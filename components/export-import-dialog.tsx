@@ -75,27 +75,35 @@ export function ExportImportDialog() {
       let importedMultisigs = 0;
       const failedMultisigs: string[] = [];
 
+      // Step 1: Import chains first
+      const newChains: typeof chains = [...chains];
       if (data.chains) {
         for (const chain of data.chains) {
-          const exists = chains.some((c) => c.id === chain.id);
+          const exists = newChains.some((c) => c.id === chain.id);
           if (!exists) {
             addChain(chain);
+            newChains.push(chain);
             importedChains++;
           }
         }
       }
 
+      // Step 2: Import multisigs after chains are added
       if (data.multisigs) {
         for (const serializedMultisig of data.multisigs) {
           try {
+            // Check for duplicates using chainId + publicKey
             const exists = multisigs.some(
-              (m) => m.publicKey.toString() === serializedMultisig.publicKey
+              (m) =>
+                m.publicKey.toString() === serializedMultisig.publicKey &&
+                m.chainId === serializedMultisig.chainId
             );
             if (exists) {
               continue;
             }
 
-            const chain = chains.find(
+            // Find chain (including newly added ones)
+            const chain = newChains.find(
               (c) => c.id === serializedMultisig.chainId
             );
             if (!chain) {
