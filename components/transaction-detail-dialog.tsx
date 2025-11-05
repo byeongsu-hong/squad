@@ -351,14 +351,8 @@ export function TransactionDetailDialog({
                 {configData ? "Config Transaction Data" : "Transaction Data"}
               </h3>
               {(txData || configData) && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleCopyTxData}
-                  className="h-8"
-                >
-                  <Copy className="mr-2 h-3 w-3" />
-                  Copy
+                <Button variant="ghost" size="icon" onClick={handleCopyTxData}>
+                  <Copy className="h-4 w-4" />
                 </Button>
               )}
             </div>
@@ -378,9 +372,6 @@ export function TransactionDetailDialog({
             {!loading && configData && (
               <div className="space-y-3">
                 <div className="bg-muted rounded px-3 py-4 text-sm">
-                  <p className="mb-2 font-semibold">
-                    Config Transaction (Multisig Configuration Change)
-                  </p>
                   <p className="text-muted-foreground mb-3 text-xs">
                     This transaction modifies the multisig configuration.
                   </p>
