@@ -1,10 +1,20 @@
 "use client";
 
 import { PublicKey } from "@solana/web3.js";
-import { Copy, Loader2, Pencil, RefreshCw, Trash2, Users } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import {
+  Copy,
+  Filter,
+  Loader2,
+  Pencil,
+  RefreshCw,
+  Tag,
+  Trash2,
+  Users,
+} from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import { ManageTagsDialog } from "@/components/manage-tags-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,6 +29,7 @@ import { SquadService } from "@/lib/squad";
 import { useChainStore } from "@/stores/chain-store";
 import { useMultisigStore } from "@/stores/multisig-store";
 import { useWalletStore } from "@/stores/wallet-store";
+import type { MultisigAccount } from "@/types/multisig";
 import type { SquadMember } from "@/types/squad";
 
 export function MultisigList() {
@@ -28,6 +39,11 @@ export function MultisigList() {
   );
   const [editingLabel, setEditingLabel] = useState<string | null>(null);
   const [labelInput, setLabelInput] = useState("");
+  const [tagDialogOpen, setTagDialogOpen] = useState(false);
+  const [selectedMultisigForTags, setSelectedMultisigForTags] =
+    useState<MultisigAccount | null>(null);
+  const [filterText, setFilterText] = useState("");
+  const [selectedFilterTags, setSelectedFilterTags] = useState<string[]>([]);
   const { publicKey } = useWalletStore();
   const { getSelectedChain, chains } = useChainStore();
   const { multisigs, setMultisigs, deleteMultisig, updateMultisigLabel } =
@@ -142,12 +158,111 @@ export function MultisigList() {
     setLabelInput("");
   };
 
+  const handleOpenTagDialog = (multisig: MultisigAccount) => {
+    setSelectedMultisigForTags(multisig);
+    setTagDialogOpen(true);
+  };
+
+  // Get all unique tags from all multisigs
+  const allTags = useMemo(() => {
+    const tagSet = new Set<string>();
+    multisigs.forEach((m) => {
+      m.tags?.forEach((tag) => tagSet.add(tag));
+    });
+    return Array.from(tagSet).sort();
+  }, [multisigs]);
+
+  // Filter multisigs based on search text and selected tags
+  const filteredMultisigs = useMemo(() => {
+    return multisigs.filter((multisig) => {
+      // Filter by text (label or address)
+      const matchesText =
+        !filterText ||
+        multisig.label?.toLowerCase().includes(filterText.toLowerCase()) ||
+        multisig.publicKey
+          .toString()
+          .toLowerCase()
+          .includes(filterText.toLowerCase());
+
+      // Filter by tags (if any tags are selected, multisig must have at least one matching tag)
+      const matchesTags =
+        selectedFilterTags.length === 0 ||
+        selectedFilterTags.some((tag) => multisig.tags?.includes(tag));
+
+      return matchesText && matchesTags;
+    });
+  }, [multisigs, filterText, selectedFilterTags]);
+
+  const toggleFilterTag = (tag: string) => {
+    setSelectedFilterTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+    );
+  };
+
   const hasMultisigs = multisigs.length > 0;
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-4">
         <h2 className="text-2xl font-bold">Your Multisigs</h2>
+        <div className="flex items-center gap-2">
+          {publicKey && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={loadMultisigs}
+              disabled={loading}
+            >
+              {loading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4" />
+              )}
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Search and filter section */}
+      {hasMultisigs && (
+        <div className="space-y-2">
+          <div className="relative">
+            <Filter className="text-muted-foreground absolute top-2.5 left-2.5 h-4 w-4" />
+            <Input
+              placeholder="Search multisigs..."
+              value={filterText}
+              onChange={(e) => setFilterText(e.target.value)}
+              className="pl-8"
+            />
+          </div>
+
+          {allTags.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {allTags.map((tag) => (
+                <Badge
+                  key={tag}
+                  variant={
+                    selectedFilterTags.includes(tag) ? "default" : "outline"
+                  }
+                  className="cursor-pointer text-xs"
+                  onClick={() => toggleFilterTag(tag)}
+                >
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className="flex items-center justify-between gap-4">
+        <div className="text-muted-foreground text-sm">
+          {filteredMultisigs.length !== multisigs.length && (
+            <span>
+              Showing {filteredMultisigs.length} of {multisigs.length} multisigs
+            </span>
+          )}
+        </div>
         <div className="flex items-center gap-2">
           {hasMultisigs && (
             <>
@@ -167,20 +282,6 @@ export function MultisigList() {
                 </Button>
               )}
             </>
-          )}
-          {publicKey && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={loadMultisigs}
-              disabled={loading}
-            >
-              {loading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <RefreshCw className="h-4 w-4" />
-              )}
-            </Button>
           )}
         </div>
       </div>
@@ -206,8 +307,18 @@ export function MultisigList() {
         </Card>
       )}
 
+      {filteredMultisigs.length === 0 && multisigs.length > 0 && (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <p className="text-muted-foreground">
+              No multisigs match your filters
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {multisigs.map((multisig) => {
+        {filteredMultisigs.map((multisig) => {
           const isSelected = selectedForDeletion.has(
             multisig.publicKey.toString()
           );
@@ -287,22 +398,46 @@ export function MultisigList() {
                       }}
                     />
                   </div>
-                  <Badge variant="outline" className="text-xs">
-                    {chains.find((c) => c.id === multisig.chainId)?.name ||
-                      multisig.chainId}
-                  </Badge>
+                  <div className="flex flex-wrap items-center gap-1">
+                    <Badge variant="outline" className="text-xs">
+                      {chains.find((c) => c.id === multisig.chainId)?.name ||
+                        multisig.chainId}
+                    </Badge>
+                    {multisig.tags?.map((tag) => (
+                      <Badge key={tag} variant="secondary" className="text-xs">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-muted-foreground text-sm">
-                  <p>TX Index: {multisig.transactionIndex.toString()}</p>
-                  <p>Members: {multisig.members.length}</p>
+                <div className="space-y-2">
+                  <div className="text-muted-foreground text-sm">
+                    <p>TX Index: {multisig.transactionIndex.toString()}</p>
+                    <p>Members: {multisig.members.length}</p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => handleOpenTagDialog(multisig)}
+                  >
+                    <Tag className="mr-2 h-3 w-3" />
+                    Manage Tags
+                  </Button>
                 </div>
               </CardContent>
             </Card>
           );
         })}
       </div>
+
+      <ManageTagsDialog
+        open={tagDialogOpen}
+        onOpenChange={setTagDialogOpen}
+        multisig={selectedMultisigForTags}
+      />
     </div>
   );
 }

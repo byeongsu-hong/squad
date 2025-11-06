@@ -99,8 +99,13 @@ export function TransactionDetailDialog({
           chain.squadsV4ProgramId
         );
 
-        // Try ConfigTransaction first (typically smaller, 119 bytes)
-        try {
+        // Determine transaction type first
+        const txType = await squadService.getTransactionType(
+          proposal.multisig,
+          proposal.transactionIndex
+        );
+
+        if (txType === "config") {
           const configTx = await squadService.getConfigTransaction(
             proposal.multisig,
             proposal.transactionIndex
@@ -110,11 +115,9 @@ export function TransactionDetailDialog({
             actions: configTx.actions,
           });
           return;
-        } catch {
-          // Not a ConfigTransaction, try VaultTransaction
         }
 
-        // Try VaultTransaction
+        // Load VaultTransaction
         const transactionAccount = await squadService.getVaultTransaction(
           proposal.multisig,
           proposal.transactionIndex

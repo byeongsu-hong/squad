@@ -49,6 +49,7 @@ const importMultisigFormSchema = z.object({
   chainId: chainIdSchema,
   multisigAddress: publicKeySchema,
   label: labelSchema.optional(),
+  tags: z.string().optional(),
 });
 
 type ImportFormValues = z.infer<typeof importMultisigFormSchema>;
@@ -101,6 +102,12 @@ export function ImportMultisigDialog({
         programId: new PublicKey(chain.squadsV4ProgramId),
         chainId: chain.id,
         label: data.label,
+        tags: data.tags
+          ? data.tags
+              .split(",")
+              .map((tag) => tag.trim())
+              .filter((tag) => tag)
+          : undefined,
       });
 
       toast.success("Multisig imported successfully!");
@@ -207,6 +214,23 @@ export function ImportMultisigDialog({
                   <FormMessage />
                   <FormDescription>
                     A friendly name for this multisig
+                  </FormDescription>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="tags"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tags (Optional)</FormLabel>
+                  <FormControl>
+                    <Input placeholder="treasury, dao, mainnet" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                  <FormDescription>
+                    Comma-separated tags to organize your multisigs
                   </FormDescription>
                 </FormItem>
               )}

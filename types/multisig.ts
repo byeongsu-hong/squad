@@ -9,6 +9,7 @@ export interface MultisigAccount {
   programId: PublicKey;
   chainId: string;
   label?: string;
+  tags?: string[];
 }
 
 export interface MultisigMember {

@@ -17,6 +17,7 @@ interface MultisigStore {
   addMultisig: (multisig: MultisigAccount) => void;
   deleteMultisig: (publicKey: string) => void;
   updateMultisigLabel: (publicKey: string, label: string) => void;
+  updateMultisigTags: (publicKey: string, tags: string[]) => void;
   setProposals: (proposals: ProposalAccount[]) => void;
   addProposal: (proposal: ProposalAccount) => void;
   updateProposal: (
@@ -83,6 +84,16 @@ export const useMultisigStore = create<MultisigStore>((set, get) => ({
     set((state) => {
       const multisigs = state.multisigs.map((m) =>
         m.publicKey.toString() === publicKey ? { ...m, label } : m
+      );
+      multisigStorage.saveMultisigs(multisigs);
+      return { multisigs };
+    });
+  },
+
+  updateMultisigTags: (publicKey, tags) => {
+    set((state) => {
+      const multisigs = state.multisigs.map((m) =>
+        m.publicKey.toString() === publicKey ? { ...m, tags } : m
       );
       multisigStorage.saveMultisigs(multisigs);
       return { multisigs };

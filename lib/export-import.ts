@@ -14,6 +14,7 @@ interface SerializedMultisigAccount {
   publicKey: string;
   chainId: string;
   label?: string;
+  tags?: string[];
 }
 
 export function serializeMultisigAccount(
@@ -23,6 +24,7 @@ export function serializeMultisigAccount(
     publicKey: multisig.publicKey.toString(),
     chainId: multisig.chainId,
     label: multisig.label,
+    tags: multisig.tags,
   };
 }
 

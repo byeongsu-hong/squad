@@ -60,6 +60,7 @@ interface StoredMultisig {
   programId: string;
   chainId: string;
   label?: string;
+  tags?: string[];
 }
 
 const multisigListStorage = createListStorage<MultisigAccount, StoredMultisig>(
@@ -77,6 +78,7 @@ const multisigListStorage = createListStorage<MultisigAccount, StoredMultisig>(
       programId: m.programId.toString(),
       chainId: m.chainId,
       label: m.label,
+      tags: m.tags,
     }),
     deserialize: (m) => ({
       publicKey: new PublicKey(m.publicKey),
@@ -90,6 +92,7 @@ const multisigListStorage = createListStorage<MultisigAccount, StoredMultisig>(
       programId: new PublicKey(m.programId),
       chainId: m.chainId,
       label: m.label,
+      tags: m.tags,
     }),
   }
 );

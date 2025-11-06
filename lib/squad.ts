@@ -7,6 +7,10 @@ const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000; // 1 second
 const CACHE_TTL = 30000; // 30 seconds
 
+// Transaction account discriminators
+const CONFIG_TRANSACTION_DISCRIMINATOR = [94, 8, 4, 35, 113, 139, 139, 112];
+const VAULT_TRANSACTION_DISCRIMINATOR = [168, 250, 162, 100, 81, 14, 162, 207];
+
 async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -233,18 +237,91 @@ export class SquadService {
     });
   }
 
+  async getTransactionType(
+    multisigPda: PublicKey,
+    transactionIndex: bigint
+  ): Promise<"config" | "vault"> {
+    const [transactionPda] = multisig.getTransactionPda({
+      multisigPda,
+      index: transactionIndex,
+      programId: this.programId,
+    });
+
+    const accountInfo = await this.connection.getAccountInfo(transactionPda);
+
+    if (!accountInfo) {
+      throw new Error("Transaction account not found");
+    }
+
+    // Check discriminator to determine transaction type
+    // Account discriminator is the first 8 bytes of the account data
+    const discriminator = accountInfo.data.subarray(0, 8);
+
+    // Compare with config transaction discriminator
+    const isConfigTransaction =
+      discriminator.length === CONFIG_TRANSACTION_DISCRIMINATOR.length &&
+      discriminator.every(
+        (byte, index) => byte === CONFIG_TRANSACTION_DISCRIMINATOR[index]
+      );
+
+    return isConfigTransaction ? "config" : "vault";
+  }
+
   async executeProposal(params: {
     multisigPda: PublicKey;
     transactionIndex: bigint;
     member: PublicKey;
   }) {
-    return multisig.instructions.vaultTransactionExecute({
-      connection: this.connection,
-      multisigPda: params.multisigPda,
-      transactionIndex: params.transactionIndex,
-      member: params.member,
-      programId: this.programId,
-    });
+    return await this.retryWithBackoff(async () => {
+      try {
+        const txType = await this.getTransactionType(
+          params.multisigPda,
+          params.transactionIndex
+        );
+
+        if (txType === "config") {
+          // Execute as ConfigTransaction
+          return await multisig.instructions.configTransactionExecute({
+            multisigPda: params.multisigPda,
+            transactionIndex: params.transactionIndex,
+            member: params.member,
+            programId: this.programId,
+          });
+        } else {
+          // Execute as VaultTransaction
+          return await multisig.instructions.vaultTransactionExecute({
+            connection: this.connection,
+            multisigPda: params.multisigPda,
+            transactionIndex: params.transactionIndex,
+            member: params.member,
+            programId: this.programId,
+          });
+        }
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : String(error);
+
+        if (
+          errorMsg.includes("buffer") ||
+          errorMsg.includes("offset") ||
+          errorMsg.includes("beyond")
+        ) {
+          throw new Error(
+            "Failed to execute transaction: Invalid transaction data format. The transaction may be corrupted or use an unsupported format. Please verify the transaction was created correctly."
+          );
+        }
+
+        if (
+          errorMsg.includes("not found") ||
+          errorMsg.includes("Account does not exist")
+        ) {
+          throw new Error(
+            "Transaction account not found. Please ensure the proposal was fully created on-chain."
+          );
+        }
+
+        throw error;
+      }
+    }, "Execute proposal");
   }
 
   async getProposal(multisigPda: PublicKey, transactionIndex: bigint) {

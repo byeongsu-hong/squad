@@ -139,6 +139,7 @@ export function ExportImportDialog() {
               programId: new PublicKey(chain.squadsV4ProgramId),
               chainId: chain.id,
               label: serializedMultisig.label,
+              tags: serializedMultisig.tags,
             };
 
             addMultisig(multisigAccount);
@@ -264,11 +265,11 @@ export function ExportImportDialog() {
                   )}
                 </Button>
               </div>
-              <ScrollArea className="h-[400px] w-full rounded-md border">
-                <pre className="p-4 text-xs break-all whitespace-pre-wrap">
+              <div className="h-[400px] w-full overflow-auto rounded-md border">
+                <pre className="p-4 text-xs whitespace-pre">
                   <code>{exportContent}</code>
                 </pre>
-              </ScrollArea>
+              </div>
             </div>
           )}
 
