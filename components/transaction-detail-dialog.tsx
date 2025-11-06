@@ -20,13 +20,12 @@ import { Separator } from "@/components/ui/separator";
 import { SquadService } from "@/lib/squad";
 import { useChainStore } from "@/stores/chain-store";
 import { useWalletStore } from "@/stores/wallet-store";
-import type { MultisigAccount, ProposalAccount } from "@/types/multisig";
+import type { ProposalAccount } from "@/types/multisig";
 
 interface TransactionDetailDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   proposal: ProposalAccount | null;
-  multisig?: MultisigAccount;
 }
 
 interface VaultTransactionData {
@@ -48,7 +47,6 @@ export function TransactionDetailDialog({
   open,
   onOpenChange,
   proposal,
-  multisig,
 }: TransactionDetailDialogProps) {
   const { publicKey } = useWalletStore();
   const { chains } = useChainStore();

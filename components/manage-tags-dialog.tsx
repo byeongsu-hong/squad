@@ -74,12 +74,13 @@ export function ManageTagsDialog({
     }
   };
 
-  // Update local state when multisig changes
+  // Reset tags when dialog opens
   useEffect(() => {
-    if (multisig) {
+    if (open && multisig) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTags(multisig.tags || []);
     }
-  }, [multisig]);
+  }, [open, multisig]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

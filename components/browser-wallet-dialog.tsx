@@ -2,10 +2,10 @@
 
 import type { Wallet } from "@solana/wallet-adapter-react";
 import { AlertCircle, Loader2, Wallet as WalletIcon } from "lucide-react";
+import Image from "next/image";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -87,10 +87,13 @@ export function BrowserWalletDialog({
                     className="hover:bg-accent flex w-full items-center gap-4 rounded-lg border p-4 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {wallet.adapter.icon && (
-                      <img
+                      <Image
                         src={wallet.adapter.icon}
                         alt={wallet.adapter.name}
+                        width={32}
+                        height={32}
                         className="h-8 w-8"
+                        unoptimized
                       />
                     )}
                     <div className="flex-1">
@@ -119,10 +122,13 @@ export function BrowserWalletDialog({
                     className="hover:bg-accent flex w-full items-center gap-4 rounded-lg border p-4 text-left transition-colors"
                   >
                     {wallet.adapter.icon && (
-                      <img
+                      <Image
                         src={wallet.adapter.icon}
                         alt={wallet.adapter.name}
+                        width={32}
+                        height={32}
                         className="h-8 w-8 opacity-50"
+                        unoptimized
                       />
                     )}
                     <div className="flex-1">

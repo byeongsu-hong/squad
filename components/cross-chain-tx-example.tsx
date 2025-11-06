@@ -1,10 +1,10 @@
 "use client";
 
 import {
-  SystemProgram,
-  Transaction,
   LAMPORTS_PER_SOL,
   PublicKey,
+  SystemProgram,
+  Transaction,
 } from "@solana/web3.js";
 import { useState } from "react";
 
@@ -130,9 +130,7 @@ export function CrossChainTransactionExample() {
 
         <Button
           onClick={handleSendTransaction}
-          disabled={
-            loading || !recipientAddress || !amount || !selectedChainId
-          }
+          disabled={loading || !recipientAddress || !amount || !selectedChainId}
           className="w-full"
         >
           {loading ? "Sending..." : "Send Transaction"}
@@ -158,4 +156,3 @@ export function CrossChainTransactionExample() {
     </Card>
   );
 }
-

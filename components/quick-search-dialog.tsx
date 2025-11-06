@@ -1,15 +1,10 @@
 "use client";
 
-import { Command, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useMultisigStore } from "@/stores/multisig-store";
 
@@ -52,8 +47,10 @@ export function QuickSearchDialog({
     option.label.toLowerCase().includes(query.toLowerCase())
   );
 
+  // Reset query when dialog opens
   useEffect(() => {
-    if (!open) {
+    if (open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setQuery("");
     }
   }, [open]);

@@ -1,8 +1,8 @@
 import {
   Connection,
+  PublicKey,
   Transaction,
   VersionedTransaction,
-  PublicKey,
 } from "@solana/web3.js";
 
 import type { ChainConfig } from "@/types/chain";
@@ -242,4 +242,3 @@ export class CrossChainTransactionService {
 }
 
 export const crossChainTxService = new CrossChainTransactionService();
-

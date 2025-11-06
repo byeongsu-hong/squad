@@ -13,8 +13,6 @@ import { ChainManagementDialog } from "./chain-management-dialog";
 
 export function Header() {
   const [chainDialogOpen, setChainDialogOpen] = useState(false);
-  const [shortcutsDialogOpen, setShortcutsDialogOpen] = useState(false);
-  const [quickSearchOpen, setQuickSearchOpen] = useState(false);
 
   return (
     <header className="border-b">

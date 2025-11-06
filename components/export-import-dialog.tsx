@@ -26,7 +26,6 @@ import {
 } from "./ui/dialog";
 import { Label } from "./ui/label";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
-import { ScrollArea } from "./ui/scroll-area";
 
 export function ExportImportDialog() {
   const [isOpen, setIsOpen] = useState(false);

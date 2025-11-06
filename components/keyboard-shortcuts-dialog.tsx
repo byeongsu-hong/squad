@@ -1,4 +1,4 @@
-import { Command, Keyboard } from "lucide-react";
+import { Keyboard } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import {

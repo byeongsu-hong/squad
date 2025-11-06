@@ -13,9 +13,7 @@ import {
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
-import { ActivityFeed } from "@/components/activity-feed";
-import { ProposalFilters } from "@/components/proposal-filters";
-import { ProposalStats } from "@/components/proposal-stats";
+import { BatchSigningPreviewDialog } from "@/components/batch-signing-preview-dialog";
 import { ProposalTableSkeletonList } from "@/components/skeletons";
 import { TransactionDetailDialog } from "@/components/transaction-detail-dialog";
 import { Badge } from "@/components/ui/badge";
@@ -84,6 +82,10 @@ export function MonitoringView() {
   );
   const [batchOperationInProgress, setBatchOperationInProgress] =
     useState(false);
+  const [batchPreviewOpen, setBatchPreviewOpen] = useState(false);
+  const [batchPreviewAction, setBatchPreviewAction] = useState<
+    "approve" | "reject"
+  >("approve");
 
   const { publicKey } = useWalletStore();
   const { chains } = useChainStore();
@@ -347,21 +349,65 @@ export function MonitoringView() {
     setSelectedProposals(new Set());
   };
 
-  const clearFilters = () => {
-    setStatusFilter("active");
-    setChainFilter("all");
-    setTagFilter("all");
-    setSearchQuery("");
+  const handleBatchApprove = () => {
+    if (selectedProposals.size === 0) return;
+
+    if (!publicKey) {
+      toast.error("Please connect your wallet first");
+      return;
+    }
+
+    // Check if user is a member of any selected proposal
+    const hasEligibleProposals = Array.from(selectedProposals).some((key) => {
+      const proposal = proposals.find(
+        (p) => `${p.multisig.toString()}-${p.transactionIndex}` === key
+      );
+      return proposal && isMemberOf(proposal) && !hasUserApproved(proposal);
+    });
+
+    if (!hasEligibleProposals) {
+      toast.error(
+        "You are not a member of any selected multisigs or have already approved all proposals"
+      );
+      return;
+    }
+
+    setBatchPreviewAction("approve");
+    setBatchPreviewOpen(true);
   };
 
-  const activeFilterCount =
-    (statusFilter !== "active" ? 1 : 0) +
-    (chainFilter !== "all" ? 1 : 0) +
-    (tagFilter !== "all" ? 1 : 0) +
-    (searchQuery.trim() ? 1 : 0);
-
-  const handleBatchApprove = async () => {
+  const handleBatchReject = () => {
     if (selectedProposals.size === 0) return;
+
+    if (!publicKey) {
+      toast.error("Please connect your wallet first");
+      return;
+    }
+
+    // Check if user is a member of any selected proposal
+    const hasEligibleProposals = Array.from(selectedProposals).some((key) => {
+      const proposal = proposals.find(
+        (p) => `${p.multisig.toString()}-${p.transactionIndex}` === key
+      );
+      return proposal && isMemberOf(proposal) && !hasUserRejected(proposal);
+    });
+
+    if (!hasEligibleProposals) {
+      toast.error(
+        "You are not a member of any selected multisigs or have already rejected all proposals"
+      );
+      return;
+    }
+
+    setBatchPreviewAction("reject");
+    setBatchPreviewOpen(true);
+  };
+
+  const executeBatchOperation = async () => {
+    if (!publicKey) {
+      toast.error("Please connect your wallet first");
+      return;
+    }
 
     setBatchOperationInProgress(true);
     let successCount = 0;
@@ -372,19 +418,46 @@ export function MonitoringView() {
         (p) => `${p.multisig.toString()}-${p.transactionIndex}` === proposalKey
       );
 
-      if (!proposal || !isMemberOf(proposal) || hasUserApproved(proposal)) {
+      if (!proposal) {
+        continue;
+      }
+
+      // Skip if trying to approve but already approved
+      if (
+        batchPreviewAction === "approve" &&
+        (!isMemberOf(proposal) || hasUserApproved(proposal))
+      ) {
+        continue;
+      }
+
+      // Skip if trying to reject but already rejected
+      if (
+        batchPreviewAction === "reject" &&
+        (!isMemberOf(proposal) || hasUserRejected(proposal))
+      ) {
         continue;
       }
 
       try {
-        await approve(
-          proposal.multisig,
-          proposal.transactionIndex,
-          proposal.multisigAccount.chainId
-        );
+        if (batchPreviewAction === "approve") {
+          await approve(
+            proposal.multisig,
+            proposal.transactionIndex,
+            proposal.multisigAccount.chainId
+          );
+        } else {
+          await reject(
+            proposal.multisig,
+            proposal.transactionIndex,
+            proposal.multisigAccount.chainId
+          );
+        }
         successCount++;
       } catch (error) {
-        console.error(`Failed to approve proposal ${proposalKey}:`, error);
+        console.error(
+          `Failed to ${batchPreviewAction} proposal ${proposalKey}:`,
+          error
+        );
         failCount++;
       }
     }
@@ -392,51 +465,13 @@ export function MonitoringView() {
     setBatchOperationInProgress(false);
     clearSelection();
 
+    const actionName =
+      batchPreviewAction === "approve" ? "Approved" : "Rejected";
     if (successCount > 0) {
-      toast.success(`Approved ${successCount} proposal(s)`);
+      toast.success(`${actionName} ${successCount} proposal(s)`);
     }
     if (failCount > 0) {
-      toast.error(`Failed to approve ${failCount} proposal(s)`);
-    }
-  };
-
-  const handleBatchReject = async () => {
-    if (selectedProposals.size === 0) return;
-
-    setBatchOperationInProgress(true);
-    let successCount = 0;
-    let failCount = 0;
-
-    for (const proposalKey of selectedProposals) {
-      const proposal = proposals.find(
-        (p) => `${p.multisig.toString()}-${p.transactionIndex}` === proposalKey
-      );
-
-      if (!proposal || !isMemberOf(proposal) || hasUserRejected(proposal)) {
-        continue;
-      }
-
-      try {
-        await reject(
-          proposal.multisig,
-          proposal.transactionIndex,
-          proposal.multisigAccount.chainId
-        );
-        successCount++;
-      } catch (error) {
-        console.error(`Failed to reject proposal ${proposalKey}:`, error);
-        failCount++;
-      }
-    }
-
-    setBatchOperationInProgress(false);
-    clearSelection();
-
-    if (successCount > 0) {
-      toast.success(`Rejected ${successCount} proposal(s)`);
-    }
-    if (failCount > 0) {
-      toast.error(`Failed to reject ${failCount} proposal(s)`);
+      toast.error(`Failed to ${batchPreviewAction} ${failCount} proposal(s)`);
     }
   };
 
@@ -456,7 +491,9 @@ export function MonitoringView() {
                 variant="default"
                 size="sm"
                 onClick={handleBatchApprove}
-                disabled={batchOperationInProgress || isActionInProgress}
+                disabled={
+                  !publicKey || batchOperationInProgress || isActionInProgress
+                }
               >
                 <Check className="mr-1 h-4 w-4" />
                 Approve ({selectedProposals.size})
@@ -465,7 +502,9 @@ export function MonitoringView() {
                 variant="destructive"
                 size="sm"
                 onClick={handleBatchReject}
-                disabled={batchOperationInProgress || isActionInProgress}
+                disabled={
+                  !publicKey || batchOperationInProgress || isActionInProgress
+                }
               >
                 <X className="mr-1 h-4 w-4" />
                 Reject ({selectedProposals.size})
@@ -875,15 +914,47 @@ export function MonitoringView() {
         open={detailDialogOpen}
         onOpenChange={setDetailDialogOpen}
         proposal={selectedProposal}
-        multisig={
-          selectedProposal
-            ? multisigs.find(
-                (m) =>
-                  m.publicKey.toString() ===
-                  selectedProposal.multisig.toString()
-              )
-            : undefined
-        }
+      />
+
+      <BatchSigningPreviewDialog
+        open={batchPreviewOpen}
+        onOpenChange={setBatchPreviewOpen}
+        proposals={proposals.filter((p) =>
+          selectedProposals.has(
+            `${p.multisig.toString()}-${p.transactionIndex}`
+          )
+        )}
+        multisigs={multisigs}
+        onConfirm={executeBatchOperation}
+        action={batchPreviewAction}
+        onExecuteProposal={async (proposal, multisig) => {
+          if (batchPreviewAction === "approve") {
+            await approve(
+              proposal.multisig,
+              proposal.transactionIndex,
+              multisig.chainId
+            );
+          } else {
+            await reject(
+              proposal.multisig,
+              proposal.transactionIndex,
+              multisig.chainId
+            );
+          }
+        }}
+        onComplete={(successCount, failCount) => {
+          clearSelection();
+          const actionName =
+            batchPreviewAction === "approve" ? "Approved" : "Rejected";
+          if (successCount > 0) {
+            toast.success(`${actionName} ${successCount} proposal(s)`);
+          }
+          if (failCount > 0) {
+            toast.error(
+              `Failed to ${batchPreviewAction} ${failCount} proposal(s)`
+            );
+          }
+        }}
       />
     </div>
   );
