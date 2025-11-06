@@ -16,6 +16,10 @@ import {
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { SquadService } from "@/lib/squad";
+import {
+  type ConfigAction,
+  formatConfigAction,
+} from "@/lib/utils/transaction-formatter";
 import { useChainStore } from "@/stores/chain-store";
 import type { MultisigAccount, ProposalAccount } from "@/types/multisig";
 
@@ -506,19 +510,50 @@ export function BatchSigningPreviewDialog({
                             </p>
                             <div className="space-y-2">
                               {preview.fullData.configActions.map(
-                                (action, idx) => (
-                                  <div
-                                    key={idx}
-                                    className="bg-muted rounded p-2"
-                                  >
-                                    <p className="mb-1 text-xs font-semibold">
-                                      Action #{idx + 1}
-                                    </p>
-                                    <pre className="overflow-x-auto text-[10px]">
-                                      {JSON.stringify(action, null, 2)}
-                                    </pre>
-                                  </div>
-                                )
+                                (action, idx) => {
+                                  const formatted = formatConfigAction(
+                                    action as ConfigAction
+                                  );
+                                  return (
+                                    <div
+                                      key={idx}
+                                      className="bg-muted space-y-2 rounded p-2"
+                                    >
+                                      <div className="flex items-center gap-2">
+                                        <Badge
+                                          variant="outline"
+                                          className="text-[10px]"
+                                        >
+                                          #{idx + 1}
+                                        </Badge>
+                                        <p className="text-xs font-semibold">
+                                          {formatted.type}
+                                        </p>
+                                      </div>
+                                      <div className="space-y-1">
+                                        {formatted.fields.map(
+                                          (field, fieldIdx) => (
+                                            <div
+                                              key={fieldIdx}
+                                              className="text-[10px]"
+                                            >
+                                              <span className="text-muted-foreground">
+                                                {field.label}:{" "}
+                                              </span>
+                                              <span className="font-medium">
+                                                {typeof field.value === "string"
+                                                  ? field.value.length > 40
+                                                    ? `${field.value.slice(0, 20)}...${field.value.slice(-8)}`
+                                                    : field.value
+                                                  : field.value}
+                                              </span>
+                                            </div>
+                                          )
+                                        )}
+                                      </div>
+                                    </div>
+                                  );
+                                }
                               )}
                             </div>
                           </div>

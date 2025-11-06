@@ -41,7 +41,7 @@ import { useChainStore } from "@/stores/chain-store";
 import { useMultisigStore } from "@/stores/multisig-store";
 import { useWalletStore } from "@/stores/wallet-store";
 import type { SquadMember } from "@/types/squad";
-import { parseLedgerError } from "@/types/wallet";
+import { WalletType, parseLedgerError } from "@/types/wallet";
 
 interface CreateMultisigDialogProps {
   open: boolean;
@@ -71,7 +71,7 @@ export function CreateMultisigDialog({
   const { publicKey, derivationPath, walletType } = useWalletStore();
   const { getSelectedChain, chains } = useChainStore();
   const { addMultisig } = useMultisigStore();
-  const wallet = useWallet();
+  const { signTransaction } = useWallet();
 
   const form = useForm<CreateMultisigFormValues>({
     resolver: zodResolver(createMultisigSchema),
@@ -132,14 +132,19 @@ export function CreateMultisigDialog({
 
       transaction.partialSign(createKey);
 
+      // For browser wallets, verify signTransaction is available
+      if (walletType === WalletType.BROWSER && !signTransaction) {
+        throw new Error(
+          "Wallet is not properly connected. Please reconnect your wallet."
+        );
+      }
+
       const signedTransaction = await transactionSignerService.signTransaction(
         transaction,
         {
           walletType,
           derivationPath,
-          walletAdapter: wallet.signTransaction
-            ? { signTransaction: wallet.signTransaction.bind(wallet) }
-            : undefined,
+          walletAdapter: signTransaction ? { signTransaction } : undefined,
         }
       );
 

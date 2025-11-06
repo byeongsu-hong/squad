@@ -23,6 +23,9 @@ export function WalletAdapterProvider({
     return solanaMainnet?.rpcUrl || "https://api.mainnet-beta.solana.com";
   }, [chains]);
 
+  // Empty wallets array - the wallet adapter will automatically detect
+  // browser extension wallets (Phantom, Solflare, Backpack, etc.) that
+  // inject themselves into the window object
   const wallets = useMemo(() => [], []);
 
   return (

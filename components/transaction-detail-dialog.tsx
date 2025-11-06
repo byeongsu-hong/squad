@@ -20,6 +20,10 @@ import {
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { SquadService } from "@/lib/squad";
+import {
+  type ConfigAction,
+  formatConfigAction,
+} from "@/lib/utils/transaction-formatter";
 import { useChainStore } from "@/stores/chain-store";
 import { useWalletStore } from "@/stores/wallet-store";
 import type { ProposalAccount } from "@/types/multisig";
@@ -43,136 +47,6 @@ interface VaultTransactionData {
 
 interface ConfigTransactionData {
   actions: unknown[];
-}
-
-interface ConfigAction {
-  __kind: string;
-  [key: string]: unknown;
-}
-
-function formatConfigAction(action: ConfigAction): {
-  type: string;
-  fields: { label: string; value: string | React.ReactNode }[];
-} {
-  const type = action.__kind || "Unknown";
-
-  switch (type) {
-    case "AddMember": {
-      const member = action as unknown as {
-        newMember: { key: unknown; permissions?: { mask: number } };
-      };
-      const memberKey = String(member.newMember?.key || "Unknown");
-      // Solana addresses are typically 32-44 characters
-      const isValidAddress =
-        memberKey.length >= 32 &&
-        memberKey.length <= 44 &&
-        memberKey !== "Unknown";
-      return {
-        type: "Add Member",
-        fields: [
-          {
-            label: "Member Address",
-            value: isValidAddress ? (
-              <AddressWithLabel address={memberKey} showFull />
-            ) : (
-              memberKey
-            ),
-          },
-          {
-            label: "Permissions",
-            value: String(member.newMember?.permissions?.mask ?? "Default"),
-          },
-        ],
-      };
-    }
-
-    case "RemoveMember": {
-      const member = action as unknown as { oldMember: unknown };
-      const memberKey = String(member.oldMember || "Unknown");
-      // Solana addresses are typically 32-44 characters
-      const isValidAddress =
-        memberKey.length >= 32 &&
-        memberKey.length <= 44 &&
-        memberKey !== "Unknown";
-      return {
-        type: "Remove Member",
-        fields: [
-          {
-            label: "Member Address",
-            value: isValidAddress ? (
-              <AddressWithLabel address={memberKey} showFull />
-            ) : (
-              memberKey
-            ),
-          },
-        ],
-      };
-    }
-
-    case "ChangeThreshold": {
-      const threshold = action as unknown as { newThreshold: number };
-      return {
-        type: "Change Threshold",
-        fields: [
-          {
-            label: "New Threshold",
-            value: String(threshold.newThreshold ?? "Unknown"),
-          },
-        ],
-      };
-    }
-
-    case "SetTimeLock": {
-      const timeLock = action as unknown as { timeLock: number };
-      return {
-        type: "Set Time Lock",
-        fields: [
-          {
-            label: "Time Lock (seconds)",
-            value: String(timeLock.timeLock ?? "Unknown"),
-          },
-        ],
-      };
-    }
-
-    case "AddSpendingLimit":
-    case "RemoveSpendingLimit":
-    case "SetRentCollector": {
-      // For these types, show all fields except __kind
-      const fields = Object.entries(action)
-        .filter(([key]) => key !== "__kind")
-        .map(([key, value]) => ({
-          label: key.replace(/([A-Z])/g, " $1").trim(),
-          value:
-            typeof value === "object"
-              ? JSON.stringify(value, null, 2)
-              : String(value),
-        }));
-
-      return {
-        type: type.replace(/([A-Z])/g, " $1").trim(),
-        fields,
-      };
-    }
-
-    default: {
-      // For unknown action types, show all fields
-      const fields = Object.entries(action)
-        .filter(([key]) => key !== "__kind")
-        .map(([key, value]) => ({
-          label: key.replace(/([A-Z])/g, " $1").trim(),
-          value:
-            typeof value === "object"
-              ? JSON.stringify(value, null, 2)
-              : String(value),
-        }));
-
-      return {
-        type,
-        fields,
-      };
-    }
-  }
 }
 
 export function TransactionDetailDialog({
@@ -613,43 +487,59 @@ export function TransactionDetailDialog({
                                 </span>
                               </div>
                               <div className="space-y-3">
-                                {formatted.fields.map((field, fieldIndex) => (
-                                  <div key={fieldIndex} className="space-y-1">
-                                    <p className="text-muted-foreground text-xs font-medium">
-                                      {field.label}
-                                    </p>
-                                    {typeof field.value === "string" ? (
-                                      field.value.length > 40 ? (
-                                        <div className="flex items-center gap-2">
-                                          <code className="bg-muted flex-1 rounded px-3 py-2 text-xs break-all">
+                                {formatted.fields.map((field, fieldIndex) => {
+                                  // Check if field value is an address (string matching Solana address pattern)
+                                  const isAddress =
+                                    typeof field.value === "string" &&
+                                    field.value.length >= 32 &&
+                                    field.value.length <= 44 &&
+                                    field.label
+                                      .toLowerCase()
+                                      .includes("address");
+
+                                  return (
+                                    <div key={fieldIndex} className="space-y-1">
+                                      <p className="text-muted-foreground text-xs font-medium">
+                                        {field.label}
+                                      </p>
+                                      {typeof field.value === "string" ? (
+                                        isAddress ? (
+                                          <AddressWithLabel
+                                            address={field.value}
+                                            showFull
+                                          />
+                                        ) : field.value.length > 40 ? (
+                                          <div className="flex items-center gap-2">
+                                            <code className="bg-muted flex-1 rounded px-3 py-2 text-xs break-all">
+                                              {field.value}
+                                            </code>
+                                            <Button
+                                              variant="ghost"
+                                              size="icon"
+                                              className="h-8 w-8 shrink-0"
+                                              onClick={() => {
+                                                navigator.clipboard.writeText(
+                                                  field.value as string
+                                                );
+                                                toast.success(
+                                                  `${field.label} copied`
+                                                );
+                                              }}
+                                            >
+                                              <Copy className="h-3 w-3" />
+                                            </Button>
+                                          </div>
+                                        ) : (
+                                          <p className="text-sm font-medium">
                                             {field.value}
-                                          </code>
-                                          <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-8 w-8 shrink-0"
-                                            onClick={() => {
-                                              navigator.clipboard.writeText(
-                                                field.value as string
-                                              );
-                                              toast.success(
-                                                `${field.label} copied`
-                                              );
-                                            }}
-                                          >
-                                            <Copy className="h-3 w-3" />
-                                          </Button>
-                                        </div>
+                                          </p>
+                                        )
                                       ) : (
-                                        <p className="text-sm font-medium">
-                                          {field.value}
-                                        </p>
-                                      )
-                                    ) : (
-                                      field.value
-                                    )}
-                                  </div>
-                                ))}
+                                        field.value
+                                      )}
+                                    </div>
+                                  );
+                                })}
                               </div>
                             </div>
                           );

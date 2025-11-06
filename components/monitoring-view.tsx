@@ -26,7 +26,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -36,7 +35,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Pagination } from "@/components/ui/pagination";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -66,6 +64,11 @@ import { useDebounce } from "@/lib/hooks/use-debounce";
 import { usePagination } from "@/lib/hooks/use-pagination";
 import { useProposalActions } from "@/lib/hooks/use-proposal-actions";
 import { SquadService } from "@/lib/squad";
+import {
+  type TransactionSummary,
+  formatConfigAction,
+  formatTransactionSummary,
+} from "@/lib/utils/transaction-formatter";
 import { useChainStore } from "@/stores/chain-store";
 import { useMultisigStore } from "@/stores/multisig-store";
 import { useWalletStore } from "@/stores/wallet-store";
@@ -75,6 +78,7 @@ import { toProposalStatus } from "@/types/multisig";
 interface ProposalWithMultisig extends ProposalAccount {
   multisigAccount: MultisigAccount;
   timestamp?: number;
+  transactionSummary?: TransactionSummary;
 }
 
 export function MonitoringView() {
@@ -142,8 +146,10 @@ export function MonitoringView() {
                 acc.account.transactionIndex.toString()
               );
 
-              // Load transaction to get creator
+              // Load transaction to get creator and summary
               let creator: PublicKey | undefined;
+              let transactionSummary: TransactionSummary | undefined;
+
               try {
                 const txType = await squadService.getTransactionType(
                   acc.account.multisig,
@@ -156,16 +162,49 @@ export function MonitoringView() {
                     transactionIndex
                   );
                   creator = vaultTx.creator;
+
+                  // Get vault transaction summary
+                  const accountKeys = vaultTx.message.accountKeys.map((key) =>
+                    key.toString()
+                  );
+                  const instructions = vaultTx.message.instructions;
+                  const uniqueProgramIds = [
+                    ...new Set(
+                      instructions.map((ix) => accountKeys[ix.programIdIndex])
+                    ),
+                  ];
+
+                  transactionSummary = {
+                    type: "vault",
+                    instructionCount: instructions.length,
+                    accountCount: accountKeys.length,
+                    programIds: uniqueProgramIds,
+                  };
                 } else if (txType === "config") {
                   const configTx = await squadService.getConfigTransaction(
                     acc.account.multisig,
                     transactionIndex
                   );
                   creator = configTx.creator;
+
+                  // Get config transaction summary
+                  const configActions = configTx.actions.map((action) =>
+                    formatConfigAction(
+                      action as unknown as import("@/lib/utils/transaction-formatter").ConfigAction
+                    )
+                  );
+
+                  transactionSummary = {
+                    type: "config",
+                    configActions: configActions.map((a) => ({
+                      type: a.type,
+                      summary: a.summary,
+                    })),
+                  };
                 }
               } catch (error) {
                 console.warn(
-                  `Failed to load creator for proposal ${transactionIndex}:`,
+                  `Failed to load transaction data for proposal ${transactionIndex}:`,
                   error
                 );
               }
@@ -180,6 +219,7 @@ export function MonitoringView() {
                 executed: status === "Executed",
                 cancelled: status === "Cancelled",
                 multisigAccount: multisig,
+                ...(transactionSummary ? { transactionSummary } : {}),
               };
             })
           );
@@ -224,6 +264,12 @@ export function MonitoringView() {
     useProposalActions({
       onSuccess: loadAllProposals,
     });
+
+  // Batch operations hook - skip auto-reload after each action
+  const { approve: batchApprove, reject: batchReject } = useProposalActions({
+    onSuccess: loadAllProposals,
+    skipSuccessCallback: true,
+  });
 
   useEffect(() => {
     loadAllProposals();
@@ -405,17 +451,35 @@ export function MonitoringView() {
       return;
     }
 
-    // Check if user is a member of any selected proposal
-    const hasEligibleProposals = Array.from(selectedProposals).some((key) => {
+    // Filter out already-processed proposals
+    const eligibleProposals: string[] = [];
+    let alreadyProcessedCount = 0;
+
+    Array.from(selectedProposals).forEach((key) => {
       const proposal = proposals.find(
         (p) => `${p.multisig.toString()}-${p.transactionIndex}` === key
       );
-      return proposal && isMemberOf(proposal) && !hasUserApproved(proposal);
+
+      if (!proposal) return;
+
+      if (isMemberOf(proposal) && !hasUserApproved(proposal)) {
+        eligibleProposals.push(key);
+      } else if (hasUserApproved(proposal)) {
+        alreadyProcessedCount++;
+      }
     });
 
-    if (!hasEligibleProposals) {
+    if (alreadyProcessedCount > 0) {
+      toast.info(
+        `${alreadyProcessedCount} transaction${alreadyProcessedCount > 1 ? "s have" : " has"} already been approved`
+      );
+      // Remove already-processed proposals from selection
+      setSelectedProposals(new Set(eligibleProposals));
+    }
+
+    if (eligibleProposals.length === 0) {
       toast.error(
-        "You are not a member of any selected multisigs or have already approved all proposals"
+        "No eligible proposals to approve. You may not be a member or have already approved all selected proposals."
       );
       return;
     }
@@ -432,17 +496,35 @@ export function MonitoringView() {
       return;
     }
 
-    // Check if user is a member of any selected proposal
-    const hasEligibleProposals = Array.from(selectedProposals).some((key) => {
+    // Filter out already-processed proposals
+    const eligibleProposals: string[] = [];
+    let alreadyProcessedCount = 0;
+
+    Array.from(selectedProposals).forEach((key) => {
       const proposal = proposals.find(
         (p) => `${p.multisig.toString()}-${p.transactionIndex}` === key
       );
-      return proposal && isMemberOf(proposal) && !hasUserRejected(proposal);
+
+      if (!proposal) return;
+
+      if (isMemberOf(proposal) && !hasUserRejected(proposal)) {
+        eligibleProposals.push(key);
+      } else if (hasUserRejected(proposal)) {
+        alreadyProcessedCount++;
+      }
     });
 
-    if (!hasEligibleProposals) {
+    if (alreadyProcessedCount > 0) {
+      toast.info(
+        `${alreadyProcessedCount} transaction${alreadyProcessedCount > 1 ? "s have" : " has"} already been rejected`
+      );
+      // Remove already-processed proposals from selection
+      setSelectedProposals(new Set(eligibleProposals));
+    }
+
+    if (eligibleProposals.length === 0) {
       toast.error(
-        "You are not a member of any selected multisigs or have already rejected all proposals"
+        "No eligible proposals to reject. You may not be a member or have already rejected all selected proposals."
       );
       return;
     }
@@ -809,6 +891,7 @@ export function MonitoringView() {
                     <TableHead>Multisig</TableHead>
                     <TableHead>Chain</TableHead>
                     <TableHead>Proposal #</TableHead>
+                    <TableHead>Transaction</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Threshold</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -874,6 +957,35 @@ export function MonitoringView() {
                           </TableCell>
                           <TableCell>
                             #{proposal.transactionIndex.toString()}
+                          </TableCell>
+                          <TableCell>
+                            {proposal.transactionSummary ? (
+                              <div className="flex flex-col gap-1">
+                                <Badge
+                                  variant={
+                                    proposal.transactionSummary.type ===
+                                    "config"
+                                      ? "secondary"
+                                      : "outline"
+                                  }
+                                  className="w-fit text-xs"
+                                >
+                                  {proposal.transactionSummary.type}
+                                </Badge>
+                                <span className="text-muted-foreground text-xs">
+                                  {formatTransactionSummary(
+                                    proposal.transactionSummary
+                                  )}
+                                </span>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-1">
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                                <span className="text-muted-foreground text-xs">
+                                  Loading...
+                                </span>
+                              </div>
+                            )}
                           </TableCell>
                           <TableCell>
                             <Badge
@@ -1083,13 +1195,13 @@ export function MonitoringView() {
         action={batchPreviewAction}
         onExecuteProposal={async (proposal, multisig) => {
           if (batchPreviewAction === "approve") {
-            await approve(
+            await batchApprove(
               proposal.multisig,
               proposal.transactionIndex,
               multisig.chainId
             );
           } else {
-            await reject(
+            await batchReject(
               proposal.multisig,
               proposal.transactionIndex,
               multisig.chainId
@@ -1108,6 +1220,8 @@ export function MonitoringView() {
               `Failed to ${batchPreviewAction} ${failCount} proposal(s)`
             );
           }
+          // Reload proposals after batch operation completes
+          loadAllProposals();
         }}
       />
     </div>

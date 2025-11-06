@@ -1,7 +1,7 @@
 "use client";
 
 import { Plus, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
@@ -30,14 +30,37 @@ export function ManageTagsDialog({
   onOpenChange,
   multisig,
 }: ManageTagsDialogProps) {
-  const [newTag, setNewTag] = useState("");
-  const [tags, setTags] = useState<string[]>(multisig?.tags || []);
   const { updateMultisigTags, multisigs } = useMultisigStore();
+
+  // Get the latest multisig data from the store
+  const currentMultisig = multisig
+    ? multisigs.find(
+        (m) => m.publicKey.toString() === multisig.publicKey.toString()
+      )
+    : null;
+
+  const multisigKey = currentMultisig?.publicKey.toString();
+
+  // State with a key to track which multisig we're editing
+  const [editingKey, setEditingKey] = useState<string | undefined>();
+  const [newTag, setNewTag] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
 
   // Get all unique tags from all multisigs
   const allGlobalTags = Array.from(
     new Set(multisigs.flatMap((m) => m.tags || []))
   ).sort();
+
+  // Reset tags when multisig changes or dialog opens with a different multisig
+  if (open && multisigKey !== editingKey) {
+    setEditingKey(multisigKey);
+    setTags(currentMultisig?.tags || []);
+  }
+
+  // Clear editing key when dialog closes
+  if (!open && editingKey) {
+    setEditingKey(undefined);
+  }
 
   const handleAddTag = (tagToAdd?: string) => {
     const trimmedTag = (tagToAdd || newTag).trim();
@@ -60,9 +83,9 @@ export function ManageTagsDialog({
   };
 
   const handleSave = () => {
-    if (!multisig) return;
+    if (!currentMultisig) return;
 
-    updateMultisigTags(multisig.publicKey.toString(), tags);
+    updateMultisigTags(currentMultisig.publicKey.toString(), tags);
     toast.success("Tags updated successfully");
     onOpenChange(false);
   };
@@ -73,14 +96,6 @@ export function ManageTagsDialog({
       handleAddTag();
     }
   };
-
-  // Reset tags when dialog opens
-  useEffect(() => {
-    if (open && multisig) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setTags(multisig.tags || []);
-    }
-  }, [open, multisig]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -141,10 +156,13 @@ export function ManageTagsDialog({
                     className="flex items-center gap-1 px-3 py-1"
                   >
                     {tag}
-                    <X
-                      className="hover:text-destructive h-3 w-3 cursor-pointer"
+                    <button
+                      type="button"
                       onClick={() => handleRemoveTag(tag)}
-                    />
+                      className="hover:text-destructive ml-1 inline-flex"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
                   </Badge>
                 ))}
               </div>

@@ -8,17 +8,18 @@ import { SquadService } from "@/lib/squad";
 import { transactionSignerService } from "@/lib/transaction-signer";
 import { useChainStore } from "@/stores/chain-store";
 import { useWalletStore } from "@/stores/wallet-store";
-import { parseLedgerError } from "@/types/wallet";
+import { WalletType, parseLedgerError } from "@/types/wallet";
 
 interface UseProposalActionsOptions {
   onSuccess?: () => void | Promise<void>;
+  skipSuccessCallback?: boolean;
 }
 
 export function useProposalActions(options: UseProposalActionsOptions = {}) {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const { publicKey, derivationPath, walletType } = useWalletStore();
   const { chains } = useChainStore();
-  const wallet = useWallet();
+  const { signTransaction, connected: walletAdapterConnected } = useWallet();
 
   const getSquadService = useCallback(
     (chainId: string) => {
@@ -40,6 +41,20 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
         throw new Error(ERROR_MESSAGES.WALLET_NOT_CONNECTED);
       }
 
+      // For browser wallets, verify signTransaction is available
+      if (walletType === WalletType.BROWSER) {
+        if (!walletAdapterConnected) {
+          throw new Error(
+            "Browser wallet is not connected via wallet adapter. Please reconnect your wallet."
+          );
+        }
+        if (!signTransaction) {
+          throw new Error(
+            "Wallet does not support transaction signing. Please use a different wallet."
+          );
+        }
+      }
+
       const { blockhash } = await squadService
         .getConnection()
         .getLatestBlockhash();
@@ -51,9 +66,7 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
         {
           walletType,
           derivationPath,
-          walletAdapter: wallet.signTransaction
-            ? { signTransaction: wallet.signTransaction.bind(wallet) }
-            : undefined,
+          walletAdapter: signTransaction ? { signTransaction } : undefined,
         }
       );
 
@@ -65,7 +78,13 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
 
       return txid;
     },
-    [publicKey, walletType, derivationPath, wallet]
+    [
+      publicKey,
+      walletType,
+      derivationPath,
+      signTransaction,
+      walletAdapterConnected,
+    ]
   );
 
   const approve = useCallback(
@@ -96,7 +115,9 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
 
         toast.success(SUCCESS_MESSAGES.PROPOSAL_APPROVED);
         squadService.invalidateProposalCache(multisigPda);
-        await options.onSuccess?.();
+        if (!options.skipSuccessCallback) {
+          await options.onSuccess?.();
+        }
       } catch (error) {
         console.error("Failed to approve proposal:", error);
         const errorMessage = parseLedgerError(error);
@@ -137,7 +158,9 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
 
         toast.success(SUCCESS_MESSAGES.PROPOSAL_REJECTED);
         squadService.invalidateProposalCache(multisigPda);
-        await options.onSuccess?.();
+        if (!options.skipSuccessCallback) {
+          await options.onSuccess?.();
+        }
       } catch (error) {
         console.error("Failed to reject proposal:", error);
         const errorMessage = parseLedgerError(error);
@@ -183,7 +206,9 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
 
         toast.success(SUCCESS_MESSAGES.PROPOSAL_EXECUTED);
         squadService.invalidateProposalCache(multisigPda);
-        await options.onSuccess?.();
+        if (!options.skipSuccessCallback) {
+          await options.onSuccess?.();
+        }
       } catch (error) {
         console.error("Failed to execute proposal:", error);
         const errorMessage = parseLedgerError(error);
