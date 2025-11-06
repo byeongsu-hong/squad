@@ -15,6 +15,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { ManageTagsDialog } from "@/components/manage-tags-dialog";
+import { MultisigCardSkeletonList } from "@/components/skeletons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,6 +26,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { useDebounce } from "@/lib/hooks/use-debounce";
 import { SquadService } from "@/lib/squad";
 import { useChainStore } from "@/stores/chain-store";
 import { useMultisigStore } from "@/stores/multisig-store";
@@ -172,17 +174,21 @@ export function MultisigList() {
     return Array.from(tagSet).sort();
   }, [multisigs]);
 
+  const debouncedFilterText = useDebounce(filterText, 300);
+
   // Filter multisigs based on search text and selected tags
   const filteredMultisigs = useMemo(() => {
     return multisigs.filter((multisig) => {
       // Filter by text (label or address)
       const matchesText =
-        !filterText ||
-        multisig.label?.toLowerCase().includes(filterText.toLowerCase()) ||
+        !debouncedFilterText ||
+        multisig.label
+          ?.toLowerCase()
+          .includes(debouncedFilterText.toLowerCase()) ||
         multisig.publicKey
           .toString()
           .toLowerCase()
-          .includes(filterText.toLowerCase());
+          .includes(debouncedFilterText.toLowerCase());
 
       // Filter by tags (if any tags are selected, multisig must have at least one matching tag)
       const matchesTags =
@@ -191,7 +197,7 @@ export function MultisigList() {
 
       return matchesText && matchesTags;
     });
-  }, [multisigs, filterText, selectedFilterTags]);
+  }, [multisigs, debouncedFilterText, selectedFilterTags]);
 
   const toggleFilterTag = (tag: string) => {
     setSelectedFilterTags((prev) =>
@@ -317,121 +323,129 @@ export function MultisigList() {
         </Card>
       )}
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {filteredMultisigs.map((multisig) => {
-          const isSelected = selectedForDeletion.has(
-            multisig.publicKey.toString()
-          );
-          return (
-            <Card
-              key={multisig.publicKey.toString()}
-              className={isSelected ? "border-primary" : ""}
-            >
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <div className="flex min-w-0 flex-1 items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={() =>
-                        toggleSelect(multisig.publicKey.toString())
-                      }
-                      className="h-4 w-4 cursor-pointer"
-                    />
-                    {editingLabel === multisig.publicKey.toString() ? (
-                      <Input
-                        value={labelInput}
-                        onChange={(e) => setLabelInput(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            handleSaveLabel(multisig.publicKey.toString());
-                          } else if (e.key === "Escape") {
-                            handleCancelEdit();
-                          }
-                        }}
-                        onBlur={() =>
-                          handleSaveLabel(multisig.publicKey.toString())
+      {loading && <MultisigCardSkeletonList />}
+
+      {!loading && (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {filteredMultisigs.map((multisig) => {
+            const isSelected = selectedForDeletion.has(
+              multisig.publicKey.toString()
+            );
+            return (
+              <Card
+                key={multisig.publicKey.toString()}
+                className={isSelected ? "border-primary" : ""}
+              >
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    <div className="flex min-w-0 flex-1 items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() =>
+                          toggleSelect(multisig.publicKey.toString())
                         }
-                        placeholder="Enter label"
-                        className="h-7 text-sm"
-                        autoFocus
+                        className="h-4 w-4 cursor-pointer"
                       />
-                    ) : (
-                      <div className="flex min-w-0 flex-1 items-center gap-1">
-                        <span className="truncate text-sm font-medium">
-                          {multisig.label || "Unnamed"}
-                        </span>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6"
-                          onClick={() =>
-                            handleStartEditLabel(
-                              multisig.publicKey.toString(),
-                              multisig.label
-                            )
+                      {editingLabel === multisig.publicKey.toString() ? (
+                        <Input
+                          value={labelInput}
+                          onChange={(e) => setLabelInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              handleSaveLabel(multisig.publicKey.toString());
+                            } else if (e.key === "Escape") {
+                              handleCancelEdit();
+                            }
+                          }}
+                          onBlur={() =>
+                            handleSaveLabel(multisig.publicKey.toString())
                           }
-                        >
-                          <Pencil className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                  <Badge variant="secondary">
-                    {multisig.threshold}/{multisig.members.length}
-                  </Badge>
-                </CardTitle>
-                <CardDescription className="space-y-1">
-                  <div className="flex items-center gap-0.5">
-                    <div className="truncate font-mono text-xs">
-                      {multisig.publicKey.toString().slice(0, 8)}...
-                      {multisig.publicKey.toString().slice(-8)}
+                          placeholder="Enter label"
+                          className="h-7 text-sm"
+                          autoFocus
+                        />
+                      ) : (
+                        <div className="flex min-w-0 flex-1 items-center gap-1">
+                          <span className="truncate text-sm font-medium">
+                            {multisig.label || "Unnamed"}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={() =>
+                              handleStartEditLabel(
+                                multisig.publicKey.toString(),
+                                multisig.label
+                              )
+                            }
+                          >
+                            <Pencil className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      )}
                     </div>
-                    <Copy
-                      className="text-muted-foreground hover:text-foreground h-2.5 w-2.5 shrink-0 cursor-pointer transition-colors"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigator.clipboard.writeText(
-                          multisig.publicKey.toString()
-                        );
-                        toast.success("Address copied");
-                      }}
-                    />
-                  </div>
-                  <div className="flex flex-wrap items-center gap-1">
-                    <Badge variant="outline" className="text-xs">
-                      {chains.find((c) => c.id === multisig.chainId)?.name ||
-                        multisig.chainId}
+                    <Badge variant="secondary">
+                      {multisig.threshold}/{multisig.members.length}
                     </Badge>
-                    {multisig.tags?.map((tag) => (
-                      <Badge key={tag} variant="secondary" className="text-xs">
-                        {tag}
+                  </CardTitle>
+                  <CardDescription className="space-y-1">
+                    <div className="flex items-center gap-0.5">
+                      <div className="truncate font-mono text-xs">
+                        {multisig.publicKey.toString().slice(0, 8)}...
+                        {multisig.publicKey.toString().slice(-8)}
+                      </div>
+                      <Copy
+                        className="text-muted-foreground hover:text-foreground h-2.5 w-2.5 shrink-0 cursor-pointer transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigator.clipboard.writeText(
+                            multisig.publicKey.toString()
+                          );
+                          toast.success("Address copied");
+                        }}
+                      />
+                    </div>
+                    <div className="flex flex-wrap items-center gap-1">
+                      <Badge variant="outline" className="text-xs">
+                        {chains.find((c) => c.id === multisig.chainId)?.name ||
+                          multisig.chainId}
                       </Badge>
-                    ))}
+                      {multisig.tags?.map((tag) => (
+                        <Badge
+                          key={tag}
+                          variant="secondary"
+                          className="text-xs"
+                        >
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <div className="text-muted-foreground text-sm">
+                      <p>TX Index: {multisig.transactionIndex.toString()}</p>
+                      <p>Members: {multisig.members.length}</p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => handleOpenTagDialog(multisig)}
+                    >
+                      <Tag className="mr-2 h-3 w-3" />
+                      Manage Tags
+                    </Button>
                   </div>
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="text-muted-foreground text-sm">
-                    <p>TX Index: {multisig.transactionIndex.toString()}</p>
-                    <p>Members: {multisig.members.length}</p>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
-                    onClick={() => handleOpenTagDialog(multisig)}
-                  >
-                    <Tag className="mr-2 h-3 w-3" />
-                    Manage Tags
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
 
       <ManageTagsDialog
         open={tagDialogOpen}

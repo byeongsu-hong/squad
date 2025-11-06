@@ -2,14 +2,12 @@ import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import * as multisig from "@sqds/multisig";
 
 import { cache } from "./cache";
-
-const MAX_RETRIES = 3;
-const RETRY_DELAY = 1000; // 1 second
-const CACHE_TTL = 30000; // 30 seconds
-
-// Transaction account discriminators
-const CONFIG_TRANSACTION_DISCRIMINATOR = [94, 8, 4, 35, 113, 139, 139, 112];
-const VAULT_TRANSACTION_DISCRIMINATOR = [168, 250, 162, 100, 81, 14, 162, 207];
+import {
+  CACHE_CONFIG,
+  ERROR_MESSAGES,
+  RPC_CONFIG,
+  TRANSACTION_DISCRIMINATORS,
+} from "./config";
 
 async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -20,12 +18,12 @@ export class SquadService {
   private programId: PublicKey;
 
   constructor(rpcUrl: string, programId: string) {
-    this.connection = new Connection(rpcUrl, "confirmed");
+    this.connection = new Connection(rpcUrl, RPC_CONFIG.COMMITMENT);
     this.programId = new PublicKey(programId);
   }
 
   updateConnection(rpcUrl: string, programId: string) {
-    this.connection = new Connection(rpcUrl, "confirmed");
+    this.connection = new Connection(rpcUrl, RPC_CONFIG.COMMITMENT);
     this.programId = new PublicKey(programId);
   }
 
@@ -35,7 +33,7 @@ export class SquadService {
   ): Promise<T> {
     let lastError: Error | null = null;
 
-    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    for (let attempt = 1; attempt <= RPC_CONFIG.MAX_RETRIES; attempt++) {
       try {
         return await operation();
       } catch (error) {
@@ -45,18 +43,16 @@ export class SquadService {
 
         // Check for rate limit or 403 errors
         if (errorMessage.includes("403") || errorMessage.includes("429")) {
-          if (attempt < MAX_RETRIES) {
-            const delay = RETRY_DELAY * Math.pow(2, attempt - 1);
+          if (attempt < RPC_CONFIG.MAX_RETRIES) {
+            const delay = RPC_CONFIG.RETRY_DELAY * Math.pow(2, attempt - 1);
             console.warn(
-              `${operationName} failed (attempt ${attempt}/${MAX_RETRIES}), retrying in ${delay}ms...`
+              `${operationName} failed (attempt ${attempt}/${RPC_CONFIG.MAX_RETRIES}), retrying in ${delay}ms...`
             );
             await sleep(delay);
             continue;
           }
 
-          throw new Error(
-            `RPC rate limit exceeded. Please try again later or configure a custom RPC endpoint with higher limits (e.g., Helius, QuickNode, Alchemy).`
-          );
+          throw new Error(ERROR_MESSAGES.RPC_RATE_LIMIT);
         }
 
         // For other errors, don't retry
@@ -66,7 +62,9 @@ export class SquadService {
 
     throw (
       lastError ||
-      new Error(`${operationName} failed after ${MAX_RETRIES} attempts`)
+      new Error(
+        `${operationName} failed after ${RPC_CONFIG.MAX_RETRIES} attempts`
+      )
     );
   }
 
@@ -159,7 +157,7 @@ export class SquadService {
     }, "Get multisig");
 
     if (useCache) {
-      cache.set(cacheKey, result, CACHE_TTL);
+      cache.set(cacheKey, result, CACHE_CONFIG.TTL);
     }
 
     return result;
@@ -259,9 +257,11 @@ export class SquadService {
 
     // Compare with config transaction discriminator
     const isConfigTransaction =
-      discriminator.length === CONFIG_TRANSACTION_DISCRIMINATOR.length &&
+      discriminator.length ===
+        TRANSACTION_DISCRIMINATORS.CONFIG_TRANSACTION.length &&
       discriminator.every(
-        (byte, index) => byte === CONFIG_TRANSACTION_DISCRIMINATOR[index]
+        (byte, index) =>
+          byte === TRANSACTION_DISCRIMINATORS.CONFIG_TRANSACTION[index]
       );
 
     return isConfigTransaction ? "config" : "vault";
@@ -390,7 +390,7 @@ export class SquadService {
       .filter((p) => p !== null);
 
     if (useCache) {
-      cache.set(cacheKey, result, CACHE_TTL);
+      cache.set(cacheKey, result, CACHE_CONFIG.TTL);
     }
 
     return result;
@@ -454,7 +454,7 @@ export class SquadService {
     }, "Get vault transaction");
 
     if (useCache) {
-      cache.set(cacheKey, result, CACHE_TTL);
+      cache.set(cacheKey, result, CACHE_CONFIG.TTL);
     }
 
     return result;
@@ -497,7 +497,7 @@ export class SquadService {
     );
 
     if (useCache) {
-      cache.set(cacheKey, result, CACHE_TTL);
+      cache.set(cacheKey, result, CACHE_CONFIG.TTL);
     }
 
     return result;
@@ -527,6 +527,10 @@ export class SquadService {
 
   getConnection(): Connection {
     return this.connection;
+  }
+
+  getProgramId(): PublicKey {
+    return this.programId;
   }
 
   invalidateCache(multisigPda: PublicKey): void {

@@ -1,11 +1,22 @@
 "use client";
 
-import { useWallet } from "@solana/wallet-adapter-react";
-import { PublicKey, Transaction } from "@solana/web3.js";
-import { Check, Eye, Loader2, RefreshCw, Search, X } from "lucide-react";
+import {
+  Check,
+  Copy,
+  Download,
+  Eye,
+  Loader2,
+  RefreshCw,
+  Search,
+  X,
+} from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import { ActivityFeed } from "@/components/activity-feed";
+import { ProposalFilters } from "@/components/proposal-filters";
+import { ProposalStats } from "@/components/proposal-stats";
+import { ProposalTableSkeletonList } from "@/components/skeletons";
 import { TransactionDetailDialog } from "@/components/transaction-detail-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,6 +28,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Pagination } from "@/components/ui/pagination";
 import { Progress } from "@/components/ui/progress";
 import {
   Select,
@@ -39,13 +51,17 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { SUCCESS_MESSAGES } from "@/lib/config";
+import { exportProposalsToCSV } from "@/lib/export-csv";
+import { useDebounce } from "@/lib/hooks/use-debounce";
+import { usePagination } from "@/lib/hooks/use-pagination";
+import { useProposalActions } from "@/lib/hooks/use-proposal-actions";
 import { SquadService } from "@/lib/squad";
-import { transactionSignerService } from "@/lib/transaction-signer";
 import { useChainStore } from "@/stores/chain-store";
 import { useMultisigStore } from "@/stores/multisig-store";
 import { useWalletStore } from "@/stores/wallet-store";
 import type { MultisigAccount, ProposalAccount } from "@/types/multisig";
-import { parseLedgerError } from "@/types/wallet";
+import { toProposalStatus } from "@/types/multisig";
 
 interface ProposalWithMultisig extends ProposalAccount {
   multisigAccount: MultisigAccount;
@@ -55,8 +71,7 @@ interface ProposalWithMultisig extends ProposalAccount {
 export function MonitoringView() {
   const [loading, setLoading] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
-  const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("active");
   const [chainFilter, setChainFilter] = useState<string>("all");
   const [tagFilter, setTagFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -64,11 +79,15 @@ export function MonitoringView() {
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedProposal, setSelectedProposal] =
     useState<ProposalAccount | null>(null);
+  const [selectedProposals, setSelectedProposals] = useState<Set<string>>(
+    new Set()
+  );
+  const [batchOperationInProgress, setBatchOperationInProgress] =
+    useState(false);
 
-  const { publicKey, derivationPath, walletType } = useWalletStore();
+  const { publicKey } = useWalletStore();
   const { chains } = useChainStore();
   const { multisigs } = useMultisigStore();
-  const wallet = useWallet();
 
   const loadAllProposals = useCallback(async () => {
     if (multisigs.length === 0) return;
@@ -103,12 +122,12 @@ export function MonitoringView() {
           for (const acc of proposalAccounts) {
             if (!acc) continue;
 
-            const status = acc.account.status.__kind;
+            const status = toProposalStatus(acc.account.status.__kind);
             const proposal: ProposalWithMultisig = {
               multisig: acc.account.multisig,
               transactionIndex: BigInt(acc.account.transactionIndex.toString()),
               creator: multisig.publicKey,
-              status: status as ProposalAccount["status"],
+              status,
               approvals: acc.account.approved || [],
               rejections: acc.account.rejected || [],
               executed: status === "Executed",
@@ -151,6 +170,11 @@ export function MonitoringView() {
     }
   }, [multisigs, chains]);
 
+  const { approve, reject, execute, actionLoading, isActionInProgress } =
+    useProposalActions({
+      onSuccess: loadAllProposals,
+    });
+
   useEffect(() => {
     loadAllProposals();
   }, [loadAllProposals]);
@@ -175,194 +199,33 @@ export function MonitoringView() {
     proposal: ProposalWithMultisig,
     transactionIndex: bigint
   ) => {
-    if (!publicKey) return;
-
-    const chain = chains.find((c) => c.id === proposal.multisigAccount.chainId);
-    if (!chain) {
-      toast.error("Chain configuration not found");
-      return;
-    }
-
-    setActionLoading(
-      `approve-${proposal.multisig.toString()}-${transactionIndex}`
+    await approve(
+      proposal.multisig,
+      transactionIndex,
+      proposal.multisigAccount.chainId
     );
-    try {
-      const squadService = new SquadService(
-        chain.rpcUrl,
-        chain.squadsV4ProgramId
-      );
-
-      const instruction = await squadService.approveProposal({
-        multisigPda: proposal.multisig,
-        transactionIndex,
-        member: publicKey,
-      });
-
-      const transaction = new Transaction().add(instruction);
-      const { blockhash } = await squadService
-        .getConnection()
-        .getLatestBlockhash();
-      transaction.recentBlockhash = blockhash;
-      transaction.feePayer = publicKey;
-
-      const signedTransaction = await transactionSignerService.signTransaction(
-        transaction,
-        {
-          walletType,
-          derivationPath,
-          walletAdapter: wallet.signTransaction
-            ? { signTransaction: wallet.signTransaction.bind(wallet) }
-            : undefined,
-        }
-      );
-
-      const txid = await squadService
-        .getConnection()
-        .sendRawTransaction(signedTransaction.serialize());
-
-      await squadService.getConnection().confirmTransaction(txid);
-
-      toast.success("Proposal approved!");
-      squadService.invalidateProposalCache(proposal.multisig);
-      await loadAllProposals();
-    } catch (error) {
-      console.error("Failed to approve proposal:", error);
-      const errorMessage = parseLedgerError(error);
-      toast.error(errorMessage);
-    } finally {
-      setActionLoading(null);
-    }
   };
 
   const handleReject = async (
     proposal: ProposalWithMultisig,
     transactionIndex: bigint
   ) => {
-    if (!publicKey) return;
-
-    const chain = chains.find((c) => c.id === proposal.multisigAccount.chainId);
-    if (!chain) {
-      toast.error("Chain configuration not found");
-      return;
-    }
-
-    setActionLoading(
-      `reject-${proposal.multisig.toString()}-${transactionIndex}`
+    await reject(
+      proposal.multisig,
+      transactionIndex,
+      proposal.multisigAccount.chainId
     );
-    try {
-      const squadService = new SquadService(
-        chain.rpcUrl,
-        chain.squadsV4ProgramId
-      );
-
-      const instruction = await squadService.rejectProposal({
-        multisigPda: proposal.multisig,
-        transactionIndex,
-        member: publicKey,
-      });
-
-      const transaction = new Transaction().add(instruction);
-      const { blockhash } = await squadService
-        .getConnection()
-        .getLatestBlockhash();
-      transaction.recentBlockhash = blockhash;
-      transaction.feePayer = publicKey;
-
-      const signedTransaction = await transactionSignerService.signTransaction(
-        transaction,
-        {
-          walletType,
-          derivationPath,
-          walletAdapter: wallet.signTransaction
-            ? { signTransaction: wallet.signTransaction.bind(wallet) }
-            : undefined,
-        }
-      );
-
-      const txid = await squadService
-        .getConnection()
-        .sendRawTransaction(signedTransaction.serialize());
-
-      await squadService.getConnection().confirmTransaction(txid);
-
-      toast.success("Proposal rejected!");
-      squadService.invalidateProposalCache(proposal.multisig);
-      await loadAllProposals();
-    } catch (error) {
-      console.error("Failed to reject proposal:", error);
-      const errorMessage = parseLedgerError(error);
-      toast.error(errorMessage);
-    } finally {
-      setActionLoading(null);
-    }
   };
 
   const handleExecute = async (
     proposal: ProposalWithMultisig,
     transactionIndex: bigint
   ) => {
-    if (!publicKey) return;
-
-    const chain = chains.find((c) => c.id === proposal.multisigAccount.chainId);
-    if (!chain) {
-      toast.error("Chain configuration not found");
-      return;
-    }
-
-    setActionLoading(
-      `execute-${proposal.multisig.toString()}-${transactionIndex}`
+    await execute(
+      proposal.multisig,
+      transactionIndex,
+      proposal.multisigAccount.chainId
     );
-    try {
-      const squadService = new SquadService(
-        chain.rpcUrl,
-        chain.squadsV4ProgramId
-      );
-
-      const result = await squadService.executeProposal({
-        multisigPda: proposal.multisig,
-        transactionIndex,
-        member: publicKey,
-      });
-
-      const instruction =
-        typeof result === "object" && "instruction" in result
-          ? result.instruction
-          : result;
-
-      const transaction = new Transaction().add(instruction);
-      const { blockhash } = await squadService
-        .getConnection()
-        .getLatestBlockhash();
-      transaction.recentBlockhash = blockhash;
-      transaction.feePayer = publicKey;
-
-      const signedTransaction = await transactionSignerService.signTransaction(
-        transaction,
-        {
-          walletType,
-          derivationPath,
-          walletAdapter: wallet.signTransaction
-            ? { signTransaction: wallet.signTransaction.bind(wallet) }
-            : undefined,
-        }
-      );
-
-      const txid = await squadService
-        .getConnection()
-        .sendRawTransaction(signedTransaction.serialize());
-
-      await squadService.getConnection().confirmTransaction(txid);
-
-      toast.success("Proposal executed!");
-      squadService.invalidateProposalCache(proposal.multisig);
-      await loadAllProposals();
-    } catch (error) {
-      console.error("Failed to execute proposal:", error);
-      const errorMessage = parseLedgerError(error);
-      toast.error(errorMessage);
-    } finally {
-      setActionLoading(null);
-    }
   };
 
   const availableTags = useMemo(() => {
@@ -372,6 +235,8 @@ export function MonitoringView() {
     });
     return Array.from(tags).sort();
   }, [multisigs]);
+
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
   const filteredProposals = useMemo(() => {
     return proposals.filter((p) => {
@@ -393,8 +258,8 @@ export function MonitoringView() {
       }
 
       // Search filter (by multisig name or address)
-      if (searchQuery.trim()) {
-        const query = searchQuery.toLowerCase();
+      if (debouncedSearchQuery.trim()) {
+        const query = debouncedSearchQuery.toLowerCase();
         const name = (p.multisigAccount.label || "").toLowerCase();
         const address = p.multisig.toString().toLowerCase();
         if (!name.includes(query) && !address.includes(query)) return false;
@@ -402,7 +267,12 @@ export function MonitoringView() {
 
       return true;
     });
-  }, [proposals, statusFilter, chainFilter, tagFilter, searchQuery]);
+  }, [proposals, statusFilter, chainFilter, tagFilter, debouncedSearchQuery]);
+
+  const pagination = usePagination(filteredProposals, {
+    totalItems: filteredProposals.length,
+    itemsPerPage: 20,
+  });
 
   const isMemberOf = (proposal: ProposalWithMultisig) => {
     return (
@@ -440,6 +310,136 @@ export function MonitoringView() {
     setDetailDialogOpen(true);
   };
 
+  const handleExportCSV = () => {
+    const multisigMap = new Map(
+      multisigs.map((m) => [m.publicKey.toString(), m])
+    );
+    exportProposalsToCSV(filteredProposals, multisigMap);
+    toast.success(SUCCESS_MESSAGES.DATA_EXPORTED);
+  };
+
+  const toggleProposalSelection = (proposalKey: string) => {
+    setSelectedProposals((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(proposalKey)) {
+        newSet.delete(proposalKey);
+      } else {
+        newSet.add(proposalKey);
+      }
+      return newSet;
+    });
+  };
+
+  const selectAllProposals = () => {
+    const activeProposals = pagination.pageItems.filter(
+      (p) => !p.executed && !p.cancelled
+    );
+    setSelectedProposals(
+      new Set(
+        activeProposals.map(
+          (p) => `${p.multisig.toString()}-${p.transactionIndex}`
+        )
+      )
+    );
+  };
+
+  const clearSelection = () => {
+    setSelectedProposals(new Set());
+  };
+
+  const clearFilters = () => {
+    setStatusFilter("active");
+    setChainFilter("all");
+    setTagFilter("all");
+    setSearchQuery("");
+  };
+
+  const activeFilterCount =
+    (statusFilter !== "active" ? 1 : 0) +
+    (chainFilter !== "all" ? 1 : 0) +
+    (tagFilter !== "all" ? 1 : 0) +
+    (searchQuery.trim() ? 1 : 0);
+
+  const handleBatchApprove = async () => {
+    if (selectedProposals.size === 0) return;
+
+    setBatchOperationInProgress(true);
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const proposalKey of selectedProposals) {
+      const proposal = proposals.find(
+        (p) => `${p.multisig.toString()}-${p.transactionIndex}` === proposalKey
+      );
+
+      if (!proposal || !isMemberOf(proposal) || hasUserApproved(proposal)) {
+        continue;
+      }
+
+      try {
+        await approve(
+          proposal.multisig,
+          proposal.transactionIndex,
+          proposal.multisigAccount.chainId
+        );
+        successCount++;
+      } catch (error) {
+        console.error(`Failed to approve proposal ${proposalKey}:`, error);
+        failCount++;
+      }
+    }
+
+    setBatchOperationInProgress(false);
+    clearSelection();
+
+    if (successCount > 0) {
+      toast.success(`Approved ${successCount} proposal(s)`);
+    }
+    if (failCount > 0) {
+      toast.error(`Failed to approve ${failCount} proposal(s)`);
+    }
+  };
+
+  const handleBatchReject = async () => {
+    if (selectedProposals.size === 0) return;
+
+    setBatchOperationInProgress(true);
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const proposalKey of selectedProposals) {
+      const proposal = proposals.find(
+        (p) => `${p.multisig.toString()}-${p.transactionIndex}` === proposalKey
+      );
+
+      if (!proposal || !isMemberOf(proposal) || hasUserRejected(proposal)) {
+        continue;
+      }
+
+      try {
+        await reject(
+          proposal.multisig,
+          proposal.transactionIndex,
+          proposal.multisigAccount.chainId
+        );
+        successCount++;
+      } catch (error) {
+        console.error(`Failed to reject proposal ${proposalKey}:`, error);
+        failCount++;
+      }
+    }
+
+    setBatchOperationInProgress(false);
+    clearSelection();
+
+    if (successCount > 0) {
+      toast.success(`Rejected ${successCount} proposal(s)`);
+    }
+    if (failCount > 0) {
+      toast.error(`Failed to reject ${failCount} proposal(s)`);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -449,18 +449,60 @@ export function MonitoringView() {
             View and manage proposals across all multisigs
           </p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleRefresh}
-          disabled={loading}
-        >
-          {loading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <RefreshCw className="h-4 w-4" />
+        <div className="flex items-center gap-2">
+          {selectedProposals.size > 0 && (
+            <>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleBatchApprove}
+                disabled={batchOperationInProgress || isActionInProgress}
+              >
+                <Check className="mr-1 h-4 w-4" />
+                Approve ({selectedProposals.size})
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleBatchReject}
+                disabled={batchOperationInProgress || isActionInProgress}
+              >
+                <X className="mr-1 h-4 w-4" />
+                Reject ({selectedProposals.size})
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={clearSelection}
+                disabled={batchOperationInProgress || isActionInProgress}
+              >
+                Clear
+              </Button>
+            </>
           )}
-        </Button>
+          {filteredProposals.length > 0 && selectedProposals.size === 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportCSV}
+              disabled={loading}
+            >
+              <Download className="h-4 w-4" />
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={loading}
+          >
+            {loading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
       </div>
 
       <Card>
@@ -521,14 +563,14 @@ export function MonitoringView() {
 
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-[160px]">
-                <SelectValue placeholder="All Status" />
+                <SelectValue placeholder="Status Filter" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="executed">Executed</SelectItem>
-                <SelectItem value="rejected">Rejected</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
+                <SelectItem value="active">🟢 Active</SelectItem>
+                <SelectItem value="executed">✅ Executed</SelectItem>
+                <SelectItem value="rejected">❌ Rejected</SelectItem>
+                <SelectItem value="cancelled">🚫 Cancelled</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -551,6 +593,26 @@ export function MonitoringView() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-12">
+                      <input
+                        type="checkbox"
+                        checked={
+                          selectedProposals.size > 0 &&
+                          selectedProposals.size ===
+                            pagination.pageItems.filter(
+                              (p) => !p.executed && !p.cancelled
+                            ).length
+                        }
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            selectAllProposals();
+                          } else {
+                            clearSelection();
+                          }
+                        }}
+                        className="h-4 w-4 cursor-pointer"
+                      />
+                    </TableHead>
                     <TableHead>Multisig</TableHead>
                     <TableHead>Chain</TableHead>
                     <TableHead>Proposal #</TableHead>
@@ -560,208 +622,254 @@ export function MonitoringView() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredProposals.map((proposal) => {
-                    const isMember = isMemberOf(proposal);
-                    const userApproved = hasUserApproved(proposal);
-                    const userRejected = hasUserRejected(proposal);
-                    const thresholdMet = hasMetThreshold(proposal);
-                    const chain = chains.find(
-                      (c) => c.id === proposal.multisigAccount.chainId
-                    );
-                    const actionKey = `${proposal.multisig.toString()}-${proposal.transactionIndex}`;
+                  {loading && <ProposalTableSkeletonList />}
+                  {!loading &&
+                    pagination.pageItems.map((proposal) => {
+                      const isMember = isMemberOf(proposal);
+                      const userApproved = hasUserApproved(proposal);
+                      const userRejected = hasUserRejected(proposal);
+                      const thresholdMet = hasMetThreshold(proposal);
+                      const chain = chains.find(
+                        (c) => c.id === proposal.multisigAccount.chainId
+                      );
+                      const actionKey = `${proposal.multisig.toString()}-${proposal.transactionIndex}`;
+                      const isSelected = selectedProposals.has(actionKey);
+                      const canSelect =
+                        !proposal.executed && !proposal.cancelled;
 
-                    return (
-                      <TableRow key={actionKey}>
-                        <TableCell className="font-medium">
-                          <div className="flex flex-col gap-1">
-                            <span>
-                              {proposal.multisigAccount.label || "Unnamed"}
-                            </span>
-                            <span className="text-muted-foreground text-xs">
-                              {proposal.multisig.toString().slice(0, 8)}...
-                              {proposal.multisig.toString().slice(-8)}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">
-                            {chain?.name || "Unknown"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          #{proposal.transactionIndex.toString()}
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={
-                              proposal.status === "Executed"
-                                ? "default"
-                                : proposal.status === "Active"
-                                  ? "secondary"
-                                  : "destructive"
-                            }
-                          >
-                            {proposal.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <div className="flex items-center gap-1">
-                              <Check className="h-3 w-3 text-green-500" />
-                              <span
-                                className={
-                                  thresholdMet
-                                    ? "font-semibold text-green-600"
-                                    : ""
+                      return (
+                        <TableRow key={actionKey}>
+                          <TableCell>
+                            {canSelect && (
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() =>
+                                  toggleProposalSelection(actionKey)
                                 }
-                              >
-                                {proposal.approvals.length}/
-                                {proposal.multisigAccount.threshold}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <X className="h-3 w-3 text-red-500" />
-                              <span>{proposal.rejections.length}</span>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-1">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-8 w-8 p-0"
-                              onClick={() => handleViewDetail(proposal)}
-                            >
-                              <Eye className="h-3 w-3" />
-                            </Button>
-                            {!proposal.executed && !proposal.cancelled && (
-                              <>
-                                {!isMember ||
-                                actionLoading !== null ||
-                                userApproved ? (
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <span>
-                                          <Button
-                                            size="sm"
-                                            variant="ghost"
-                                            className="h-8 w-8 p-0 hover:bg-green-500 hover:text-white"
-                                            disabled
-                                          >
-                                            {actionLoading ===
-                                            `approve-${actionKey}` ? (
-                                              <Loader2 className="h-3 w-3 animate-spin" />
-                                            ) : (
-                                              <Check className="h-3 w-3" />
-                                            )}
-                                          </Button>
-                                        </span>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        {userApproved
-                                          ? "Already Approved"
-                                          : !isMember
-                                            ? "Not a member"
-                                            : "Action in progress"}
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                ) : (
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    className="h-8 w-8 p-0 hover:bg-green-500 hover:text-white"
-                                    onClick={() =>
-                                      handleApprove(
-                                        proposal,
-                                        proposal.transactionIndex
-                                      )
-                                    }
-                                  >
-                                    <Check className="h-3 w-3" />
-                                  </Button>
-                                )}
-
-                                {!isMember ||
-                                actionLoading !== null ||
-                                userRejected ? (
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <span>
-                                          <Button
-                                            size="sm"
-                                            variant="ghost"
-                                            className="h-8 w-8 p-0 hover:bg-red-500 hover:text-white"
-                                            disabled
-                                          >
-                                            {actionLoading ===
-                                            `reject-${actionKey}` ? (
-                                              <Loader2 className="h-3 w-3 animate-spin" />
-                                            ) : (
-                                              <X className="h-3 w-3" />
-                                            )}
-                                          </Button>
-                                        </span>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        {userRejected
-                                          ? "Already Rejected"
-                                          : !isMember
-                                            ? "Not a member"
-                                            : "Action in progress"}
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                ) : (
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    className="h-8 w-8 p-0 hover:bg-red-500 hover:text-white"
-                                    onClick={() =>
-                                      handleReject(
-                                        proposal,
-                                        proposal.transactionIndex
-                                      )
-                                    }
-                                  >
-                                    <X className="h-3 w-3" />
-                                  </Button>
-                                )}
-
-                                {thresholdMet && (
-                                  <Button
-                                    size="sm"
-                                    variant="secondary"
-                                    className="ml-1"
-                                    onClick={() =>
-                                      handleExecute(
-                                        proposal,
-                                        proposal.transactionIndex
-                                      )
-                                    }
-                                    disabled={
-                                      !isMember || actionLoading !== null
-                                    }
-                                  >
-                                    {actionLoading ===
-                                    `execute-${actionKey}` ? (
-                                      <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                                    ) : null}
-                                    Execute
-                                  </Button>
-                                )}
-                              </>
+                                className="h-4 w-4 cursor-pointer"
+                              />
                             )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
+                          </TableCell>
+                          <TableCell className="font-medium">
+                            <div className="flex items-center gap-2">
+                              <div className="flex flex-col gap-1">
+                                <span>
+                                  {proposal.multisigAccount.label || "Unnamed"}
+                                </span>
+                                <span className="text-muted-foreground text-xs">
+                                  {proposal.multisig.toString().slice(0, 8)}...
+                                  {proposal.multisig.toString().slice(-8)}
+                                </span>
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigator.clipboard.writeText(
+                                    proposal.multisig.toString()
+                                  );
+                                  toast.success("Multisig address copied");
+                                }}
+                              >
+                                <Copy className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">
+                              {chain?.name || "Unknown"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            #{proposal.transactionIndex.toString()}
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant={
+                                proposal.status === "Executed"
+                                  ? "default"
+                                  : proposal.status === "Active"
+                                    ? "secondary"
+                                    : "destructive"
+                              }
+                            >
+                              {proposal.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-1">
+                                <Check className="h-3 w-3 text-green-500" />
+                                <span
+                                  className={
+                                    thresholdMet
+                                      ? "font-semibold text-green-600"
+                                      : ""
+                                  }
+                                >
+                                  {proposal.approvals.length}/
+                                  {proposal.multisigAccount.threshold}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <X className="h-3 w-3 text-red-500" />
+                                <span>{proposal.rejections.length}</span>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-8 w-8 p-0"
+                                onClick={() => handleViewDetail(proposal)}
+                              >
+                                <Eye className="h-3 w-3" />
+                              </Button>
+                              {!proposal.executed && !proposal.cancelled && (
+                                <>
+                                  {!isMember ||
+                                  isActionInProgress ||
+                                  userApproved ? (
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <span>
+                                            <Button
+                                              size="sm"
+                                              variant="ghost"
+                                              className="h-8 w-8 p-0 hover:bg-green-500 hover:text-white"
+                                              disabled
+                                            >
+                                              {actionLoading ===
+                                              `approve-${actionKey}` ? (
+                                                <Loader2 className="h-3 w-3 animate-spin" />
+                                              ) : (
+                                                <Check className="h-3 w-3" />
+                                              )}
+                                            </Button>
+                                          </span>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          {userApproved
+                                            ? "Already Approved"
+                                            : !isMember
+                                              ? "Not a member"
+                                              : "Action in progress"}
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  ) : (
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-8 w-8 p-0 hover:bg-green-500 hover:text-white"
+                                      onClick={() =>
+                                        handleApprove(
+                                          proposal,
+                                          proposal.transactionIndex
+                                        )
+                                      }
+                                    >
+                                      <Check className="h-3 w-3" />
+                                    </Button>
+                                  )}
+
+                                  {!isMember ||
+                                  isActionInProgress ||
+                                  userRejected ? (
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <span>
+                                            <Button
+                                              size="sm"
+                                              variant="ghost"
+                                              className="h-8 w-8 p-0 hover:bg-red-500 hover:text-white"
+                                              disabled
+                                            >
+                                              {actionLoading ===
+                                              `reject-${actionKey}` ? (
+                                                <Loader2 className="h-3 w-3 animate-spin" />
+                                              ) : (
+                                                <X className="h-3 w-3" />
+                                              )}
+                                            </Button>
+                                          </span>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          {userRejected
+                                            ? "Already Rejected"
+                                            : !isMember
+                                              ? "Not a member"
+                                              : "Action in progress"}
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  ) : (
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-8 w-8 p-0 hover:bg-red-500 hover:text-white"
+                                      onClick={() =>
+                                        handleReject(
+                                          proposal,
+                                          proposal.transactionIndex
+                                        )
+                                      }
+                                    >
+                                      <X className="h-3 w-3" />
+                                    </Button>
+                                  )}
+
+                                  {thresholdMet && (
+                                    <Button
+                                      size="sm"
+                                      variant="secondary"
+                                      className="ml-1"
+                                      onClick={() =>
+                                        handleExecute(
+                                          proposal,
+                                          proposal.transactionIndex
+                                        )
+                                      }
+                                      disabled={!isMember || isActionInProgress}
+                                    >
+                                      {actionLoading ===
+                                      `execute-${actionKey}` ? (
+                                        <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                                      ) : null}
+                                      Execute
+                                    </Button>
+                                  )}
+                                </>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                 </TableBody>
               </Table>
+
+              {filteredProposals.length > 0 && (
+                <div className="mt-4">
+                  <Pagination
+                    currentPage={pagination.currentPage}
+                    totalPages={pagination.totalPages}
+                    onPageChange={pagination.goToPage}
+                    canGoNext={pagination.canGoNext}
+                    canGoPrevious={pagination.canGoPrevious}
+                    startIndex={pagination.startIndex}
+                    endIndex={pagination.endIndex}
+                    totalItems={filteredProposals.length}
+                  />
+                </div>
+              )}
             </div>
           )}
         </CardContent>
@@ -771,6 +879,15 @@ export function MonitoringView() {
         open={detailDialogOpen}
         onOpenChange={setDetailDialogOpen}
         proposal={selectedProposal}
+        multisig={
+          selectedProposal
+            ? multisigs.find(
+                (m) =>
+                  m.publicKey.toString() ===
+                  selectedProposal.multisig.toString()
+              )
+            : undefined
+        }
       />
     </div>
   );

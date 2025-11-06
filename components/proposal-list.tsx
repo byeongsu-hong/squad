@@ -1,11 +1,11 @@
 "use client";
 
-import { useWallet } from "@solana/wallet-adapter-react";
-import { Transaction } from "@solana/web3.js";
 import { Check, Copy, Eye, Loader2, RefreshCw, X } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import { MultisigStatsCard } from "@/components/multisig-stats-card";
+import { ProposalCardSkeletonList } from "@/components/skeletons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,13 +21,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useProposalActions } from "@/lib/hooks/use-proposal-actions";
 import { SquadService } from "@/lib/squad";
-import { transactionSignerService } from "@/lib/transaction-signer";
 import { useChainStore } from "@/stores/chain-store";
 import { useMultisigStore } from "@/stores/multisig-store";
 import { useWalletStore } from "@/stores/wallet-store";
 import type { ProposalAccount } from "@/types/multisig";
-import { parseLedgerError } from "@/types/wallet";
+import { toProposalStatus } from "@/types/multisig";
 
 import { TransactionDetailDialog } from "./transaction-detail-dialog";
 
@@ -41,16 +41,14 @@ export function ProposalList({
   refreshTrigger,
 }: ProposalListProps = {}) {
   const [loading, setLoading] = useState(false);
-  const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedProposal, setSelectedProposal] =
     useState<ProposalAccount | null>(null);
 
-  const { publicKey, derivationPath, walletType } = useWalletStore();
+  const { publicKey } = useWalletStore();
   const { chains } = useChainStore();
   const { proposals, setProposals, getSelectedMultisig, selectedMultisigKey } =
     useMultisigStore();
-  const wallet = useWallet();
 
   const selectedMultisig = getSelectedMultisig();
 
@@ -95,12 +93,12 @@ export function ProposalList({
       for (const acc of proposalAccounts) {
         if (!acc) continue;
 
-        const status = acc.account.status.__kind;
+        const status = toProposalStatus(acc.account.status.__kind);
         const proposal: ProposalAccount = {
           multisig: acc.account.multisig,
           transactionIndex: BigInt(acc.account.transactionIndex.toString()),
           creator: multisig.publicKey,
-          status: status as ProposalAccount["status"],
+          status,
           approvals: acc.account.approved || [],
           rejections: acc.account.rejected || [],
           executed: status === "Executed",
@@ -125,9 +123,24 @@ export function ProposalList({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedMultisigKey, onLoadingChange, chains]);
 
+  const { approve, reject, execute, actionLoading, isActionInProgress } =
+    useProposalActions({
+      onSuccess: loadProposals,
+    });
+
   useEffect(() => {
     loadProposals();
   }, [loadProposals, refreshTrigger]);
+
+  const activeProposalsCount = useMemo(
+    () => proposals.filter((p) => p.status === "Active").length,
+    [proposals]
+  );
+
+  const executedProposalsCount = useMemo(
+    () => proposals.filter((p) => p.executed).length,
+    [proposals]
+  );
 
   const handleRefresh = async () => {
     const multisig = getSelectedMultisig();
@@ -148,462 +161,336 @@ export function ProposalList({
   };
 
   const handleApprove = async (transactionIndex: bigint) => {
-    if (!publicKey || !selectedMultisig) return;
-
-    const chain = chains.find((c) => c.id === selectedMultisig.chainId);
-    if (!chain) {
-      toast.error("Chain configuration not found");
-      return;
-    }
-
-    setActionLoading(`approve-${transactionIndex}`);
-    try {
-      const squadService = new SquadService(
-        chain.rpcUrl,
-        chain.squadsV4ProgramId
-      );
-
-      const instruction = await squadService.approveProposal({
-        multisigPda: selectedMultisig.publicKey,
-        transactionIndex,
-        member: publicKey,
-      });
-
-      const transaction = new Transaction().add(instruction);
-      const { blockhash } = await squadService
-        .getConnection()
-        .getLatestBlockhash();
-      transaction.recentBlockhash = blockhash;
-      transaction.feePayer = publicKey;
-
-      const signedTransaction = await transactionSignerService.signTransaction(
-        transaction,
-        {
-          walletType,
-          derivationPath,
-          walletAdapter: wallet.signTransaction
-            ? { signTransaction: wallet.signTransaction.bind(wallet) }
-            : undefined,
-        }
-      );
-
-      const txid = await squadService
-        .getConnection()
-        .sendRawTransaction(signedTransaction.serialize());
-
-      await squadService.getConnection().confirmTransaction(txid);
-
-      toast.success("Proposal approved!");
-      squadService.invalidateProposalCache(selectedMultisig.publicKey);
-      await loadProposals();
-    } catch (error) {
-      console.error("Failed to approve proposal:", error);
-      const errorMessage = parseLedgerError(error);
-      toast.error(errorMessage);
-    } finally {
-      setActionLoading(null);
-    }
+    if (!selectedMultisig) return;
+    await approve(
+      selectedMultisig.publicKey,
+      transactionIndex,
+      selectedMultisig.chainId
+    );
   };
 
   const handleReject = async (transactionIndex: bigint) => {
-    if (!publicKey || !selectedMultisig) return;
-
-    const chain = chains.find((c) => c.id === selectedMultisig.chainId);
-    if (!chain) {
-      toast.error("Chain configuration not found");
-      return;
-    }
-
-    setActionLoading(`reject-${transactionIndex}`);
-    try {
-      const squadService = new SquadService(
-        chain.rpcUrl,
-        chain.squadsV4ProgramId
-      );
-
-      const instruction = await squadService.rejectProposal({
-        multisigPda: selectedMultisig.publicKey,
-        transactionIndex,
-        member: publicKey,
-      });
-
-      const transaction = new Transaction().add(instruction);
-      const { blockhash } = await squadService
-        .getConnection()
-        .getLatestBlockhash();
-      transaction.recentBlockhash = blockhash;
-      transaction.feePayer = publicKey;
-
-      const signedTransaction = await transactionSignerService.signTransaction(
-        transaction,
-        {
-          walletType,
-          derivationPath,
-          walletAdapter: wallet.signTransaction
-            ? { signTransaction: wallet.signTransaction.bind(wallet) }
-            : undefined,
-        }
-      );
-
-      const txid = await squadService
-        .getConnection()
-        .sendRawTransaction(signedTransaction.serialize());
-
-      await squadService.getConnection().confirmTransaction(txid);
-
-      toast.success("Proposal rejected!");
-      squadService.invalidateProposalCache(selectedMultisig.publicKey);
-      await loadProposals();
-    } catch (error) {
-      console.error("Failed to reject proposal:", error);
-      const errorMessage = parseLedgerError(error);
-      toast.error(errorMessage);
-    } finally {
-      setActionLoading(null);
-    }
+    if (!selectedMultisig) return;
+    await reject(
+      selectedMultisig.publicKey,
+      transactionIndex,
+      selectedMultisig.chainId
+    );
   };
 
   const handleExecute = async (transactionIndex: bigint) => {
-    if (!publicKey || !selectedMultisig) return;
-
-    const chain = chains.find((c) => c.id === selectedMultisig.chainId);
-    if (!chain) {
-      toast.error("Chain configuration not found");
-      return;
-    }
-
-    setActionLoading(`execute-${transactionIndex}`);
-    try {
-      const squadService = new SquadService(
-        chain.rpcUrl,
-        chain.squadsV4ProgramId
-      );
-
-      const result = await squadService.executeProposal({
-        multisigPda: selectedMultisig.publicKey,
-        transactionIndex,
-        member: publicKey,
-      });
-
-      const instruction =
-        typeof result === "object" && "instruction" in result
-          ? result.instruction
-          : result;
-
-      const transaction = new Transaction().add(instruction);
-      const { blockhash } = await squadService
-        .getConnection()
-        .getLatestBlockhash();
-      transaction.recentBlockhash = blockhash;
-      transaction.feePayer = publicKey;
-
-      const signedTransaction = await transactionSignerService.signTransaction(
-        transaction,
-        {
-          walletType,
-          derivationPath,
-          walletAdapter: wallet.signTransaction
-            ? { signTransaction: wallet.signTransaction.bind(wallet) }
-            : undefined,
-        }
-      );
-
-      const txid = await squadService
-        .getConnection()
-        .sendRawTransaction(signedTransaction.serialize());
-
-      await squadService.getConnection().confirmTransaction(txid);
-
-      toast.success("Proposal executed!");
-      squadService.invalidateProposalCache(selectedMultisig.publicKey);
-      await loadProposals();
-    } catch (error) {
-      console.error("Failed to execute proposal:", error);
-      const errorMessage = parseLedgerError(error);
-      toast.error(errorMessage);
-    } finally {
-      setActionLoading(null);
-    }
+    if (!selectedMultisig) return;
+    await execute(
+      selectedMultisig.publicKey,
+      transactionIndex,
+      selectedMultisig.chainId
+    );
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold">Proposals</h2>
-          {selectedMultisig && (
-            <div className="flex flex-col gap-0.5">
-              <p className="text-muted-foreground text-sm">
-                {selectedMultisig.label || "Unnamed"} ·{" "}
-                {chains.find((c) => c.id === selectedMultisig.chainId)?.name ||
-                  "Unknown Chain"}
-              </p>
-              <div className="flex items-center gap-1">
+    <div className="grid gap-6 lg:grid-cols-3">
+      {/* Main Content */}
+      <div className="space-y-4 lg:col-span-2">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h2 className="text-2xl font-bold">Proposals</h2>
+            {selectedMultisig && (
+              <div className="flex flex-col gap-0.5">
                 <p className="text-muted-foreground text-sm">
-                  {selectedMultisig.publicKey.toString().slice(0, 6)}...
-                  {selectedMultisig.publicKey.toString().slice(-4)}
+                  {selectedMultisig.label || "Unnamed"} ·{" "}
+                  {chains.find((c) => c.id === selectedMultisig.chainId)
+                    ?.name || "Unknown Chain"}
                 </p>
-                <Copy
-                  className="text-muted-foreground hover:text-foreground h-3 w-3 cursor-pointer transition-colors"
-                  onClick={() => {
-                    navigator.clipboard.writeText(
-                      selectedMultisig.publicKey.toString()
-                    );
-                    toast.success("Address copied");
-                  }}
-                />
+                <div className="flex items-center gap-1">
+                  <p className="text-muted-foreground text-sm">
+                    {selectedMultisig.publicKey.toString().slice(0, 6)}...
+                    {selectedMultisig.publicKey.toString().slice(-4)}
+                  </p>
+                  <Copy
+                    className="text-muted-foreground hover:text-foreground h-3 w-3 cursor-pointer transition-colors"
+                    onClick={() => {
+                      navigator.clipboard.writeText(
+                        selectedMultisig.publicKey.toString()
+                      );
+                      toast.success("Address copied");
+                    }}
+                  />
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRefresh}
+              disabled={loading || !selectedMultisig}
+            >
+              {loading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleRefresh}
-          disabled={loading || !selectedMultisig}
-        >
-          {loading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <RefreshCw className="h-4 w-4" />
-          )}
-        </Button>
+
+        {!selectedMultisig && (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <p className="text-muted-foreground">
+                Select a multisig from the sidebar to view proposals
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {selectedMultisig && (
+          <>
+            {proposals.length === 0 && !loading && (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-12">
+                  <p className="text-muted-foreground">No proposals found</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {loading && <ProposalCardSkeletonList />}
+            {!loading && (
+              <div className="space-y-4">
+                {proposals.map((proposal: ProposalAccount) => {
+                  const approvalCount = proposal.approvals.length;
+                  const hasMetThreshold =
+                    selectedMultisig &&
+                    approvalCount >= selectedMultisig.threshold;
+
+                  // Check if current user has already approved or rejected
+                  const currentUserApproved = publicKey
+                    ? proposal.approvals.some(
+                        (approver) =>
+                          approver.toString() === publicKey.toString()
+                      )
+                    : false;
+
+                  const currentUserRejected = publicKey
+                    ? proposal.rejections.some(
+                        (rejector) =>
+                          rejector.toString() === publicKey.toString()
+                      )
+                    : false;
+
+                  return (
+                    <Card key={proposal.transactionIndex.toString()}>
+                      <CardHeader>
+                        <CardTitle className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span>
+                              Proposal #{proposal.transactionIndex.toString()}
+                            </span>
+                            {currentUserApproved && (
+                              <Badge variant="default" className="bg-green-600">
+                                Approved
+                              </Badge>
+                            )}
+                            {currentUserRejected && (
+                              <Badge variant="destructive">Rejected</Badge>
+                            )}
+                          </div>
+                          <Badge>{proposal.status}</Badge>
+                        </CardTitle>
+                        <CardDescription>
+                          <div className="flex items-center gap-0.5">
+                            <span>
+                              Creator: {proposal.creator.toString().slice(0, 8)}
+                              ...
+                              {proposal.creator.toString().slice(-8)}
+                            </span>
+                            <Copy
+                              className="text-muted-foreground hover:text-foreground h-2.5 w-2.5 cursor-pointer transition-colors"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigator.clipboard.writeText(
+                                  proposal.creator.toString()
+                                );
+                                toast.success("Creator address copied");
+                              }}
+                            />
+                          </div>
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          <div className="flex gap-2 text-sm">
+                            <div className="flex items-center gap-1">
+                              <Check className="h-4 w-4 text-green-500" />
+                              <span>
+                                Approvals: {approvalCount}
+                                {selectedMultisig &&
+                                  ` / ${selectedMultisig.threshold}`}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <X className="h-4 w-4 text-red-500" />
+                              <span>
+                                Rejections: {proposal.rejections.length}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleViewDetail(proposal)}
+                            >
+                              <Eye className="mr-2 h-4 w-4" />
+                              Details
+                            </Button>
+
+                            {!proposal.executed && !proposal.cancelled && (
+                              <>
+                                {!isMember ||
+                                isActionInProgress ||
+                                currentUserApproved ? (
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <span>
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="hover:bg-green-500 hover:text-white"
+                                            onClick={() =>
+                                              handleApprove(
+                                                proposal.transactionIndex
+                                              )
+                                            }
+                                            disabled={true}
+                                          >
+                                            {actionLoading ===
+                                            `approve-${proposal.transactionIndex}` ? (
+                                              <Loader2 className="h-4 w-4 animate-spin" />
+                                            ) : (
+                                              <Check className="h-4 w-4" />
+                                            )}
+                                          </Button>
+                                        </span>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        {currentUserApproved
+                                          ? "Already Approved"
+                                          : !isMember
+                                            ? "Not a member"
+                                            : "Action in progress"}
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                ) : (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="hover:bg-green-500 hover:text-white"
+                                    onClick={() =>
+                                      handleApprove(proposal.transactionIndex)
+                                    }
+                                  >
+                                    <Check className="h-4 w-4" />
+                                  </Button>
+                                )}
+                                {!isMember ||
+                                isActionInProgress ||
+                                currentUserRejected ? (
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <span>
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="hover:bg-red-500 hover:text-white"
+                                            onClick={() =>
+                                              handleReject(
+                                                proposal.transactionIndex
+                                              )
+                                            }
+                                            disabled={true}
+                                          >
+                                            {actionLoading ===
+                                            `reject-${proposal.transactionIndex}` ? (
+                                              <Loader2 className="h-4 w-4 animate-spin" />
+                                            ) : (
+                                              <X className="h-4 w-4" />
+                                            )}
+                                          </Button>
+                                        </span>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        {currentUserRejected
+                                          ? "Already Rejected"
+                                          : !isMember
+                                            ? "Not a member"
+                                            : "Action in progress"}
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                ) : (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="hover:bg-red-500 hover:text-white"
+                                    onClick={() =>
+                                      handleReject(proposal.transactionIndex)
+                                    }
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                )}
+                                {hasMetThreshold && (
+                                  <Button
+                                    size="sm"
+                                    variant="secondary"
+                                    onClick={() =>
+                                      handleExecute(proposal.transactionIndex)
+                                    }
+                                    disabled={!isMember || isActionInProgress}
+                                  >
+                                    {actionLoading ===
+                                    `execute-${proposal.transactionIndex}` ? (
+                                      <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                                    ) : null}
+                                    Execute
+                                  </Button>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </>
+        )}
       </div>
 
-      {!selectedMultisig && (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <p className="text-muted-foreground">
-              Select a multisig from the sidebar to view proposals
-            </p>
-          </CardContent>
-        </Card>
-      )}
-
-      {selectedMultisig && (
-        <>
-          {proposals.length === 0 && !loading && (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <p className="text-muted-foreground">No proposals found</p>
-              </CardContent>
-            </Card>
-          )}
-
-          <div className="space-y-4">
-            {proposals.map((proposal: ProposalAccount) => {
-              const approvalCount = proposal.approvals.length;
-              const hasMetThreshold =
-                selectedMultisig && approvalCount >= selectedMultisig.threshold;
-
-              // Check if current user has already approved or rejected
-              const currentUserApproved = publicKey
-                ? proposal.approvals.some(
-                    (approver) => approver.toString() === publicKey.toString()
-                  )
-                : false;
-
-              const currentUserRejected = publicKey
-                ? proposal.rejections.some(
-                    (rejector) => rejector.toString() === publicKey.toString()
-                  )
-                : false;
-
-              return (
-                <Card key={proposal.transactionIndex.toString()}>
-                  <CardHeader>
-                    <CardTitle className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span>
-                          Proposal #{proposal.transactionIndex.toString()}
-                        </span>
-                        {currentUserApproved && (
-                          <Badge variant="default" className="bg-green-600">
-                            Approved
-                          </Badge>
-                        )}
-                        {currentUserRejected && (
-                          <Badge variant="destructive">Rejected</Badge>
-                        )}
-                      </div>
-                      <Badge>{proposal.status}</Badge>
-                    </CardTitle>
-                    <CardDescription>
-                      <div className="flex items-center gap-0.5">
-                        <span>
-                          Creator: {proposal.creator.toString().slice(0, 8)}...
-                          {proposal.creator.toString().slice(-8)}
-                        </span>
-                        <Copy
-                          className="text-muted-foreground hover:text-foreground h-2.5 w-2.5 cursor-pointer transition-colors"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigator.clipboard.writeText(
-                              proposal.creator.toString()
-                            );
-                            toast.success("Creator address copied");
-                          }}
-                        />
-                      </div>
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex gap-2 text-sm">
-                        <div className="flex items-center gap-1">
-                          <Check className="h-4 w-4 text-green-500" />
-                          <span>
-                            Approvals: {approvalCount}
-                            {selectedMultisig &&
-                              ` / ${selectedMultisig.threshold}`}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <X className="h-4 w-4 text-red-500" />
-                          <span>Rejections: {proposal.rejections.length}</span>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleViewDetail(proposal)}
-                        >
-                          <Eye className="mr-2 h-4 w-4" />
-                          Details
-                        </Button>
-
-                        {!proposal.executed && !proposal.cancelled && (
-                          <>
-                            {!isMember ||
-                            actionLoading !== null ||
-                            currentUserApproved ? (
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <span>
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        className="hover:bg-green-500 hover:text-white"
-                                        onClick={() =>
-                                          handleApprove(
-                                            proposal.transactionIndex
-                                          )
-                                        }
-                                        disabled={true}
-                                      >
-                                        {actionLoading ===
-                                        `approve-${proposal.transactionIndex}` ? (
-                                          <Loader2 className="h-4 w-4 animate-spin" />
-                                        ) : (
-                                          <Check className="h-4 w-4" />
-                                        )}
-                                      </Button>
-                                    </span>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    {currentUserApproved
-                                      ? "Already Approved"
-                                      : !isMember
-                                        ? "Not a member"
-                                        : "Action in progress"}
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            ) : (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="hover:bg-green-500 hover:text-white"
-                                onClick={() =>
-                                  handleApprove(proposal.transactionIndex)
-                                }
-                              >
-                                <Check className="h-4 w-4" />
-                              </Button>
-                            )}
-                            {!isMember ||
-                            actionLoading !== null ||
-                            currentUserRejected ? (
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <span>
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        className="hover:bg-red-500 hover:text-white"
-                                        onClick={() =>
-                                          handleReject(
-                                            proposal.transactionIndex
-                                          )
-                                        }
-                                        disabled={true}
-                                      >
-                                        {actionLoading ===
-                                        `reject-${proposal.transactionIndex}` ? (
-                                          <Loader2 className="h-4 w-4 animate-spin" />
-                                        ) : (
-                                          <X className="h-4 w-4" />
-                                        )}
-                                      </Button>
-                                    </span>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    {currentUserRejected
-                                      ? "Already Rejected"
-                                      : !isMember
-                                        ? "Not a member"
-                                        : "Action in progress"}
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            ) : (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="hover:bg-red-500 hover:text-white"
-                                onClick={() =>
-                                  handleReject(proposal.transactionIndex)
-                                }
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            )}
-                            {hasMetThreshold && (
-                              <Button
-                                size="sm"
-                                variant="secondary"
-                                onClick={() =>
-                                  handleExecute(proposal.transactionIndex)
-                                }
-                                disabled={!isMember || actionLoading !== null}
-                              >
-                                {actionLoading ===
-                                `execute-${proposal.transactionIndex}` ? (
-                                  <Loader2 className="mr-1 h-4 w-4 animate-spin" />
-                                ) : null}
-                                Execute
-                              </Button>
-                            )}
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </>
-      )}
+      {/* Sidebar Metrics */}
+      <div className="lg:col-span-1">
+        {selectedMultisig && !loading && (
+          <MultisigStatsCard
+            multisig={selectedMultisig}
+            activeProposals={activeProposalsCount}
+            executedProposals={executedProposalsCount}
+          />
+        )}
+      </div>
 
       <TransactionDetailDialog
         open={detailDialogOpen}
         onOpenChange={setDetailDialogOpen}
         proposal={selectedProposal}
+        multisig={selectedMultisig}
       />
     </div>
   );

@@ -234,3 +234,27 @@ export const derivationPathSchema = z
     },
     { message: "Invalid derivation path format" }
   );
+
+/**
+ * Validate a public key address
+ */
+export function validatePublicKey(address: string): boolean {
+  try {
+    new PublicKey(address);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Validate SOL amount
+ */
+export function validateSolAmount(amount: string): boolean {
+  try {
+    const num = parseFloat(amount);
+    return !isNaN(num) && num > 0 && num < 1_000_000_000; // Max 1 billion SOL
+  } catch {
+    return false;
+  }
+}

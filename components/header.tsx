@@ -4,15 +4,17 @@ import { Settings } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
+import { ExportImportDialog } from "@/components/export-import-dialog";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
+import { WalletButton } from "@/components/wallet-button";
 
 import { ChainManagementDialog } from "./chain-management-dialog";
-import { ExportImportDialog } from "./export-import-dialog";
-import { ThemeToggle } from "./theme-toggle";
-import { WalletButton } from "./wallet-button";
 
 export function Header() {
   const [chainDialogOpen, setChainDialogOpen] = useState(false);
+  const [shortcutsDialogOpen, setShortcutsDialogOpen] = useState(false);
+  const [quickSearchOpen, setQuickSearchOpen] = useState(false);
 
   return (
     <header className="border-b">

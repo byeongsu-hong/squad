@@ -1,7 +1,7 @@
 "use client";
 
 import { PublicKey } from "@solana/web3.js";
-import * as multisig from "@sqds/multisig";
+import * as multisigSdk from "@sqds/multisig";
 import bs58 from "bs58";
 import { Copy, ExternalLink, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -19,12 +19,14 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { SquadService } from "@/lib/squad";
 import { useChainStore } from "@/stores/chain-store";
-import type { ProposalAccount } from "@/types/multisig";
+import { useWalletStore } from "@/stores/wallet-store";
+import type { MultisigAccount, ProposalAccount } from "@/types/multisig";
 
 interface TransactionDetailDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   proposal: ProposalAccount | null;
+  multisig?: MultisigAccount;
 }
 
 interface VaultTransactionData {
@@ -46,7 +48,9 @@ export function TransactionDetailDialog({
   open,
   onOpenChange,
   proposal,
+  multisig,
 }: TransactionDetailDialogProps) {
+  const { publicKey } = useWalletStore();
   const { chains } = useChainStore();
   const [transactionPda, setTransactionPda] = useState<string | null>(null);
   const [txData, setTxData] = useState<VaultTransactionData | null>(null);
@@ -79,7 +83,7 @@ export function TransactionDetailDialog({
         return;
       }
 
-      const [txPda] = multisig.getTransactionPda({
+      const [txPda] = multisigSdk.getTransactionPda({
         multisigPda: proposal.multisig,
         index: proposal.transactionIndex,
         programId: new PublicKey(chain.squadsV4ProgramId),
@@ -160,6 +164,10 @@ export function TransactionDetailDialog({
   }, [proposal, open, chains]);
 
   if (!proposal) return null;
+
+  const isCurrentUser = (address: string) => {
+    return publicKey && address === publicKey.toString();
+  };
 
   const handleCopyRawData = () => {
     const rawData = JSON.stringify(
@@ -249,6 +257,11 @@ export function TransactionDetailDialog({
           <div className="space-y-2">
             <h3 className="text-sm font-semibold">Creator</h3>
             <div className="flex items-center gap-2">
+              {isCurrentUser(proposal.creator.toString()) && (
+                <Badge variant="secondary" className="text-xs">
+                  👤 You
+                </Badge>
+              )}
               <code className="bg-muted flex-1 rounded px-3 py-2 text-xs">
                 {proposal.creator.toString()}
               </code>
@@ -297,14 +310,31 @@ export function TransactionDetailDialog({
             <div className="space-y-2">
               <h3 className="text-sm font-semibold">Approvers</h3>
               <div className="space-y-1">
-                {proposal.approvals.map((approver, index) => (
-                  <code
-                    key={index}
-                    className="bg-muted block rounded px-3 py-2 text-xs"
-                  >
-                    {approver.toString()}
-                  </code>
-                ))}
+                {proposal.approvals.map((approver, index) => {
+                  const isYou = isCurrentUser(approver.toString());
+                  return (
+                    <div
+                      key={index}
+                      className={`flex items-center gap-2 rounded px-3 py-2 ${isYou ? "bg-primary/10" : "bg-muted"}`}
+                    >
+                      {isYou && (
+                        <div className="bg-primary/10 flex h-6 w-6 items-center justify-center rounded-full">
+                          <span className="text-primary text-xs font-bold">
+                            ✓
+                          </span>
+                        </div>
+                      )}
+                      <code className="flex-1 text-xs">
+                        {approver.toString()}
+                      </code>
+                      {isYou && (
+                        <Badge variant="secondary" className="text-xs">
+                          You
+                        </Badge>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -313,14 +343,31 @@ export function TransactionDetailDialog({
             <div className="space-y-2">
               <h3 className="text-sm font-semibold">Rejectors</h3>
               <div className="space-y-1">
-                {proposal.rejections.map((rejector, index) => (
-                  <code
-                    key={index}
-                    className="bg-muted block rounded px-3 py-2 text-xs"
-                  >
-                    {rejector.toString()}
-                  </code>
-                ))}
+                {proposal.rejections.map((rejector, index) => {
+                  const isYou = isCurrentUser(rejector.toString());
+                  return (
+                    <div
+                      key={index}
+                      className={`flex items-center gap-2 rounded px-3 py-2 ${isYou ? "bg-primary/10" : "bg-muted"}`}
+                    >
+                      {isYou && (
+                        <div className="bg-primary/10 flex h-6 w-6 items-center justify-center rounded-full">
+                          <span className="text-primary text-xs font-bold">
+                            ✓
+                          </span>
+                        </div>
+                      )}
+                      <code className="flex-1 text-xs">
+                        {rejector.toString()}
+                      </code>
+                      {isYou && (
+                        <Badge variant="secondary" className="text-xs">
+                          You
+                        </Badge>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
