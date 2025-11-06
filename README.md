@@ -7,6 +7,7 @@ A modern web application for managing Squads V4 multisig wallets across multiple
 - 🔐 **Ledger Hardware Wallet Support** - Secure transaction signing with Ledger devices
 - 🌐 **Multi-Chain Support** - Manage multisigs across Solana, Soon, Eclipse, SonicSVM, Solaxy, and more
 - 📝 **Proposal Management** - Create, approve, reject, and execute multisig proposals
+- 📊 **Monitoring Dashboard** - View and manage proposals across all multisigs in a single table view
 - 🔍 **Transaction Details** - View detailed transaction data including instructions and account keys
 - ⚡ **Smart Caching** - Intelligent RPC response caching to reduce network requests and improve performance
 - ⚙️ **Custom RPC Configuration** - Configure custom RPC endpoints for each chain
@@ -54,8 +55,11 @@ Click "Connect Wallet" and connect your Ledger device with the Solana app instal
 
 ### 3. Manage Proposals
 
-- Select a multisig from the sidebar
-- View, approve, reject, or execute proposals
+- **Per-Multisig View**: Select a multisig from the sidebar to view its proposals
+- **Monitoring Dashboard**: Use the Monitoring tab to view all proposals across all multisigs
+- Approve, reject, or execute proposals inline
+- Filter proposals by status (Active, Executed, Rejected, Cancelled)
+- View threshold status and approval/rejection counts
 - See detailed transaction data before signing
 
 ### 4. Configure Chains

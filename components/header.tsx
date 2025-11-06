@@ -34,6 +34,12 @@ export function Header() {
             >
               Proposals
             </Link>
+            <Link
+              href="/monitoring"
+              className="hover:text-primary text-sm font-medium transition-colors"
+            >
+              Monitoring
+            </Link>
           </nav>
         </div>
 
