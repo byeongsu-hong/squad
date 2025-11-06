@@ -490,7 +490,6 @@ export function ProposalList({
         open={detailDialogOpen}
         onOpenChange={setDetailDialogOpen}
         proposal={selectedProposal}
-        multisig={selectedMultisig}
       />
     </div>
   );
