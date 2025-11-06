@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey, Transaction } from "@solana/web3.js";
+import * as multisigSdk from "@sqds/multisig";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
@@ -150,6 +151,14 @@ export function CreateMultisigDialog({
 
       const multisigAccount = await squadService.getMultisig(multisigPda);
 
+      // Calculate vault PDA (default vault index is 0)
+      const programId = new PublicKey(chain.squadsV4ProgramId);
+      const [vaultPda] = multisigSdk.getVaultPda({
+        multisigPda,
+        index: 0,
+        programId,
+      });
+
       addMultisig({
         publicKey: multisigPda,
         threshold: multisigAccount.threshold,
@@ -159,7 +168,7 @@ export function CreateMultisigDialog({
         })),
         transactionIndex: BigInt(multisigAccount.transactionIndex.toString()),
         msChangeIndex: 0,
-        programId: new PublicKey(chain.squadsV4ProgramId),
+        programId,
         chainId: chain.id,
         label: data.label,
         tags: data.tags
@@ -168,6 +177,7 @@ export function CreateMultisigDialog({
               .map((tag) => tag.trim())
               .filter((tag) => tag)
           : undefined,
+        vaultPda,
       });
 
       toast.success("Multisig created successfully!");

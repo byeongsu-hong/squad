@@ -1,6 +1,7 @@
 import { PublicKey } from "@solana/web3.js";
 
 import { createListStorage, createStorage } from "@/lib/storage-base";
+import type { AddressLabel } from "@/types/address-label";
 import type { ChainConfig } from "@/types/chain";
 import type { MultisigAccount } from "@/types/multisig";
 
@@ -9,6 +10,7 @@ const STORAGE_KEYS = {
   SELECTED_CHAIN: "squad-selected-chain",
   MULTISIGS: "squad-multisigs",
   SELECTED_MULTISIG: "squad-selected-multisig",
+  ADDRESS_LABELS: "squad-address-labels",
 } as const;
 
 const chainListStorage = createListStorage<ChainConfig>(STORAGE_KEYS.CHAINS);
@@ -129,5 +131,40 @@ export const multisigStorage = {
 
   setSelectedMultisigKey(key: string): void {
     selectedMultisigStorage.set(key);
+  },
+};
+
+const addressLabelListStorage = createListStorage<AddressLabel>(
+  STORAGE_KEYS.ADDRESS_LABELS
+);
+
+export const addressLabelStorage = {
+  getLabels(): AddressLabel[] {
+    return addressLabelListStorage.getAll();
+  },
+
+  saveLabels(labels: AddressLabel[]): void {
+    addressLabelListStorage.save(labels);
+  },
+
+  addLabel(label: AddressLabel): void {
+    const exists = addressLabelListStorage.find(
+      (l) => l.address === label.address
+    );
+    if (!exists) {
+      addressLabelListStorage.add(label);
+    }
+  },
+
+  updateLabel(address: string, updates: Partial<AddressLabel>): void {
+    addressLabelListStorage.update((l) => l.address === address, updates);
+  },
+
+  deleteLabel(address: string): void {
+    addressLabelListStorage.remove((l) => l.address === address);
+  },
+
+  getLabel(address: string): AddressLabel | undefined {
+    return addressLabelListStorage.find((l) => l.address === address);
   },
 };

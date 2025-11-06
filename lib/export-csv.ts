@@ -90,7 +90,7 @@ export function exportProposalsToCSV(
       rejectionCount: p.rejections.length,
       executed: p.executed ? "Yes" : "No",
       cancelled: p.cancelled ? "Yes" : "No",
-      creator: p.creator.toString(),
+      creator: p.creator?.toString() || "Unknown",
     };
   });
 

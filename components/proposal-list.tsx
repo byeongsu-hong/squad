@@ -1,5 +1,6 @@
 "use client";
 
+import { PublicKey } from "@solana/web3.js";
 import { Check, Copy, Eye, Loader2, RefreshCw, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -88,24 +89,59 @@ export function ProposalList({
         multisig.publicKey
       );
 
-      const loadedProposals: ProposalAccount[] = [];
+      const proposalResults = await Promise.all(
+        proposalAccounts.map(async (acc) => {
+          if (!acc) return null;
 
-      for (const acc of proposalAccounts) {
-        if (!acc) continue;
+          const status = toProposalStatus(acc.account.status.__kind);
+          const transactionIndex = BigInt(
+            acc.account.transactionIndex.toString()
+          );
 
-        const status = toProposalStatus(acc.account.status.__kind);
-        const proposal: ProposalAccount = {
-          multisig: acc.account.multisig,
-          transactionIndex: BigInt(acc.account.transactionIndex.toString()),
-          creator: multisig.publicKey,
-          status,
-          approvals: acc.account.approved || [],
-          rejections: acc.account.rejected || [],
-          executed: status === "Executed",
-          cancelled: status === "Cancelled",
-        };
-        loadedProposals.push(proposal);
-      }
+          // Load transaction to get creator
+          let creator: PublicKey | undefined;
+          try {
+            const txType = await squadService.getTransactionType(
+              acc.account.multisig,
+              transactionIndex
+            );
+
+            if (txType === "vault") {
+              const vaultTx = await squadService.getVaultTransaction(
+                acc.account.multisig,
+                transactionIndex
+              );
+              creator = vaultTx.creator;
+            } else if (txType === "config") {
+              const configTx = await squadService.getConfigTransaction(
+                acc.account.multisig,
+                transactionIndex
+              );
+              creator = configTx.creator;
+            }
+          } catch (error) {
+            console.warn(
+              `Failed to load creator for proposal ${transactionIndex}:`,
+              error
+            );
+          }
+
+          return {
+            multisig: acc.account.multisig,
+            transactionIndex,
+            ...(creator ? { creator } : {}),
+            status,
+            approvals: acc.account.approved || [],
+            rejections: acc.account.rejected || [],
+            executed: status === "Executed",
+            cancelled: status === "Cancelled",
+          };
+        })
+      );
+
+      const loadedProposals = proposalResults.filter(
+        (p): p is ProposalAccount => p !== null
+      );
 
       // Sort proposals by transaction index descending (newest first)
       loadedProposals.sort((a, b) => {
@@ -299,23 +335,28 @@ export function ProposalList({
                           <Badge>{proposal.status}</Badge>
                         </CardTitle>
                         <CardDescription>
-                          <div className="flex items-center gap-0.5">
-                            <span>
-                              Creator: {proposal.creator.toString().slice(0, 8)}
-                              ...
-                              {proposal.creator.toString().slice(-8)}
-                            </span>
-                            <Copy
-                              className="text-muted-foreground hover:text-foreground h-2.5 w-2.5 cursor-pointer transition-colors"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                navigator.clipboard.writeText(
-                                  proposal.creator.toString()
-                                );
-                                toast.success("Creator address copied");
-                              }}
-                            />
-                          </div>
+                          {proposal.creator && (
+                            <div className="flex items-center gap-0.5">
+                              <span>
+                                Creator:{" "}
+                                {proposal.creator.toString().slice(0, 8)}
+                                ...
+                                {proposal.creator.toString().slice(-8)}
+                              </span>
+                              <Copy
+                                className="text-muted-foreground hover:text-foreground h-2.5 w-2.5 cursor-pointer transition-colors"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (proposal.creator) {
+                                    navigator.clipboard.writeText(
+                                      proposal.creator.toString()
+                                    );
+                                    toast.success("Creator address copied");
+                                  }
+                                }}
+                              />
+                            </div>
+                          )}
                         </CardDescription>
                       </CardHeader>
                       <CardContent>

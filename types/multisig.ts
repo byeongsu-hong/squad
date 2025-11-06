@@ -10,6 +10,7 @@ export interface MultisigAccount {
   chainId: string;
   label?: string;
   tags?: string[];
+  vaultPda?: PublicKey;
 }
 
 export interface MultisigMember {
@@ -29,7 +30,7 @@ export type ProposalStatus =
 export interface ProposalAccount {
   multisig: PublicKey;
   transactionIndex: bigint;
-  creator: PublicKey;
+  creator?: PublicKey;
   status: ProposalStatus;
   approvals: PublicKey[];
   rejections: PublicKey[];

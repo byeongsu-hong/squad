@@ -27,6 +27,7 @@ A modern web application for managing Squads V4 multisig wallets across multiple
 
 - ✅ **Batch Operations** - Approve or reject multiple proposals at once
 - 🏷️ **Tagging System** - Organize multisigs with custom tags
+- 🏷️ **Address Labeling** - Label wallet addresses with custom names, descriptions, and colors
 - 📤 **CSV Export** - Export proposals and multisig data to CSV
 - 🎯 **Smart Filtering** - Filter by status (🟢 Active, ✅ Executed, ❌ Rejected, 🚫 Cancelled), chain, and tags
 - 🔄 **Transaction History** - View executed and cancelled proposals with default active filter
@@ -114,7 +115,18 @@ Click "Connect Wallet" and connect your Ledger device with the Solana app instal
 - Navigate search results with arrow keys
 - Press `Enter` to select
 
-### 6. Configure Chains
+### 6. Address Labeling
+
+Label wallet addresses for easier identification:
+
+- Click the Tag icon in the header to open the Address Label Manager
+- **Add Label**: Enter address, label name, optional description, and choose a color
+- **Search Labels**: Filter through saved labels
+- **Edit/Delete**: Manage existing labels from the list
+- **Quick Access**: Add labels directly from member lists and transaction details
+- **Visual Display**: Labeled addresses show colored badges with custom names
+
+### 7. Configure Chains
 
 Click the Settings icon to:
 
@@ -167,40 +179,50 @@ squad/
 ├── components/            # React components
 │   ├── ui/               # shadcn/ui components (Button, Card, Alert, Badge, etc.)
 │   ├── skeletons.tsx     # Loading skeleton components
-│   ├── monitoring-view.tsx           # Main monitoring dashboard
-│   ├── proposal-list.tsx             # Per-multisig proposal view
-│   ├── proposal-stats.tsx            # Proposal statistics cards
-│   ├── multisig-stats-card.tsx       # Alert/Badge based metrics
-│   ├── member-management-dialog.tsx  # Member & threshold management
-│   ├── keyboard-shortcuts-dialog.tsx # Shortcuts reference
-│   ├── quick-search-dialog.tsx       # Global search
+│   ├── monitoring-view.tsx              # Main monitoring dashboard
+│   ├── proposal-list.tsx                # Per-multisig proposal view
+│   ├── proposal-stats.tsx               # Proposal statistics cards
+│   ├── multisig-stats-card.tsx          # Alert/Badge based metrics
+│   ├── member-management-dialog.tsx     # Member & threshold management
+│   ├── address-label-manager-dialog.tsx # Address labeling UI
+│   ├── address-with-label.tsx           # Address display with labels
+│   ├── keyboard-shortcuts-dialog.tsx    # Shortcuts reference
+│   ├── quick-search-dialog.tsx          # Global search
 │   └── ...               # Feature components
 ├── lib/                   # Utility functions
 │   ├── hooks/            # Custom React hooks
 │   │   ├── use-proposal-actions.ts    # Shared proposal actions
+│   │   ├── use-address-label.ts       # Address label hooks
 │   │   ├── use-debounce.ts            # Debounce hook
 │   │   ├── use-pagination.ts          # Pagination hook
 │   │   ├── use-local-storage.ts       # localStorage hook
 │   │   ├── use-clipboard.ts           # Clipboard operations
 │   │   └── use-keyboard-shortcuts.ts  # Keyboard shortcut manager
+│   ├── utils/            # Utility functions
+│   │   └── format-address.ts          # Address formatting utilities
 │   ├── squad.ts              # SquadService (blockchain interaction)
 │   ├── cache.ts              # Smart caching layer
 │   ├── config.ts             # Centralized configuration
 │   ├── export-csv.ts         # CSV export utilities
 │   ├── transaction-simulator.ts  # Pre-flight checks
+│   ├── storage.ts            # localStorage abstractions
 │   └── validation.ts         # Zod schemas & validators
 ├── stores/               # Zustand stores
-│   ├── chain-store.ts    # Chain configuration
-│   ├── multisig-store.ts # Multisig management
-│   └── wallet-store.ts   # Wallet state
+│   ├── chain-store.ts         # Chain configuration
+│   ├── multisig-store.ts      # Multisig management
+│   ├── address-label-store.ts # Address label management
+│   └── wallet-store.ts        # Wallet state
 ├── types/                # TypeScript types
 │   ├── multisig.ts       # Multisig & Proposal types
 │   ├── chain.ts          # Chain types
+│   ├── address-label.ts  # Address label types
 │   └── wallet.ts         # Wallet types
-└── __tests__/            # Test files (58 tests)
+└── __tests__/            # Test files (74 tests)
     └── lib/              # Library tests
         ├── hooks/        # Hook tests
         ├── cache.test.ts
+        ├── address-label.test.ts
+        ├── format-address.test.ts
         ├── export-csv.test.ts
         └── validation.test.ts
 ```

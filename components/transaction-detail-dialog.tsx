@@ -7,12 +7,14 @@ import { Copy, ExternalLink, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
+import { AddressWithLabel } from "@/components/address-with-label";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -43,6 +45,136 @@ interface ConfigTransactionData {
   actions: unknown[];
 }
 
+interface ConfigAction {
+  __kind: string;
+  [key: string]: unknown;
+}
+
+function formatConfigAction(action: ConfigAction): {
+  type: string;
+  fields: { label: string; value: string | React.ReactNode }[];
+} {
+  const type = action.__kind || "Unknown";
+
+  switch (type) {
+    case "AddMember": {
+      const member = action as unknown as {
+        newMember: { key: unknown; permissions?: { mask: number } };
+      };
+      const memberKey = String(member.newMember?.key || "Unknown");
+      // Solana addresses are typically 32-44 characters
+      const isValidAddress =
+        memberKey.length >= 32 &&
+        memberKey.length <= 44 &&
+        memberKey !== "Unknown";
+      return {
+        type: "Add Member",
+        fields: [
+          {
+            label: "Member Address",
+            value: isValidAddress ? (
+              <AddressWithLabel address={memberKey} showFull />
+            ) : (
+              memberKey
+            ),
+          },
+          {
+            label: "Permissions",
+            value: String(member.newMember?.permissions?.mask ?? "Default"),
+          },
+        ],
+      };
+    }
+
+    case "RemoveMember": {
+      const member = action as unknown as { oldMember: unknown };
+      const memberKey = String(member.oldMember || "Unknown");
+      // Solana addresses are typically 32-44 characters
+      const isValidAddress =
+        memberKey.length >= 32 &&
+        memberKey.length <= 44 &&
+        memberKey !== "Unknown";
+      return {
+        type: "Remove Member",
+        fields: [
+          {
+            label: "Member Address",
+            value: isValidAddress ? (
+              <AddressWithLabel address={memberKey} showFull />
+            ) : (
+              memberKey
+            ),
+          },
+        ],
+      };
+    }
+
+    case "ChangeThreshold": {
+      const threshold = action as unknown as { newThreshold: number };
+      return {
+        type: "Change Threshold",
+        fields: [
+          {
+            label: "New Threshold",
+            value: String(threshold.newThreshold ?? "Unknown"),
+          },
+        ],
+      };
+    }
+
+    case "SetTimeLock": {
+      const timeLock = action as unknown as { timeLock: number };
+      return {
+        type: "Set Time Lock",
+        fields: [
+          {
+            label: "Time Lock (seconds)",
+            value: String(timeLock.timeLock ?? "Unknown"),
+          },
+        ],
+      };
+    }
+
+    case "AddSpendingLimit":
+    case "RemoveSpendingLimit":
+    case "SetRentCollector": {
+      // For these types, show all fields except __kind
+      const fields = Object.entries(action)
+        .filter(([key]) => key !== "__kind")
+        .map(([key, value]) => ({
+          label: key.replace(/([A-Z])/g, " $1").trim(),
+          value:
+            typeof value === "object"
+              ? JSON.stringify(value, null, 2)
+              : String(value),
+        }));
+
+      return {
+        type: type.replace(/([A-Z])/g, " $1").trim(),
+        fields,
+      };
+    }
+
+    default: {
+      // For unknown action types, show all fields
+      const fields = Object.entries(action)
+        .filter(([key]) => key !== "__kind")
+        .map(([key, value]) => ({
+          label: key.replace(/([A-Z])/g, " $1").trim(),
+          value:
+            typeof value === "object"
+              ? JSON.stringify(value, null, 2)
+              : String(value),
+        }));
+
+      return {
+        type,
+        fields,
+      };
+    }
+  }
+}
+
 export function TransactionDetailDialog({
   open,
   onOpenChange,
@@ -57,6 +189,9 @@ export function TransactionDetailDialog({
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [multisigLabel, setMultisigLabel] = useState<string | null>(null);
+  const [chainName, setChainName] = useState<string | null>(null);
+  const [vaultAddress, setVaultAddress] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadTransactionData() {
@@ -81,13 +216,31 @@ export function TransactionDetailDialog({
         return;
       }
 
+      // Set multisig label and chain name
+      setMultisigLabel(multisigAccount.label || null);
+      setChainName(chain.name);
+
+      const programId = new PublicKey(chain.squadsV4ProgramId);
+
       const [txPda] = multisigSdk.getTransactionPda({
         multisigPda: proposal.multisig,
         index: proposal.transactionIndex,
-        programId: new PublicKey(chain.squadsV4ProgramId),
+        programId,
       });
 
       setTransactionPda(txPda.toString());
+
+      // Use stored vault PDA or calculate if not available (default vault index is 0)
+      if (multisigAccount.vaultPda) {
+        setVaultAddress(multisigAccount.vaultPda.toString());
+      } else {
+        const [vaultPda] = multisigSdk.getVaultPda({
+          multisigPda: proposal.multisig,
+          index: 0,
+          programId,
+        });
+        setVaultAddress(vaultPda.toString());
+      }
 
       // Try to load transaction data
       setLoading(true);
@@ -172,7 +325,7 @@ export function TransactionDetailDialog({
       {
         multisig: proposal.multisig.toString(),
         transactionIndex: proposal.transactionIndex.toString(),
-        creator: proposal.creator.toString(),
+        creator: proposal.creator?.toString() || "Unknown",
         status: proposal.status,
         approvals: proposal.approvals.map((a) => a.toString()),
         rejections: proposal.rejections.map((r) => r.toString()),
@@ -221,8 +374,8 @@ export function TransactionDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-[600px]">
-        <DialogHeader>
+      <DialogContent className="flex max-h-[85vh] flex-col gap-0 p-0 sm:max-w-[600px]">
+        <DialogHeader className="shrink-0 px-6 pt-6">
           <DialogTitle className="flex items-center gap-2">
             Transaction #{proposal.transactionIndex.toString()}
             <Badge>{proposal.status}</Badge>
@@ -232,306 +385,360 @@ export function TransactionDetailDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <h3 className="text-sm font-semibold">Multisig</h3>
-            <div className="flex items-center gap-2">
-              <code className="bg-muted flex-1 rounded px-3 py-2 text-xs">
-                {proposal.multisig.toString()}
-              </code>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => {
-                  navigator.clipboard.writeText(proposal.multisig.toString());
-                  toast.success("Multisig address copied");
-                }}
-              >
-                <Copy className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <h3 className="text-sm font-semibold">Creator</h3>
-            <div className="flex items-center gap-2">
-              {isCurrentUser(proposal.creator.toString()) && (
-                <Badge variant="secondary" className="text-xs">
-                  👤 You
-                </Badge>
+        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <h3 className="text-sm font-semibold">Multisig</h3>
+              {multisigLabel && (
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-medium">{multisigLabel}</p>
+                  {chainName && (
+                    <Badge variant="secondary" className="text-xs">
+                      {chainName}
+                    </Badge>
+                  )}
+                </div>
               )}
-              <code className="bg-muted flex-1 rounded px-3 py-2 text-xs">
-                {proposal.creator.toString()}
-              </code>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => {
-                  navigator.clipboard.writeText(proposal.creator.toString());
-                  toast.success("Creator address copied");
-                }}
-              >
-                <Copy className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-
-          <Separator />
-
-          <div className="space-y-2">
-            <h3 className="text-sm font-semibold">Status</h3>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <p className="text-muted-foreground">Approvals</p>
-                <p className="font-semibold">{proposal.approvals.length}</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">Rejections</p>
-                <p className="font-semibold">{proposal.rejections.length}</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">Executed</p>
-                <p className="font-semibold">
-                  {proposal.executed ? "Yes" : "No"}
-                </p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">Cancelled</p>
-                <p className="font-semibold">
-                  {proposal.cancelled ? "Yes" : "No"}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {proposal.approvals.length > 0 && (
-            <div className="space-y-2">
-              <h3 className="text-sm font-semibold">Approvers</h3>
-              <div className="space-y-1">
-                {proposal.approvals.map((approver, index) => {
-                  const isYou = isCurrentUser(approver.toString());
-                  return (
-                    <div
-                      key={index}
-                      className={`flex items-center gap-2 rounded px-3 py-2 ${isYou ? "bg-primary/10" : "bg-muted"}`}
-                    >
-                      {isYou && (
-                        <div className="bg-primary/10 flex h-6 w-6 items-center justify-center rounded-full">
-                          <span className="text-primary text-xs font-bold">
-                            ✓
-                          </span>
-                        </div>
-                      )}
-                      <code className="flex-1 text-xs">
-                        {approver.toString()}
-                      </code>
-                      {isYou && (
-                        <Badge variant="secondary" className="text-xs">
-                          You
-                        </Badge>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {proposal.rejections.length > 0 && (
-            <div className="space-y-2">
-              <h3 className="text-sm font-semibold">Rejectors</h3>
-              <div className="space-y-1">
-                {proposal.rejections.map((rejector, index) => {
-                  const isYou = isCurrentUser(rejector.toString());
-                  return (
-                    <div
-                      key={index}
-                      className={`flex items-center gap-2 rounded px-3 py-2 ${isYou ? "bg-primary/10" : "bg-muted"}`}
-                    >
-                      {isYou && (
-                        <div className="bg-primary/10 flex h-6 w-6 items-center justify-center rounded-full">
-                          <span className="text-primary text-xs font-bold">
-                            ✓
-                          </span>
-                        </div>
-                      )}
-                      <code className="flex-1 text-xs">
-                        {rejector.toString()}
-                      </code>
-                      {isYou && (
-                        <Badge variant="secondary" className="text-xs">
-                          You
-                        </Badge>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          <Separator />
-
-          {transactionPda && (
-            <div className="space-y-2">
-              <h3 className="text-sm font-semibold">Transaction PDA</h3>
               <div className="flex items-center gap-2">
                 <code className="bg-muted flex-1 rounded px-3 py-2 text-xs">
-                  {transactionPda}
+                  {proposal.multisig.toString()}
                 </code>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => {
-                    navigator.clipboard.writeText(transactionPda);
-                    toast.success("Transaction PDA copied");
+                    navigator.clipboard.writeText(proposal.multisig.toString());
+                    toast.success("Multisig address copied");
                   }}
                 >
                   <Copy className="h-4 w-4" />
                 </Button>
               </div>
             </div>
-          )}
 
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold">
-                {configData ? "Config Transaction Data" : "Transaction Data"}
-              </h3>
-              {(txData || configData) && (
-                <Button variant="ghost" size="icon" onClick={handleCopyTxData}>
-                  <Copy className="h-4 w-4" />
-                </Button>
-              )}
+            {proposal.creator && (
+              <div className="space-y-2">
+                <h3 className="text-sm font-semibold">Creator</h3>
+                <div className="flex items-center gap-2">
+                  {isCurrentUser(proposal.creator.toString()) && (
+                    <Badge variant="secondary" className="text-xs">
+                      👤 You
+                    </Badge>
+                  )}
+                  <AddressWithLabel
+                    address={proposal.creator.toString()}
+                    showFull
+                  />
+                </div>
+              </div>
+            )}
+
+            <Separator />
+
+            <div className="space-y-2">
+              <h3 className="text-sm font-semibold">Status</h3>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="text-muted-foreground">Approvals</p>
+                  <p className="font-semibold">{proposal.approvals.length}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Rejections</p>
+                  <p className="font-semibold">{proposal.rejections.length}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Executed</p>
+                  <p className="font-semibold">
+                    {proposal.executed ? "Yes" : "No"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Cancelled</p>
+                  <p className="font-semibold">
+                    {proposal.cancelled ? "Yes" : "No"}
+                  </p>
+                </div>
+              </div>
             </div>
 
-            {loading && (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
-              </div>
-            )}
-
-            {!loading && error && (
-              <div className="bg-muted text-muted-foreground rounded px-3 py-4 text-sm">
-                <p className="text-xs">{error}</p>
-              </div>
-            )}
-
-            {!loading && configData && (
-              <div className="space-y-3">
-                <div className="bg-muted rounded px-3 py-4 text-sm">
-                  <p className="text-muted-foreground mb-3 text-xs">
-                    This transaction modifies the multisig configuration.
-                  </p>
-                  <div>
-                    <p className="text-muted-foreground mb-2 text-xs font-medium">
-                      Actions ({configData.actions.length})
-                    </p>
-                    <div className="bg-background max-h-96 space-y-2 overflow-y-auto rounded p-2">
-                      {configData.actions.map((action, index) => (
-                        <div key={index} className="bg-muted rounded p-2">
-                          <p className="mb-1 text-xs font-semibold">
-                            Action {index + 1}
-                          </p>
-                          <pre className="overflow-x-auto text-xs">
-                            {JSON.stringify(action, null, 2)}
-                          </pre>
+            {proposal.approvals.length > 0 && (
+              <div className="space-y-2">
+                <h3 className="text-sm font-semibold">Approvers</h3>
+                <div className="space-y-1">
+                  {proposal.approvals.map((approver, index) => {
+                    const isYou = isCurrentUser(approver.toString());
+                    return (
+                      <div
+                        key={index}
+                        className={`flex items-center gap-2 rounded px-3 py-2 ${isYou ? "bg-primary/10" : "bg-muted"}`}
+                      >
+                        {isYou && (
+                          <div className="bg-primary/10 flex h-6 w-6 items-center justify-center rounded-full">
+                            <span className="text-primary text-xs font-bold">
+                              ✓
+                            </span>
+                          </div>
+                        )}
+                        <div className="flex-1">
+                          <AddressWithLabel
+                            address={approver.toString()}
+                            showFull
+                          />
                         </div>
-                      ))}
+                        {isYou && (
+                          <Badge variant="secondary" className="text-xs">
+                            You
+                          </Badge>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {proposal.rejections.length > 0 && (
+              <div className="space-y-2">
+                <h3 className="text-sm font-semibold">Rejectors</h3>
+                <div className="space-y-1">
+                  {proposal.rejections.map((rejector, index) => {
+                    const isYou = isCurrentUser(rejector.toString());
+                    return (
+                      <div
+                        key={index}
+                        className={`flex items-center gap-2 rounded px-3 py-2 ${isYou ? "bg-primary/10" : "bg-muted"}`}
+                      >
+                        {isYou && (
+                          <div className="bg-primary/10 flex h-6 w-6 items-center justify-center rounded-full">
+                            <span className="text-primary text-xs font-bold">
+                              ✓
+                            </span>
+                          </div>
+                        )}
+                        <div className="flex-1">
+                          <AddressWithLabel
+                            address={rejector.toString()}
+                            showFull
+                          />
+                        </div>
+                        {isYou && (
+                          <Badge variant="secondary" className="text-xs">
+                            You
+                          </Badge>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            <Separator />
+
+            {transactionPda && (
+              <div className="space-y-2">
+                <h3 className="text-sm font-semibold">Transaction PDA</h3>
+                <div className="flex items-center gap-2">
+                  <code className="bg-muted flex-1 rounded px-3 py-2 text-xs">
+                    {transactionPda}
+                  </code>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      navigator.clipboard.writeText(transactionPda);
+                      toast.success("Transaction PDA copied");
+                    }}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold">
+                  {configData ? "Config Transaction Data" : "Transaction Data"}
+                </h3>
+                {(txData || configData) && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleCopyTxData}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+
+              {loading && (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
+                </div>
+              )}
+
+              {!loading && error && (
+                <div className="bg-muted text-muted-foreground rounded px-3 py-4 text-sm">
+                  <p className="text-xs">{error}</p>
+                </div>
+              )}
+
+              {!loading && configData && (
+                <div className="space-y-3">
+                  <div className="bg-muted rounded px-3 py-4 text-sm">
+                    <p className="text-muted-foreground mb-3 text-xs">
+                      This transaction modifies the multisig configuration.
+                    </p>
+                    <div>
+                      <p className="text-muted-foreground mb-2 text-xs font-medium">
+                        Actions ({configData.actions.length})
+                      </p>
+                      <div className="max-h-96 space-y-3 overflow-y-auto">
+                        {configData.actions.map((action, index) => {
+                          const formatted = formatConfigAction(
+                            action as ConfigAction
+                          );
+                          return (
+                            <div
+                              key={index}
+                              className="bg-background rounded-lg border p-4"
+                            >
+                              <div className="mb-3 flex items-center gap-2">
+                                <Badge variant="secondary">
+                                  Action {index + 1}
+                                </Badge>
+                                <span className="text-sm font-semibold">
+                                  {formatted.type}
+                                </span>
+                              </div>
+                              <div className="space-y-3">
+                                {formatted.fields.map((field, fieldIndex) => (
+                                  <div key={fieldIndex} className="space-y-1">
+                                    <p className="text-muted-foreground text-xs font-medium">
+                                      {field.label}
+                                    </p>
+                                    {typeof field.value === "string" ? (
+                                      field.value.length > 40 ? (
+                                        <div className="flex items-center gap-2">
+                                          <code className="bg-muted flex-1 rounded px-3 py-2 text-xs break-all">
+                                            {field.value}
+                                          </code>
+                                          <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8 shrink-0"
+                                            onClick={() => {
+                                              navigator.clipboard.writeText(
+                                                field.value as string
+                                              );
+                                              toast.success(
+                                                `${field.label} copied`
+                                              );
+                                            }}
+                                          >
+                                            <Copy className="h-3 w-3" />
+                                          </Button>
+                                        </div>
+                                      ) : (
+                                        <p className="text-sm font-medium">
+                                          {field.value}
+                                        </p>
+                                      )
+                                    ) : (
+                                      field.value
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {!loading && txData && (
-              <div className="space-y-3">
-                <div>
-                  <p className="text-muted-foreground mb-2 text-xs font-medium">
-                    Account Keys ({txData.message.accountKeys.length})
-                  </p>
-                  <div className="bg-muted max-h-48 space-y-1 overflow-y-auto rounded p-2">
-                    {txData.message.accountKeys.map((key, index) => (
-                      <code
-                        key={index}
-                        className="block text-xs leading-relaxed break-all"
-                      >
-                        {index}: {key}
-                      </code>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <p className="text-muted-foreground mb-2 text-xs font-medium">
-                    Instructions ({txData.message.instructions.length})
-                  </p>
-                  <div className="space-y-2">
-                    {txData.message.instructions.map((ix, index) => {
-                      const programAddress =
-                        txData.message.accountKeys[ix.programIdIndex];
-                      return (
-                        <div key={index} className="bg-muted rounded p-3">
-                          <div className="mb-2 space-y-2">
-                            <span className="text-xs font-semibold">
-                              Instruction {index + 1}
-                            </span>
-                            <div>
-                              <span className="text-muted-foreground text-xs">
-                                Program: {ix.programIdIndex}
+              {!loading && txData && (
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-muted-foreground mb-2 text-xs font-medium">
+                      Instructions ({txData.message.instructions.length})
+                    </p>
+                    <div className="space-y-3">
+                      {txData.message.instructions.map((ix, index) => {
+                        const programAddress =
+                          txData.message.accountKeys[ix.programIdIndex];
+                        return (
+                          <div key={index} className="bg-muted rounded p-3">
+                            <div className="mb-3 space-y-2">
+                              <span className="text-xs font-semibold">
+                                Instruction {index + 1}
                               </span>
-                              <code className="block text-xs break-all">
-                                {programAddress}
-                              </code>
+                              <div>
+                                <span className="text-muted-foreground mb-1 block text-xs">
+                                  Program: {ix.programIdIndex}
+                                </span>
+                                <AddressWithLabel
+                                  address={programAddress}
+                                  showFull
+                                  vaultAddress={vaultAddress}
+                                />
+                              </div>
                             </div>
-                          </div>
 
-                          <div className="space-y-2 text-xs">
-                            <div>
-                              <span className="text-muted-foreground">
-                                Accounts:{" "}
-                              </span>
-                              <code className="text-xs">
-                                [{ix.accountKeyIndexes.join(", ")}]
-                              </code>
-                            </div>
-                            {ix.accountKeyIndexes.length > 0 && (
-                              <div className="mt-1 ml-4 space-y-1">
-                                {ix.accountKeyIndexes.map(
-                                  (accIdx: number, i: number) => (
-                                    <div key={i} className="text-xs">
-                                      <span className="text-muted-foreground">
-                                        [{i}]:{" "}
-                                      </span>
-                                      <code className="text-xs break-all">
-                                        {txData.message.accountKeys[accIdx]}
-                                      </code>
-                                    </div>
-                                  )
+                            <div className="space-y-3 text-xs">
+                              <div>
+                                <span className="text-muted-foreground mb-2 block">
+                                  Accounts ({ix.accountKeyIndexes.length})
+                                </span>
+                                {ix.accountKeyIndexes.length > 0 && (
+                                  <div className="space-y-1.5">
+                                    {ix.accountKeyIndexes.map(
+                                      (accIdx: number, i: number) => (
+                                        <div
+                                          key={i}
+                                          className="flex items-center gap-2"
+                                        >
+                                          <span className="text-muted-foreground w-6 shrink-0 font-mono text-xs">
+                                            {accIdx}:
+                                          </span>
+                                          <AddressWithLabel
+                                            address={
+                                              txData.message.accountKeys[accIdx]
+                                            }
+                                            showFull
+                                            vaultAddress={vaultAddress}
+                                          />
+                                        </div>
+                                      )
+                                    )}
+                                  </div>
                                 )}
                               </div>
-                            )}
-                            <div>
-                              <span className="text-muted-foreground">
-                                Data (base58):{" "}
-                              </span>
-                              <code className="block text-xs break-all">
-                                {ix.data}
-                              </code>
+                              <div>
+                                <span className="text-muted-foreground">
+                                  Data (base58):{" "}
+                                </span>
+                                <code className="bg-background mt-1 block rounded px-2 py-1 text-xs break-all">
+                                  {ix.data}
+                                </code>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
+        </div>
 
-          <Separator />
-
-          <div className="flex gap-2">
+        <DialogFooter className="shrink-0 border-t px-6 py-4">
+          <div className="flex w-full gap-2">
             <Button
               variant="outline"
               onClick={handleCopyRawData}
@@ -549,7 +756,7 @@ export function TransactionDetailDialog({
               View on Explorer
             </Button>
           </div>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

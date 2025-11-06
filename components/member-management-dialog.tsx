@@ -5,6 +5,7 @@ import { Plus, Trash2, Users } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { AddressWithLabel } from "@/components/address-with-label";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -229,10 +230,11 @@ export function MemberManagementDialog({
                         <span className="text-muted-foreground text-sm">
                           #{index + 1}
                         </span>
-                        <code className="text-xs">
-                          {member.toString().slice(0, 8)}...
-                          {member.toString().slice(-8)}
-                        </code>
+                        <AddressWithLabel
+                          address={member.toString()}
+                          showCopy={false}
+                          showLabelButton={false}
+                        />
                         {isNewMember && (
                           <Badge variant="default" className="bg-green-600">
                             New

@@ -1,5 +1,6 @@
 "use client";
 
+import { PublicKey } from "@solana/web3.js";
 import {
   Check,
   Copy,
@@ -25,7 +26,17 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Pagination } from "@/components/ui/pagination";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -69,7 +80,9 @@ interface ProposalWithMultisig extends ProposalAccount {
 export function MonitoringView() {
   const [loading, setLoading] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
-  const [statusFilter, setStatusFilter] = useState<string>("active");
+  const [statusFilters, setStatusFilters] = useState<Set<string>>(
+    new Set(["active"])
+  );
   const [chainFilter, setChainFilter] = useState<string>("all");
   const [tagFilter, setTagFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -120,25 +133,60 @@ export function MonitoringView() {
             multisig.publicKey
           );
 
-          const proposals: ProposalWithMultisig[] = [];
-          for (const acc of proposalAccounts) {
-            if (!acc) continue;
+          const proposalResults = await Promise.all(
+            proposalAccounts.map(async (acc) => {
+              if (!acc) return null;
 
-            const status = toProposalStatus(acc.account.status.__kind);
-            const proposal: ProposalWithMultisig = {
-              multisig: acc.account.multisig,
-              transactionIndex: BigInt(acc.account.transactionIndex.toString()),
-              creator: multisig.publicKey,
-              status,
-              approvals: acc.account.approved || [],
-              rejections: acc.account.rejected || [],
-              executed: status === "Executed",
-              cancelled: status === "Cancelled",
-              multisigAccount: multisig,
-            };
+              const status = toProposalStatus(acc.account.status.__kind);
+              const transactionIndex = BigInt(
+                acc.account.transactionIndex.toString()
+              );
 
-            proposals.push(proposal);
-          }
+              // Load transaction to get creator
+              let creator: PublicKey | undefined;
+              try {
+                const txType = await squadService.getTransactionType(
+                  acc.account.multisig,
+                  transactionIndex
+                );
+
+                if (txType === "vault") {
+                  const vaultTx = await squadService.getVaultTransaction(
+                    acc.account.multisig,
+                    transactionIndex
+                  );
+                  creator = vaultTx.creator;
+                } else if (txType === "config") {
+                  const configTx = await squadService.getConfigTransaction(
+                    acc.account.multisig,
+                    transactionIndex
+                  );
+                  creator = configTx.creator;
+                }
+              } catch (error) {
+                console.warn(
+                  `Failed to load creator for proposal ${transactionIndex}:`,
+                  error
+                );
+              }
+
+              return {
+                multisig: acc.account.multisig,
+                transactionIndex,
+                ...(creator ? { creator } : {}),
+                status,
+                approvals: acc.account.approved || [],
+                rejections: acc.account.rejected || [],
+                executed: status === "Executed",
+                cancelled: status === "Cancelled",
+                multisigAccount: multisig,
+              };
+            })
+          );
+
+          const proposals = proposalResults.filter(
+            (p): p is ProposalWithMultisig => p !== null
+          );
 
           completedCount++;
           setLoadingProgress((completedCount / totalMultisigs) * 100);
@@ -243,9 +291,9 @@ export function MonitoringView() {
   const filteredProposals = useMemo(() => {
     return proposals.filter((p) => {
       // Status filter
-      if (statusFilter !== "all") {
+      if (statusFilters.size > 0 && !statusFilters.has("all")) {
         const status = p.status.toLowerCase();
-        if (status !== statusFilter.toLowerCase()) return false;
+        if (!statusFilters.has(status)) return false;
       }
 
       // Chain filter
@@ -269,7 +317,7 @@ export function MonitoringView() {
 
       return true;
     });
-  }, [proposals, statusFilter, chainFilter, tagFilter, debouncedSearchQuery]);
+  }, [proposals, statusFilters, chainFilter, tagFilter, debouncedSearchQuery]);
 
   const pagination = usePagination(filteredProposals, {
     totalItems: filteredProposals.length,
@@ -600,18 +648,124 @@ export function MonitoringView() {
               </SelectContent>
             </Select>
 
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[160px]">
-                <SelectValue placeholder="Status Filter" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="active">🟢 Active</SelectItem>
-                <SelectItem value="executed">✅ Executed</SelectItem>
-                <SelectItem value="rejected">❌ Rejected</SelectItem>
-                <SelectItem value="cancelled">🚫 Cancelled</SelectItem>
-              </SelectContent>
-            </Select>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="w-[160px]">
+                  Status Filter
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                className="w-56"
+                onCloseAutoFocus={(e) => e.preventDefault()}
+              >
+                <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuCheckboxItem
+                  checked={statusFilters.has("all")}
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      setStatusFilters(new Set(["all"]));
+                    } else {
+                      setStatusFilters(new Set(["active"]));
+                    }
+                  }}
+                  onSelect={(e) => e.preventDefault()}
+                >
+                  All
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuCheckboxItem
+                  checked={statusFilters.has("active")}
+                  onCheckedChange={(checked) => {
+                    const newFilters = new Set(statusFilters);
+                    newFilters.delete("all");
+                    if (checked) {
+                      newFilters.add("active");
+                    } else {
+                      newFilters.delete("active");
+                    }
+                    setStatusFilters(
+                      newFilters.size > 0 ? newFilters : new Set(["active"])
+                    );
+                  }}
+                  onSelect={(e) => e.preventDefault()}
+                >
+                  🟢 Active
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={statusFilters.has("approved")}
+                  onCheckedChange={(checked) => {
+                    const newFilters = new Set(statusFilters);
+                    newFilters.delete("all");
+                    if (checked) {
+                      newFilters.add("approved");
+                    } else {
+                      newFilters.delete("approved");
+                    }
+                    setStatusFilters(
+                      newFilters.size > 0 ? newFilters : new Set(["active"])
+                    );
+                  }}
+                  onSelect={(e) => e.preventDefault()}
+                >
+                  ✔️ Approved
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={statusFilters.has("executed")}
+                  onCheckedChange={(checked) => {
+                    const newFilters = new Set(statusFilters);
+                    newFilters.delete("all");
+                    if (checked) {
+                      newFilters.add("executed");
+                    } else {
+                      newFilters.delete("executed");
+                    }
+                    setStatusFilters(
+                      newFilters.size > 0 ? newFilters : new Set(["active"])
+                    );
+                  }}
+                  onSelect={(e) => e.preventDefault()}
+                >
+                  ✅ Executed
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={statusFilters.has("rejected")}
+                  onCheckedChange={(checked) => {
+                    const newFilters = new Set(statusFilters);
+                    newFilters.delete("all");
+                    if (checked) {
+                      newFilters.add("rejected");
+                    } else {
+                      newFilters.delete("rejected");
+                    }
+                    setStatusFilters(
+                      newFilters.size > 0 ? newFilters : new Set(["active"])
+                    );
+                  }}
+                  onSelect={(e) => e.preventDefault()}
+                >
+                  ❌ Rejected
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={statusFilters.has("cancelled")}
+                  onCheckedChange={(checked) => {
+                    const newFilters = new Set(statusFilters);
+                    newFilters.delete("all");
+                    if (checked) {
+                      newFilters.add("cancelled");
+                    } else {
+                      newFilters.delete("cancelled");
+                    }
+                    setStatusFilters(
+                      newFilters.size > 0 ? newFilters : new Set(["active"])
+                    );
+                  }}
+                  onSelect={(e) => e.preventDefault()}
+                >
+                  🚫 Cancelled
+                </DropdownMenuCheckboxItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </CardHeader>
         <CardContent>

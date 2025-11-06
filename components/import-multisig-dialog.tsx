@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PublicKey } from "@solana/web3.js";
+import * as multisigSdk from "@sqds/multisig";
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -48,7 +49,7 @@ interface ImportMultisigDialogProps {
 const importMultisigFormSchema = z.object({
   chainId: chainIdSchema,
   multisigAddress: publicKeySchema,
-  label: labelSchema.optional(),
+  label: labelSchema,
   tags: z.string().optional(),
 });
 
@@ -90,6 +91,14 @@ export function ImportMultisigDialog({
 
       const multisigAccount = await squadService.getMultisig(multisigPubkey);
 
+      // Calculate vault PDA (default vault index is 0)
+      const programId = new PublicKey(chain.squadsV4ProgramId);
+      const [vaultPda] = multisigSdk.getVaultPda({
+        multisigPda: multisigPubkey,
+        index: 0,
+        programId,
+      });
+
       addMultisig({
         publicKey: multisigPubkey,
         threshold: multisigAccount.threshold,
@@ -99,7 +108,7 @@ export function ImportMultisigDialog({
         })),
         transactionIndex: BigInt(multisigAccount.transactionIndex.toString()),
         msChangeIndex: 0,
-        programId: new PublicKey(chain.squadsV4ProgramId),
+        programId,
         chainId: chain.id,
         label: data.label,
         tags: data.tags
@@ -108,6 +117,7 @@ export function ImportMultisigDialog({
               .map((tag) => tag.trim())
               .filter((tag) => tag)
           : undefined,
+        vaultPda,
       });
 
       toast.success("Multisig imported successfully!");
@@ -207,7 +217,9 @@ export function ImportMultisigDialog({
               name="label"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Label (Optional)</FormLabel>
+                  <FormLabel>
+                    Label <span className="text-destructive">*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input placeholder="My Imported Multisig" {...field} />
                   </FormControl>

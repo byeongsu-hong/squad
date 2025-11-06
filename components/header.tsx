@@ -1,9 +1,10 @@
 "use client";
 
-import { Settings } from "lucide-react";
+import { Settings, Tag } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
+import { AddressLabelManagerDialog } from "@/components/address-label-manager-dialog";
 import { ExportImportDialog } from "@/components/export-import-dialog";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
@@ -44,12 +45,18 @@ export function Header() {
         </div>
 
         <div className="flex items-center gap-3">
+          <AddressLabelManagerDialog>
+            <Button variant="ghost" size="icon" title="Manage Address Labels">
+              <Tag className="h-4 w-4" />
+            </Button>
+          </AddressLabelManagerDialog>
           <ExportImportDialog />
           <ThemeToggle />
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setChainDialogOpen(true)}
+            title="Chain Settings"
           >
             <Settings className="h-4 w-4" />
           </Button>
