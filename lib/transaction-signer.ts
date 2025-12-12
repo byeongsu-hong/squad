@@ -4,6 +4,7 @@ import { PublicKey } from "@solana/web3.js";
 import { WalletType } from "@/types/wallet";
 
 import { ledgerService } from "./ledger";
+import { okxWalletService } from "./okx-wallet";
 
 export interface SignTransactionOptions {
   walletType: WalletType | null;
@@ -52,6 +53,10 @@ export class TransactionSignerService {
       return await walletAdapter.signTransaction(transaction);
     }
 
+    if (walletType === WalletType.OKX) {
+      return await okxWalletService.signTransaction(transaction);
+    }
+
     throw new Error(`Unsupported wallet type: ${walletType}`);
   }
 
@@ -89,6 +94,10 @@ export class TransactionSignerService {
       }
 
       return await walletAdapter.signTransaction(transaction);
+    }
+
+    if (walletType === WalletType.OKX) {
+      return await okxWalletService.signVersionedTransaction(transaction);
     }
 
     throw new Error(`Unsupported wallet type: ${walletType}`);

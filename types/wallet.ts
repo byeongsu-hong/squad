@@ -3,6 +3,7 @@ import type { PublicKey } from "@solana/web3.js";
 export enum WalletType {
   LEDGER = "ledger",
   BROWSER = "browser",
+  OKX = "okx",
 }
 
 export interface WalletState {

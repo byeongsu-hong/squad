@@ -19,6 +19,7 @@ interface WalletStore extends WalletState {
     publicKey: WalletState["publicKey"],
     walletName: string
   ) => void;
+  connectOkx: (publicKey: WalletState["publicKey"]) => void;
   disconnect: () => void;
 }
 
@@ -53,6 +54,17 @@ export const useWalletStore = create<WalletStore>()(
           publicKey,
           walletType: WalletType.BROWSER,
           walletName,
+          derivationPath: undefined,
+          deviceModel: undefined,
+        });
+      },
+
+      connectOkx: (publicKey) => {
+        set({
+          connected: true,
+          publicKey,
+          walletType: WalletType.OKX,
+          walletName: "OKX Wallet",
           derivationPath: undefined,
           deviceModel: undefined,
         });
