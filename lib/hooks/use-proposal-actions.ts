@@ -1,5 +1,10 @@
 import { useWallet } from "@solana/wallet-adapter-react";
-import { PublicKey, Transaction } from "@solana/web3.js";
+import {
+  PublicKey,
+  Transaction,
+  TransactionMessage,
+  VersionedTransaction,
+} from "@solana/web3.js";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 
@@ -36,7 +41,11 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
   );
 
   const signAndSendTransaction = useCallback(
-    async (transaction: Transaction, squadService: SquadService) => {
+    async (
+      transaction: Transaction,
+      squadService: SquadService,
+      chainId: string
+    ) => {
       if (!publicKey) {
         throw new Error(ERROR_MESSAGES.WALLET_NOT_CONNECTED);
       }
@@ -61,6 +70,36 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
       transaction.recentBlockhash = blockhash;
       transaction.feePayer = publicKey;
 
+      // Solaxy requires V0 versioned transactions
+      const isSolaxy = chainId === "solaxy-mainnet";
+
+      if (isSolaxy) {
+        // Convert to V0 versioned transaction for Solaxy
+        const messageV0 = new TransactionMessage({
+          payerKey: publicKey,
+          recentBlockhash: blockhash,
+          instructions: transaction.instructions,
+        }).compileToV0Message();
+
+        const versionedTx = new VersionedTransaction(messageV0);
+
+        const signedVersionedTx =
+          await transactionSignerService.signVersionedTransaction(versionedTx, {
+            walletType,
+            derivationPath,
+            walletAdapter: signTransaction ? { signTransaction } : undefined,
+          });
+
+        const txid = await squadService
+          .getConnection()
+          .sendRawTransaction(signedVersionedTx.serialize());
+
+        await squadService.getConnection().confirmTransaction(txid);
+
+        return txid;
+      }
+
+      // Standard legacy transaction for other chains
       const signedTransaction = await transactionSignerService.signTransaction(
         transaction,
         {
@@ -111,7 +150,7 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
         });
 
         const transaction = new Transaction().add(instruction);
-        await signAndSendTransaction(transaction, squadService);
+        await signAndSendTransaction(transaction, squadService, chainId);
 
         toast.success(SUCCESS_MESSAGES.PROPOSAL_APPROVED);
         squadService.invalidateProposalCache(multisigPda);
@@ -154,7 +193,7 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
         });
 
         const transaction = new Transaction().add(instruction);
-        await signAndSendTransaction(transaction, squadService);
+        await signAndSendTransaction(transaction, squadService, chainId);
 
         toast.success(SUCCESS_MESSAGES.PROPOSAL_REJECTED);
         squadService.invalidateProposalCache(multisigPda);
@@ -202,7 +241,7 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
             : result;
 
         const transaction = new Transaction().add(instruction);
-        await signAndSendTransaction(transaction, squadService);
+        await signAndSendTransaction(transaction, squadService, chainId);
 
         toast.success(SUCCESS_MESSAGES.PROPOSAL_EXECUTED);
         squadService.invalidateProposalCache(multisigPda);
