@@ -3,6 +3,7 @@ import { useCallback } from "react";
 import { toast } from "sonner";
 
 import { ledgerService } from "@/lib/ledger";
+import { okxWalletService } from "@/lib/okx-wallet";
 import { useWalletStore } from "@/stores/wallet-store";
 import { WalletType } from "@/types/wallet";
 
@@ -16,6 +17,8 @@ export function useWalletDisconnect() {
         await ledgerService.disconnect();
       } else if (walletType === WalletType.BROWSER) {
         await disconnectAdapter();
+      } else if (walletType === WalletType.OKX) {
+        await okxWalletService.disconnect();
       }
 
       disconnectStore();

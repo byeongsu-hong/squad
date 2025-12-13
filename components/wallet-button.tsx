@@ -17,9 +17,10 @@ import { useWalletDisconnect } from "@/lib/hooks/use-wallet-disconnect";
 import { useWalletStore } from "@/stores/wallet-store";
 
 import { BrowserWalletDialog } from "./browser-wallet-dialog";
+import { OkxWalletDialog } from "./okx-wallet-dialog";
 import { WalletConnectDialog } from "./wallet-connect-dialog";
 
-type DialogType = "ledger" | "browser" | null;
+type DialogType = "ledger" | "browser" | "okx" | null;
 
 export function WalletButton() {
   const [dialogOpen, setDialogOpen] = useState<DialogType>(null);
@@ -50,6 +51,10 @@ export function WalletButton() {
               <Globe className="mr-2 h-4 w-4" />
               Browser Wallet
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setDialogOpen("okx")}>
+              <Wallet className="mr-2 h-4 w-4" />
+              OKX Wallet
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setDialogOpen("ledger")}>
               <Usb className="mr-2 h-4 w-4" />
               Ledger Device
@@ -64,6 +69,10 @@ export function WalletButton() {
         <BrowserWalletDialog
           open={dialogOpen === "browser"}
           onOpenChange={(open) => setDialogOpen(open ? "browser" : null)}
+        />
+        <OkxWalletDialog
+          open={dialogOpen === "okx"}
+          onOpenChange={(open) => setDialogOpen(open ? "okx" : null)}
         />
       </>
     );
