@@ -1,7 +1,7 @@
 import yaml from "js-yaml";
 
 import type { AddressLabel } from "@/types/address-label";
-import type { ChainConfig } from "@/types/chain";
+import { type ChainConfig, normalizeChainConfig } from "@/types/chain";
 import type { MultisigAccount } from "@/types/multisig";
 
 export interface ExportData {
@@ -57,6 +57,10 @@ export function importFromYaml(yamlContent: string): ExportData {
         ? multisig.tags.filter((tag): tag is string => typeof tag === "string")
         : [],
     }));
+  }
+
+  if (data.chains) {
+    data.chains = data.chains.map(normalizeChainConfig);
   }
 
   return data;

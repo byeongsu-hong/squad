@@ -25,6 +25,13 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import {
   chainNameSchema,
@@ -43,12 +50,27 @@ interface ChainManagementControllerProps {
   embedded?: boolean;
 }
 
-const chainFormSchema = z.object({
-  name: chainNameSchema,
-  rpcUrl: rpcUrlSchema,
-  squadsV4ProgramId: programIdSchema,
-  explorerUrl: rpcUrlSchema.optional().or(z.literal("")),
-});
+const chainFormSchema = z
+  .object({
+    name: chainNameSchema,
+    vmFamily: z.enum(["svm", "evm"]),
+    multisigProvider: z.enum(["squads", "safe"]),
+    rpcUrl: rpcUrlSchema,
+    squadsV4ProgramId: z.string(),
+    explorerUrl: rpcUrlSchema.optional().or(z.literal("")),
+  })
+  .superRefine((data, context) => {
+    if (data.multisigProvider === "squads") {
+      const result = programIdSchema.safeParse(data.squadsV4ProgramId);
+      if (!result.success) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["squadsV4ProgramId"],
+          message: "Valid Squads program ID is required",
+        });
+      }
+    }
+  });
 
 type ChainFormValues = z.infer<typeof chainFormSchema>;
 
@@ -91,6 +113,8 @@ export function ChainManagementController({
     resolver: zodResolver(chainFormSchema),
     defaultValues: {
       name: "",
+      vmFamily: "svm",
+      multisigProvider: "squads",
       rpcUrl: "",
       squadsV4ProgramId: "",
       explorerUrl: "",
@@ -101,8 +125,11 @@ export function ChainManagementController({
     if (editingChain) {
       updateChain(editingChain.id, {
         name: data.name,
+        vmFamily: data.vmFamily,
+        multisigProvider: data.multisigProvider,
         rpcUrl: data.rpcUrl,
-        squadsV4ProgramId: data.squadsV4ProgramId,
+        squadsV4ProgramId:
+          data.multisigProvider === "squads" ? data.squadsV4ProgramId : "",
         explorerUrl: data.explorerUrl || undefined,
       });
       toast.success("Chain updated successfully");
@@ -110,8 +137,11 @@ export function ChainManagementController({
       const newChain: ChainConfig = {
         id: `custom-${crypto.randomUUID()}`,
         name: data.name,
+        vmFamily: data.vmFamily,
+        multisigProvider: data.multisigProvider,
         rpcUrl: data.rpcUrl,
-        squadsV4ProgramId: data.squadsV4ProgramId,
+        squadsV4ProgramId:
+          data.multisigProvider === "squads" ? data.squadsV4ProgramId : "",
         explorerUrl: data.explorerUrl || undefined,
       };
       addChain(newChain);
@@ -125,6 +155,8 @@ export function ChainManagementController({
     setEditingChain(chain);
     form.reset({
       name: chain.name,
+      vmFamily: chain.vmFamily ?? "svm",
+      multisigProvider: chain.multisigProvider ?? "squads",
       rpcUrl: chain.rpcUrl,
       squadsV4ProgramId: chain.squadsV4ProgramId,
       explorerUrl: chain.explorerUrl || "",
@@ -154,6 +186,8 @@ export function ChainManagementController({
     setEditingChain(null);
     form.reset({
       name: "",
+      vmFamily: "svm",
+      multisigProvider: "squads",
       rpcUrl: "",
       squadsV4ProgramId: "",
       explorerUrl: "",
@@ -211,6 +245,8 @@ function ChainEditor({
   onSubmit,
   onCancel,
 }: ChainEditorProps) {
+  const multisigProvider = form.watch("multisigProvider");
+
   return (
     <div
       className={
@@ -248,6 +284,65 @@ function ChainEditor({
             )}
           />
 
+          <div className="grid gap-4 md:grid-cols-2">
+            <FormField
+              control={form.control}
+              name="vmFamily"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>VM Family</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value || "svm"}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select a VM family" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="svm">SVM</SelectItem>
+                      <SelectItem value="evm">EVM</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    Determines the transaction runtime this chain belongs to.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="multisigProvider"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Multisig Provider</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value || "squads"}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select a provider" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="squads">Squads</SelectItem>
+                      <SelectItem value="safe">Safe</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    Safe chains are settings-only for now and do not participate
+                    in current signing flows.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
           <FormField
             control={form.control}
             name="rpcUrl"
@@ -267,24 +362,33 @@ function ChainEditor({
             )}
           />
 
-          <FormField
-            control={form.control}
-            name="squadsV4ProgramId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>
-                  Squad Program ID <span className="text-destructive">*</span>
-                </FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="SQDS4ep65T869zMMBKyuUq6aD6EgTu8psMjkvj52pCf"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {multisigProvider === "squads" ? (
+            <FormField
+              control={form.control}
+              name="squadsV4ProgramId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Squads Program ID{" "}
+                    <span className="text-destructive">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="SQDS4ep65T869zMMBKyuUq6aD6EgTu8psMjkvj52pCf"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          ) : (
+            <div className="rounded-md border border-zinc-800 bg-zinc-950/55 px-3 py-3 text-sm text-zinc-400">
+              Safe-specific runtime addresses live in the adapter settings
+              panel. Chain creation here stores the network identity and RPC /
+              explorer endpoints.
+            </div>
+          )}
 
           <FormField
             control={form.control}
@@ -389,6 +493,12 @@ function ChainRegistry({
                     Default
                   </span>
                 ) : null}
+                <span className="rounded-full border border-zinc-700 bg-zinc-900 px-1.5 py-0.5 text-[0.62rem] tracking-[0.16em] text-zinc-400 uppercase">
+                  {(chain.vmFamily ?? "svm").toUpperCase()}
+                </span>
+                <span className="rounded-full border border-zinc-700 bg-zinc-900 px-1.5 py-0.5 text-[0.62rem] tracking-[0.16em] text-zinc-400 uppercase">
+                  {chain.multisigProvider ?? "squads"}
+                </span>
               </div>
               {!embedded ? (
                 <p className="text-muted-foreground text-xs">

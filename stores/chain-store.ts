@@ -2,7 +2,7 @@ import { create } from "zustand";
 
 import { chainStorage } from "@/lib/storage";
 import type { ChainConfig } from "@/types/chain";
-import { DEFAULT_CHAINS } from "@/types/chain";
+import { DEFAULT_CHAINS, normalizeChainConfig } from "@/types/chain";
 
 interface ChainStore {
   chains: ChainConfig[];
@@ -21,7 +21,7 @@ export const useChainStore = create<ChainStore>((set, get) => ({
   selectedChainId: null,
 
   initializeChains: () => {
-    const storedChains = chainStorage.getChains();
+    const storedChains = chainStorage.getChains().map(normalizeChainConfig);
     const selectedId = chainStorage.getSelectedChainId();
 
     const chains = storedChains.length > 0 ? storedChains : DEFAULT_CHAINS;
@@ -41,14 +41,24 @@ export const useChainStore = create<ChainStore>((set, get) => ({
   },
 
   addChain: (chain) => {
-    chainStorage.addChain(chain);
-    set((state) => ({ chains: [...state.chains, chain] }));
+    const normalizedChain = normalizeChainConfig(chain);
+    chainStorage.addChain(normalizedChain);
+    set((state) => ({ chains: [...state.chains, normalizedChain] }));
   },
 
   updateChain: (id, updates) => {
-    chainStorage.updateChain(id, updates);
+    const existingChain = get().chains.find((chain) => chain.id === id);
+    if (!existingChain) {
+      return;
+    }
+
+    const normalizedChain = normalizeChainConfig({
+      ...existingChain,
+      ...updates,
+    });
+    chainStorage.updateChain(id, normalizedChain);
     const newChains = get().chains.map((chain) =>
-      chain.id === id ? { ...chain, ...updates } : chain
+      chain.id === id ? normalizedChain : chain
     );
     set({ chains: newChains });
   },
