@@ -1,5 +1,6 @@
 interface UseOperationsSelectionOptions {
   setActiveViewKey: (key: string) => void;
+  setFocusedProposalKey: (key: string | null) => void;
   setSelectedRegistryKeys: (
     keys: string[] | ((current: string[]) => string[])
   ) => void;
@@ -10,12 +11,14 @@ interface UseOperationsSelectionOptions {
 
 export function useOperationsSelection({
   setActiveViewKey,
+  setFocusedProposalKey,
   setSelectedRegistryKeys,
   setExpandedViewKeys,
 }: UseOperationsSelectionOptions) {
   const handleViewSelect = (viewId: string) => {
     setActiveViewKey(viewId);
     setSelectedRegistryKeys([]);
+    setFocusedProposalKey(null);
   };
 
   const handleRegistrySelect = (
@@ -23,6 +26,7 @@ export function useOperationsSelection({
     event?: Pick<MouseEvent, "metaKey" | "ctrlKey">
   ) => {
     const multiselect = Boolean(event?.metaKey || event?.ctrlKey);
+    setFocusedProposalKey(null);
 
     setSelectedRegistryKeys((current) => {
       if (!multiselect) {
