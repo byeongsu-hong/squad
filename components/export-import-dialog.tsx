@@ -13,7 +13,7 @@ import { useAddressLabels } from "@/lib/hooks/use-address-label";
 import { SquadService } from "@/lib/squad";
 import { useChainStore } from "@/stores/chain-store";
 import { useMultisigStore } from "@/stores/multisig-store";
-import type { ChainConfig } from "@/types/chain";
+import { type ChainConfig, isOperationalSquadsChain } from "@/types/chain";
 import type { MultisigAccount } from "@/types/multisig";
 
 import { Button } from "./ui/button";
@@ -146,6 +146,13 @@ export function ExportImportController({
             if (!chain) {
               failedMultisigs.push(
                 `${serializedMultisig.publicKey} (chain not found: ${serializedMultisig.chainId})`
+              );
+              continue;
+            }
+
+            if (!isOperationalSquadsChain(chain)) {
+              failedMultisigs.push(
+                `${serializedMultisig.publicKey} (chain ${chain.name} is not active for Squads imports)`
               );
               continue;
             }
@@ -387,6 +394,11 @@ function ExportImportExportPanel({
   copied,
   onCopy,
 }: ExportImportExportPanelProps) {
+  const operationalSquadsChains = chains.filter(isOperationalSquadsChain);
+  const preparedSafeChains = chains.filter(
+    (chain) => chain.multisigProvider === "safe"
+  );
+
   return (
     <div
       className={
@@ -414,10 +426,10 @@ function ExportImportExportPanel({
             <div className="grid gap-2">
               <div className="border border-zinc-800 bg-zinc-950 px-3 py-2">
                 <p className="text-[0.62rem] tracking-[0.16em] text-zinc-500 uppercase">
-                  Chains
+                  Squads chains
                 </p>
                 <p className="mt-1 text-sm font-medium text-zinc-100">
-                  {chains.length}
+                  {operationalSquadsChains.length}
                 </p>
               </div>
               <div className="border border-zinc-800 bg-zinc-950 px-3 py-2">
@@ -426,6 +438,14 @@ function ExportImportExportPanel({
                 </p>
                 <p className="mt-1 text-sm font-medium text-zinc-100">
                   {multisigs.length}
+                </p>
+              </div>
+              <div className="border border-zinc-800 bg-zinc-950 px-3 py-2">
+                <p className="text-[0.62rem] tracking-[0.16em] text-zinc-500 uppercase">
+                  Safe-ready chains
+                </p>
+                <p className="mt-1 text-sm font-medium text-zinc-100">
+                  {preparedSafeChains.length}
                 </p>
               </div>
               <Button
@@ -514,6 +534,8 @@ function ExportImportImportPanel({
             <p>New chains import before multisigs.</p>
             <p>Duplicate multisigs are skipped.</p>
             <p>Missing-chain entries are reported as failures.</p>
+            <p>Non-Squads chains import as settings only.</p>
+            <p>Multisigs targeting Safe-prepared chains are skipped for now.</p>
           </div>
         </div>
       ) : null}
