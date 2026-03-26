@@ -20,7 +20,7 @@ export function RegistryManagementDialog({
 
   const handleOpenSettings = () => {
     setSettingsActiveSection("registry");
-    router.push("/settings?section=registry");
+    router.push("/settings?section=registry&panel=manage");
   };
 
   return (

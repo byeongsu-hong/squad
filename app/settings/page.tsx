@@ -1,7 +1,7 @@
 "use client";
 
 import { Database, Network, Tag } from "lucide-react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo } from "react";
 
 import { AddMultisigActions } from "@/components/add-multisig-actions";
@@ -65,12 +65,18 @@ function StatPill({ label, value }: { label: string; value: string }) {
 }
 
 export default function SettingsPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const { chains } = useChainStore();
   const { multisigs } = useMultisigStore();
   const { labels } = useAddressLabels();
   const { settingsActiveSection, setSettingsActiveSection } =
     useWorkspaceStore();
+  const registryPanel =
+    searchParams.get("panel") === "transport" ||
+    searchParams.get("panel") === "adapters"
+      ? searchParams.get("panel")
+      : "manage";
 
   useEffect(() => {
     const requestedSection = searchParams.get("section");
@@ -229,15 +235,56 @@ export default function SettingsPage() {
             </div>
           ) : null}
           {settingsActiveSection === "registry" ? (
-            <div className="grid gap-5 2xl:grid-cols-[minmax(0,1.35fr)_minmax(21rem,0.8fr)]">
-              <div className="min-w-0">
+            <div className="space-y-5">
+              <div className="flex flex-wrap items-center gap-2 border-b border-zinc-800 pb-4">
+                {[
+                  {
+                    id: "manage",
+                    label: "Manage",
+                    copy: "Create, relabel, retag, and remove saved multisigs.",
+                  },
+                  {
+                    id: "transport",
+                    label: "Transport",
+                    copy: "Import or export local registry data.",
+                  },
+                  {
+                    id: "adapters",
+                    label: "Adapters",
+                    copy: "Prepare future provider settings such as Safe.",
+                  },
+                ].map((panel) => {
+                  const selected = registryPanel === panel.id;
+                  const href = `/settings?section=registry&panel=${panel.id}`;
+
+                  return (
+                    <button
+                      key={panel.id}
+                      type="button"
+                      onClick={() => router.replace(href, { scroll: false })}
+                      className={cn(
+                        "rounded-md border px-3 py-2 text-sm transition-colors",
+                        selected
+                          ? "border-zinc-100 bg-zinc-100 text-zinc-950"
+                          : "border-zinc-800 bg-zinc-950/60 text-zinc-300 hover:bg-zinc-900"
+                      )}
+                      title={panel.copy}
+                    >
+                      {panel.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {registryPanel === "manage" ? (
                 <MultisigList
                   embedded
                   actions={<AddMultisigActions />}
                   statusText="Create, import, relabel, retag, and clean up stored multisigs from the main admin surface."
                 />
-              </div>
-              <div className="space-y-5">
+              ) : null}
+
+              {registryPanel === "transport" ? (
                 <div className="space-y-4 border border-zinc-800 bg-zinc-950/55 p-4">
                   <div className="space-y-1 border-b border-zinc-800 pb-4">
                     <p className="text-[0.68rem] tracking-[0.18em] text-zinc-500 uppercase">
@@ -250,7 +297,9 @@ export default function SettingsPage() {
                   </div>
                   <ExportImportController embedded />
                 </div>
-              </div>
+              ) : null}
+
+              {registryPanel === "adapters" ? <ProviderAdaptersPanel /> : null}
             </div>
           ) : null}
           {settingsActiveSection === "labels" ? (
