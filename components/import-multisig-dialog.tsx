@@ -39,6 +39,7 @@ import { SquadService } from "@/lib/squad";
 import { chainIdSchema, labelSchema, publicKeySchema } from "@/lib/validation";
 import { useChainStore } from "@/stores/chain-store";
 import { useMultisigStore } from "@/stores/multisig-store";
+import { getOperationalSquadsChains } from "@/types/chain";
 import type { SquadMember } from "@/types/squad";
 
 interface ImportMultisigDialogProps {
@@ -63,6 +64,7 @@ export function ImportMultisigDialog({
 
   const { getSelectedChain, chains } = useChainStore();
   const { addMultisig } = useMultisigStore();
+  const operationalChains = getOperationalSquadsChains(chains);
 
   const form = useForm<ImportFormValues>({
     resolver: zodResolver(importMultisigFormSchema),
@@ -74,7 +76,7 @@ export function ImportMultisigDialog({
   });
 
   const handleSubmit = form.handleSubmit(async (data) => {
-    const chain = chains.find((c) => c.id === data.chainId);
+    const chain = operationalChains.find((c) => c.id === data.chainId);
     if (!chain) {
       toast.error("Selected chain not found");
       return;
@@ -134,11 +136,19 @@ export function ImportMultisigDialog({
 
   // Set default chain when dialog opens
   useEffect(() => {
-    if (open && !form.getValues("chainId") && chains.length > 0) {
+    if (open && !form.getValues("chainId") && operationalChains.length > 0) {
       const currentChain = getSelectedChain();
-      form.setValue("chainId", currentChain?.id || chains[0].id);
+      const nextChainId = operationalChains.some(
+        (chain) => chain.id === currentChain?.id
+      )
+        ? currentChain?.id
+        : operationalChains[0]?.id;
+
+      if (nextChainId) {
+        form.setValue("chainId", nextChainId);
+      }
     }
-  }, [open, chains, form, getSelectedChain]);
+  }, [open, operationalChains, form, getSelectedChain]);
 
   useEffect(() => {
     if (!open) {
@@ -177,7 +187,7 @@ export function ImportMultisigDialog({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {chains.map((chain) => (
+                      {operationalChains.map((chain) => (
                         <SelectItem key={chain.id} value={chain.id}>
                           {chain.name}
                         </SelectItem>
@@ -185,6 +195,10 @@ export function ImportMultisigDialog({
                     </SelectContent>
                   </Select>
                   <FormMessage />
+                  <FormDescription>
+                    Only chains with active SVM / Squads support are available
+                    for import.
+                  </FormDescription>
                 </FormItem>
               )}
             />

@@ -20,6 +20,8 @@ describe("export-import", () => {
       rpcUrl: "https://test.example.com",
       squadsV4ProgramId: "SQDS4ep65T869zMMBKyuUq6aD6EgTu8psMjkvj52pCf",
       explorerUrl: "https://explorer.test.example.com",
+      vmFamily: "svm",
+      multisigProvider: "squads",
       isDefault: true,
     },
   ];
@@ -126,6 +128,8 @@ describe("export-import", () => {
       expect(imported.chains).toHaveLength(1);
       expect(imported.chains?.[0].id).toBe("test-chain");
       expect(imported.chains?.[0].name).toBe("Test Chain");
+      expect(imported.chains?.[0].vmFamily).toBe("svm");
+      expect(imported.chains?.[0].multisigProvider).toBe("squads");
     });
 
     it("should import multisigs from YAML", () => {
@@ -159,6 +163,21 @@ describe("export-import", () => {
     it("should throw error for missing version", () => {
       const yaml = "chains:\n  - id: test";
       expect(() => importFromYaml(yaml)).toThrow("Missing version field");
+    });
+
+    it("should normalize legacy chains without provider metadata", () => {
+      const yaml = `version: "1.0"
+exportedAt: "2026-03-27T00:00:00.000Z"
+chains:
+  - id: legacy-chain
+    name: Legacy Chain
+    rpcUrl: https://legacy.example.com
+    squadsV4ProgramId: SQDS4ep65T869zMMBKyuUq6aD6EgTu8psMjkvj52pCf
+`;
+      const imported = importFromYaml(yaml);
+
+      expect(imported.chains?.[0].vmFamily).toBe("svm");
+      expect(imported.chains?.[0].multisigProvider).toBe("squads");
     });
   });
 
