@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 interface UsePaginationOptions {
   totalItems: number;
@@ -35,18 +35,21 @@ export function usePagination<T>(
     return items.slice(startIndex, endIndex);
   }, [items, currentPage, itemsPerPage]);
 
-  const goToPage = (page: number) => {
-    const validPage = Math.max(1, Math.min(page, totalPages));
-    setCurrentPage(validPage);
-  };
+  const goToPage = useCallback(
+    (page: number) => {
+      const validPage = Math.max(1, Math.min(page, totalPages));
+      setCurrentPage(validPage);
+    },
+    [totalPages]
+  );
 
-  const nextPage = () => {
+  const nextPage = useCallback(() => {
     goToPage(currentPage + 1);
-  };
+  }, [currentPage, goToPage]);
 
-  const previousPage = () => {
+  const previousPage = useCallback(() => {
     goToPage(currentPage - 1);
-  };
+  }, [currentPage, goToPage]);
 
   const canGoNext = currentPage < totalPages;
   const canGoPrevious = currentPage > 1;

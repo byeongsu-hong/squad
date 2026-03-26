@@ -1,7 +1,5 @@
-"use client";
-
-import { MonitoringView } from "@/components/monitoring-view";
+import { redirect } from "next/navigation";
 
 export default function MonitoringPage() {
-  return <MonitoringView />;
+  redirect("/");
 }
