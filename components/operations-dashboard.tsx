@@ -23,6 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Pagination } from "@/components/ui/pagination";
+import { useOperationsRegistry } from "@/lib/hooks/use-operations-registry";
 import { usePagination } from "@/lib/hooks/use-pagination";
 import { useProposalActions } from "@/lib/hooks/use-proposal-actions";
 import { useSquadsProposalLoader } from "@/lib/hooks/use-squads-proposal-loader";
@@ -34,11 +35,7 @@ import {
   type ConfigAction,
   formatConfigAction,
 } from "@/lib/utils/transaction-formatter";
-import {
-  buildWorkspaceExplorerViews,
-  buildWorkspaceRegistryItems,
-  toWorkspaceMultisigs,
-} from "@/lib/workspace/squads-adapter";
+import { toWorkspaceMultisigs } from "@/lib/workspace/squads-adapter";
 import { useChainStore } from "@/stores/chain-store";
 import { useMultisigStore } from "@/stores/multisig-store";
 import { useWalletStore } from "@/stores/wallet-store";
@@ -132,87 +129,28 @@ export function OperationsDashboard({
     setActiveViewKey,
   });
 
-  const primarySelectedRegistryKey = selectedRegistryKeys[0] ?? null;
-  const selectedRegistryKeySet = useMemo(
-    () => new Set(selectedRegistryKeys),
-    [selectedRegistryKeys]
-  );
-
   const queueItems = useWorkspaceQueue({
     proposals,
     multisigs: workspaceMultisigs,
     viewerAddress: publicKey?.toString() ?? null,
   });
-
-  const searchNeedle = searchText.trim().toLowerCase();
-
-  const registryItems = useMemo(
-    () =>
-      buildWorkspaceRegistryItems(workspaceMultisigs, queueItems, searchNeedle),
-    [queueItems, searchNeedle, workspaceMultisigs]
-  );
-
-  const explorerViews = useMemo(
-    () => buildWorkspaceExplorerViews(registryItems),
-    [registryItems]
-  );
-
-  const activeView =
-    explorerViews.find((view) => view.id === activeViewKey) ?? explorerViews[0];
-
-  useEffect(() => {
-    if (!activeViewKey) {
-      return;
-    }
-
-    setExpandedViewKeys((current) =>
-      current.includes(activeViewKey) ? current : [...current, activeViewKey]
-    );
-  }, [activeViewKey, setExpandedViewKeys]);
-
-  useEffect(() => {
-    if (activeViewKey.startsWith("chain:")) {
-      setExplorerMode("chains");
-      return;
-    }
-    if (activeViewKey.startsWith("tag:")) {
-      setExplorerMode("tags");
-      return;
-    }
-    setExplorerMode("views");
-  }, [activeViewKey, setExplorerMode]);
-
-  const explorerSections = useMemo(
-    () =>
-      [
-        {
-          id: "views",
-          label: "Views",
-          views: explorerViews.filter(
-            (view) => view.id === "all" || view.id === "attention"
-          ),
-        },
-        {
-          id: "chains",
-          label: "Chains",
-          views: explorerViews.filter((view) => view.id.startsWith("chain:")),
-        },
-        {
-          id: "tags",
-          label: "Tags",
-          views: explorerViews.filter((view) => view.id.startsWith("tag:")),
-        },
-      ].filter((section) => section.views.length > 0),
-    [explorerViews]
-  );
-
-  const visibleExplorerSection = useMemo(
-    () =>
-      explorerSections.find((section) => section.id === explorerMode) ??
-      explorerSections[0] ??
-      null,
-    [explorerMode, explorerSections]
-  );
+  const {
+    primarySelectedRegistryKey,
+    selectedRegistryKeySet,
+    registryItems,
+    activeView,
+    explorerSections,
+    visibleExplorerSection,
+  } = useOperationsRegistry({
+    multisigs: workspaceMultisigs,
+    queueItems,
+    searchText,
+    activeViewKey,
+    explorerMode,
+    selectedRegistryKeys,
+    setExplorerMode,
+    setExpandedViewKeys,
+  });
 
   const scopedMultisigKeys = useMemo(
     () => new Set(activeView?.multisigKeys ?? []),
