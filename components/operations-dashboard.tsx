@@ -26,6 +26,7 @@ import { Pagination } from "@/components/ui/pagination";
 import { usePagination } from "@/lib/hooks/use-pagination";
 import { useProposalActions } from "@/lib/hooks/use-proposal-actions";
 import { useSquadsProposalLoader } from "@/lib/hooks/use-squads-proposal-loader";
+import { useWorkspacePayload } from "@/lib/hooks/use-workspace-payload";
 import { useOperationsWorkspaceQuerySync } from "@/lib/hooks/use-workspace-query-sync";
 import { cn } from "@/lib/utils";
 import {
@@ -36,7 +37,6 @@ import {
   buildWorkspaceExplorerViews,
   buildWorkspaceQueueItem,
   buildWorkspaceRegistryItems,
-  loadSquadsWorkspacePayload,
   toWorkspaceMultisigs,
   toWorkspaceProposalFromRaw,
 } from "@/lib/workspace/squads-adapter";
@@ -46,7 +46,6 @@ import { useWalletStore } from "@/stores/wallet-store";
 import { useWorkspaceStore } from "@/stores/workspace-store";
 import type {
   WorkspaceExplorerMode,
-  WorkspacePayload,
   WorkspaceQueueItem,
 } from "@/types/workspace";
 
@@ -81,11 +80,6 @@ export function OperationsDashboard({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [searchText, setSearchText] = useState("");
-  const [payloadLoading, setPayloadLoading] = useState(false);
-  const [payloadError, setPayloadError] = useState<string | null>(null);
-  const [focusedPayload, setFocusedPayload] = useState<WorkspacePayload | null>(
-    null
-  );
 
   const { publicKey, connected } = useWalletStore();
   const { chains } = useChainStore();
@@ -318,6 +312,15 @@ export function OperationsDashboard({
     filteredQueueItems.find((item) => item.focusKey === focusedProposalKey) ??
     filteredQueueItems[0] ??
     null;
+  const {
+    loading: payloadLoading,
+    payload: focusedPayload,
+    error: payloadError,
+  } = useWorkspacePayload({
+    chains,
+    multisig: focusedItem?.multisig ?? null,
+    proposal: focusedItem?.proposal ?? null,
+  });
 
   useEffect(() => {
     setDetailTab("overview");
@@ -349,52 +352,6 @@ export function OperationsDashboard({
     actionLoading ===
       `execute-${focusedItem.multisig.key}-${focusedItem.proposal.transactionIndex}`
   );
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadFocusedPayload() {
-      if (!focusedItem) {
-        setFocusedPayload(null);
-        setPayloadError(null);
-        return;
-      }
-
-      setPayloadLoading(true);
-      setPayloadError(null);
-      setFocusedPayload(null);
-
-      try {
-        const payload = await loadSquadsWorkspacePayload(
-          focusedItem.multisig,
-          focusedItem.proposal,
-          chains
-        );
-
-        if (!cancelled) {
-          setFocusedPayload(payload);
-        }
-      } catch (error) {
-        if (!cancelled) {
-          setPayloadError(
-            error instanceof Error
-              ? error.message
-              : "Transaction data not available."
-          );
-        }
-      } finally {
-        if (!cancelled) {
-          setPayloadLoading(false);
-        }
-      }
-    }
-
-    void loadFocusedPayload();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [chains, focusedItem]);
 
   const handleApprove = async () => {
     if (!focusedItem) return;
