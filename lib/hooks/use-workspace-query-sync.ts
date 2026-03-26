@@ -151,7 +151,6 @@ export function useOperationsWorkspaceQuerySync({
     if (hasRequestedProposal && !proposalMatchesSelectedScope) {
       setFocusedProposalKey(null);
     }
-
   }, [
     availableMultisigKeys,
     searchParams,
@@ -284,8 +283,6 @@ export function useProposalDeskQuerySync({
     if (hasRequestedProposal && requestedProposal) {
       setFocusedProposalKey(requestedProposal);
     }
-
-    hasHydratedQueryRef.current = true;
   }, [searchParams, setFocusedProposalKey]);
 
   useEffect(() => {
