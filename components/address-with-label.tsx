@@ -4,12 +4,6 @@ import { Copy, Tag } from "lucide-react";
 import { toast } from "sonner";
 
 import { AddressLabelManagerDialog } from "@/components/address-label-manager-dialog";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { useAddressLabel } from "@/lib/hooks/use-address-label";
 import { cn } from "@/lib/utils";
 
@@ -152,42 +146,26 @@ export function AddressWithLabel({
             ) : null}
           </button>
         ) : (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div
-                  className={cn(
-                    "flex min-w-0",
-                    showFull
-                      ? "flex-col items-start gap-1"
-                      : "items-center gap-2"
-                  )}
-                >
-                  <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-zinc-800 bg-zinc-950 px-2.5 py-1 text-xs text-zinc-200 transition-colors hover:border-zinc-700 hover:bg-zinc-900 hover:text-zinc-100">
-                    <span
-                      className="h-1.5 w-1.5 shrink-0 rounded-full"
-                      style={{ backgroundColor: label.color }}
-                    />
-                    <span className="truncate">{label.label}</span>
-                  </div>
-                  {showFull ? (
-                    <code className="max-w-full truncate font-mono text-xs text-zinc-500 tabular-nums transition-colors hover:text-zinc-300">
-                      {address}
-                    </code>
-                  ) : null}
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <div className="space-y-1">
-                  <p className="font-medium">{label.label}</p>
-                  <p className="text-muted-foreground text-xs">{address}</p>
-                  {label.description && (
-                    <p className="text-xs">{label.description}</p>
-                  )}
-                </div>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <div
+            className={cn(
+              "flex min-w-0",
+              showFull ? "flex-col items-start gap-1" : "items-center gap-2"
+            )}
+            title={`${label.label}${label.description ? `\n${label.description}` : ""}\n${address}`}
+          >
+            <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-zinc-800 bg-zinc-950 px-2.5 py-1 text-xs text-zinc-200 transition-colors hover:border-zinc-700 hover:bg-zinc-900 hover:text-zinc-100">
+              <span
+                className="h-1.5 w-1.5 shrink-0 rounded-full"
+                style={{ backgroundColor: label.color }}
+              />
+              <span className="truncate">{label.label}</span>
+            </div>
+            {showFull ? (
+              <code className="max-w-full truncate font-mono text-xs text-zinc-500 tabular-nums transition-colors hover:text-zinc-300">
+                {address}
+              </code>
+            ) : null}
+          </div>
         )
       ) : copyOnClick ? (
         <button
@@ -203,18 +181,12 @@ export function AddressWithLabel({
           {displayAddress}
         </button>
       ) : (
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <code className="rounded-md border border-zinc-800 bg-zinc-950 px-2 py-1 font-mono text-xs text-zinc-300 transition-colors hover:border-zinc-700 hover:bg-zinc-900 hover:text-zinc-100">
-                {displayAddress}
-              </code>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p className="font-mono text-xs tabular-nums">{address}</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <code
+          className="rounded-md border border-zinc-800 bg-zinc-950 px-2 py-1 font-mono text-xs text-zinc-300 transition-colors hover:border-zinc-700 hover:bg-zinc-900 hover:text-zinc-100"
+          title={address}
+        >
+          {displayAddress}
+        </code>
       )}
 
       <div className="flex items-center gap-0.5">

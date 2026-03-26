@@ -34,6 +34,10 @@ export function useFocusedQueue<T>({
 
     return items;
   }, [filter, isExecutable, isWaiting, items]);
+  const filteredItemKeys = useMemo(
+    () => new Set(filteredItems.map(getItemKey)),
+    [filteredItems, getItemKey]
+  );
 
   const pagination = usePagination(filteredItems, {
     totalItems: filteredItems.length,
@@ -45,13 +49,12 @@ export function useFocusedQueue<T>({
       return;
     }
 
-    const availableKeys = new Set(items.map(getItemKey));
-    if (focusedKey && availableKeys.has(focusedKey)) {
+    if (focusedKey && filteredItemKeys.has(focusedKey)) {
       return;
     }
 
     setFocusedKey(filteredItems[0] ? getItemKey(filteredItems[0]) : null);
-  }, [filteredItems, focusedKey, getItemKey, items, setFocusedKey]);
+  }, [filteredItemKeys, filteredItems, focusedKey, getItemKey, setFocusedKey]);
 
   useEffect(() => {
     if (!focusedKey) {
@@ -70,7 +73,10 @@ export function useFocusedQueue<T>({
   }, [filteredItems, focusedKey, getItemKey, itemsPerPage, pagination]);
 
   const focusedItem =
-    items.find((item) => getItemKey(item) === focusedKey) ?? items[0] ?? null;
+    filteredItems.find((item) => getItemKey(item) === focusedKey) ??
+    filteredItems[0] ??
+    items[0] ??
+    null;
 
   return {
     filteredItems,
