@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { loadSquadsWorkspacePayload } from "@/lib/workspace/squads-adapter";
+import { getWorkspaceProviderAdapter } from "@/lib/workspace/provider-adapters";
 import type { ChainConfig } from "@/types/chain";
 import type {
   WorkspaceMultisig,
@@ -38,11 +38,12 @@ export function useWorkspacePayload({
       setError(null);
 
       try {
-        const nextPayload = await loadSquadsWorkspacePayload(
+        const adapter = getWorkspaceProviderAdapter(multisig.provider);
+        const nextPayload = await adapter.loadPayload({
+          chains,
           multisig,
           proposal,
-          chains
-        );
+        });
 
         if (!cancelled) {
           setPayload(nextPayload);
