@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { resolveInitialMultisigs } from "@/lib/initial-config";
 import { useChainStore } from "@/stores/chain-store";
 import { useMultisigStore } from "@/stores/multisig-store";
+import { useProviderAdapterStore } from "@/stores/provider-adapter-store";
 
 import { WalletAdapterProvider } from "./wallet-adapter-provider";
 import { WalletSync } from "./wallet-sync";
@@ -16,6 +17,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const initializeChains = useChainStore((state) => state.initializeChains);
   const initializeMultisigs = useMultisigStore(
     (state) => state.initializeMultisigs
+  );
+  const initializeProviderAdapterSettings = useProviderAdapterStore(
+    (state) => state.initializeSettings
   );
   const setMultisigs = useMultisigStore((state) => state.setMultisigs);
   const selectMultisig = useMultisigStore((state) => state.selectMultisig);
@@ -30,6 +34,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     const run = async () => {
       initializeChains();
       initializeMultisigs();
+      initializeProviderAdapterSettings();
 
       const { chains } = useChainStore.getState();
       const { multisigs, selectedMultisigKey } = useMultisigStore.getState();
@@ -51,7 +56,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
     };
 
     void run();
-  }, [initializeChains, initializeMultisigs, selectMultisig, setMultisigs]);
+  }, [
+    initializeChains,
+    initializeMultisigs,
+    initializeProviderAdapterSettings,
+    selectMultisig,
+    setMultisigs,
+  ]);
 
   return (
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
