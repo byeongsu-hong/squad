@@ -13,14 +13,24 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useChainStore } from "@/stores/chain-store";
 import { useWalletStore } from "@/stores/wallet-store";
+import { getOperationalSquadsChains } from "@/types/chain";
 
 export function AddMultisigActions() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const { publicKey } = useWalletStore();
+  const { chains } = useChainStore();
+  const operationalChains = getOperationalSquadsChains(chains);
+  const hasOperationalSquadsChains = operationalChains.length > 0;
 
   const handleCreateClick = () => {
+    if (!hasOperationalSquadsChains) {
+      toast.error("Add a live SVM / Squads chain before creating a multisig");
+      return;
+    }
+
     if (!publicKey) {
       toast.error("Please connect your wallet to create a multisig");
       return;
@@ -32,7 +42,7 @@ export function AddMultisigActions() {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button>
+          <Button disabled={!hasOperationalSquadsChains}>
             <Plus className="mr-2 h-4 w-4" />
             Add Multisig
             <ChevronDown className="ml-2 h-4 w-4" />
@@ -42,11 +52,17 @@ export function AddMultisigActions() {
           align="end"
           className="border-zinc-800 bg-zinc-950 text-zinc-100"
         >
-          <DropdownMenuItem onClick={handleCreateClick}>
+          <DropdownMenuItem
+            onClick={handleCreateClick}
+            disabled={!hasOperationalSquadsChains}
+          >
             <Plus className="mr-2 h-4 w-4" />
             Create New
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setImportDialogOpen(true)}>
+          <DropdownMenuItem
+            onClick={() => setImportDialogOpen(true)}
+            disabled={!hasOperationalSquadsChains}
+          >
             <FileDown className="mr-2 h-4 w-4" />
             Import Existing
           </DropdownMenuItem>
