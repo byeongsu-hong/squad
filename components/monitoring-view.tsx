@@ -90,6 +90,8 @@ export function MonitoringView() {
     proposals,
     filteredProposals,
     availableTags,
+    supportedMultisigs,
+    unsupportedMultisigs,
     loadAllProposals,
     handleRefresh,
   } = useMonitoringProposals({
@@ -378,6 +380,7 @@ export function MonitoringView() {
       !p.proposal.executed &&
       !p.proposal.cancelled
   ).length;
+  const unsupportedCount = unsupportedMultisigs.length;
 
   return (
     <div className="space-y-4">
@@ -401,6 +404,11 @@ export function MonitoringView() {
             <span className="text-xs tracking-[0.18em] text-zinc-500 uppercase">
               {selectedProposals.size} selected
             </span>
+            {unsupportedCount > 0 ? (
+              <span className="text-xs tracking-[0.18em] text-amber-300 uppercase">
+                {unsupportedCount} unsupported
+              </span>
+            ) : null}
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
@@ -616,7 +624,7 @@ export function MonitoringView() {
               variant="outline"
               size="sm"
               onClick={handleRefresh}
-              disabled={loading}
+              disabled={loading || supportedMultisigs.length === 0}
               className="rounded-md border-zinc-800 bg-transparent text-zinc-200 hover:bg-zinc-900"
             >
               {loading ? (
@@ -637,9 +645,32 @@ export function MonitoringView() {
           </div>
         )}
 
+        {unsupportedMultisigs.length > 0 ? (
+          <div className="border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-sm text-amber-100">
+            <span className="font-medium">
+              Monitoring is loading Squads-only multisigs.
+            </span>{" "}
+            {unsupportedMultisigs
+              .slice(0, 3)
+              .map(
+                (multisig) =>
+                  `${multisig.label} (${multisig.chainName} · ${multisig.vmFamily.toUpperCase()} / ${multisig.provider})`
+              )
+              .join(", ")}
+            {unsupportedMultisigs.length > 3
+              ? ` and ${unsupportedMultisigs.length - 3} more are currently excluded.`
+              : " are currently excluded."}
+          </div>
+        ) : null}
+
         {multisigs.length === 0 ? (
           <div className="border border-dashed border-zinc-800 px-6 py-10 text-center text-zinc-400">
             No multisigs found. Add multisigs first to start monitoring.
+          </div>
+        ) : supportedMultisigs.length === 0 && !loading ? (
+          <div className="border border-dashed border-zinc-800 px-6 py-10 text-center text-zinc-400">
+            No supported Squads multisigs are available for monitoring on the
+            current registry.
           </div>
         ) : filteredProposals.length === 0 && !loading ? (
           <div className="border border-dashed border-zinc-800 px-6 py-10 text-center text-zinc-400">

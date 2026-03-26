@@ -14,13 +14,26 @@ import {
   loadSquadsWorkspaceProposalsForMultisig,
   toWorkspaceMultisig,
 } from "@/lib/workspace/squads-adapter";
-import type { ChainConfig } from "@/types/chain";
+import {
+  type ChainConfig,
+  isOperationalSquadsChain,
+  normalizeChainConfig,
+} from "@/types/chain";
 import type { MultisigAccount } from "@/types/multisig";
 
 export interface MonitoringProposal extends WorkspaceProposalRecord {
   rawMultisig: MultisigAccount;
   timestamp?: number;
   transactionSummary?: TransactionSummary;
+}
+
+export interface UnsupportedMonitoringMultisig {
+  key: string;
+  label: string;
+  chainId: string;
+  chainName: string;
+  vmFamily: string;
+  provider: string;
 }
 
 interface UseMonitoringProposalsOptions {
@@ -43,9 +56,50 @@ export function useMonitoringProposals({
   const [proposals, setProposals] = useState<MonitoringProposal[]>([]);
 
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
+  const unsupportedMultisigs = useMemo<UnsupportedMonitoringMultisig[]>(
+    () =>
+      multisigs.flatMap((multisig) => {
+        const chain = chains.find((item) => item.id === multisig.chainId);
+        if (!chain) {
+          return [
+            {
+              key: multisig.publicKey.toString(),
+              label: multisig.label || "Unnamed",
+              chainId: multisig.chainId,
+              chainName: multisig.chainId,
+              vmFamily: "unknown",
+              provider: "unknown",
+            },
+          ];
+        }
+
+        const normalizedChain = normalizeChainConfig(chain);
+        return isOperationalSquadsChain(normalizedChain)
+          ? []
+          : [
+              {
+                key: multisig.publicKey.toString(),
+                label: multisig.label || "Unnamed",
+                chainId: multisig.chainId,
+                chainName: normalizedChain.name,
+                vmFamily: normalizedChain.vmFamily ?? "svm",
+                provider: normalizedChain.multisigProvider ?? "squads",
+              },
+            ];
+      }),
+    [chains, multisigs]
+  );
+  const supportedMultisigs = useMemo(
+    () =>
+      multisigs.filter((multisig) => {
+        const chain = chains.find((item) => item.id === multisig.chainId);
+        return Boolean(chain && isOperationalSquadsChain(chain));
+      }),
+    [chains, multisigs]
+  );
 
   const loadAllProposals = useCallback(async () => {
-    if (multisigs.length === 0) {
+    if (supportedMultisigs.length === 0) {
       setProposals([]);
       return;
     }
@@ -54,10 +108,10 @@ export function useMonitoringProposals({
     setLoadingProgress(0);
 
     try {
-      const totalMultisigs = multisigs.length;
+      const totalMultisigs = supportedMultisigs.length;
       let completedCount = 0;
 
-      const proposalPromises = multisigs.map(async (multisig) => {
+      const proposalPromises = supportedMultisigs.map(async (multisig) => {
         const chain = chains.find((item) => item.id === multisig.chainId);
         if (!chain) {
           completedCount += 1;
@@ -189,10 +243,10 @@ export function useMonitoringProposals({
       setLoading(false);
       setLoadingProgress(0);
     }
-  }, [chains, multisigs]);
+  }, [chains, supportedMultisigs]);
 
   const handleRefresh = useCallback(async () => {
-    multisigs.forEach((multisig) => {
+    supportedMultisigs.forEach((multisig) => {
       invalidateSquadsProposalCache(
         multisig.chainId,
         multisig.publicKey.toString(),
@@ -201,7 +255,7 @@ export function useMonitoringProposals({
     });
 
     await loadAllProposals();
-  }, [chains, loadAllProposals, multisigs]);
+  }, [chains, loadAllProposals, supportedMultisigs]);
 
   const availableTags = useMemo(() => {
     const tags = new Set<string>();
@@ -263,6 +317,8 @@ export function useMonitoringProposals({
     proposals,
     filteredProposals,
     availableTags,
+    supportedMultisigs,
+    unsupportedMultisigs,
     loadAllProposals,
     handleRefresh,
   };
