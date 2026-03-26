@@ -1,11 +1,15 @@
 "use client";
 
 import { Database, Network, Tag } from "lucide-react";
-import { useMemo } from "react";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useMemo } from "react";
 
-import { AddressLabelManagerContent } from "@/components/address-label-manager-dialog";
-import { ChainManagementContent } from "@/components/chain-management-dialog";
-import { ExportImportContent } from "@/components/export-import-dialog";
+import { AddMultisigActions } from "@/components/add-multisig-actions";
+import { AddressLabelManagerController } from "@/components/address-label-manager-dialog";
+import { ChainManagementController } from "@/components/chain-management-dialog";
+import { ExportImportController } from "@/components/export-import-dialog";
+import { MultisigList } from "@/components/multisig-list";
+import { ProviderAdaptersPanel } from "@/components/provider-adapters-panel";
 import { useAddressLabels } from "@/lib/hooks/use-address-label";
 import { cn } from "@/lib/utils";
 import { useChainStore } from "@/stores/chain-store";
@@ -33,9 +37,9 @@ const SECTION_COPY: Record<
   },
   registry: {
     eyebrow: "Registry Data",
-    title: "Export and import",
+    title: "Registry and transport",
     description:
-      "Move chains and multisigs between local environments without leaving the admin surface.",
+      "Manage saved multisigs, import or export local workspace data, and keep the registry ready for future runtimes.",
     icon: Database,
     accent: "text-amber-300",
   },
@@ -61,11 +65,23 @@ function StatPill({ label, value }: { label: string; value: string }) {
 }
 
 export default function SettingsPage() {
+  const searchParams = useSearchParams();
   const { chains } = useChainStore();
   const { multisigs } = useMultisigStore();
   const { labels } = useAddressLabels();
   const { settingsActiveSection, setSettingsActiveSection } =
     useWorkspaceStore();
+
+  useEffect(() => {
+    const requestedSection = searchParams.get("section");
+    if (
+      requestedSection === "chains" ||
+      requestedSection === "registry" ||
+      requestedSection === "labels"
+    ) {
+      setSettingsActiveSection(requestedSection);
+    }
+  }, [searchParams, setSettingsActiveSection]);
 
   const sectionMeta = useMemo(
     () => [
@@ -77,7 +93,7 @@ export default function SettingsPage() {
       {
         id: "registry" as const,
         count: multisigs.length,
-        summary: "portable config",
+        summary: "multisigs + transport",
       },
       {
         id: "labels" as const,
@@ -207,13 +223,38 @@ export default function SettingsPage() {
           </div>
 
           {settingsActiveSection === "chains" ? (
-            <ChainManagementContent embedded />
+            <div className="space-y-5">
+              <ChainManagementController embedded />
+              <ProviderAdaptersPanel />
+            </div>
           ) : null}
           {settingsActiveSection === "registry" ? (
-            <ExportImportContent embedded />
+            <div className="grid gap-5 2xl:grid-cols-[minmax(0,1.35fr)_minmax(21rem,0.8fr)]">
+              <div className="min-w-0">
+                <MultisigList
+                  embedded
+                  actions={<AddMultisigActions />}
+                  statusText="Create, import, relabel, retag, and clean up stored multisigs from the main admin surface."
+                />
+              </div>
+              <div className="space-y-5">
+                <div className="space-y-4 border border-zinc-800 bg-zinc-950/55 p-4">
+                  <div className="space-y-1 border-b border-zinc-800 pb-4">
+                    <p className="text-[0.68rem] tracking-[0.18em] text-zinc-500 uppercase">
+                      Registry Transport
+                    </p>
+                    <p className="text-sm leading-6 text-zinc-400">
+                      Move chain and multisig config between local environments
+                      without leaving settings.
+                    </p>
+                  </div>
+                  <ExportImportController embedded />
+                </div>
+              </div>
+            </div>
           ) : null}
           {settingsActiveSection === "labels" ? (
-            <AddressLabelManagerContent embedded />
+            <AddressLabelManagerController embedded />
           ) : null}
         </section>
       </div>

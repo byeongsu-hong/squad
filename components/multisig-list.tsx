@@ -23,6 +23,10 @@ import { Input } from "@/components/ui/input";
 import { useCreatorMultisigs } from "@/lib/hooks/use-creator-multisigs";
 import { useDebounce } from "@/lib/hooks/use-debounce";
 import { useMultisigAttention } from "@/lib/hooks/use-multisig-attention";
+import {
+  type RegistrySummaryRow,
+  buildRegistrySummaryRowsFromMultisigs,
+} from "@/lib/registry/registry-summary";
 import { cn } from "@/lib/utils";
 import { useChainStore } from "@/stores/chain-store";
 import { useMultisigStore } from "@/stores/multisig-store";
@@ -71,6 +75,13 @@ export function MultisigList({
     multisigs,
     viewerAddress: publicKey?.toString() ?? null,
   });
+  const multisigByKey = useMemo(
+    () =>
+      new Map(
+        multisigs.map((multisig) => [multisig.publicKey.toString(), multisig])
+      ),
+    [multisigs]
+  );
 
   const loadMultisigs = useCallback(async () => {
     const chain = getSelectedChain();
@@ -153,25 +164,26 @@ export function MultisigList({
 
   const debouncedFilterText = useDebounce(filterText, 300);
 
-  const filteredMultisigs = useMemo(() => {
-    return multisigs.filter((multisig) => {
-      const matchesText =
-        !debouncedFilterText ||
-        multisig.label
-          ?.toLowerCase()
-          .includes(debouncedFilterText.toLowerCase()) ||
-        multisig.publicKey
-          .toString()
-          .toLowerCase()
-          .includes(debouncedFilterText.toLowerCase());
+  const registryRows = useMemo<RegistrySummaryRow[]>(
+    () =>
+      buildRegistrySummaryRowsFromMultisigs({
+        multisigs,
+        chains,
+        attentionByMultisig,
+        searchNeedle: debouncedFilterText,
+      }),
+    [attentionByMultisig, chains, debouncedFilterText, multisigs]
+  );
 
+  const filteredRegistryRows = useMemo(() => {
+    return registryRows.filter((row) => {
       const matchesTags =
         selectedFilterTags.length === 0 ||
-        selectedFilterTags.some((tag) => multisig.tags?.includes(tag));
+        selectedFilterTags.some((tag) => row.tags.includes(tag));
 
-      return matchesText && matchesTags;
+      return matchesTags;
     });
-  }, [multisigs, debouncedFilterText, selectedFilterTags]);
+  }, [registryRows, selectedFilterTags]);
 
   const toggleFilterTag = (tag: string) => {
     setSelectedFilterTags((prev) =>
@@ -193,6 +205,9 @@ export function MultisigList({
     selectMultisig(multisigKey);
     router.push(`/?multisig=${multisigKey}&filter=${filter}`);
   };
+
+  const getMultisigForRow = (row: RegistrySummaryRow) =>
+    multisigByKey.get(row.key);
 
   return (
     <div className={cn("space-y-4", embedded && "space-y-3")}>
@@ -302,7 +317,7 @@ export function MultisigList({
           ) : null}
           <div className="ml-auto text-sm text-zinc-500">
             {hasMultisigs
-              ? `${filteredMultisigs.length} visible / ${multisigs.length} total`
+              ? `${filteredRegistryRows.length} visible / ${multisigs.length} total`
               : "No multisigs loaded"}
           </div>
         </div>
@@ -317,7 +332,7 @@ export function MultisigList({
         </div>
       )}
 
-      {filteredMultisigs.length === 0 && multisigs.length > 0 && (
+      {filteredRegistryRows.length === 0 && multisigs.length > 0 && (
         <div className="border border-dashed border-zinc-800 px-4 py-4 text-sm text-zinc-400">
           No multisigs match the current filters.
         </div>
@@ -325,176 +340,186 @@ export function MultisigList({
 
       {loading && <MultisigCardSkeletonList />}
 
-      {!loading && hasMultisigs && filteredMultisigs.length > 0 && (
-        <div className="overflow-x-auto rounded-[1.15rem] border border-zinc-800 bg-zinc-950/70">
-          <div className="min-w-[980px]">
-            <div className="grid grid-cols-[2.1rem_minmax(11rem,1.5fr)_minmax(8rem,0.8fr)_minmax(7rem,0.7fr)_minmax(8rem,0.7fr)_minmax(10rem,1fr)_minmax(8rem,0.75fr)] gap-3 border-b border-zinc-800 px-4 py-3 text-[0.68rem] font-medium tracking-[0.18em] text-zinc-500 uppercase">
-              <span />
-              <span>Multisig</span>
-              <span>Chain</span>
-              <span>Threshold</span>
-              <span>Members</span>
-              <span>Tags</span>
-              <span className="text-right">Actions</span>
-            </div>
+      {!loading &&
+        hasMultisigs &&
+        filteredRegistryRows.length > 0 &&
+        embedded && (
+          <div className="space-y-2">
+            {filteredRegistryRows.map((row) => {
+              const multisig = getMultisigForRow(row);
+              if (!multisig) {
+                return null;
+              }
 
-            {filteredMultisigs.map((multisig) => {
-              const isSelected = selectedForDeletion.has(
-                multisig.publicKey.toString()
-              );
-              const isActiveDesk =
-                selectedMultisigKey === multisig.publicKey.toString();
-              const chainName =
-                chains.find((c) => c.id === multisig.chainId)?.name ||
-                multisig.chainId;
-              const attention =
-                attentionByMultisig[multisig.publicKey.toString()];
-              const attentionLine = attention
-                ? attention.waiting > 0
-                  ? `${attention.waiting} waiting on you · ${attention.executable} executable · ${attention.active} active`
-                  : attention.executable > 0
-                    ? `${attention.executable} executable · ${attention.active} active`
-                    : `${attention.active} active`
-                : "Attention loading";
+              const isSelected = selectedForDeletion.has(row.key);
+              const isActiveDesk = selectedMultisigKey === row.key;
 
               return (
                 <div
-                  key={multisig.publicKey.toString()}
+                  key={row.key}
                   className={cn(
-                    "grid grid-cols-[2.1rem_minmax(11rem,1.5fr)_minmax(8rem,0.8fr)_minmax(7rem,0.7fr)_minmax(8rem,0.7fr)_minmax(10rem,1fr)_minmax(8rem,0.75fr)] gap-3 border-b border-zinc-800 px-4 py-4 last:border-b-0",
+                    "border border-zinc-800 bg-zinc-950/55 p-4 transition-colors",
                     isSelected || isActiveDesk
-                      ? "bg-zinc-900/90"
-                      : "bg-transparent"
+                      ? "border-zinc-700 bg-zinc-900/70"
+                      : ""
                   )}
                 >
-                  <div className="flex items-start pt-1">
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={(event) => {
-                        event.stopPropagation();
-                        toggleSelect(multisig.publicKey.toString());
-                      }}
-                      className="h-4 w-4 cursor-pointer"
-                      aria-label={`Select ${multisig.label || "unnamed multisig"}`}
-                    />
-                  </div>
-
-                  <div className="min-w-0">
-                    {editingLabel === multisig.publicKey.toString() ? (
-                      <Input
-                        value={labelInput}
-                        onChange={(e) => setLabelInput(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            handleSaveLabel(multisig.publicKey.toString());
-                          } else if (e.key === "Escape") {
-                            handleCancelEdit();
-                          }
-                        }}
-                        onBlur={() =>
-                          handleSaveLabel(multisig.publicKey.toString())
-                        }
-                        placeholder="Enter label"
-                        className="h-8 border-zinc-800 bg-zinc-950 text-zinc-100"
-                        autoFocus
-                      />
-                    ) : (
-                      <div className="flex items-center gap-0.5">
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="truncate text-sm font-medium text-zinc-100">
-                              {multisig.label || "Unnamed"}
-                            </span>
-                            {isActiveDesk ? (
-                              <Badge
-                                variant="outline"
-                                className="rounded-md border-lime-500/30 bg-lime-500/10 text-[0.65rem] text-lime-200"
-                              >
-                                Desk
-                              </Badge>
-                            ) : null}
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6 rounded-md text-zinc-500 hover:bg-zinc-900 hover:text-zinc-100"
-                              onClick={() =>
-                                handleStartEditLabel(
-                                  multisig.publicKey.toString(),
-                                  multisig.label
-                                )
-                              }
-                              aria-label={`Edit label for ${multisig.label || "unnamed multisig"}`}
-                              title={`Edit label for ${multisig.label || "unnamed multisig"}`}
-                            >
-                              <Pencil className="h-3 w-3" />
-                            </Button>
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1 space-y-3">
+                      <div className="flex items-start gap-3">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={(event) => {
+                            event.stopPropagation();
+                            toggleSelect(row.key);
+                          }}
+                          className="mt-1 h-4 w-4 cursor-pointer"
+                          aria-label={`Select ${row.label}`}
+                        />
+                        <div className="min-w-0 flex-1 space-y-2">
+                          <div className="flex flex-wrap items-center gap-2">
+                            {editingLabel === row.key ? (
+                              <Input
+                                value={labelInput}
+                                onChange={(event) =>
+                                  setLabelInput(event.target.value)
+                                }
+                                onKeyDown={(event) => {
+                                  if (event.key === "Enter") {
+                                    handleSaveLabel(row.key);
+                                  } else if (event.key === "Escape") {
+                                    handleCancelEdit();
+                                  }
+                                }}
+                                onBlur={() => handleSaveLabel(row.key)}
+                                placeholder="Enter label"
+                                className="h-8 max-w-[14rem] border-zinc-800 bg-zinc-950 text-zinc-100"
+                                autoFocus
+                              />
+                            ) : (
+                              <>
+                                <p className="truncate text-sm font-medium text-zinc-100">
+                                  {row.label}
+                                </p>
+                                <Badge
+                                  variant="outline"
+                                  className="rounded-md border-cyan-500/30 bg-cyan-500/10 text-cyan-200"
+                                >
+                                  {row.chainName}
+                                </Badge>
+                                <Badge
+                                  variant="outline"
+                                  className="rounded-md border-zinc-700 bg-zinc-900 text-zinc-300"
+                                >
+                                  SVM / Squads
+                                </Badge>
+                                {isActiveDesk ? (
+                                  <Badge
+                                    variant="outline"
+                                    className="rounded-md border-lime-500/30 bg-lime-500/10 text-lime-200"
+                                  >
+                                    Focused
+                                  </Badge>
+                                ) : null}
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6 rounded-md text-zinc-500 hover:bg-zinc-900 hover:text-zinc-100"
+                                  onClick={() =>
+                                    handleStartEditLabel(
+                                      row.key,
+                                      multisig.label
+                                    )
+                                  }
+                                  aria-label={`Edit label for ${row.label}`}
+                                  title={`Edit label for ${row.label}`}
+                                >
+                                  <Pencil className="h-3 w-3" />
+                                </Button>
+                              </>
+                            )}
                           </div>
-                          <div className="mt-1 flex items-center gap-1">
-                            <span className="truncate font-mono text-xs text-zinc-500">
+
+                          <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-500">
+                            <span className="font-mono">
                               {multisig.publicKey.toString().slice(0, 8)}...
                               {multisig.publicKey.toString().slice(-8)}
                             </span>
                             <button
                               type="button"
-                              className="shrink-0 text-zinc-500 transition-colors hover:text-zinc-100"
-                              onClick={(e) => {
-                                e.stopPropagation();
+                              className="text-zinc-500 transition-colors hover:text-zinc-100"
+                              onClick={() => {
                                 navigator.clipboard.writeText(
                                   multisig.publicKey.toString()
                                 );
                                 toast.success("Address copied");
                               }}
-                              aria-label={`Copy address for ${multisig.label || "unnamed multisig"}`}
-                              title={`Copy address for ${multisig.label || "unnamed multisig"}`}
+                              aria-label={`Copy address for ${row.label}`}
+                              title={`Copy address for ${row.label}`}
                             >
-                              <Copy className="h-3 w-3" />
+                              <Copy className="h-3.5 w-3.5" />
                             </button>
                           </div>
-                          <p className="mt-2 text-xs text-zinc-500">
-                            {attentionLine}
+
+                          <p className="text-xs text-zinc-500">
+                            {row.attentionLine}
                           </p>
                         </div>
                       </div>
-                    )}
-                  </div>
 
-                  <div className="flex items-start">
-                    <Badge
-                      variant="outline"
-                      className="rounded-md border-zinc-800 bg-transparent text-zinc-300"
-                    >
-                      {chainName}
-                    </Badge>
-                  </div>
+                      <div className="grid gap-2 sm:grid-cols-4">
+                        <div className="border border-zinc-800 bg-zinc-950/55 px-3 py-2">
+                          <p className="text-[0.62rem] tracking-[0.16em] text-zinc-500 uppercase">
+                            Threshold
+                          </p>
+                          <p className="mt-1 font-mono text-sm text-zinc-100">
+                            {row.threshold}/{row.memberCount}
+                          </p>
+                        </div>
+                        <div className="border border-zinc-800 bg-zinc-950/55 px-3 py-2">
+                          <p className="text-[0.62rem] tracking-[0.16em] text-zinc-500 uppercase">
+                            Waiting
+                          </p>
+                          <p className="mt-1 font-mono text-sm text-zinc-100">
+                            {row.waiting}
+                          </p>
+                        </div>
+                        <div className="border border-zinc-800 bg-zinc-950/55 px-3 py-2">
+                          <p className="text-[0.62rem] tracking-[0.16em] text-zinc-500 uppercase">
+                            Executable
+                          </p>
+                          <p className="mt-1 font-mono text-sm text-zinc-100">
+                            {row.executable}
+                          </p>
+                        </div>
+                        <div className="border border-zinc-800 bg-zinc-950/55 px-3 py-2">
+                          <p className="text-[0.62rem] tracking-[0.16em] text-zinc-500 uppercase">
+                            Active
+                          </p>
+                          <p className="mt-1 font-mono text-sm text-zinc-100">
+                            {row.active}
+                          </p>
+                        </div>
+                      </div>
 
-                  <div className="pt-1 text-sm font-medium text-zinc-100">
-                    {multisig.threshold}
-                  </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {row.tags.length > 0 ? (
+                          row.tags.map((tag) => (
+                            <Badge
+                              key={tag}
+                              variant="outline"
+                              className="rounded-md border-zinc-800 bg-zinc-900/70 text-xs text-zinc-300"
+                            >
+                              {tag}
+                            </Badge>
+                          ))
+                        ) : (
+                          <span className="text-xs text-zinc-600">No tags</span>
+                        )}
+                      </div>
+                    </div>
 
-                  <div className="pt-1 text-sm text-zinc-400">
-                    {multisig.members.length}
-                  </div>
-
-                  <div className="flex flex-wrap items-start gap-1">
-                    {multisig.tags?.length ? (
-                      multisig.tags.map((tag) => (
-                        <Badge
-                          key={tag}
-                          variant="outline"
-                          className="rounded-md border-zinc-800 bg-zinc-900/70 text-xs text-zinc-300"
-                        >
-                          {tag}
-                        </Badge>
-                      ))
-                    ) : (
-                      <span className="pt-1 text-sm text-zinc-600">
-                        No tags
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex items-start justify-end">
                     <div className="flex flex-wrap justify-end gap-2">
                       <Button
                         variant="outline"
@@ -506,10 +531,19 @@ export function MultisigList({
                         Tags
                       </Button>
                       <Button
+                        variant="outline"
+                        size="sm"
+                        className="rounded-md border-zinc-800 bg-transparent text-zinc-200 hover:bg-zinc-900"
+                        onClick={() => deleteMultisig(row.key)}
+                      >
+                        <Trash2 className="mr-2 h-3 w-3" />
+                        Remove
+                      </Button>
+                      <Button
                         size="sm"
                         className={cn(
                           "rounded-md text-zinc-950",
-                          attention?.waiting
+                          row.waiting
                             ? "bg-lime-300 hover:bg-lime-200"
                             : "bg-zinc-100 hover:bg-zinc-200"
                         )}
@@ -524,8 +558,194 @@ export function MultisigList({
               );
             })}
           </div>
-        </div>
-      )}
+        )}
+
+      {!loading &&
+        hasMultisigs &&
+        filteredRegistryRows.length > 0 &&
+        !embedded && (
+          <div className="overflow-x-auto rounded-[1.15rem] border border-zinc-800 bg-zinc-950/70">
+            <div className="min-w-[980px]">
+              <div className="grid grid-cols-[2.1rem_minmax(11rem,1.5fr)_minmax(8rem,0.8fr)_minmax(7rem,0.7fr)_minmax(8rem,0.7fr)_minmax(10rem,1fr)_minmax(8rem,0.75fr)] gap-3 border-b border-zinc-800 px-4 py-3 text-[0.68rem] font-medium tracking-[0.18em] text-zinc-500 uppercase">
+                <span />
+                <span>Multisig</span>
+                <span>Chain</span>
+                <span>Threshold</span>
+                <span>Members</span>
+                <span>Tags</span>
+                <span className="text-right">Actions</span>
+              </div>
+
+              {filteredRegistryRows.map((row) => {
+                const multisig = getMultisigForRow(row);
+                if (!multisig) {
+                  return null;
+                }
+
+                const isSelected = selectedForDeletion.has(row.key);
+                const isActiveDesk = selectedMultisigKey === row.key;
+
+                return (
+                  <div
+                    key={row.key}
+                    className={cn(
+                      "grid grid-cols-[2.1rem_minmax(11rem,1.5fr)_minmax(8rem,0.8fr)_minmax(7rem,0.7fr)_minmax(8rem,0.7fr)_minmax(10rem,1fr)_minmax(8rem,0.75fr)] gap-3 border-b border-zinc-800 px-4 py-4 last:border-b-0",
+                      isSelected || isActiveDesk
+                        ? "bg-zinc-900/90"
+                        : "bg-transparent"
+                    )}
+                  >
+                    <div className="flex items-start pt-1">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={(event) => {
+                          event.stopPropagation();
+                          toggleSelect(row.key);
+                        }}
+                        className="h-4 w-4 cursor-pointer"
+                        aria-label={`Select ${row.label || "unnamed multisig"}`}
+                      />
+                    </div>
+
+                    <div className="min-w-0">
+                      {editingLabel === row.key ? (
+                        <Input
+                          value={labelInput}
+                          onChange={(e) => setLabelInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              handleSaveLabel(row.key);
+                            } else if (e.key === "Escape") {
+                              handleCancelEdit();
+                            }
+                          }}
+                          onBlur={() => handleSaveLabel(row.key)}
+                          placeholder="Enter label"
+                          className="h-8 border-zinc-800 bg-zinc-950 text-zinc-100"
+                          autoFocus
+                        />
+                      ) : (
+                        <div className="flex items-center gap-0.5">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="truncate text-sm font-medium text-zinc-100">
+                                {row.label}
+                              </span>
+                              {isActiveDesk ? (
+                                <Badge
+                                  variant="outline"
+                                  className="rounded-md border-lime-500/30 bg-lime-500/10 text-[0.65rem] text-lime-200"
+                                >
+                                  Desk
+                                </Badge>
+                              ) : null}
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 rounded-md text-zinc-500 hover:bg-zinc-900 hover:text-zinc-100"
+                                onClick={() =>
+                                  handleStartEditLabel(row.key, multisig.label)
+                                }
+                                aria-label={`Edit label for ${row.label}`}
+                                title={`Edit label for ${row.label}`}
+                              >
+                                <Pencil className="h-3 w-3" />
+                              </Button>
+                            </div>
+                            <div className="mt-1 flex items-center gap-1">
+                              <span className="truncate font-mono text-xs text-zinc-500">
+                                {row.key.slice(0, 8)}...{row.key.slice(-8)}
+                              </span>
+                              <button
+                                type="button"
+                                className="shrink-0 text-zinc-500 transition-colors hover:text-zinc-100"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigator.clipboard.writeText(row.key);
+                                  toast.success("Address copied");
+                                }}
+                                aria-label={`Copy address for ${row.label}`}
+                                title={`Copy address for ${row.label}`}
+                              >
+                                <Copy className="h-3 w-3" />
+                              </button>
+                            </div>
+                            <p className="mt-2 text-xs text-zinc-500">
+                              {row.attentionLine}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex items-start">
+                      <Badge
+                        variant="outline"
+                        className="rounded-md border-zinc-800 bg-transparent text-zinc-300"
+                      >
+                        {row.chainName}
+                      </Badge>
+                    </div>
+
+                    <div className="pt-1 text-sm font-medium text-zinc-100">
+                      {row.threshold}
+                    </div>
+
+                    <div className="pt-1 text-sm text-zinc-400">
+                      {row.memberCount}
+                    </div>
+
+                    <div className="flex flex-wrap items-start gap-1">
+                      {row.tags.length ? (
+                        row.tags.map((tag) => (
+                          <Badge
+                            key={tag}
+                            variant="outline"
+                            className="rounded-md border-zinc-800 bg-zinc-900/70 text-xs text-zinc-300"
+                          >
+                            {tag}
+                          </Badge>
+                        ))
+                      ) : (
+                        <span className="pt-1 text-sm text-zinc-600">
+                          No tags
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-start justify-end">
+                      <div className="flex flex-wrap justify-end gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="rounded-md border-zinc-800 bg-transparent text-zinc-200 hover:bg-zinc-900"
+                          onClick={() => handleOpenTagDialog(multisig)}
+                        >
+                          <Tag className="mr-2 h-3 w-3" />
+                          Tags
+                        </Button>
+                        <Button
+                          size="sm"
+                          className={cn(
+                            "rounded-md text-zinc-950",
+                            row.waiting > 0
+                              ? "bg-lime-300 hover:bg-lime-200"
+                              : "bg-zinc-100 hover:bg-zinc-200"
+                          )}
+                          onClick={() => handleOpenDesk(multisig)}
+                        >
+                          <ArrowUpRight className="mr-2 h-3 w-3" />
+                          Focus
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
       <ManageTagsDialog
         open={tagDialogOpen}

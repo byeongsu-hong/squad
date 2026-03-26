@@ -77,8 +77,8 @@ export function OperationsDashboard({
   const [searchText, setSearchText] = useState("");
 
   const { publicKey, connected } = useWalletStore();
-  const { multisigs, setProposals, proposals } = useMultisigStore();
-  const { chains, workspaceMultisigs, availableMultisigKeys } =
+  const { multisigs, setProposals } = useMultisigStore();
+  const { chains, proposals, workspaceMultisigs, availableMultisigKeys } =
     useWorkspaceMultisigs();
   const {
     operationsFocusedProposalKey: focusedProposalKey,
