@@ -41,6 +41,10 @@ export function useFocusedQueue<T>({
   });
 
   useEffect(() => {
+    if (filteredItems.length === 0) {
+      return;
+    }
+
     const availableKeys = new Set(items.map(getItemKey));
     if (focusedKey && availableKeys.has(focusedKey)) {
       return;
