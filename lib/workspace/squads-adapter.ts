@@ -3,7 +3,7 @@ import * as multisigSdk from "@sqds/multisig";
 import bs58 from "bs58";
 
 import { SquadService } from "@/lib/squad";
-import type { ChainConfig } from "@/types/chain";
+import { type ChainConfig, isOperationalSquadsChain } from "@/types/chain";
 import type { MultisigAccount, ProposalAccount } from "@/types/multisig";
 import { toProposalStatus } from "@/types/multisig";
 import type {
@@ -17,6 +17,15 @@ import type {
 
 function getChainConfig(chains: ChainConfig[], chainId: string) {
   return chains.find((chain) => chain.id === chainId);
+}
+
+function getOperationalSquadsChain(chains: ChainConfig[], chainId: string) {
+  const chain = getChainConfig(chains, chainId);
+  if (!chain || !isOperationalSquadsChain(chain)) {
+    return null;
+  }
+
+  return chain;
 }
 
 export function toWorkspaceMultisig(
@@ -47,7 +56,7 @@ export async function loadSquadsWorkspaceProposals(
 ): Promise<WorkspaceProposal[]> {
   const groupedResults = await Promise.all(
     multisigs.map(async (multisig) => {
-      const chain = getChainConfig(chains, multisig.chainId);
+      const chain = getOperationalSquadsChain(chains, multisig.chainId);
       if (!chain) {
         return [];
       }
@@ -87,7 +96,7 @@ export async function loadSquadsCreatorMultisigs(
   chains: ChainConfig[],
   existingMultisigs: MultisigAccount[] = []
 ): Promise<MultisigAccount[]> {
-  const chain = getChainConfig(chains, chainId);
+  const chain = getOperationalSquadsChain(chains, chainId);
   if (!chain) {
     return [];
   }
@@ -128,7 +137,7 @@ export async function loadSquadsWorkspaceProposalsForMultisig(
   multisig: MultisigAccount,
   chains: ChainConfig[]
 ): Promise<WorkspaceProposal[]> {
-  const chain = getChainConfig(chains, multisig.chainId);
+  const chain = getOperationalSquadsChain(chains, multisig.chainId);
   if (!chain) {
     return [];
   }
@@ -422,9 +431,9 @@ export async function loadSquadsWorkspacePayload(
   proposal: WorkspaceProposal,
   chains: ChainConfig[]
 ): Promise<WorkspacePayload> {
-  const chain = getChainConfig(chains, multisig.chainId);
+  const chain = getOperationalSquadsChain(chains, multisig.chainId);
   if (!chain) {
-    throw new Error("Chain configuration not found");
+    throw new Error("Chain configuration is not available for Squads payloads");
   }
 
   const programId = new PublicKey(chain.squadsV4ProgramId);
@@ -494,7 +503,7 @@ export function invalidateSquadsProposalCache(
   multisigKey: string,
   chains: ChainConfig[]
 ) {
-  const chain = getChainConfig(chains, chainId);
+  const chain = getOperationalSquadsChain(chains, chainId);
   if (!chain) {
     return;
   }

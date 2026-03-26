@@ -7,7 +7,7 @@ import {
   loadSquadsWorkspaceProposals,
   loadSquadsWorkspaceProposalsForMultisig,
 } from "@/lib/workspace/squads-adapter";
-import type { ChainConfig } from "@/types/chain";
+import { type ChainConfig, isOperationalSquadsChain } from "@/types/chain";
 import type { MultisigAccount, ProposalAccount } from "@/types/multisig";
 
 interface UseSquadsProposalLoaderOptions {
@@ -32,12 +32,22 @@ export function useSquadsProposalLoader({
         return;
       }
 
+      const operationalMultisigs = multisigs.filter((multisig) => {
+        const chain = chains.find((item) => item.id === multisig.chainId);
+        return Boolean(chain && isOperationalSquadsChain(chain));
+      });
+
+      if (operationalMultisigs.length === 0) {
+        setProposals([]);
+        return;
+      }
+
       setLoading(true);
       onLoadingChange?.(true);
 
       try {
         const loadedProposals = await loadSquadsWorkspaceProposals(
-          multisigs,
+          operationalMultisigs,
           chains
         );
         setProposals(loadedProposals.map(fromWorkspaceProposal));
@@ -55,6 +65,12 @@ export function useSquadsProposalLoader({
   const loadForMultisig = useCallback(
     async (multisig: MultisigAccount | null | undefined) => {
       if (!multisig) {
+        return;
+      }
+
+      const chain = chains.find((item) => item.id === multisig.chainId);
+      if (!chain || !isOperationalSquadsChain(chain)) {
+        setProposals([]);
         return;
       }
 

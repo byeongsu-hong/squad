@@ -13,6 +13,7 @@ import { SquadService } from "@/lib/squad";
 import { transactionSignerService } from "@/lib/transaction-signer";
 import { useChainStore } from "@/stores/chain-store";
 import { useWalletStore } from "@/stores/wallet-store";
+import { isOperationalSquadsChain } from "@/types/chain";
 import { WalletType, parseLedgerError } from "@/types/wallet";
 
 interface UseProposalActionsOptions {
@@ -41,6 +42,11 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
       const chain = chains.find((c) => c.id === chainId);
       if (!chain) {
         throw new Error(ERROR_MESSAGES.CHAIN_NOT_FOUND);
+      }
+      if (!isOperationalSquadsChain(chain)) {
+        throw new Error(
+          "This chain is not configured for active Squads operations yet."
+        );
       }
       return {
         service: new SquadService(chain.rpcUrl, chain.squadsV4ProgramId),
