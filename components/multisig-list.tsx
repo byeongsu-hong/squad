@@ -31,6 +31,7 @@ import { cn } from "@/lib/utils";
 import { useChainStore } from "@/stores/chain-store";
 import { useMultisigStore } from "@/stores/multisig-store";
 import { useWalletStore } from "@/stores/wallet-store";
+import { normalizeChainConfig } from "@/types/chain";
 import type { MultisigAccount } from "@/types/multisig";
 
 interface MultisigListProps {
@@ -65,7 +66,7 @@ export function MultisigList({
     selectMultisig,
     selectedMultisigKey,
   } = useMultisigStore();
-  const { loading, loadForCreator } = useCreatorMultisigs({
+  const { loading, loadForCreator, canLoadFromChain } = useCreatorMultisigs({
     chains,
     existingMultisigs: multisigs,
     onLoaded: setMultisigs,
@@ -85,12 +86,20 @@ export function MultisigList({
 
   const loadMultisigs = useCallback(async () => {
     const chain = getSelectedChain();
+    if (!canLoadFromChain(chain?.id)) {
+      return;
+    }
     await loadForCreator(chain?.id, publicKey?.toString() ?? null);
-  }, [getSelectedChain, loadForCreator, publicKey]);
+  }, [canLoadFromChain, getSelectedChain, loadForCreator, publicKey]);
 
   useEffect(() => {
-    loadMultisigs();
-  }, [loadMultisigs]);
+    const chain = getSelectedChain();
+    if (!publicKey || !canLoadFromChain(chain?.id)) {
+      return;
+    }
+
+    void loadMultisigs();
+  }, [canLoadFromChain, getSelectedChain, loadMultisigs, publicKey]);
 
   const toggleSelect = (publicKey: string) => {
     setSelectedForDeletion((prev) => {
@@ -192,6 +201,18 @@ export function MultisigList({
   };
 
   const hasMultisigs = multisigs.length > 0;
+  const selectedChain = getSelectedChain();
+  const normalizedSelectedChain = selectedChain
+    ? normalizeChainConfig(selectedChain)
+    : null;
+  const canSyncSelectedChain = canLoadFromChain(selectedChain?.id);
+  const syncStatusText = publicKey
+    ? canSyncSelectedChain
+      ? `Creator sync is available on ${normalizedSelectedChain?.name ?? "the selected chain"}.`
+      : selectedChain
+        ? `${normalizedSelectedChain?.name ?? selectedChain.id} is configured for ${(normalizedSelectedChain?.vmFamily ?? "svm").toUpperCase()} / ${normalizedSelectedChain?.multisigProvider ?? "squads"}. Creator sync stays local-only for now.`
+        : "Select a chain to sync registry entries from a connected creator wallet."
+    : "Connect a wallet to sync creator-owned Squads multisigs. Manual create and import stay available where supported.";
 
   const handleOpenDesk = (multisig: MultisigAccount) => {
     const multisigKey = multisig.publicKey.toString();
@@ -238,6 +259,12 @@ export function MultisigList({
               <span className="text-sm text-zinc-400">{statusText}</span>
             </>
           ) : null}
+          {embedded ? (
+            <>
+              <span className="hidden h-4 w-px bg-zinc-800 sm:block" />
+              <span className="text-sm text-zinc-500">{syncStatusText}</span>
+            </>
+          ) : null}
           {actions ? <div className="ml-auto">{actions}</div> : null}
         </div>
 
@@ -252,7 +279,7 @@ export function MultisigList({
               aria-label="Search multisigs"
             />
           </div>
-          {publicKey && (
+          {publicKey && canSyncSelectedChain ? (
             <Button
               variant="outline"
               size="sm"
@@ -268,7 +295,7 @@ export function MultisigList({
                 <RefreshCw className="h-4 w-4" />
               )}
             </Button>
-          )}
+          ) : null}
           {hasMultisigs && (
             <Button
               variant="outline"
@@ -412,7 +439,8 @@ export function MultisigList({
                                   variant="outline"
                                   className="rounded-md border-zinc-700 bg-zinc-900 text-zinc-300"
                                 >
-                                  SVM / Squads
+                                  {row.vmFamily.toUpperCase()} /{" "}
+                                  {row.multisigProvider}
                                 </Badge>
                                 {isActiveDesk ? (
                                   <Badge

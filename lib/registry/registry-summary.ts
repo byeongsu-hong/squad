@@ -1,4 +1,4 @@
-import type { ChainConfig } from "@/types/chain";
+import { type ChainConfig, normalizeChainConfig } from "@/types/chain";
 import type { MultisigAccount } from "@/types/multisig";
 import type {
   WorkspaceExplorerView,
@@ -16,6 +16,8 @@ export interface RegistrySummaryRow {
   label: string;
   chainId: string;
   chainName: string;
+  vmFamily: string;
+  multisigProvider: string;
   threshold: number;
   memberCount: number;
   tags: string[];
@@ -65,9 +67,11 @@ export function buildRegistrySummaryRowsFromMultisigs({
 
   return multisigs
     .map((multisig) => {
-      const chainName =
-        chains.find((chain) => chain.id === multisig.chainId)?.name ??
-        multisig.chainId;
+      const chainConfig = chains.find((chain) => chain.id === multisig.chainId);
+      const normalizedChain = chainConfig
+        ? normalizeChainConfig(chainConfig)
+        : null;
+      const chainName = normalizedChain?.name ?? multisig.chainId;
       const attention =
         attentionByMultisig[multisig.publicKey.toString()] ?? null;
 
@@ -76,6 +80,8 @@ export function buildRegistrySummaryRowsFromMultisigs({
         label: multisig.label || "Unnamed",
         chainId: multisig.chainId,
         chainName,
+        vmFamily: normalizedChain?.vmFamily ?? "svm",
+        multisigProvider: normalizedChain?.multisigProvider ?? "squads",
         threshold: multisig.threshold,
         memberCount: multisig.members.length,
         tags: multisig.tags ?? [],
@@ -113,6 +119,8 @@ export function buildRegistrySummaryRowsFromWorkspaceItems({
       label: item.multisig.label || "Unnamed",
       chainId: item.multisig.chainId,
       chainName: item.multisig.chainName,
+      vmFamily: item.multisig.provider === "safe" ? "evm" : "svm",
+      multisigProvider: item.multisig.provider,
       threshold: item.multisig.threshold,
       memberCount: item.multisig.members.length,
       tags: item.multisig.tags,

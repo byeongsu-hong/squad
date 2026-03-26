@@ -89,5 +89,13 @@ export function useCreatorMultisigs({
   return {
     loading,
     loadForCreator,
+    canLoadFromChain: (chainId: string | null | undefined) => {
+      if (!chainId) {
+        return false;
+      }
+
+      const chain = chains.find((item) => item.id === chainId);
+      return Boolean(chain && isOperationalSquadsChain(chain));
+    },
   };
 }
