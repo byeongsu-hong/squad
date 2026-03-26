@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
 
-import {
-  loadSquadsWorkspaceProposalsForMultisig,
-  toWorkspaceMultisig,
-} from "@/lib/workspace/squads-adapter";
+import { toWorkspaceMultisig } from "@/lib/workspace/multisig-conversion";
+import { loadSquadsWorkspaceProposalsForMultisig } from "@/lib/workspace/squads-adapter";
 import type { ChainConfig } from "@/types/chain";
 import type { MultisigAccount } from "@/types/multisig";
 

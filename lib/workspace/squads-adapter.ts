@@ -3,6 +3,10 @@ import * as multisigSdk from "@sqds/multisig";
 import bs58 from "bs58";
 
 import { SquadService } from "@/lib/squad";
+import {
+  toWorkspaceMultisig,
+  toWorkspaceMultisigs,
+} from "@/lib/workspace/multisig-conversion";
 import type {
   WorkspacePayloadLoaderOptions,
   WorkspaceProviderAdapter,
@@ -30,28 +34,6 @@ function getOperationalSquadsChain(chains: ChainConfig[], chainId: string) {
   }
 
   return chain;
-}
-
-export function toWorkspaceMultisig(
-  multisig: MultisigAccount,
-  chains: ChainConfig[]
-): WorkspaceMultisig {
-  const chain = getChainConfig(chains, multisig.chainId);
-
-  return {
-    provider: "squads",
-    key: multisig.publicKey.toString(),
-    chainId: multisig.chainId,
-    chainName: chain?.name ?? multisig.chainId,
-    label: multisig.label,
-    tags: multisig.tags ?? [],
-    threshold: multisig.threshold,
-    members: multisig.members.map((member) => ({
-      address: member.key.toString(),
-      permissionsMask: member.permissions.mask,
-    })),
-    vaultAddress: multisig.vaultPda?.toString(),
-  };
 }
 
 export async function loadSquadsWorkspaceProposals(
@@ -516,12 +498,7 @@ export function invalidateSquadsProposalCache(
   squadService.invalidateProposalCache(new PublicKey(multisigKey));
 }
 
-export function toWorkspaceMultisigs(
-  multisigs: MultisigAccount[],
-  chains: ChainConfig[]
-) {
-  return multisigs.map((multisig) => toWorkspaceMultisig(multisig, chains));
-}
+export { toWorkspaceMultisig, toWorkspaceMultisigs };
 
 export const squadsWorkspaceAdapter: WorkspaceProviderAdapter = {
   id: "squads",

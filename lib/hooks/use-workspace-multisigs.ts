@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 
 import { buildWorkspaceProposalRecords } from "@/lib/hooks/use-workspace-proposal-records";
-import { toWorkspaceMultisigs } from "@/lib/workspace/squads-adapter";
+import { toWorkspaceMultisigs } from "@/lib/workspace/multisig-conversion";
 import { useChainStore } from "@/stores/chain-store";
 import { useMultisigStore } from "@/stores/multisig-store";
 
