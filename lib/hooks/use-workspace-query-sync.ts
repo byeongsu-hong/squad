@@ -152,7 +152,6 @@ export function useOperationsWorkspaceQuerySync({
       setFocusedProposalKey(null);
     }
 
-    hasHydratedQueryRef.current = true;
   }, [
     availableMultisigKeys,
     searchParams,
@@ -163,6 +162,10 @@ export function useOperationsWorkspaceQuerySync({
   ]);
 
   useEffect(() => {
+    if (!hasHydratedQueryRef.current) {
+      return;
+    }
+
     const nextParams = new URLSearchParams(searchParams.toString());
 
     if (selectedRegistryKeys.length > 1) {
@@ -205,6 +208,10 @@ export function useOperationsWorkspaceQuerySync({
     searchParams,
     selectedRegistryKeys,
   ]);
+
+  useEffect(() => {
+    hasHydratedQueryRef.current = true;
+  }, []);
 }
 
 export function useProposalDeskQuerySync({
@@ -282,6 +289,10 @@ export function useProposalDeskQuerySync({
   }, [searchParams, setFocusedProposalKey]);
 
   useEffect(() => {
+    if (!hasHydratedQueryRef.current) {
+      return;
+    }
+
     const nextParams = new URLSearchParams(searchParams.toString());
 
     if (selectedMultisigKey) {
@@ -311,4 +322,8 @@ export function useProposalDeskQuerySync({
     searchParams,
     selectedMultisigKey,
   ]);
+
+  useEffect(() => {
+    hasHydratedQueryRef.current = true;
+  }, []);
 }

@@ -1,9 +1,10 @@
 import { useEffect, useMemo } from "react";
 
 import {
-  buildWorkspaceExplorerViews,
-  buildWorkspaceRegistryItems,
-} from "@/lib/workspace/squads-adapter";
+  buildRegistryExplorerViews,
+  buildRegistrySummaryRowsFromWorkspaceItems,
+} from "@/lib/registry/registry-summary";
+import { buildWorkspaceRegistryItems } from "@/lib/workspace/squads-adapter";
 import type {
   WorkspaceExplorerMode,
   WorkspaceExplorerView,
@@ -53,9 +54,18 @@ export function useOperationsRegistry({
     [multisigs, queueItems, searchNeedle]
   );
 
+  const registryRows = useMemo(
+    () =>
+      buildRegistrySummaryRowsFromWorkspaceItems({
+        registryItems,
+        searchNeedle,
+      }),
+    [registryItems, searchNeedle]
+  );
+
   const explorerViews = useMemo(
-    () => buildWorkspaceExplorerViews(registryItems),
-    [registryItems]
+    () => buildRegistryExplorerViews(registryRows),
+    [registryRows]
   );
 
   const activeView =
@@ -116,6 +126,7 @@ export function useOperationsRegistry({
     primarySelectedRegistryKey,
     selectedRegistryKeySet,
     registryItems,
+    registryRows,
     explorerViews,
     activeView,
     explorerSections,

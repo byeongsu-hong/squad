@@ -13,6 +13,7 @@ import { useAddressLabels } from "@/lib/hooks/use-address-label";
 import { SquadService } from "@/lib/squad";
 import { useChainStore } from "@/stores/chain-store";
 import { useMultisigStore } from "@/stores/multisig-store";
+import type { ChainConfig } from "@/types/chain";
 import type { MultisigAccount } from "@/types/multisig";
 
 import { Button } from "./ui/button";
@@ -28,7 +29,7 @@ import {
 import { Label } from "./ui/label";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 
-interface ExportImportContentProps {
+interface ExportImportControllerProps {
   embedded?: boolean;
   onClose?: () => void;
 }
@@ -58,16 +59,16 @@ function DialogShell() {
             Export your configuration to YAML or import from clipboard.
           </DialogDescription>
         </DialogHeader>
-        <ExportImportContent onClose={() => setIsOpen(false)} />
+        <ExportImportController onClose={() => setIsOpen(false)} />
       </DialogContent>
     </Dialog>
   );
 }
 
-export function ExportImportContent({
+export function ExportImportController({
   embedded = false,
   onClose,
-}: ExportImportContentProps) {
+}: ExportImportControllerProps) {
   const [mode, setMode] = useState<"export" | "import">("export");
   const [exportContent, setExportContent] = useState<string>("");
   const [importContent, setImportContent] = useState<string>("");
@@ -256,197 +257,29 @@ export function ExportImportContent({
           embedded ? "space-y-5" : "flex-1 space-y-6 overflow-y-auto py-4"
         }
       >
-        <RadioGroup value={mode} onValueChange={handleModeChange}>
-          <div className={embedded ? "grid gap-2 sm:grid-cols-2" : "space-y-2"}>
-            <Label
-              htmlFor={embedded ? "settings-export" : "export"}
-              className={
-                embedded
-                  ? "flex cursor-pointer items-start gap-3 border border-zinc-800 bg-zinc-950/55 px-3 py-3 font-normal"
-                  : "flex cursor-pointer items-center space-x-2 font-normal"
-              }
-            >
-              <RadioGroupItem
-                value="export"
-                id={embedded ? "settings-export" : "export"}
-              />
-              <span className="space-y-1">
-                <span className="block text-sm text-zinc-100">
-                  Export to YAML
-                </span>
-                {embedded ? (
-                  <span className="block text-xs text-zinc-400">
-                    Generate the complete portable workspace snapshot.
-                  </span>
-                ) : null}
-              </span>
-            </Label>
-            <Label
-              htmlFor={embedded ? "settings-import" : "import"}
-              className={
-                embedded
-                  ? "flex cursor-pointer items-start gap-3 border border-zinc-800 bg-zinc-950/55 px-3 py-3 font-normal"
-                  : "flex cursor-pointer items-center space-x-2 font-normal"
-              }
-            >
-              <RadioGroupItem
-                value="import"
-                id={embedded ? "settings-import" : "import"}
-              />
-              <span className="space-y-1">
-                <span className="block text-sm text-zinc-100">
-                  Import from YAML
-                </span>
-                {embedded ? (
-                  <span className="block text-xs text-zinc-400">
-                    Merge chains and multisigs from another environment.
-                  </span>
-                ) : null}
-              </span>
-            </Label>
-          </div>
-        </RadioGroup>
+        <ExportImportModePicker
+          embedded={embedded}
+          mode={mode}
+          onModeChange={handleModeChange}
+        />
 
         {mode === "export" && exportContent && (
-          <div
-            className={
-              embedded
-                ? "grid gap-4 xl:grid-cols-[16rem_minmax(0,1fr)]"
-                : "space-y-2"
-            }
-          >
-            <div
-              className={
-                embedded
-                  ? "space-y-3 border border-zinc-800 bg-zinc-950/55 p-4"
-                  : "flex items-center justify-between"
-              }
-            >
-              {embedded ? (
-                <>
-                  <div className="space-y-1">
-                    <p className="text-[0.68rem] tracking-[0.18em] text-zinc-500 uppercase">
-                      Export package
-                    </p>
-                    <p className="text-sm leading-6 text-zinc-400">
-                      Current output contains all saved chains and multisigs in
-                      a single portable YAML document.
-                    </p>
-                  </div>
-                  <div className="grid gap-2">
-                    <div className="border border-zinc-800 bg-zinc-950 px-3 py-2">
-                      <p className="text-[0.62rem] tracking-[0.16em] text-zinc-500 uppercase">
-                        Chains
-                      </p>
-                      <p className="mt-1 text-sm font-medium text-zinc-100">
-                        {chains.length}
-                      </p>
-                    </div>
-                    <div className="border border-zinc-800 bg-zinc-950 px-3 py-2">
-                      <p className="text-[0.62rem] tracking-[0.16em] text-zinc-500 uppercase">
-                        Multisigs
-                      </p>
-                      <p className="mt-1 text-sm font-medium text-zinc-100">
-                        {multisigs.length}
-                      </p>
-                    </div>
-                    <Button
-                      variant="outline"
-                      onClick={handleCopy}
-                      disabled={copied}
-                      className="justify-start border-zinc-800 bg-transparent text-zinc-200 hover:bg-zinc-900"
-                    >
-                      {copied ? (
-                        <>
-                          <Check className="mr-2 h-4 w-4" />
-                          Copied
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="mr-2 h-4 w-4" />
-                          Copy YAML
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <Label>YAML Configuration:</Label>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleCopy}
-                    disabled={copied}
-                  >
-                    {copied ? (
-                      <>
-                        <Check className="mr-2 h-4 w-4" />
-                        Copied
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="mr-2 h-4 w-4" />
-                        Copy
-                      </>
-                    )}
-                  </Button>
-                </>
-              )}
-            </div>
-            <div
-              className={
-                embedded
-                  ? "min-h-[28rem] w-full overflow-auto border border-zinc-800 bg-zinc-950/35"
-                  : "h-[400px] w-full overflow-auto rounded-md border"
-              }
-            >
-              <pre className="p-4 text-xs whitespace-pre">
-                <code>{exportContent}</code>
-              </pre>
-            </div>
-          </div>
+          <ExportImportExportPanel
+            embedded={embedded}
+            chains={chains}
+            multisigs={multisigs}
+            exportContent={exportContent}
+            copied={copied}
+            onCopy={handleCopy}
+          />
         )}
 
         {mode === "import" && (
-          <div
-            className={
-              embedded
-                ? "grid gap-4 xl:grid-cols-[16rem_minmax(0,1fr)]"
-                : "space-y-3"
-            }
-          >
-            {embedded ? (
-              <div className="space-y-3 border border-zinc-800 bg-zinc-950/55 p-4">
-                <p className="text-[0.68rem] tracking-[0.18em] text-zinc-500 uppercase">
-                  Import rules
-                </p>
-                <div className="space-y-2 text-sm leading-6 text-zinc-400">
-                  <p>Existing items are preserved.</p>
-                  <p>New chains import before multisigs.</p>
-                  <p>Duplicate multisigs are skipped.</p>
-                  <p>Missing-chain entries are reported as failures.</p>
-                </div>
-              </div>
-            ) : null}
-            <div className="space-y-3">
-              <Label>Paste YAML content:</Label>
-              <p className="text-muted-foreground text-sm">
-                Existing items will be preserved. Only new items will be
-                imported.
-              </p>
-              <textarea
-                value={importContent}
-                onChange={(e) => setImportContent(e.target.value)}
-                placeholder="Paste your YAML configuration here..."
-                className={
-                  embedded
-                    ? "border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring min-h-[28rem] w-full resize-y overflow-auto border border-zinc-800 px-3 py-2 font-mono text-xs focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-                    : "border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring min-h-[300px] w-full resize-none overflow-auto rounded-md border px-3 py-2 font-mono text-xs focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-                }
-              />
-            </div>
-          </div>
+          <ExportImportImportPanel
+            embedded={embedded}
+            importContent={importContent}
+            onImportContentChange={setImportContent}
+          />
         )}
       </div>
 
@@ -471,5 +304,235 @@ export function ExportImportContent({
         </div>
       ) : null}
     </>
+  );
+}
+
+interface ExportImportModePickerProps {
+  embedded: boolean;
+  mode: "export" | "import";
+  onModeChange: (mode: "export" | "import") => void;
+}
+
+function ExportImportModePicker({
+  embedded,
+  mode,
+  onModeChange,
+}: ExportImportModePickerProps) {
+  return (
+    <RadioGroup value={mode} onValueChange={onModeChange}>
+      <div className={embedded ? "grid gap-2 sm:grid-cols-2" : "space-y-2"}>
+        <Label
+          htmlFor={embedded ? "settings-export" : "export"}
+          className={
+            embedded
+              ? "flex cursor-pointer items-start gap-3 border border-zinc-800 bg-zinc-950/55 px-3 py-3 font-normal"
+              : "flex cursor-pointer items-center space-x-2 font-normal"
+          }
+        >
+          <RadioGroupItem
+            value="export"
+            id={embedded ? "settings-export" : "export"}
+          />
+          <span className="space-y-1">
+            <span className="block text-sm text-zinc-100">Export to YAML</span>
+            {embedded ? (
+              <span className="block text-xs text-zinc-400">
+                Generate the complete portable workspace snapshot.
+              </span>
+            ) : null}
+          </span>
+        </Label>
+        <Label
+          htmlFor={embedded ? "settings-import" : "import"}
+          className={
+            embedded
+              ? "flex cursor-pointer items-start gap-3 border border-zinc-800 bg-zinc-950/55 px-3 py-3 font-normal"
+              : "flex cursor-pointer items-center space-x-2 font-normal"
+          }
+        >
+          <RadioGroupItem
+            value="import"
+            id={embedded ? "settings-import" : "import"}
+          />
+          <span className="space-y-1">
+            <span className="block text-sm text-zinc-100">
+              Import from YAML
+            </span>
+            {embedded ? (
+              <span className="block text-xs text-zinc-400">
+                Merge chains and multisigs from another environment.
+              </span>
+            ) : null}
+          </span>
+        </Label>
+      </div>
+    </RadioGroup>
+  );
+}
+
+interface ExportImportExportPanelProps {
+  embedded: boolean;
+  chains: ChainConfig[];
+  multisigs: MultisigAccount[];
+  exportContent: string;
+  copied: boolean;
+  onCopy: () => void;
+}
+
+function ExportImportExportPanel({
+  embedded,
+  chains,
+  multisigs,
+  exportContent,
+  copied,
+  onCopy,
+}: ExportImportExportPanelProps) {
+  return (
+    <div
+      className={
+        embedded ? "grid gap-4 xl:grid-cols-[16rem_minmax(0,1fr)]" : "space-y-2"
+      }
+    >
+      <div
+        className={
+          embedded
+            ? "space-y-3 border border-zinc-800 bg-zinc-950/55 p-4"
+            : "flex items-center justify-between"
+        }
+      >
+        {embedded ? (
+          <>
+            <div className="space-y-1">
+              <p className="text-[0.68rem] tracking-[0.18em] text-zinc-500 uppercase">
+                Export package
+              </p>
+              <p className="text-sm leading-6 text-zinc-400">
+                Current output contains all saved chains and multisigs in a
+                single portable YAML document.
+              </p>
+            </div>
+            <div className="grid gap-2">
+              <div className="border border-zinc-800 bg-zinc-950 px-3 py-2">
+                <p className="text-[0.62rem] tracking-[0.16em] text-zinc-500 uppercase">
+                  Chains
+                </p>
+                <p className="mt-1 text-sm font-medium text-zinc-100">
+                  {chains.length}
+                </p>
+              </div>
+              <div className="border border-zinc-800 bg-zinc-950 px-3 py-2">
+                <p className="text-[0.62rem] tracking-[0.16em] text-zinc-500 uppercase">
+                  Multisigs
+                </p>
+                <p className="mt-1 text-sm font-medium text-zinc-100">
+                  {multisigs.length}
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                onClick={onCopy}
+                disabled={copied}
+                className="justify-start border-zinc-800 bg-transparent text-zinc-200 hover:bg-zinc-900"
+              >
+                {copied ? (
+                  <>
+                    <Check className="mr-2 h-4 w-4" />
+                    Copied
+                  </>
+                ) : (
+                  <>
+                    <Copy className="mr-2 h-4 w-4" />
+                    Copy YAML
+                  </>
+                )}
+              </Button>
+            </div>
+          </>
+        ) : (
+          <>
+            <Label>YAML Configuration:</Label>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onCopy}
+              disabled={copied}
+            >
+              {copied ? (
+                <>
+                  <Check className="mr-2 h-4 w-4" />
+                  Copied
+                </>
+              ) : (
+                <>
+                  <Copy className="mr-2 h-4 w-4" />
+                  Copy
+                </>
+              )}
+            </Button>
+          </>
+        )}
+      </div>
+      <div
+        className={
+          embedded
+            ? "min-h-[28rem] w-full overflow-auto border border-zinc-800 bg-zinc-950/35"
+            : "h-[400px] w-full overflow-auto rounded-md border"
+        }
+      >
+        <pre className="p-4 text-xs whitespace-pre">
+          <code>{exportContent}</code>
+        </pre>
+      </div>
+    </div>
+  );
+}
+
+interface ExportImportImportPanelProps {
+  embedded: boolean;
+  importContent: string;
+  onImportContentChange: (value: string) => void;
+}
+
+function ExportImportImportPanel({
+  embedded,
+  importContent,
+  onImportContentChange,
+}: ExportImportImportPanelProps) {
+  return (
+    <div
+      className={
+        embedded ? "grid gap-4 xl:grid-cols-[16rem_minmax(0,1fr)]" : "space-y-3"
+      }
+    >
+      {embedded ? (
+        <div className="space-y-3 border border-zinc-800 bg-zinc-950/55 p-4">
+          <p className="text-[0.68rem] tracking-[0.18em] text-zinc-500 uppercase">
+            Import rules
+          </p>
+          <div className="space-y-2 text-sm leading-6 text-zinc-400">
+            <p>Existing items are preserved.</p>
+            <p>New chains import before multisigs.</p>
+            <p>Duplicate multisigs are skipped.</p>
+            <p>Missing-chain entries are reported as failures.</p>
+          </div>
+        </div>
+      ) : null}
+      <div className="space-y-3">
+        <Label>Paste YAML content:</Label>
+        <p className="text-muted-foreground text-sm">
+          Existing items will be preserved. Only new items will be imported.
+        </p>
+        <textarea
+          value={importContent}
+          onChange={(e) => onImportContentChange(e.target.value)}
+          placeholder="Paste your YAML configuration here..."
+          className={
+            embedded
+              ? "border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring min-h-[28rem] w-full resize-y overflow-auto border border-zinc-800 px-3 py-2 font-mono text-xs focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+              : "border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring min-h-[300px] w-full resize-none overflow-auto rounded-md border px-3 py-2 font-mono text-xs focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+          }
+        />
+      </div>
+    </div>
   );
 }

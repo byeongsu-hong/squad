@@ -26,10 +26,7 @@ import { useFocusedQueue } from "@/lib/hooks/use-focused-queue";
 import { useProposalActions } from "@/lib/hooks/use-proposal-actions";
 import { useSquadsProposalLoader } from "@/lib/hooks/use-squads-proposal-loader";
 import { useWorkspaceMultisigs } from "@/lib/hooks/use-workspace-multisigs";
-import {
-  type WorkspaceProposalRecord,
-  useWorkspaceProposalRecords,
-} from "@/lib/hooks/use-workspace-proposal-records";
+import type { WorkspaceProposalRecord } from "@/lib/hooks/use-workspace-proposal-records";
 import { useProposalDeskQuerySync } from "@/lib/hooks/use-workspace-query-sync";
 import { useWorkspaceQueue } from "@/lib/hooks/use-workspace-queue";
 import { cn } from "@/lib/utils";
@@ -77,13 +74,15 @@ export function ProposalList({
   const searchParams = useSearchParams();
 
   const { publicKey, connected } = useWalletStore();
-  const { proposals, setProposals, selectMultisig } = useMultisigStore();
+  const { setProposals, selectMultisig } = useMultisigStore();
   const {
     chains,
+    proposals,
     multisigs,
     selectedMultisig,
     selectedMultisigKey,
     selectedWorkspaceMultisig: workspaceSelectedMultisig,
+    workspaceProposalRecordMap,
     availableMultisigKeys,
   } = useWorkspaceMultisigs();
   const {
@@ -147,10 +146,6 @@ export function ProposalList({
     multisigs: workspaceSelectedMultisig ? [workspaceSelectedMultisig] : [],
     viewerAddress: publicKey?.toString() ?? null,
   });
-  const { recordMap } = useWorkspaceProposalRecords({
-    proposals,
-    multisigs: workspaceSelectedMultisig ? [workspaceSelectedMultisig] : [],
-  });
   const {
     filteredItems: filteredQueueItems,
     focusedItem,
@@ -206,7 +201,7 @@ export function ProposalList({
   );
 
   const handleViewDetail = (proposalKey: string) => {
-    setSelectedProposal(recordMap.get(proposalKey) ?? null);
+    setSelectedProposal(workspaceProposalRecordMap.get(proposalKey) ?? null);
     setDetailDialogOpen(true);
   };
 

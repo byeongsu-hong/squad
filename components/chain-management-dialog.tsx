@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Pencil, Plus, RotateCcw, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { type UseFormReturn, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -39,7 +39,7 @@ interface ChainManagementDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-interface ChainManagementContentProps {
+interface ChainManagementControllerProps {
   embedded?: boolean;
 }
 
@@ -74,15 +74,15 @@ export function ChainManagementDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <ChainManagementContent />
+        <ChainManagementController />
       </DialogContent>
     </Dialog>
   );
 }
 
-export function ChainManagementContent({
+export function ChainManagementController({
   embedded = false,
-}: ChainManagementContentProps) {
+}: ChainManagementControllerProps) {
   const { chains, addChain, updateChain, deleteChain, resetToDefaults } =
     useChainStore();
   const [editingChain, setEditingChain] = useState<ChainConfig | null>(null);
@@ -175,225 +175,272 @@ export function ChainManagementContent({
           : "space-y-6"
       }
     >
-      <div
-        className={
-          embedded
-            ? "space-y-4 border border-zinc-800 bg-zinc-950/55 p-4"
-            : "space-y-6"
-        }
-      >
-        {embedded ? (
-          <div className="space-y-1 border-b border-zinc-800 pb-4">
-            <p className="text-[0.68rem] tracking-[0.18em] text-zinc-500 uppercase">
-              Chain Editor
-            </p>
-            <p className="text-sm leading-6 text-zinc-400">
-              Define the RPC, program, and explorer endpoints that this
-              workspace trusts for proposal loading and execution.
-            </p>
-          </div>
-        ) : null}
-        <Form {...form}>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Chain Name <span className="text-destructive">*</span>
-                  </FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., Eclipse Mainnet" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="rpcUrl"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    RPC URL <span className="text-destructive">*</span>
-                  </FormLabel>
-                  <FormControl>
-                    <Input placeholder="https://..." {...field} />
-                  </FormControl>
-                  <FormMessage />
-                  <FormDescription>
-                    Must use HTTPS or WSS protocol for security
-                  </FormDescription>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="squadsV4ProgramId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Squad Program ID <span className="text-destructive">*</span>
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="SQDS4ep65T869zMMBKyuUq6aD6EgTu8psMjkvj52pCf"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="explorerUrl"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Explorer URL (Optional)</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="https://explorer.solana.com"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="flex gap-2">
-              <Button type="submit" className="flex-1">
-                <Plus className="mr-2 h-4 w-4" />
-                {editingChain ? "Update Chain" : "Add Chain"}
-              </Button>
-              {editingChain && (
-                <Button type="button" variant="outline" onClick={resetForm}>
-                  Cancel
-                </Button>
-              )}
-            </div>
-          </form>
-        </Form>
-      </div>
+      <ChainEditor
+        embedded={embedded}
+        form={form}
+        editingChain={editingChain}
+        onSubmit={handleSubmit}
+        onCancel={resetForm}
+      />
 
       {embedded ? null : <Separator />}
 
-      <div
-        className={
-          embedded
-            ? "space-y-3 border border-zinc-800 bg-zinc-950/35 p-4"
-            : "space-y-2"
-        }
-      >
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <h3 className="text-sm font-semibold">Configured Chains</h3>
-            {embedded ? (
-              <p className="text-sm text-zinc-400">
-                Review every configured endpoint before editing or deleting it.
-              </p>
-            ) : null}
-          </div>
-          <Button variant="outline" size="sm" onClick={handleResetToDefaults}>
-            <RotateCcw className="mr-2 h-3 w-3" />
-            Reset to Defaults
-          </Button>
+      <ChainRegistry
+        embedded={embedded}
+        chains={chains}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+        onResetToDefaults={handleResetToDefaults}
+      />
+    </div>
+  );
+}
+
+interface ChainEditorProps {
+  embedded: boolean;
+  form: UseFormReturn<ChainFormValues>;
+  editingChain: ChainConfig | null;
+  onSubmit: React.FormEventHandler<HTMLFormElement>;
+  onCancel: () => void;
+}
+
+function ChainEditor({
+  embedded,
+  form,
+  editingChain,
+  onSubmit,
+  onCancel,
+}: ChainEditorProps) {
+  return (
+    <div
+      className={
+        embedded
+          ? "space-y-4 border border-zinc-800 bg-zinc-950/55 p-4"
+          : "space-y-6"
+      }
+    >
+      {embedded ? (
+        <div className="space-y-1 border-b border-zinc-800 pb-4">
+          <p className="text-[0.68rem] tracking-[0.18em] text-zinc-500 uppercase">
+            Chain Editor
+          </p>
+          <p className="text-sm leading-6 text-zinc-400">
+            Define the RPC, program, and explorer endpoints that this workspace
+            trusts for proposal loading and execution.
+          </p>
         </div>
-        <div
-          className={
-            embedded ? "space-y-0 border border-zinc-800" : "space-y-2"
-          }
-        >
-          {chains.map((chain) => (
-            <div
-              key={chain.id}
-              role="button"
-              tabIndex={0}
-              onClick={() => handleEdit(chain)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") {
-                  event.preventDefault();
-                  handleEdit(chain);
-                }
-              }}
-              className={
-                embedded
-                  ? "grid cursor-pointer items-center gap-2 border-b border-zinc-800 px-4 py-3 transition-colors last:border-b-0 hover:bg-zinc-900/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-600 md:grid-cols-[minmax(13rem,0.64fr)_minmax(0,1.16fr)_auto]"
-                  : "flex cursor-pointer items-center justify-between rounded-lg border p-3 transition-colors hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-600"
+      ) : null}
+      <Form {...form}>
+        <form onSubmit={onSubmit} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  Chain Name <span className="text-destructive">*</span>
+                </FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g., Eclipse Mainnet" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="rpcUrl"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  RPC URL <span className="text-destructive">*</span>
+                </FormLabel>
+                <FormControl>
+                  <Input placeholder="https://..." {...field} />
+                </FormControl>
+                <FormMessage />
+                <FormDescription>
+                  Must use HTTPS or WSS protocol for security
+                </FormDescription>
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="squadsV4ProgramId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  Squad Program ID <span className="text-destructive">*</span>
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="SQDS4ep65T869zMMBKyuUq6aD6EgTu8psMjkvj52pCf"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="explorerUrl"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Explorer URL (Optional)</FormLabel>
+                <FormControl>
+                  <Input placeholder="https://explorer.solana.com" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="flex gap-2">
+            <Button type="submit" className="flex-1">
+              <Plus className="mr-2 h-4 w-4" />
+              {editingChain ? "Update Chain" : "Add Chain"}
+            </Button>
+            {editingChain && (
+              <Button type="button" variant="outline" onClick={onCancel}>
+                Cancel
+              </Button>
+            )}
+          </div>
+        </form>
+      </Form>
+    </div>
+  );
+}
+
+interface ChainRegistryProps {
+  embedded: boolean;
+  chains: ChainConfig[];
+  onEdit: (chain: ChainConfig) => void;
+  onDelete: (id: string) => void;
+  onResetToDefaults: () => void;
+}
+
+function ChainRegistry({
+  embedded,
+  chains,
+  onEdit,
+  onDelete,
+  onResetToDefaults,
+}: ChainRegistryProps) {
+  return (
+    <div
+      className={
+        embedded
+          ? "space-y-3 border border-zinc-800 bg-zinc-950/35 p-4"
+          : "space-y-2"
+      }
+    >
+      <div className="flex items-center justify-between">
+        <div className="space-y-1">
+          <h3 className="text-sm font-semibold">Configured Chains</h3>
+          {embedded ? (
+            <p className="text-sm text-zinc-400">
+              Review every configured endpoint before editing or deleting it.
+            </p>
+          ) : null}
+        </div>
+        <Button variant="outline" size="sm" onClick={onResetToDefaults}>
+          <RotateCcw className="mr-2 h-3 w-3" />
+          Reset to Defaults
+        </Button>
+      </div>
+      <div
+        className={embedded ? "space-y-0 border border-zinc-800" : "space-y-2"}
+      >
+        {chains.map((chain) => (
+          <div
+            key={chain.id}
+            role="button"
+            tabIndex={0}
+            onClick={() => onEdit(chain)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                onEdit(chain);
               }
-            >
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <p className="text-[0.95rem] font-medium text-zinc-100">
-                    {chain.name}
-                  </p>
-                  {chain.id.startsWith("custom-") ? (
-                    <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-[0.62rem] tracking-[0.16em] text-amber-300 uppercase">
-                      Custom
-                    </span>
-                  ) : chain.isDefault ? (
-                    <span className="rounded-full border border-zinc-700 bg-zinc-900 px-1.5 py-0.5 text-[0.62rem] tracking-[0.16em] text-zinc-400 uppercase">
-                      Default
-                    </span>
-                  ) : null}
-                </div>
-                {!embedded ? (
-                  <p className="text-muted-foreground text-xs">
-                    RPC: {chain.rpcUrl}
-                  </p>
-                ) : (
-                  <p className="text-[0.68rem] tracking-[0.14em] text-zinc-500 uppercase">
-                    {chain.id}
-                  </p>
-                )}
-              </div>
-              <div className="space-y-1 text-xs text-zinc-400">
-                <p className="font-mono break-all">RPC: {chain.rpcUrl}</p>
-                {chain.explorerUrl ? (
-                  <p className="font-mono break-all">
-                    Explorer: {chain.explorerUrl}
-                  </p>
+            }}
+            className={
+              embedded
+                ? "grid cursor-pointer items-center gap-2 border-b border-zinc-800 px-4 py-3 transition-colors last:border-b-0 hover:bg-zinc-900/60 focus-visible:ring-1 focus-visible:ring-zinc-600 focus-visible:outline-none md:grid-cols-[minmax(13rem,0.64fr)_minmax(0,1.16fr)_auto]"
+                : "hover:bg-accent/40 flex cursor-pointer items-center justify-between rounded-lg border p-3 transition-colors focus-visible:ring-1 focus-visible:ring-zinc-600 focus-visible:outline-none"
+            }
+          >
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <p className="text-[0.95rem] font-medium text-zinc-100">
+                  {chain.name}
+                </p>
+                {chain.id.startsWith("custom-") ? (
+                  <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-[0.62rem] tracking-[0.16em] text-amber-300 uppercase">
+                    Custom
+                  </span>
+                ) : chain.isDefault ? (
+                  <span className="rounded-full border border-zinc-700 bg-zinc-900 px-1.5 py-0.5 text-[0.62rem] tracking-[0.16em] text-zinc-400 uppercase">
+                    Default
+                  </span>
                 ) : null}
               </div>
-              <div className="flex w-[4.25rem] gap-1 justify-self-start md:justify-self-end">
+              {!embedded ? (
+                <p className="text-muted-foreground text-xs">
+                  RPC: {chain.rpcUrl}
+                </p>
+              ) : (
+                <p className="text-[0.68rem] tracking-[0.14em] text-zinc-500 uppercase">
+                  {chain.id}
+                </p>
+              )}
+            </div>
+            <div className="space-y-1 text-xs text-zinc-400">
+              <p className="font-mono break-all">RPC: {chain.rpcUrl}</p>
+              {chain.explorerUrl ? (
+                <p className="font-mono break-all">
+                  Explorer: {chain.explorerUrl}
+                </p>
+              ) : null}
+            </div>
+            <div className="flex w-[4.25rem] gap-1 justify-self-start md:justify-self-end">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onEdit(chain);
+                }}
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+              {chain.id !== "solana-mainnet" ? (
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={(event) => {
                     event.stopPropagation();
-                    handleEdit(chain);
+                    onDelete(chain.id);
                   }}
                 >
-                  <Pencil className="h-4 w-4" />
+                  <Trash2 className="text-destructive h-4 w-4" />
                 </Button>
-                {chain.id !== "solana-mainnet" ? (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      handleDelete(chain.id);
-                    }}
-                  >
-                    <Trash2 className="text-destructive h-4 w-4" />
-                  </Button>
-                ) : (
-                  <span className="h-9 w-9" aria-hidden="true" />
-                )}
-              </div>
+              ) : (
+                <span className="h-9 w-9" aria-hidden="true" />
+              )}
             </div>
-          ))}
-          {chains.length === 0 ? (
-            <div className="text-muted-foreground rounded-lg border border-dashed p-4 text-sm">
-              No chains configured.
-            </div>
-          ) : null}
-        </div>
+          </div>
+        ))}
+        {chains.length === 0 ? (
+          <div className="text-muted-foreground rounded-lg border border-dashed p-4 text-sm">
+            No chains configured.
+          </div>
+        ) : null}
       </div>
     </div>
   );
