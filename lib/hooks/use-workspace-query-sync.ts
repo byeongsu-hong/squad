@@ -77,11 +77,16 @@ export function useOperationsWorkspaceQuerySync({
   setActiveViewKey,
 }: OperationsQuerySyncOptions) {
   const lastWrittenQueryRef = useRef<string | null>(null);
+  const hasHydratedQueryRef = useRef(false);
 
   useEffect(() => {
     const currentQuery = searchParams.toString();
     if (lastWrittenQueryRef.current === currentQuery) {
       lastWrittenQueryRef.current = null;
+      return;
+    }
+
+    if (hasHydratedQueryRef.current) {
       return;
     }
 
@@ -146,6 +151,8 @@ export function useOperationsWorkspaceQuerySync({
     if (hasRequestedProposal && !proposalMatchesSelectedScope) {
       setFocusedProposalKey(null);
     }
+
+    hasHydratedQueryRef.current = true;
   }, [
     availableMultisigKeys,
     searchParams,
@@ -213,11 +220,16 @@ export function useProposalDeskQuerySync({
   setFocusedProposalKey,
 }: ProposalDeskQuerySyncOptions) {
   const lastWrittenQueryRef = useRef<string | null>(null);
+  const hasHydratedQueryRef = useRef(false);
 
   useEffect(() => {
     const currentQuery = searchParams.toString();
     if (lastWrittenQueryRef.current === currentQuery) {
       lastWrittenQueryRef.current = null;
+      return;
+    }
+
+    if (hasHydratedQueryRef.current) {
       return;
     }
 
@@ -243,6 +255,10 @@ export function useProposalDeskQuerySync({
       return;
     }
 
+    if (hasHydratedQueryRef.current) {
+      return;
+    }
+
     const requestedFilter = searchParams.get("filter");
     if (isQueueFilter(requestedFilter)) {
       setQueueFilter(requestedFilter);
@@ -261,6 +277,8 @@ export function useProposalDeskQuerySync({
     if (hasRequestedProposal && requestedProposal) {
       setFocusedProposalKey(requestedProposal);
     }
+
+    hasHydratedQueryRef.current = true;
   }, [searchParams, setFocusedProposalKey]);
 
   useEffect(() => {
