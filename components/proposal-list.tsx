@@ -26,14 +26,16 @@ import { useFocusedQueue } from "@/lib/hooks/use-focused-queue";
 import { useProposalActions } from "@/lib/hooks/use-proposal-actions";
 import { useSquadsProposalLoader } from "@/lib/hooks/use-squads-proposal-loader";
 import { useWorkspaceMultisigs } from "@/lib/hooks/use-workspace-multisigs";
+import {
+  type WorkspaceProposalRecord,
+  useWorkspaceProposalRecords,
+} from "@/lib/hooks/use-workspace-proposal-records";
 import { useProposalDeskQuerySync } from "@/lib/hooks/use-workspace-query-sync";
 import { useWorkspaceQueue } from "@/lib/hooks/use-workspace-queue";
 import { cn } from "@/lib/utils";
-import { fromWorkspaceProposal } from "@/lib/workspace/squads-adapter";
 import { useMultisigStore } from "@/stores/multisig-store";
 import { useWalletStore } from "@/stores/wallet-store";
 import { useWorkspaceStore } from "@/stores/workspace-store";
-import type { ProposalAccount } from "@/types/multisig";
 import type { WorkspaceQueueItem } from "@/types/workspace";
 
 import { TransactionDetailDialog } from "./transaction-detail-dialog";
@@ -69,7 +71,7 @@ export function ProposalList({
 }: ProposalListProps = {}) {
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedProposal, setSelectedProposal] =
-    useState<ProposalAccount | null>(null);
+    useState<WorkspaceProposalRecord | null>(null);
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -145,6 +147,10 @@ export function ProposalList({
     multisigs: workspaceSelectedMultisig ? [workspaceSelectedMultisig] : [],
     viewerAddress: publicKey?.toString() ?? null,
   });
+  const { recordMap } = useWorkspaceProposalRecords({
+    proposals,
+    multisigs: workspaceSelectedMultisig ? [workspaceSelectedMultisig] : [],
+  });
   const {
     filteredItems: filteredQueueItems,
     focusedItem,
@@ -199,8 +205,8 @@ export function ProposalList({
     )
   );
 
-  const handleViewDetail = (proposal: ProposalAccount) => {
-    setSelectedProposal(proposal);
+  const handleViewDetail = (proposalKey: string) => {
+    setSelectedProposal(recordMap.get(proposalKey) ?? null);
     setDetailDialogOpen(true);
   };
 
@@ -576,11 +582,7 @@ export function ProposalList({
                 <Button
                   variant="outline"
                   className="rounded-md border-zinc-800 bg-transparent text-zinc-200 hover:bg-zinc-900"
-                  onClick={() =>
-                    handleViewDetail(
-                      fromWorkspaceProposal(focusedItem.proposal)
-                    )
-                  }
+                  onClick={() => handleViewDetail(focusedItem.focusKey)}
                 >
                   <Eye className="h-4 w-4" />
                   View detail

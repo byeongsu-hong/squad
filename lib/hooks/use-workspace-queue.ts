@@ -1,9 +1,7 @@
 import { useMemo } from "react";
 
-import {
-  buildWorkspaceQueueItem,
-  toWorkspaceProposalFromRaw,
-} from "@/lib/workspace/squads-adapter";
+import { useWorkspaceProposalRecords } from "@/lib/hooks/use-workspace-proposal-records";
+import { buildWorkspaceQueueItem } from "@/lib/workspace/squads-adapter";
 import type { ProposalAccount } from "@/types/multisig";
 import type { WorkspaceMultisig, WorkspaceQueueItem } from "@/types/workspace";
 
@@ -18,27 +16,21 @@ export function useWorkspaceQueue({
   multisigs,
   viewerAddress,
 }: UseWorkspaceQueueOptions) {
-  const multisigMap = useMemo(
-    () => new Map(multisigs.map((multisig) => [multisig.key, multisig])),
-    [multisigs]
-  );
+  const { records } = useWorkspaceProposalRecords({
+    proposals,
+    multisigs,
+  });
 
   return useMemo(
     () =>
-      proposals
-        .map((proposal) => {
-          const multisigKey = proposal.multisig.toString();
-          const multisig = multisigMap.get(multisigKey);
-          if (!multisig) {
-            return null;
-          }
-
-          return buildWorkspaceQueueItem(
-            toWorkspaceProposalFromRaw(proposal, multisig.chainId),
-            multisig,
+      records
+        .map((record) =>
+          buildWorkspaceQueueItem(
+            record.proposal,
+            record.multisig,
             viewerAddress
-          );
-        })
+          )
+        )
         .filter((item): item is WorkspaceQueueItem => item !== null)
         .sort((left, right) => {
           if (left.priority !== right.priority) {
@@ -49,6 +41,6 @@ export function useWorkspaceQueue({
             right.proposal.transactionIndex - left.proposal.transactionIndex
           );
         }),
-    [multisigMap, proposals, viewerAddress]
+    [records, viewerAddress]
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { Check, Copy, ExternalLink, Loader2, Minus, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { AddressWithLabel } from "@/components/address-with-label";
@@ -17,40 +17,38 @@ import {
 } from "@/components/ui/dialog";
 import { useWorkspaceMultisigs } from "@/lib/hooks/use-workspace-multisigs";
 import { useWorkspacePayload } from "@/lib/hooks/use-workspace-payload";
+import type { WorkspaceProposalRecord } from "@/lib/hooks/use-workspace-proposal-records";
 import {
   type ConfigAction,
   formatConfigAction,
 } from "@/lib/utils/transaction-formatter";
-import {
-  toWorkspaceMultisig,
-  toWorkspaceProposalFromRaw,
-} from "@/lib/workspace/squads-adapter";
 import { useWalletStore } from "@/stores/wallet-store";
-import type { ProposalAccount } from "@/types/multisig";
 
 interface TransactionDetailDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  proposal: ProposalAccount | null;
+  proposal: WorkspaceProposalRecord | null;
 }
 
 function getDecisionState(
   address: string,
-  proposal: ProposalAccount
+  proposal: WorkspaceProposalRecord
 ): "approved" | "rejected" | "pending" | "inactive" {
-  if (proposal.approvals.some((item) => item.toString() === address)) {
+  if (proposal.proposal.approvals.includes(address)) {
     return "approved";
   }
-  if (proposal.rejections.some((item) => item.toString() === address)) {
+  if (proposal.proposal.rejections.includes(address)) {
     return "rejected";
   }
-  if (proposal.status !== "Active") {
+  if (proposal.proposal.status !== "Active") {
     return "inactive";
   }
   return "pending";
 }
 
-function getStatusBadgeClass(status: ProposalAccount["status"]) {
+function getStatusBadgeClass(
+  status: WorkspaceProposalRecord["proposal"]["status"]
+) {
   if (status === "Executed") {
     return "border-lime-500/30 bg-lime-500/10 text-lime-200";
   }
@@ -66,39 +64,19 @@ export function TransactionDetailDialog({
   proposal,
 }: TransactionDetailDialogProps) {
   const { publicKey } = useWalletStore();
-  const { chains, rawMultisigMap } = useWorkspaceMultisigs();
+  const { chains } = useWorkspaceMultisigs();
   const [activeTab, setActiveTab] = useState<
     "overview" | "signers" | "payload"
   >("overview");
-
-  const multisigAccount = useMemo(
-    () =>
-      proposal
-        ? (rawMultisigMap.get(proposal.multisig.toString()) ?? null)
-        : null,
-    [proposal, rawMultisigMap]
-  );
-  const workspaceMultisig = useMemo(
-    () =>
-      multisigAccount ? toWorkspaceMultisig(multisigAccount, chains) : null,
-    [chains, multisigAccount]
-  );
-  const workspaceProposal = useMemo(
-    () =>
-      proposal && workspaceMultisig
-        ? toWorkspaceProposalFromRaw(proposal, workspaceMultisig.chainId)
-        : null,
-    [proposal, workspaceMultisig]
-  );
   const { loading, payload, error } = useWorkspacePayload({
     chains,
-    multisig: open ? workspaceMultisig : null,
-    proposal: open ? workspaceProposal : null,
+    multisig: open ? (proposal?.multisig ?? null) : null,
+    proposal: open ? (proposal?.proposal ?? null) : null,
   });
   const transactionPda = payload?.transactionPda ?? null;
   const vaultAddress = payload?.vaultAddress ?? null;
-  const chainName = workspaceMultisig?.chainName ?? null;
-  const multisigLabel = workspaceMultisig?.label ?? null;
+  const chainName = proposal?.multisig.chainName ?? null;
+  const multisigLabel = proposal?.multisig.label ?? null;
 
   if (!proposal) return null;
 
@@ -109,14 +87,14 @@ export function TransactionDetailDialog({
   const handleCopyRawData = () => {
     const rawData = JSON.stringify(
       {
-        multisig: proposal.multisig.toString(),
-        transactionIndex: proposal.transactionIndex.toString(),
-        creator: proposal.creator?.toString() || "Unknown",
-        status: proposal.status,
-        approvals: proposal.approvals.map((a) => a.toString()),
-        rejections: proposal.rejections.map((r) => r.toString()),
-        executed: proposal.executed,
-        cancelled: proposal.cancelled,
+        multisig: proposal.multisig.key,
+        transactionIndex: proposal.proposal.transactionIndex.toString(),
+        creator: proposal.proposal.creator || "Unknown",
+        status: proposal.proposal.status,
+        approvals: proposal.proposal.approvals,
+        rejections: proposal.proposal.rejections,
+        executed: proposal.proposal.executed,
+        cancelled: proposal.proposal.cancelled,
       },
       null,
       2
@@ -133,29 +111,29 @@ export function TransactionDetailDialog({
   };
 
   const handleOpenExplorer = () => {
-    if (!proposal || !workspaceMultisig) {
+    if (!proposal) {
       toast.error("Multisig not found");
       return;
     }
 
-    const chain = chains.find((c) => c.id === workspaceMultisig.chainId);
+    const chain = chains.find((c) => c.id === proposal.multisig.chainId);
     if (!chain?.explorerUrl) {
       toast.error("Explorer URL not configured for this chain");
       return;
     }
 
-    const url = `${chain.explorerUrl}/address/${workspaceMultisig.key}`;
+    const url = `${chain.explorerUrl}/address/${proposal.multisig.key}`;
     window.open(url, "_blank");
   };
 
-  const signerSummary = workspaceMultisig
+  const signerSummary = proposal
     ? {
-        threshold: workspaceMultisig.threshold,
-        members: workspaceMultisig.members.length,
+        threshold: proposal.multisig.threshold,
+        members: proposal.multisig.members.length,
         pending: Math.max(
-          workspaceMultisig.members.length -
-            proposal.approvals.length -
-            proposal.rejections.length,
+          proposal.multisig.members.length -
+            proposal.proposal.approvals.length -
+            proposal.proposal.rejections.length,
           0
         ),
       }
@@ -179,12 +157,12 @@ export function TransactionDetailDialog({
       <DialogContent className="flex max-h-[88vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-[860px]">
         <DialogHeader className="shrink-0 border-b border-zinc-800 px-6 py-5">
           <DialogTitle className="flex flex-wrap items-center gap-2 text-zinc-50">
-            Proposal #{proposal.transactionIndex.toString()}
+            Proposal #{proposal.proposal.transactionIndex.toString()}
             <Badge
               variant="outline"
-              className={getStatusBadgeClass(proposal.status)}
+              className={getStatusBadgeClass(proposal.proposal.status)}
             >
-              {proposal.status}
+              {proposal.proposal.status}
             </Badge>
             {chainName ? (
               <Badge
@@ -234,7 +212,7 @@ export function TransactionDetailDialog({
                     Signers
                   </p>
                   <p className="mt-2 font-mono text-2xl text-zinc-50 tabular-nums">
-                    {proposal.approvals.length}
+                    {proposal.proposal.approvals.length}
                     {signerSummary ? (
                       <span className="text-zinc-600">
                         /{signerSummary.threshold}
@@ -247,7 +225,7 @@ export function TransactionDetailDialog({
                     Rejections
                   </p>
                   <p className="mt-2 font-mono text-2xl text-zinc-50 tabular-nums">
-                    {proposal.rejections.length}
+                    {proposal.proposal.rejections.length}
                   </p>
                 </div>
                 <div className="rounded-xl border border-zinc-800 bg-zinc-950/70 p-3">
@@ -286,16 +264,14 @@ export function TransactionDetailDialog({
                   </p>
                   <div className="flex items-center gap-2">
                     <code className="flex-1 rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 font-mono text-xs text-zinc-300">
-                      {workspaceMultisig?.key ?? proposal.multisig.toString()}
+                      {proposal.multisig.key}
                     </code>
                     <Button
                       variant="ghost"
                       size="icon"
                       className="border border-zinc-800 bg-zinc-950 text-zinc-200 hover:bg-zinc-900"
                       onClick={() => {
-                        navigator.clipboard.writeText(
-                          workspaceMultisig?.key ?? proposal.multisig.toString()
-                        );
+                        navigator.clipboard.writeText(proposal.multisig.key);
                         toast.success("Multisig address copied");
                       }}
                     >
@@ -304,17 +280,17 @@ export function TransactionDetailDialog({
                   </div>
                 </div>
 
-                {proposal.creator ? (
+                {proposal.proposal.creator ? (
                   <div className="space-y-2">
                     <p className="text-[0.68rem] tracking-[0.18em] text-zinc-500 uppercase">
                       Creator
                     </p>
                     <div className="flex flex-wrap items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2">
                       <AddressWithLabel
-                        address={proposal.creator.toString()}
+                        address={proposal.proposal.creator}
                         showFull
                       />
-                      {isCurrentUser(proposal.creator.toString()) ? (
+                      {isCurrentUser(proposal.proposal.creator) ? (
                         <Badge
                           variant="outline"
                           className="border-lime-500/30 bg-lime-500/10 text-lime-200"
@@ -366,7 +342,7 @@ export function TransactionDetailDialog({
                       Signed
                     </p>
                     <p className="mt-2 font-mono text-2xl text-zinc-50 tabular-nums">
-                      {proposal.approvals.length}
+                      {proposal.proposal.approvals.length}
                     </p>
                   </div>
                   <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-3">
@@ -374,7 +350,7 @@ export function TransactionDetailDialog({
                       Rejected
                     </p>
                     <p className="mt-2 font-mono text-2xl text-zinc-50 tabular-nums">
-                      {proposal.rejections.length}
+                      {proposal.proposal.rejections.length}
                     </p>
                   </div>
                   <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-3">
@@ -403,7 +379,7 @@ export function TransactionDetailDialog({
               </div>
 
               <div className="divide-y divide-zinc-800 rounded-2xl border border-zinc-800 bg-zinc-950/55">
-                {workspaceMultisig?.members.map((member) => {
+                {proposal.multisig.members.map((member) => {
                   const address = member.address;
                   const decisionState = getDecisionState(address, proposal);
                   const isYou = isCurrentUser(address);
