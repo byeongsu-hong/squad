@@ -14,6 +14,7 @@ export interface WorkspacePayloadLoaderOptions {
 
 export interface WorkspaceProviderCapabilities {
   payload: boolean;
+  proposalActions: boolean;
 }
 
 export interface WorkspaceProviderAdapter {

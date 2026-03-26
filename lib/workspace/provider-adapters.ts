@@ -7,6 +7,7 @@ const unsupportedSafeAdapter: WorkspaceProviderAdapter = {
   label: "Safe",
   capabilities: {
     payload: false,
+    proposalActions: false,
   },
   async loadPayload() {
     throw new Error("Safe payload loading is not implemented yet.");
