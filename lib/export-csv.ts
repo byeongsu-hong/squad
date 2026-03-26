@@ -1,3 +1,4 @@
+import type { MonitoringProposal } from "@/lib/hooks/use-monitoring-proposals";
 import type { MultisigAccount, ProposalAccount } from "@/types/multisig";
 
 /**
@@ -93,6 +94,55 @@ export function exportProposalsToCSV(
       creator: p.creator?.toString() || "Unknown",
     };
   });
+
+  const csv = convertToCSV(data, headers);
+  const timestamp = new Date().toISOString().split("T")[0];
+  const filename = `squad-proposals-${timestamp}.csv`;
+
+  downloadCSV(csv, filename);
+}
+
+export function exportMonitoringProposalsToCSV(
+  proposals: MonitoringProposal[]
+): void {
+  type ProposalExportRow = {
+    multisig: string;
+    multisigLabel: string;
+    chain: string;
+    transactionIndex: string;
+    status: string;
+    approvalCount: number;
+    rejectionCount: number;
+    executed: string;
+    cancelled: string;
+    creator: string;
+  };
+
+  const headers: { key: keyof ProposalExportRow; label: string }[] = [
+    { key: "multisig", label: "Multisig Address" },
+    { key: "multisigLabel", label: "Multisig Name" },
+    { key: "chain", label: "Chain" },
+    { key: "transactionIndex", label: "Proposal #" },
+    { key: "status", label: "Status" },
+    { key: "approvalCount", label: "Approvals" },
+    { key: "rejectionCount", label: "Rejections" },
+    { key: "executed", label: "Executed" },
+    { key: "cancelled", label: "Cancelled" },
+    { key: "creator", label: "Creator" },
+  ];
+
+  const data = proposals.map((item) => ({
+    multisig: item.multisig.key,
+    multisigLabel: item.multisig.label || "Unnamed",
+    chain: item.multisig.chainName,
+    transactionIndex: item.proposal.transactionIndex.toString(),
+    status: item.proposal.status,
+    approvalCount: item.proposal.approvals.length,
+    rejectionCount: item.proposal.rejections.length,
+    executed: item.proposal.executed ? "Yes" : "No",
+    cancelled: item.proposal.cancelled ? "Yes" : "No",
+    creator: item.proposal.creator || "Unknown",
+  }));
 
   const csv = convertToCSV(data, headers);
   const timestamp = new Date().toISOString().split("T")[0];

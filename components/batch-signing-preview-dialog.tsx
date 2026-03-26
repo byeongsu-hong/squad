@@ -15,31 +15,26 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import type { MonitoringProposal } from "@/lib/hooks/use-monitoring-proposals";
 import { SquadService } from "@/lib/squad";
 import {
   type ConfigAction,
   formatConfigAction,
 } from "@/lib/utils/transaction-formatter";
 import { useChainStore } from "@/stores/chain-store";
-import type { MultisigAccount, ProposalAccount } from "@/types/multisig";
 
 interface BatchSigningPreviewDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  proposals: ProposalAccount[];
-  multisigs: MultisigAccount[];
+  proposals: MonitoringProposal[];
   onConfirm: () => void | Promise<void>;
   action: "approve" | "reject";
-  onExecuteProposal?: (
-    proposal: ProposalAccount,
-    multisig: MultisigAccount
-  ) => Promise<void>;
+  onExecuteProposal?: (proposal: MonitoringProposal) => Promise<void>;
   onComplete?: (successCount: number, failCount: number) => void;
 }
 
 interface TransactionPreview {
-  proposal: ProposalAccount;
-  multisig: MultisigAccount;
+  proposal: MonitoringProposal;
   chainName: string;
   transactionType: "vault" | "config";
   instructionCount?: number;
@@ -66,7 +61,6 @@ export function BatchSigningPreviewDialog({
   open,
   onOpenChange,
   proposals,
-  multisigs,
   onConfirm,
   action,
   onExecuteProposal,
@@ -97,14 +91,10 @@ export function BatchSigningPreviewDialog({
 
     // Initialize previews
     const initialPreviews: TransactionPreview[] = proposals.map((proposal) => {
-      const multisig = multisigs.find(
-        (m) => m.publicKey.toString() === proposal.multisig.toString()
-      );
-      const chain = chains.find((c) => c.id === multisig?.chainId);
+      const chain = chains.find((c) => c.id === proposal.multisig.chainId);
 
       return {
         proposal,
-        multisig: multisig!,
         chainName: chain?.name || "Unknown",
         transactionType: "vault",
         loading: true,
@@ -118,9 +108,9 @@ export function BatchSigningPreviewDialog({
     const loadPreviewData = async () => {
       for (let i = 0; i < initialPreviews.length; i++) {
         const preview = initialPreviews[i];
-        const { proposal, multisig } = preview;
+        const { proposal } = preview;
 
-        const chain = chains.find((c) => c.id === multisig.chainId);
+        const chain = chains.find((c) => c.id === proposal.multisig.chainId);
         if (!chain) {
           setPreviews((prev) =>
             prev.map((p, idx) =>
@@ -137,14 +127,14 @@ export function BatchSigningPreviewDialog({
           );
 
           const txType = await squadService.getTransactionType(
-            proposal.multisig,
-            proposal.transactionIndex
+            proposal.rawProposal.multisig,
+            proposal.proposal.transactionIndex
           );
 
           if (txType === "config") {
             const configTx = await squadService.getConfigTransaction(
-              proposal.multisig,
-              proposal.transactionIndex
+              proposal.rawProposal.multisig,
+              proposal.proposal.transactionIndex
             );
 
             setPreviews((prev) =>
@@ -164,8 +154,8 @@ export function BatchSigningPreviewDialog({
             );
           } else {
             const vaultTx = await squadService.getVaultTransaction(
-              proposal.multisig,
-              proposal.transactionIndex
+              proposal.rawProposal.multisig,
+              proposal.proposal.transactionIndex
             );
 
             const accountKeys = vaultTx.message.accountKeys.map((key) =>
@@ -267,7 +257,7 @@ export function BatchSigningPreviewDialog({
         );
 
         try {
-          await onExecuteProposal(preview.proposal, preview.multisig);
+          await onExecuteProposal(preview.proposal);
           successCount++;
         } catch (error) {
           console.error(`Failed to ${action} proposal:`, error);
@@ -343,7 +333,7 @@ export function BatchSigningPreviewDialog({
             <div className="space-y-3 pr-4">
               {previews.map((preview, index) => (
                 <div
-                  key={`${preview.proposal.multisig.toString()}-${preview.proposal.transactionIndex}`}
+                  key={preview.proposal.key}
                   ref={(el) => {
                     previewRefs.current[index] = el;
                   }}
@@ -374,7 +364,8 @@ export function BatchSigningPreviewDialog({
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <h4 className="text-sm font-semibold">
-                          TX #{preview.proposal.transactionIndex.toString()}
+                          TX #
+                          {preview.proposal.proposal.transactionIndex.toString()}
                         </h4>
                         <Badge variant="outline" className="text-xs">
                           {preview.chainName}
@@ -422,9 +413,9 @@ export function BatchSigningPreviewDialog({
 
                       {!preview.loading &&
                         !preview.error &&
-                        preview.multisig && (
+                        preview.proposal.multisig && (
                           <code className="text-muted-foreground mt-2 block truncate text-[10px]">
-                            {preview.proposal.multisig.toString()}
+                            {preview.proposal.multisig.key}
                           </code>
                         )}
                     </div>
