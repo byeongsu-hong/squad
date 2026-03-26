@@ -1,53 +1,42 @@
 "use client";
 
 import { Layers3, Network } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-const STORAGE_KEY = "squad-provider-adapter-settings";
-
-interface ProviderAdapterSettings {
-  safeTransactionServiceUrl: string;
-  safeSingletonAddress: string;
-  safeProxyFactoryAddress: string;
-}
-
-const DEFAULT_SETTINGS: ProviderAdapterSettings = {
-  safeTransactionServiceUrl: "",
-  safeSingletonAddress: "",
-  safeProxyFactoryAddress: "",
-};
+import { useChainStore } from "@/stores/chain-store";
+import { useProviderAdapterStore } from "@/stores/provider-adapter-store";
 
 export function ProviderAdaptersPanel() {
-  const [settings, setSettings] = useState<ProviderAdapterSettings>(() => {
-    if (typeof window === "undefined") {
-      return DEFAULT_SETTINGS;
-    }
+  const { chains } = useChainStore();
+  const settings = useProviderAdapterStore((state) => state.settings);
+  const updateSettings = useProviderAdapterStore(
+    (state) => state.updateSettings
+  );
 
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    if (!stored) {
-      return DEFAULT_SETTINGS;
-    }
-
-    try {
-      const parsed = JSON.parse(stored) as Partial<ProviderAdapterSettings>;
-      return {
-        safeTransactionServiceUrl: parsed.safeTransactionServiceUrl ?? "",
-        safeSingletonAddress: parsed.safeSingletonAddress ?? "",
-        safeProxyFactoryAddress: parsed.safeProxyFactoryAddress ?? "",
-      };
-    } catch {
-      window.localStorage.removeItem(STORAGE_KEY);
-      return DEFAULT_SETTINGS;
-    }
-  });
-
-  useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
-  }, [settings]);
+  const liveSquadsChains = useMemo(
+    () => chains.filter((chain) => chain.multisigProvider === "squads").length,
+    [chains]
+  );
+  const safePreparedChains = useMemo(
+    () => chains.filter((chain) => chain.multisigProvider === "safe").length,
+    [chains]
+  );
+  const safeAdapterFieldsConfigured = useMemo(
+    () =>
+      [
+        settings.safeTransactionServiceUrl,
+        settings.safeSingletonAddress,
+        settings.safeProxyFactoryAddress,
+      ].filter(Boolean).length,
+    [
+      settings.safeProxyFactoryAddress,
+      settings.safeSingletonAddress,
+      settings.safeTransactionServiceUrl,
+    ]
+  );
 
   return (
     <div className="space-y-4 border border-zinc-800 bg-zinc-950/55 p-4">
@@ -74,7 +63,9 @@ export function ProviderAdaptersPanel() {
                 Active runtime used by the current workspace.
               </p>
             </div>
-            <Badge className="rounded-md bg-zinc-100 text-zinc-950">Live</Badge>
+            <Badge className="rounded-md bg-zinc-100 text-zinc-950">
+              {liveSquadsChains} live
+            </Badge>
           </div>
         </div>
 
@@ -90,7 +81,8 @@ export function ProviderAdaptersPanel() {
               variant="outline"
               className="rounded-md border-violet-500/30 bg-violet-500/10 text-violet-200"
             >
-              Prepared
+              {safePreparedChains} chains · {safeAdapterFieldsConfigured}/3
+              ready
             </Badge>
           </div>
         </div>
@@ -103,10 +95,9 @@ export function ProviderAdaptersPanel() {
             id="safe-tx-service"
             value={settings.safeTransactionServiceUrl}
             onChange={(event) =>
-              setSettings((current) => ({
-                ...current,
+              updateSettings({
                 safeTransactionServiceUrl: event.target.value,
-              }))
+              })
             }
             placeholder="https://safe-transaction-mainnet.safe.global"
             className="border-zinc-800 bg-zinc-950 text-zinc-100"
@@ -119,10 +110,9 @@ export function ProviderAdaptersPanel() {
             id="safe-singleton"
             value={settings.safeSingletonAddress}
             onChange={(event) =>
-              setSettings((current) => ({
-                ...current,
+              updateSettings({
                 safeSingletonAddress: event.target.value,
-              }))
+              })
             }
             placeholder="0xd9Db270c1B5E3Bd161E8c8503c55ceABe..."
             className="border-zinc-800 bg-zinc-950 text-zinc-100"
@@ -135,10 +125,9 @@ export function ProviderAdaptersPanel() {
             id="safe-proxy-factory"
             value={settings.safeProxyFactoryAddress}
             onChange={(event) =>
-              setSettings((current) => ({
-                ...current,
+              updateSettings({
                 safeProxyFactoryAddress: event.target.value,
-              }))
+              })
             }
             placeholder="0xa6B71E26C5e0845f74c812102Ca7114b6a896Ab2"
             className="border-zinc-800 bg-zinc-950 text-zinc-100"

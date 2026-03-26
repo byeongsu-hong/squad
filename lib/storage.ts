@@ -4,6 +4,11 @@ import { createListStorage, createStorage } from "@/lib/storage-base";
 import type { AddressLabel } from "@/types/address-label";
 import type { ChainConfig } from "@/types/chain";
 import type { MultisigAccount } from "@/types/multisig";
+import type { ProviderAdapterSettings } from "@/types/provider-adapter";
+import {
+  DEFAULT_PROVIDER_ADAPTER_SETTINGS,
+  normalizeProviderAdapterSettings,
+} from "@/types/provider-adapter";
 
 const STORAGE_KEYS = {
   CHAINS: "squad-chains",
@@ -11,6 +16,7 @@ const STORAGE_KEYS = {
   MULTISIGS: "squad-multisigs",
   SELECTED_MULTISIG: "squad-selected-multisig",
   ADDRESS_LABELS: "squad-address-labels",
+  PROVIDER_ADAPTER_SETTINGS: "squad-provider-adapter-settings",
 } as const;
 
 const chainListStorage = createListStorage<ChainConfig>(STORAGE_KEYS.CHAINS);
@@ -166,5 +172,29 @@ export const addressLabelStorage = {
 
   getLabel(address: string): AddressLabel | undefined {
     return addressLabelListStorage.find((l) => l.address === address);
+  },
+};
+
+const providerAdapterSettingsStorage = createStorage<ProviderAdapterSettings>(
+  STORAGE_KEYS.PROVIDER_ADAPTER_SETTINGS,
+  {
+    serialize: (settings) => settings,
+    deserialize: (settings) => normalizeProviderAdapterSettings(settings),
+  }
+);
+
+export const providerAdapterStorage = {
+  getSettings(): ProviderAdapterSettings {
+    return (
+      providerAdapterSettingsStorage.get() ?? DEFAULT_PROVIDER_ADAPTER_SETTINGS
+    );
+  },
+
+  saveSettings(settings: ProviderAdapterSettings): void {
+    providerAdapterSettingsStorage.set(settings);
+  },
+
+  resetSettings(): void {
+    providerAdapterSettingsStorage.set(DEFAULT_PROVIDER_ADAPTER_SETTINGS);
   },
 };
