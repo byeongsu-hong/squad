@@ -73,28 +73,34 @@ export function useOperationsWorkspaceQuerySync({
       setQueueFilter(requestedFilter);
     }
 
-    const requestedMultisigs = searchParams.get("multisigs");
-    const requestedMultisig = searchParams.get("multisig");
-    const nextSelectedRegistryKeys = requestedMultisigs
-      ? requestedMultisigs
-          .split(",")
-          .map((value) => value.trim())
-          .filter(
-            (value, index, array) =>
-              value.length > 0 &&
-              array.indexOf(value) === index &&
-              availableMultisigKeys.includes(value)
-          )
-      : requestedMultisig && availableMultisigKeys.includes(requestedMultisig)
-        ? [requestedMultisig]
-        : [];
+    const hasRequestedMultisigs =
+      searchParams.has("multisigs") || searchParams.has("multisig");
+    if (hasRequestedMultisigs) {
+      const requestedMultisigs = searchParams.get("multisigs");
+      const requestedMultisig = searchParams.get("multisig");
+      const nextSelectedRegistryKeys = requestedMultisigs
+        ? requestedMultisigs
+            .split(",")
+            .map((value) => value.trim())
+            .filter(
+              (value, index, array) =>
+                value.length > 0 &&
+                array.indexOf(value) === index &&
+                availableMultisigKeys.includes(value)
+            )
+        : requestedMultisig && availableMultisigKeys.includes(requestedMultisig)
+          ? [requestedMultisig]
+          : [];
 
-    setSelectedRegistryKeys((current) =>
-      current.length === nextSelectedRegistryKeys.length &&
-      current.every((value, index) => value === nextSelectedRegistryKeys[index])
-        ? current
-        : nextSelectedRegistryKeys
-    );
+      setSelectedRegistryKeys((current) =>
+        current.length === nextSelectedRegistryKeys.length &&
+        current.every(
+          (value, index) => value === nextSelectedRegistryKeys[index]
+        )
+          ? current
+          : nextSelectedRegistryKeys
+      );
+    }
 
     const requestedView =
       searchParams.get("view") ?? searchParams.get("folder");
