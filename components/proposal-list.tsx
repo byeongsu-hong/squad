@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { AddressWithLabel } from "@/components/address-with-label";
@@ -25,14 +25,11 @@ import { Pagination } from "@/components/ui/pagination";
 import { useFocusedQueue } from "@/lib/hooks/use-focused-queue";
 import { useProposalActions } from "@/lib/hooks/use-proposal-actions";
 import { useSquadsProposalLoader } from "@/lib/hooks/use-squads-proposal-loader";
+import { useWorkspaceMultisigs } from "@/lib/hooks/use-workspace-multisigs";
 import { useProposalDeskQuerySync } from "@/lib/hooks/use-workspace-query-sync";
 import { useWorkspaceQueue } from "@/lib/hooks/use-workspace-queue";
 import { cn } from "@/lib/utils";
-import {
-  fromWorkspaceProposal,
-  toWorkspaceMultisig,
-} from "@/lib/workspace/squads-adapter";
-import { useChainStore } from "@/stores/chain-store";
+import { fromWorkspaceProposal } from "@/lib/workspace/squads-adapter";
 import { useMultisigStore } from "@/stores/multisig-store";
 import { useWalletStore } from "@/stores/wallet-store";
 import { useWorkspaceStore } from "@/stores/workspace-store";
@@ -78,32 +75,21 @@ export function ProposalList({
   const searchParams = useSearchParams();
 
   const { publicKey, connected } = useWalletStore();
-  const { chains } = useChainStore();
+  const { proposals, setProposals, selectMultisig } = useMultisigStore();
   const {
+    chains,
     multisigs,
-    proposals,
-    setProposals,
-    getSelectedMultisig,
+    selectedMultisig,
     selectedMultisigKey,
-    selectMultisig,
-  } = useMultisigStore();
+    selectedWorkspaceMultisig: workspaceSelectedMultisig,
+    availableMultisigKeys,
+  } = useWorkspaceMultisigs();
   const {
     proposalDeskFocusedProposalKey: focusedProposalKey,
     proposalDeskQueueFilter: queueFilter,
     setProposalDeskFocusedProposalKey: setFocusedProposalKey,
     setProposalDeskQueueFilter: setQueueFilter,
   } = useWorkspaceStore();
-
-  const selectedMultisig = getSelectedMultisig();
-  const workspaceSelectedMultisig = useMemo(
-    () =>
-      selectedMultisig ? toWorkspaceMultisig(selectedMultisig, chains) : null,
-    [chains, selectedMultisig]
-  );
-  const availableMultisigKeys = useMemo(
-    () => multisigs.map((multisig) => multisig.publicKey.toString()),
-    [multisigs]
-  );
 
   const isMember = Boolean(
     publicKey &&
@@ -128,12 +114,12 @@ export function ProposalList({
     isActionLoading,
     isActionInProgress,
   } = useProposalActions({
-    onSuccess: () => loadForMultisig(getSelectedMultisig()),
+    onSuccess: () => loadForMultisig(selectedMultisig),
   });
 
   useEffect(() => {
-    void loadForMultisig(getSelectedMultisig());
-  }, [getSelectedMultisig, loadForMultisig, refreshTrigger]);
+    void loadForMultisig(selectedMultisig);
+  }, [loadForMultisig, refreshTrigger, selectedMultisig]);
 
   useProposalDeskQuerySync({
     searchParams,
@@ -149,10 +135,9 @@ export function ProposalList({
   });
 
   const handleRefresh = async () => {
-    const multisig = getSelectedMultisig();
-    if (!multisig) return;
-    invalidateForMultisig(multisig);
-    await loadForMultisig(multisig);
+    if (!selectedMultisig) return;
+    invalidateForMultisig(selectedMultisig);
+    await loadForMultisig(selectedMultisig);
   };
 
   const queueItems = useWorkspaceQueue({

@@ -6,6 +6,7 @@ import { useState } from "react";
 
 import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { useWorkspaceMultisigs } from "@/lib/hooks/use-workspace-multisigs";
 import { useMultisigStore } from "@/stores/multisig-store";
 
 interface QuickSearchDialogProps {
@@ -19,15 +20,16 @@ export function QuickSearchDialog({
 }: QuickSearchDialogProps) {
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
-  const { multisigs, selectMultisig } = useMultisigStore();
+  const { selectMultisig } = useMultisigStore();
+  const { workspaceMultisigs } = useWorkspaceMultisigs();
   const router = useRouter();
 
-  const filteredMultisigs = multisigs.filter((m) => {
+  const filteredMultisigs = workspaceMultisigs.filter((m) => {
     const lowerQuery = query.toLowerCase();
     return (
       m.label?.toLowerCase().includes(lowerQuery) ||
-      m.publicKey.toString().toLowerCase().includes(lowerQuery) ||
-      m.tags?.some((tag) => tag.toLowerCase().includes(lowerQuery))
+      m.key.toLowerCase().includes(lowerQuery) ||
+      m.tags.some((tag) => tag.toLowerCase().includes(lowerQuery))
     );
   });
 
@@ -58,16 +60,15 @@ export function QuickSearchDialog({
       },
     })),
     ...filteredMultisigs.map((multisig) => ({
-      id: `multisig-${multisig.publicKey.toString()}`,
+      id: `multisig-${multisig.key}`,
       kind: "multisig" as const,
       label: multisig.label || "Unnamed",
       sublabel: [
-        `${multisig.publicKey.toString().slice(0, 12)}...`,
-        ...(multisig.tags && multisig.tags.length > 0
-          ? [multisig.tags.join(", ")]
-          : []),
+        multisig.chainName,
+        `${multisig.key.slice(0, 12)}...`,
+        ...(multisig.tags.length > 0 ? [multisig.tags.join(", ")] : []),
       ].join(" • "),
-      onSelect: () => handleSelect(multisig.publicKey.toString()),
+      onSelect: () => handleSelect(multisig.key),
     })),
   ];
 
@@ -188,21 +189,19 @@ export function QuickSearchDialog({
                   </p>
                   {filteredMultisigs.map((multisig) => (
                     <button
-                      id={`multisig-${multisig.publicKey.toString()}`}
-                      key={multisig.publicKey.toString()}
-                      onClick={() =>
-                        handleSelect(multisig.publicKey.toString())
-                      }
+                      id={`multisig-${multisig.key}`}
+                      key={multisig.key}
+                      onClick={() => handleSelect(multisig.key)}
                       className={`flex min-h-11 w-full flex-col gap-1 rounded-lg px-3 py-2.5 text-left transition-colors ${
                         combinedResults[activeIndex]?.id ===
-                        `multisig-${multisig.publicKey.toString()}`
+                        `multisig-${multisig.key}`
                           ? "bg-zinc-900 text-zinc-50"
                           : "hover:bg-muted"
                       }`}
                       role="option"
                       aria-selected={
                         combinedResults[activeIndex]?.id ===
-                        `multisig-${multisig.publicKey.toString()}`
+                        `multisig-${multisig.key}`
                       }
                     >
                       <span className="text-sm font-medium tracking-[-0.01em]">
@@ -210,9 +209,12 @@ export function QuickSearchDialog({
                       </span>
                       <div className="flex min-w-0 flex-wrap items-center gap-2">
                         <code className="text-muted-foreground max-w-full truncate font-mono text-xs tabular-nums">
-                          {multisig.publicKey.toString().slice(0, 12)}...
+                          {multisig.key.slice(0, 12)}...
                         </code>
-                        {multisig.tags && multisig.tags.length > 0 && (
+                        <span className="text-muted-foreground text-xs">
+                          • {multisig.chainName}
+                        </span>
+                        {multisig.tags.length > 0 && (
                           <span className="text-muted-foreground min-w-0 text-xs break-words">
                             • {multisig.tags.join(", ")}
                           </span>
