@@ -22,25 +22,19 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/lib/hooks/use-debounce";
+import { useMultisigAttention } from "@/lib/hooks/use-multisig-attention";
 import { SquadService } from "@/lib/squad";
 import { cn } from "@/lib/utils";
 import { useChainStore } from "@/stores/chain-store";
 import { useMultisigStore } from "@/stores/multisig-store";
 import { useWalletStore } from "@/stores/wallet-store";
 import type { MultisigAccount } from "@/types/multisig";
-import { toProposalStatus } from "@/types/multisig";
 import type { SquadMember } from "@/types/squad";
 
 interface MultisigListProps {
   actions?: React.ReactNode;
   statusText?: string;
   embedded?: boolean;
-}
-
-interface AttentionSummary {
-  waiting: number;
-  executable: number;
-  active: number;
 }
 
 export function MultisigList({
@@ -50,9 +44,6 @@ export function MultisigList({
 }: MultisigListProps = {}) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [attentionByMultisig, setAttentionByMultisig] = useState<
-    Record<string, AttentionSummary>
-  >({});
   const [selectedForDeletion, setSelectedForDeletion] = useState<Set<string>>(
     new Set()
   );
@@ -73,6 +64,11 @@ export function MultisigList({
     selectMultisig,
     selectedMultisigKey,
   } = useMultisigStore();
+  const attentionByMultisig = useMultisigAttention({
+    chains,
+    multisigs,
+    viewerAddress: publicKey?.toString() ?? null,
+  });
 
   const loadMultisigs = useCallback(async () => {
     if (!publicKey) return;
@@ -138,106 +134,6 @@ export function MultisigList({
   useEffect(() => {
     loadMultisigs();
   }, [loadMultisigs]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const loadAttention = async () => {
-      if (multisigs.length === 0) {
-        setAttentionByMultisig({});
-        return;
-      }
-
-      const summaries = await Promise.all(
-        multisigs.map(async (multisig) => {
-          const chain = chains.find((item) => item.id === multisig.chainId);
-          if (!chain) {
-            return [multisig.publicKey.toString(), null] as const;
-          }
-
-          try {
-            const squadService = new SquadService(
-              chain.rpcUrl,
-              chain.squadsV4ProgramId
-            );
-            const proposalAccounts = await squadService.getProposalsByMultisig(
-              multisig.publicKey
-            );
-
-            let waiting = 0;
-            let executable = 0;
-            let active = 0;
-
-            for (const proposalAccount of proposalAccounts) {
-              if (!proposalAccount) continue;
-
-              const status = toProposalStatus(
-                proposalAccount.account.status.__kind
-              );
-              const approvals = proposalAccount.account.approved || [];
-              const rejections = proposalAccount.account.rejected || [];
-              const isActive = status !== "Executed" && status !== "Cancelled";
-
-              if (!isActive) {
-                continue;
-              }
-
-              active += 1;
-
-              if (approvals.length >= multisig.threshold) {
-                executable += 1;
-              }
-
-              const needsYourSignature =
-                publicKey &&
-                multisig.members.some(
-                  (member) => member.key.toString() === publicKey.toString()
-                ) &&
-                !approvals.some(
-                  (approver) => approver.toString() === publicKey.toString()
-                ) &&
-                !rejections.some(
-                  (rejector) => rejector.toString() === publicKey.toString()
-                );
-
-              if (needsYourSignature) {
-                waiting += 1;
-              }
-            }
-
-            return [
-              multisig.publicKey.toString(),
-              { waiting, executable, active },
-            ] as const;
-          } catch (error) {
-            console.warn(
-              `Failed to load proposal attention for ${multisig.publicKey.toString()}:`,
-              error
-            );
-            return [multisig.publicKey.toString(), null] as const;
-          }
-        })
-      );
-
-      if (cancelled) {
-        return;
-      }
-
-      setAttentionByMultisig(
-        Object.fromEntries(
-          summaries.filter(
-            (entry): entry is [string, AttentionSummary] => entry[1] !== null
-          )
-        )
-      );
-    };
-
-    void loadAttention();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [chains, multisigs, publicKey]);
 
   const toggleSelect = (publicKey: string) => {
     setSelectedForDeletion((prev) => {
