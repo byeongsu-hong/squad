@@ -106,8 +106,9 @@ export function useOperationsWorkspaceQuerySync({
       searchParams.get("view") ?? searchParams.get("folder");
     setActiveViewKey(requestedView || "all");
 
+    const hasRequestedProposal = searchParams.has("proposal");
     const requestedProposal = searchParams.get("proposal");
-    if (requestedProposal) {
+    if (hasRequestedProposal && requestedProposal) {
       setFocusedProposalKey(requestedProposal);
     }
   }, [
@@ -196,8 +197,9 @@ export function useProposalDeskQuerySync({
   }, [searchParams, setQueueFilter]);
 
   useEffect(() => {
+    const hasRequestedProposal = searchParams.has("proposal");
     const requestedProposal = searchParams.get("proposal");
-    if (requestedProposal) {
+    if (hasRequestedProposal && requestedProposal) {
       setFocusedProposalKey(requestedProposal);
     }
   }, [searchParams, setFocusedProposalKey]);
