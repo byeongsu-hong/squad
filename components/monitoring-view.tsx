@@ -1,6 +1,4 @@
 "use client";
-
-import { PublicKey } from "@solana/web3.js";
 import {
   Check,
   Copy,
@@ -11,7 +9,7 @@ import {
   Search,
   X,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { BatchSigningPreviewDialog } from "@/components/batch-signing-preview-dialog";
@@ -53,38 +51,18 @@ import {
 } from "@/components/ui/tooltip";
 import { SUCCESS_MESSAGES } from "@/lib/config";
 import { exportProposalsToCSV } from "@/lib/export-csv";
-import { useDebounce } from "@/lib/hooks/use-debounce";
+import { useMonitoringProposals } from "@/lib/hooks/use-monitoring-proposals";
+import type { MonitoringProposal } from "@/lib/hooks/use-monitoring-proposals";
 import { usePagination } from "@/lib/hooks/use-pagination";
 import { useProposalActions } from "@/lib/hooks/use-proposal-actions";
-import { SquadService } from "@/lib/squad";
 import { cn } from "@/lib/utils";
-import {
-  type TransactionSummary,
-  formatConfigAction,
-  formatTransactionSummary,
-} from "@/lib/utils/transaction-formatter";
+import { formatTransactionSummary } from "@/lib/utils/transaction-formatter";
 import { useChainStore } from "@/stores/chain-store";
 import { useMultisigStore } from "@/stores/multisig-store";
 import { useWalletStore } from "@/stores/wallet-store";
-import type { MultisigAccount, ProposalAccount } from "@/types/multisig";
-import { toProposalStatus } from "@/types/multisig";
-
-interface ProposalWithMultisig extends ProposalAccount {
-  multisigAccount: MultisigAccount;
-  timestamp?: number;
-  transactionSummary?: TransactionSummary;
-}
+import type { ProposalAccount } from "@/types/multisig";
 
 export function MonitoringView() {
-  const [loading, setLoading] = useState(false);
-  const [loadingProgress, setLoadingProgress] = useState(0);
-  const [statusFilters, setStatusFilters] = useState<Set<string>>(
-    new Set(["active"])
-  );
-  const [chainFilter, setChainFilter] = useState<string>("all");
-  const [tagFilter, setTagFilter] = useState<string>("all");
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [proposals, setProposals] = useState<ProposalWithMultisig[]>([]);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedProposal, setSelectedProposal] =
     useState<ProposalAccount | null>(null);
@@ -101,158 +79,26 @@ export function MonitoringView() {
   const { publicKey } = useWalletStore();
   const { chains } = useChainStore();
   const { multisigs } = useMultisigStore();
-
-  const loadAllProposals = useCallback(async () => {
-    if (multisigs.length === 0) return;
-
-    setLoading(true);
-    setLoadingProgress(0);
-
-    try {
-      const totalMultisigs = multisigs.length;
-      let completedCount = 0;
-
-      // Use Promise.all for parallel fetching
-      const proposalPromises = multisigs.map(async (multisig) => {
-        const chain = chains.find((c) => c.id === multisig.chainId);
-        if (!chain) {
-          completedCount++;
-          setLoadingProgress((completedCount / totalMultisigs) * 100);
-          return [];
-        }
-
-        const squadService = new SquadService(
-          chain.rpcUrl,
-          chain.squadsV4ProgramId
-        );
-
-        try {
-          const proposalAccounts = await squadService.getProposalsByMultisig(
-            multisig.publicKey
-          );
-
-          const proposalResults = await Promise.all(
-            proposalAccounts.map(async (acc) => {
-              if (!acc) return null;
-
-              const status = toProposalStatus(acc.account.status.__kind);
-              const transactionIndex = BigInt(
-                acc.account.transactionIndex.toString()
-              );
-
-              // Load transaction to get creator and summary
-              let creator: PublicKey | undefined;
-              let transactionSummary: TransactionSummary | undefined;
-
-              try {
-                const txType = await squadService.getTransactionType(
-                  acc.account.multisig,
-                  transactionIndex
-                );
-
-                if (txType === "vault") {
-                  const vaultTx = await squadService.getVaultTransaction(
-                    acc.account.multisig,
-                    transactionIndex
-                  );
-                  creator = vaultTx.creator;
-
-                  // Get vault transaction summary
-                  const accountKeys = vaultTx.message.accountKeys.map((key) =>
-                    key.toString()
-                  );
-                  const instructions = vaultTx.message.instructions;
-                  const uniqueProgramIds = [
-                    ...new Set(
-                      instructions.map((ix) => accountKeys[ix.programIdIndex])
-                    ),
-                  ];
-
-                  transactionSummary = {
-                    type: "vault",
-                    instructionCount: instructions.length,
-                    accountCount: accountKeys.length,
-                    programIds: uniqueProgramIds,
-                  };
-                } else if (txType === "config") {
-                  const configTx = await squadService.getConfigTransaction(
-                    acc.account.multisig,
-                    transactionIndex
-                  );
-                  creator = configTx.creator;
-
-                  // Get config transaction summary
-                  const configActions = configTx.actions.map((action) =>
-                    formatConfigAction(
-                      action as unknown as import("@/lib/utils/transaction-formatter").ConfigAction
-                    )
-                  );
-
-                  transactionSummary = {
-                    type: "config",
-                    configActions: configActions.map((a) => ({
-                      type: a.type,
-                      summary: a.summary,
-                    })),
-                  };
-                }
-              } catch (error) {
-                console.warn(
-                  `Failed to load transaction data for proposal ${transactionIndex}:`,
-                  error
-                );
-              }
-
-              return {
-                multisig: acc.account.multisig,
-                transactionIndex,
-                ...(creator ? { creator } : {}),
-                status,
-                approvals: acc.account.approved || [],
-                rejections: acc.account.rejected || [],
-                executed: status === "Executed",
-                cancelled: status === "Cancelled",
-                multisigAccount: multisig,
-                ...(transactionSummary ? { transactionSummary } : {}),
-              };
-            })
-          );
-
-          const proposals = proposalResults.filter(
-            (p): p is ProposalWithMultisig => p !== null
-          );
-
-          completedCount++;
-          setLoadingProgress((completedCount / totalMultisigs) * 100);
-          return proposals;
-        } catch (error) {
-          console.error(
-            `Failed to load proposals for ${multisig.label}:`,
-            error
-          );
-          completedCount++;
-          setLoadingProgress((completedCount / totalMultisigs) * 100);
-          return [];
-        }
-      });
-
-      const results = await Promise.all(proposalPromises);
-      const allProposals = results.flat();
-
-      // Sort by transaction index descending (newest first)
-      allProposals.sort((a, b) => {
-        return Number(b.transactionIndex - a.transactionIndex);
-      });
-
-      setProposals(allProposals);
-    } catch (error) {
-      console.error("Failed to load proposals:", error);
-      toast.error("Failed to load proposals");
-    } finally {
-      setLoading(false);
-      setLoadingProgress(0);
-    }
-  }, [multisigs, chains]);
+  const {
+    loading,
+    loadingProgress,
+    searchQuery,
+    setSearchQuery,
+    chainFilter,
+    setChainFilter,
+    tagFilter,
+    setTagFilter,
+    statusFilters,
+    setStatusFilters,
+    proposals,
+    filteredProposals,
+    availableTags,
+    loadAllProposals,
+    handleRefresh,
+  } = useMonitoringProposals({
+    multisigs,
+    chains,
+  });
 
   const { approve, reject, execute, actionLoading, isActionInProgress } =
     useProposalActions({
@@ -269,24 +115,8 @@ export function MonitoringView() {
     loadAllProposals();
   }, [loadAllProposals]);
 
-  const handleRefresh = async () => {
-    // Invalidate all caches
-    multisigs.forEach((multisig) => {
-      const chain = chains.find((c) => c.id === multisig.chainId);
-      if (chain) {
-        const squadService = new SquadService(
-          chain.rpcUrl,
-          chain.squadsV4ProgramId
-        );
-        squadService.invalidateProposalCache(multisig.publicKey);
-      }
-    });
-
-    await loadAllProposals();
-  };
-
   const handleApprove = async (
-    proposal: ProposalWithMultisig,
+    proposal: MonitoringProposal,
     transactionIndex: bigint
   ) => {
     await approve(
@@ -297,7 +127,7 @@ export function MonitoringView() {
   };
 
   const handleReject = async (
-    proposal: ProposalWithMultisig,
+    proposal: MonitoringProposal,
     transactionIndex: bigint
   ) => {
     await reject(
@@ -308,7 +138,7 @@ export function MonitoringView() {
   };
 
   const handleExecute = async (
-    proposal: ProposalWithMultisig,
+    proposal: MonitoringProposal,
     transactionIndex: bigint
   ) => {
     await execute(
@@ -318,53 +148,12 @@ export function MonitoringView() {
     );
   };
 
-  const availableTags = useMemo(() => {
-    const tags = new Set<string>();
-    multisigs.forEach((m) => {
-      m.tags?.forEach((tag) => tags.add(tag));
-    });
-    return Array.from(tags).sort();
-  }, [multisigs]);
-
-  const debouncedSearchQuery = useDebounce(searchQuery, 300);
-
-  const filteredProposals = useMemo(() => {
-    return proposals.filter((p) => {
-      // Status filter
-      if (statusFilters.size > 0 && !statusFilters.has("all")) {
-        const status = p.status.toLowerCase();
-        if (!statusFilters.has(status)) return false;
-      }
-
-      // Chain filter
-      if (chainFilter !== "all") {
-        if (p.multisigAccount.chainId !== chainFilter) return false;
-      }
-
-      // Tag filter
-      if (tagFilter !== "all") {
-        const multisigTags = p.multisigAccount.tags || [];
-        if (!multisigTags.includes(tagFilter)) return false;
-      }
-
-      // Search filter (by multisig name or address)
-      if (debouncedSearchQuery.trim()) {
-        const query = debouncedSearchQuery.toLowerCase();
-        const name = (p.multisigAccount.label || "").toLowerCase();
-        const address = p.multisig.toString().toLowerCase();
-        if (!name.includes(query) && !address.includes(query)) return false;
-      }
-
-      return true;
-    });
-  }, [proposals, statusFilters, chainFilter, tagFilter, debouncedSearchQuery]);
-
   const pagination = usePagination(filteredProposals, {
     totalItems: filteredProposals.length,
     itemsPerPage: 20,
   });
 
-  const isMemberOf = (proposal: ProposalWithMultisig) => {
+  const isMemberOf = (proposal: MonitoringProposal) => {
     return (
       publicKey &&
       proposal.multisigAccount.members.some(
@@ -373,7 +162,7 @@ export function MonitoringView() {
     );
   };
 
-  const hasUserApproved = (proposal: ProposalWithMultisig) => {
+  const hasUserApproved = (proposal: MonitoringProposal) => {
     return (
       publicKey &&
       proposal.approvals.some(
@@ -382,7 +171,7 @@ export function MonitoringView() {
     );
   };
 
-  const hasUserRejected = (proposal: ProposalWithMultisig) => {
+  const hasUserRejected = (proposal: MonitoringProposal) => {
     return (
       publicKey &&
       proposal.rejections.some(
@@ -391,11 +180,11 @@ export function MonitoringView() {
     );
   };
 
-  const hasMetThreshold = (proposal: ProposalWithMultisig) => {
+  const hasMetThreshold = (proposal: MonitoringProposal) => {
     return proposal.approvals.length >= proposal.multisigAccount.threshold;
   };
 
-  const handleViewDetail = (proposal: ProposalWithMultisig) => {
+  const handleViewDetail = (proposal: MonitoringProposal) => {
     setSelectedProposal(proposal);
     setDetailDialogOpen(true);
   };
