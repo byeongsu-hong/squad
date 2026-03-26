@@ -64,47 +64,54 @@ export function Pagination({
   };
 
   return (
-    <div className="flex items-center justify-between px-2">
+    <div className="flex flex-col gap-3 px-2 sm:flex-row sm:items-center sm:justify-between">
       <div className="text-muted-foreground text-sm">
         Showing {startIndex + 1}-{endIndex} of {totalItems}
       </div>
 
-      <div className="flex items-center space-x-2">
+      <div className="flex min-w-0 items-center gap-2">
         <Button
           variant="outline"
           size="sm"
           onClick={() => onPageChange(currentPage - 1)}
           disabled={!canGoPrevious}
+          className="h-9 w-9 shrink-0 p-0"
+          aria-label="Previous page"
+          title="Previous page"
         >
           <ChevronLeft className="h-4 w-4" />
-          Previous
         </Button>
 
-        <div className="flex items-center gap-1">
-          {renderPageNumbers().map((page, index) => {
-            if (page === "...") {
-              return (
-                <span key={`ellipsis-${index}`} className="px-2">
-                  ...
-                </span>
-              );
-            }
+        <div className="min-w-0 flex-1 overflow-x-auto">
+          <div className="flex min-w-max items-center gap-1 whitespace-nowrap">
+            {renderPageNumbers().map((page, index) => {
+              if (page === "...") {
+                return (
+                  <span
+                    key={`ellipsis-${index}`}
+                    className="text-muted-foreground px-2 text-sm"
+                  >
+                    ...
+                  </span>
+                );
+              }
 
-            return (
-              <Button
-                key={page}
-                variant={currentPage === page ? "default" : "outline"}
-                size="sm"
-                onClick={() => onPageChange(page as number)}
-                className={cn(
-                  "h-8 w-8 p-0",
-                  currentPage === page && "pointer-events-none"
-                )}
-              >
-                {page}
-              </Button>
-            );
-          })}
+              return (
+                <Button
+                  key={page}
+                  variant={currentPage === page ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => onPageChange(page as number)}
+                  className={cn(
+                    "h-9 w-9 shrink-0 p-0",
+                    currentPage === page && "pointer-events-none"
+                  )}
+                >
+                  {page}
+                </Button>
+              );
+            })}
+          </div>
         </div>
 
         <Button
@@ -112,8 +119,10 @@ export function Pagination({
           size="sm"
           onClick={() => onPageChange(currentPage + 1)}
           disabled={!canGoNext}
+          className="h-9 w-9 shrink-0 p-0"
+          aria-label="Next page"
+          title="Next page"
         >
-          Next
           <ChevronRight className="h-4 w-4" />
         </Button>
       </div>

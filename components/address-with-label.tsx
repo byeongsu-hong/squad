@@ -18,6 +18,7 @@ interface AddressWithLabelProps {
   showFull?: boolean;
   showCopy?: boolean;
   showLabelButton?: boolean;
+  copyOnClick?: boolean;
   className?: string;
   vaultAddress?: string | null;
 }
@@ -84,6 +85,7 @@ export function AddressWithLabel({
   showFull = false,
   showCopy = true,
   showLabelButton = true,
+  copyOnClick = false,
   className,
   vaultAddress,
 }: AddressWithLabelProps) {
@@ -116,28 +118,67 @@ export function AddressWithLabel({
 
   const displayAddress = showFull
     ? address
-    : `${address.slice(0, 4)}...${address.slice(-4)}`;
+    : `${address.slice(0, 6)}...${address.slice(-6)}`;
+  const interactiveDisplayClass = copyOnClick
+    ? "transition-colors hover:text-zinc-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-600"
+    : "";
 
   return (
-    <div className={cn("flex items-center gap-1", className)}>
+    <div className={cn("flex min-w-0 items-center gap-1.5", className)}>
       {label ? (
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <div
-                className="flex items-center gap-1.5 rounded-md px-2 py-1"
-                style={{
-                  backgroundColor: `${label.color}20`,
-                  borderLeft: `3px solid ${label.color}`,
-                }}
-              >
-                <span
-                  className="text-xs font-medium"
-                  style={{ color: label.color }}
+              {copyOnClick ? (
+                <button
+                  type="button"
+                  onClick={handleCopy}
+                  aria-label="Copy address"
+                  title="Copy address"
+                  className={cn(
+                    "flex min-w-0 text-left",
+                    showFull
+                      ? "flex-col items-start gap-1"
+                      : "items-center gap-2",
+                    interactiveDisplayClass
+                  )}
                 >
-                  {label.label}
-                </span>
-              </div>
+                  <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-zinc-800 bg-zinc-950 px-2.5 py-1 text-xs text-zinc-200 transition-colors hover:border-zinc-700 hover:bg-zinc-900">
+                    <span
+                      className="h-1.5 w-1.5 shrink-0 rounded-full"
+                      style={{ backgroundColor: label.color }}
+                    />
+                    <span className="truncate">{label.label}</span>
+                  </div>
+                  {showFull ? (
+                    <code className="max-w-full truncate font-mono text-xs text-zinc-500 tabular-nums transition-colors hover:text-zinc-300">
+                      {address}
+                    </code>
+                  ) : null}
+                </button>
+              ) : (
+                <div
+                  className={cn(
+                    "flex min-w-0",
+                    showFull
+                      ? "flex-col items-start gap-1"
+                      : "items-center gap-2"
+                  )}
+                >
+                  <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-zinc-800 bg-zinc-950 px-2.5 py-1 text-xs text-zinc-200 transition-colors hover:border-zinc-700 hover:bg-zinc-900 hover:text-zinc-100">
+                    <span
+                      className="h-1.5 w-1.5 shrink-0 rounded-full"
+                      style={{ backgroundColor: label.color }}
+                    />
+                    <span className="truncate">{label.label}</span>
+                  </div>
+                  {showFull ? (
+                    <code className="max-w-full truncate font-mono text-xs text-zinc-500 tabular-nums transition-colors hover:text-zinc-300">
+                      {address}
+                    </code>
+                  ) : null}
+                </div>
+              )}
             </TooltipTrigger>
             <TooltipContent>
               <div className="space-y-1">
@@ -151,22 +192,58 @@ export function AddressWithLabel({
           </Tooltip>
         </TooltipProvider>
       ) : (
-        <code className="bg-muted rounded px-2 py-1 font-mono text-xs">
-          {displayAddress}
-        </code>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              {copyOnClick ? (
+                <button
+                  type="button"
+                  onClick={handleCopy}
+                  aria-label="Copy address"
+                  title="Copy address"
+                  className={cn(
+                    "rounded-md border border-zinc-800 bg-zinc-950 px-2 py-1 font-mono text-xs text-zinc-300 transition-colors hover:border-zinc-700 hover:bg-zinc-900 hover:text-zinc-100 focus-visible:ring-1 focus-visible:ring-zinc-600 focus-visible:outline-none",
+                    interactiveDisplayClass
+                  )}
+                >
+                  {displayAddress}
+                </button>
+              ) : (
+                <code className="rounded-md border border-zinc-800 bg-zinc-950 px-2 py-1 font-mono text-xs text-zinc-300 transition-colors hover:border-zinc-700 hover:bg-zinc-900 hover:text-zinc-100">
+                  {displayAddress}
+                </code>
+              )}
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="font-mono text-xs tabular-nums">{address}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       )}
 
       <div className="flex items-center gap-0.5">
         {showCopy && (
-          <Copy
-            className="text-muted-foreground hover:text-foreground h-3 w-3 shrink-0 cursor-pointer transition-colors"
+          <button
+            type="button"
+            className="rounded-sm p-1 text-zinc-500 transition-colors hover:bg-zinc-900 hover:text-zinc-100"
             onClick={handleCopy}
-          />
+            aria-label="Copy address"
+            title="Copy address"
+          >
+            <Copy className="h-3 w-3 shrink-0" />
+          </button>
         )}
 
         {shouldShowLabelButton && (
           <AddressLabelManagerDialog defaultAddress={address}>
-            <Tag className="text-muted-foreground hover:text-foreground h-3 w-3 shrink-0 cursor-pointer transition-colors" />
+            <button
+              type="button"
+              className="rounded-sm p-1 text-zinc-500 transition-colors hover:bg-zinc-900 hover:text-zinc-100"
+              aria-label="Label address"
+              title="Label address"
+            >
+              <Tag className="h-3 w-3 shrink-0" />
+            </button>
           </AddressLabelManagerDialog>
         )}
       </div>
