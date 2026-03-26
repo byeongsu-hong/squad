@@ -26,12 +26,11 @@ import { usePagination } from "@/lib/hooks/use-pagination";
 import { useProposalActions } from "@/lib/hooks/use-proposal-actions";
 import { useSquadsProposalLoader } from "@/lib/hooks/use-squads-proposal-loader";
 import { useProposalDeskQuerySync } from "@/lib/hooks/use-workspace-query-sync";
+import { useWorkspaceQueue } from "@/lib/hooks/use-workspace-queue";
 import { cn } from "@/lib/utils";
 import {
-  buildWorkspaceQueueItem,
   fromWorkspaceProposal,
   toWorkspaceMultisig,
-  toWorkspaceProposalFromRaw,
 } from "@/lib/workspace/squads-adapter";
 import { useChainStore } from "@/stores/chain-store";
 import { useMultisigStore } from "@/stores/multisig-store";
@@ -151,34 +150,11 @@ export function ProposalList({
     await loadForMultisig(multisig);
   };
 
-  const queueItems = useMemo(
-    () =>
-      proposals
-        .map((proposal) => {
-          if (!workspaceSelectedMultisig) {
-            return null;
-          }
-
-          return buildWorkspaceQueueItem(
-            toWorkspaceProposalFromRaw(
-              proposal,
-              workspaceSelectedMultisig.chainId
-            ),
-            workspaceSelectedMultisig,
-            publicKey?.toString() ?? null
-          );
-        })
-        .filter((item): item is WorkspaceQueueItem => item !== null)
-        .sort((left, right) => {
-          if (left.priority !== right.priority) {
-            return left.priority - right.priority;
-          }
-          return Number(
-            right.proposal.transactionIndex - left.proposal.transactionIndex
-          );
-        }),
-    [proposals, publicKey, workspaceSelectedMultisig]
-  );
+  const queueItems = useWorkspaceQueue({
+    proposals,
+    multisigs: workspaceSelectedMultisig ? [workspaceSelectedMultisig] : [],
+    viewerAddress: publicKey?.toString() ?? null,
+  });
 
   const filteredQueueItems = useMemo(() => {
     if (queueFilter === "waiting") {
