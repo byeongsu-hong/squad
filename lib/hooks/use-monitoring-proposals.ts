@@ -3,27 +3,22 @@ import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { useDebounce } from "@/lib/hooks/use-debounce";
+import type { WorkspaceProposalRecord } from "@/lib/hooks/use-workspace-proposal-records";
 import { SquadService } from "@/lib/squad";
 import {
   type TransactionSummary,
   formatConfigAction,
 } from "@/lib/utils/transaction-formatter";
 import {
-  fromWorkspaceProposal,
   invalidateSquadsProposalCache,
   loadSquadsWorkspaceProposalsForMultisig,
   toWorkspaceMultisig,
 } from "@/lib/workspace/squads-adapter";
 import type { ChainConfig } from "@/types/chain";
 import type { MultisigAccount } from "@/types/multisig";
-import type { WorkspaceMultisig, WorkspaceProposal } from "@/types/workspace";
 
-export interface MonitoringProposal {
-  key: string;
-  multisig: WorkspaceMultisig;
+export interface MonitoringProposal extends WorkspaceProposalRecord {
   rawMultisig: MultisigAccount;
-  proposal: WorkspaceProposal;
-  rawProposal: ReturnType<typeof fromWorkspaceProposal>;
   timestamp?: number;
   transactionSummary?: TransactionSummary;
 }
@@ -142,7 +137,22 @@ export function useMonitoringProposals({
                 multisig: workspaceMultisig,
                 rawMultisig: multisig,
                 proposal,
-                rawProposal: fromWorkspaceProposal(proposal),
+                rawProposal: {
+                  multisig: new PublicKey(proposal.multisigKey),
+                  transactionIndex: proposal.transactionIndex,
+                  creator: proposal.creator
+                    ? new PublicKey(proposal.creator)
+                    : undefined,
+                  status: proposal.status,
+                  approvals: proposal.approvals.map(
+                    (item) => new PublicKey(item)
+                  ),
+                  rejections: proposal.rejections.map(
+                    (item) => new PublicKey(item)
+                  ),
+                  cancelled: proposal.cancelled,
+                  executed: proposal.executed,
+                },
                 ...(transactionSummary ? { transactionSummary } : {}),
               } satisfies MonitoringProposal;
             })

@@ -982,7 +982,7 @@ export function MonitoringView() {
       <TransactionDetailDialog
         open={detailDialogOpen}
         onOpenChange={setDetailDialogOpen}
-        proposal={selectedProposal?.rawProposal ?? null}
+        proposal={selectedProposal}
       />
 
       <BatchSigningPreviewDialog
