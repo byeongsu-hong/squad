@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import { toast } from "sonner";
 
 import { loadSquadsCreatorMultisigs } from "@/lib/workspace/squads-adapter";
-import type { ChainConfig } from "@/types/chain";
+import { type ChainConfig, isOperationalSquadsChain } from "@/types/chain";
 import type { MultisigAccount } from "@/types/multisig";
 
 interface UseCreatorMultisigsOptions {
@@ -28,6 +28,12 @@ export function useCreatorMultisigs({
       creatorAddress: string | null
     ) => {
       if (!chainId || !creatorAddress) {
+        return;
+      }
+
+      const chain = chains.find((item) => item.id === chainId);
+      if (!chain || !isOperationalSquadsChain(chain)) {
+        toast.error("Selected chain is not configured for Squads loading");
         return;
       }
 
