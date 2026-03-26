@@ -3,7 +3,7 @@
 import { PublicKey } from "@solana/web3.js";
 import * as multisigSdk from "@sqds/multisig";
 import bs58 from "bs58";
-import { Copy, ExternalLink, Loader2 } from "lucide-react";
+import { Check, Copy, ExternalLink, Loader2, Minus, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -18,7 +18,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Separator } from "@/components/ui/separator";
 import { SquadService } from "@/lib/squad";
 import {
   type ConfigAction,
@@ -26,7 +25,7 @@ import {
 } from "@/lib/utils/transaction-formatter";
 import { useChainStore } from "@/stores/chain-store";
 import { useWalletStore } from "@/stores/wallet-store";
-import type { ProposalAccount } from "@/types/multisig";
+import type { MultisigAccount, ProposalAccount } from "@/types/multisig";
 
 interface TransactionDetailDialogProps {
   open: boolean;
@@ -49,6 +48,32 @@ interface ConfigTransactionData {
   actions: unknown[];
 }
 
+function getDecisionState(
+  address: string,
+  proposal: ProposalAccount
+): "approved" | "rejected" | "pending" | "inactive" {
+  if (proposal.approvals.some((item) => item.toString() === address)) {
+    return "approved";
+  }
+  if (proposal.rejections.some((item) => item.toString() === address)) {
+    return "rejected";
+  }
+  if (proposal.status !== "Active") {
+    return "inactive";
+  }
+  return "pending";
+}
+
+function getStatusBadgeClass(status: ProposalAccount["status"]) {
+  if (status === "Executed") {
+    return "border-lime-500/30 bg-lime-500/10 text-lime-200";
+  }
+  if (status === "Rejected" || status === "Cancelled") {
+    return "border-red-500/30 bg-red-500/10 text-red-200";
+  }
+  return "border-zinc-700 bg-zinc-900 text-zinc-200";
+}
+
 export function TransactionDetailDialog({
   open,
   onOpenChange,
@@ -66,6 +91,17 @@ export function TransactionDetailDialog({
   const [multisigLabel, setMultisigLabel] = useState<string | null>(null);
   const [chainName, setChainName] = useState<string | null>(null);
   const [vaultAddress, setVaultAddress] = useState<string | null>(null);
+  const [multisigAccount, setMultisigAccount] =
+    useState<MultisigAccount | null>(null);
+  const [activeTab, setActiveTab] = useState<
+    "overview" | "signers" | "payload"
+  >("overview");
+
+  useEffect(() => {
+    if (open) {
+      setActiveTab("overview");
+    }
+  }, [open]);
 
   useEffect(() => {
     async function loadTransactionData() {
@@ -83,6 +119,7 @@ export function TransactionDetailDialog({
         console.error("Multisig not found for proposal");
         return;
       }
+      setMultisigAccount(multisigAccount);
 
       const chain = chains.find((c) => c.id === multisigAccount.chainId);
       if (!chain) {
@@ -246,199 +283,328 @@ export function TransactionDetailDialog({
     window.open(url, "_blank");
   };
 
+  const signerSummary = multisigAccount
+    ? {
+        threshold: multisigAccount.threshold,
+        members: multisigAccount.members.length,
+        pending: Math.max(
+          multisigAccount.members.length -
+            proposal.approvals.length -
+            proposal.rejections.length,
+          0
+        ),
+      }
+    : null;
+
+  const tabButtonClass = (tab: "overview" | "signers" | "payload") =>
+    activeTab === tab
+      ? "border-zinc-100 bg-zinc-100 text-zinc-950 hover:bg-zinc-200"
+      : "border-zinc-800 bg-transparent text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100";
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[85vh] flex-col gap-0 p-0 sm:max-w-[600px]">
-        <DialogHeader className="shrink-0 px-6 pt-6">
-          <DialogTitle className="flex items-center gap-2">
-            Transaction #{proposal.transactionIndex.toString()}
-            <Badge>{proposal.status}</Badge>
+      <DialogContent className="flex max-h-[88vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-[860px]">
+        <DialogHeader className="shrink-0 border-b border-zinc-800 px-6 py-5">
+          <DialogTitle className="flex flex-wrap items-center gap-2 text-zinc-50">
+            Proposal #{proposal.transactionIndex.toString()}
+            <Badge
+              variant="outline"
+              className={getStatusBadgeClass(proposal.status)}
+            >
+              {proposal.status}
+            </Badge>
+            {chainName ? (
+              <Badge
+                variant="outline"
+                className="border-zinc-700 bg-zinc-950 px-2.5 py-1 text-zinc-300"
+              >
+                {chainName}
+              </Badge>
+            ) : null}
           </DialogTitle>
-          <DialogDescription>
-            Transaction details and raw data
+          <DialogDescription className="text-zinc-400">
+            Review signer state, label unknown addresses, and inspect the
+            underlying transaction payload.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <h3 className="text-sm font-semibold">Multisig</h3>
-              {multisigLabel && (
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium">{multisigLabel}</p>
-                  {chainName && (
-                    <Badge variant="secondary" className="text-xs">
-                      {chainName}
-                    </Badge>
-                  )}
-                </div>
-              )}
-              <div className="flex items-center gap-2">
-                <code className="bg-muted flex-1 rounded px-3 py-2 text-xs">
-                  {proposal.multisig.toString()}
-                </code>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => {
-                    navigator.clipboard.writeText(proposal.multisig.toString());
-                    toast.success("Multisig address copied");
-                  }}
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
+        <div className="flex items-center gap-2 border-b border-zinc-800 px-6 py-3">
+          <Button
+            variant="outline"
+            className={tabButtonClass("overview")}
+            onClick={() => setActiveTab("overview")}
+          >
+            Overview
+          </Button>
+          <Button
+            variant="outline"
+            className={tabButtonClass("signers")}
+            onClick={() => setActiveTab("signers")}
+          >
+            Signers
+          </Button>
+          <Button
+            variant="outline"
+            className={tabButtonClass("payload")}
+            onClick={() => setActiveTab("payload")}
+          >
+            Payload
+          </Button>
+        </div>
 
-            {proposal.creator && (
-              <div className="space-y-2">
-                <h3 className="text-sm font-semibold">Creator</h3>
-                <div className="flex items-center gap-2">
-                  {isCurrentUser(proposal.creator.toString()) && (
-                    <Badge variant="secondary" className="text-xs">
-                      👤 You
-                    </Badge>
-                  )}
-                  <AddressWithLabel
-                    address={proposal.creator.toString()}
-                    showFull
-                  />
-                </div>
-              </div>
-            )}
-
-            <Separator />
-
-            <div className="space-y-2">
-              <h3 className="text-sm font-semibold">Status</h3>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-muted-foreground">Approvals</p>
-                  <p className="font-semibold">{proposal.approvals.length}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Rejections</p>
-                  <p className="font-semibold">{proposal.rejections.length}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Executed</p>
-                  <p className="font-semibold">
-                    {proposal.executed ? "Yes" : "No"}
+        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
+          {activeTab === "overview" ? (
+            <div className="space-y-5">
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className="rounded-xl border border-zinc-800 bg-zinc-950/70 p-3">
+                  <p className="text-[0.68rem] tracking-[0.16em] text-zinc-500 uppercase">
+                    Signers
+                  </p>
+                  <p className="mt-2 font-mono text-2xl text-zinc-50 tabular-nums">
+                    {proposal.approvals.length}
+                    {signerSummary ? (
+                      <span className="text-zinc-600">
+                        /{signerSummary.threshold}
+                      </span>
+                    ) : null}
                   </p>
                 </div>
-                <div>
-                  <p className="text-muted-foreground">Cancelled</p>
-                  <p className="font-semibold">
-                    {proposal.cancelled ? "Yes" : "No"}
+                <div className="rounded-xl border border-zinc-800 bg-zinc-950/70 p-3">
+                  <p className="text-[0.68rem] tracking-[0.16em] text-zinc-500 uppercase">
+                    Rejections
+                  </p>
+                  <p className="mt-2 font-mono text-2xl text-zinc-50 tabular-nums">
+                    {proposal.rejections.length}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-zinc-800 bg-zinc-950/70 p-3">
+                  <p className="text-[0.68rem] tracking-[0.16em] text-zinc-500 uppercase">
+                    Pending
+                  </p>
+                  <p className="mt-2 font-mono text-2xl text-zinc-50 tabular-nums">
+                    {signerSummary?.pending ?? "-"}
                   </p>
                 </div>
               </div>
+
+              <div className="space-y-3 rounded-2xl border border-zinc-800 bg-zinc-950/55 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-[0.68rem] tracking-[0.18em] text-zinc-500 uppercase">
+                      Scope
+                    </p>
+                    <p className="mt-1 text-sm font-medium text-zinc-100">
+                      {multisigLabel || "Unnamed multisig"}
+                    </p>
+                  </div>
+                  {signerSummary ? (
+                    <Badge
+                      variant="outline"
+                      className="border-zinc-700 bg-zinc-950 px-2.5 py-1 text-zinc-300"
+                    >
+                      {signerSummary.threshold}/{signerSummary.members} signers
+                    </Badge>
+                  ) : null}
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-[0.68rem] tracking-[0.18em] text-zinc-500 uppercase">
+                    Multisig address
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <code className="flex-1 rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 font-mono text-xs text-zinc-300">
+                      {proposal.multisig.toString()}
+                    </code>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="border border-zinc-800 bg-zinc-950 text-zinc-200 hover:bg-zinc-900"
+                      onClick={() => {
+                        navigator.clipboard.writeText(
+                          proposal.multisig.toString()
+                        );
+                        toast.success("Multisig address copied");
+                      }}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                {proposal.creator ? (
+                  <div className="space-y-2">
+                    <p className="text-[0.68rem] tracking-[0.18em] text-zinc-500 uppercase">
+                      Creator
+                    </p>
+                    <div className="flex flex-wrap items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2">
+                      <AddressWithLabel
+                        address={proposal.creator.toString()}
+                        showFull
+                      />
+                      {isCurrentUser(proposal.creator.toString()) ? (
+                        <Badge
+                          variant="outline"
+                          className="border-lime-500/30 bg-lime-500/10 text-lime-200"
+                        >
+                          You
+                        </Badge>
+                      ) : null}
+                    </div>
+                  </div>
+                ) : null}
+
+                {transactionPda ? (
+                  <div className="space-y-2">
+                    <p className="text-[0.68rem] tracking-[0.18em] text-zinc-500 uppercase">
+                      Transaction PDA
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <code className="flex-1 rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 font-mono text-xs text-zinc-300">
+                        {transactionPda}
+                      </code>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="border border-zinc-800 bg-zinc-950 text-zinc-200 hover:bg-zinc-900"
+                        onClick={() => {
+                          navigator.clipboard.writeText(transactionPda);
+                          toast.success("Transaction PDA copied");
+                        }}
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+
+              <div className="space-y-3 rounded-2xl border border-zinc-800 bg-zinc-950/55 p-4">
+                <div>
+                  <p className="text-[0.68rem] tracking-[0.18em] text-zinc-500 uppercase">
+                    Signer status
+                  </p>
+                  <p className="mt-1 text-sm text-zinc-400">
+                    Open the signers tab to inspect every member in full detail.
+                  </p>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-3">
+                    <p className="text-[0.68rem] tracking-[0.16em] text-zinc-500 uppercase">
+                      Signed
+                    </p>
+                    <p className="mt-2 font-mono text-2xl text-zinc-50 tabular-nums">
+                      {proposal.approvals.length}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-3">
+                    <p className="text-[0.68rem] tracking-[0.16em] text-zinc-500 uppercase">
+                      Rejected
+                    </p>
+                    <p className="mt-2 font-mono text-2xl text-zinc-50 tabular-nums">
+                      {proposal.rejections.length}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-3">
+                    <p className="text-[0.68rem] tracking-[0.16em] text-zinc-500 uppercase">
+                      Awaiting
+                    </p>
+                    <p className="mt-2 font-mono text-2xl text-zinc-50 tabular-nums">
+                      {signerSummary?.pending ?? 0}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
+          ) : null}
 
-            {proposal.approvals.length > 0 && (
-              <div className="space-y-2">
-                <h3 className="text-sm font-semibold">Approvers</h3>
-                <div className="space-y-1">
-                  {proposal.approvals.map((approver, index) => {
-                    const isYou = isCurrentUser(approver.toString());
-                    return (
-                      <div
-                        key={index}
-                        className={`flex items-center gap-2 rounded px-3 py-2 ${isYou ? "bg-primary/10" : "bg-muted"}`}
-                      >
-                        {isYou && (
-                          <div className="bg-primary/10 flex h-6 w-6 items-center justify-center rounded-full">
-                            <span className="text-primary text-xs font-bold">
-                              ✓
-                            </span>
-                          </div>
-                        )}
-                        <div className="flex-1">
-                          <AddressWithLabel
-                            address={approver.toString()}
-                            showFull
-                          />
+          {activeTab === "signers" ? (
+            <div className="space-y-4">
+              <div>
+                <p className="text-[0.68rem] tracking-[0.18em] text-zinc-500 uppercase">
+                  Signer map
+                </p>
+                <p className="mt-1 text-sm text-zinc-400">
+                  Full addresses stay visible here. Copy and labeling actions
+                  live on each row.
+                </p>
+              </div>
+
+              <div className="divide-y divide-zinc-800 rounded-2xl border border-zinc-800 bg-zinc-950/55">
+                {multisigAccount?.members.map((member) => {
+                  const address = member.key.toString();
+                  const decisionState = getDecisionState(address, proposal);
+                  const isYou = isCurrentUser(address);
+
+                  return (
+                    <div
+                      key={address}
+                      className="flex items-start justify-between gap-4 px-4 py-3"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <AddressWithLabel address={address} showFull />
+                          {isYou ? (
+                            <Badge
+                              variant="outline"
+                              className="border-lime-500/30 bg-lime-500/10 text-lime-200"
+                            >
+                              You
+                            </Badge>
+                          ) : null}
                         </div>
-                        {isYou && (
-                          <Badge variant="secondary" className="text-xs">
-                            You
-                          </Badge>
-                        )}
                       </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {proposal.rejections.length > 0 && (
-              <div className="space-y-2">
-                <h3 className="text-sm font-semibold">Rejectors</h3>
-                <div className="space-y-1">
-                  {proposal.rejections.map((rejector, index) => {
-                    const isYou = isCurrentUser(rejector.toString());
-                    return (
-                      <div
-                        key={index}
-                        className={`flex items-center gap-2 rounded px-3 py-2 ${isYou ? "bg-primary/10" : "bg-muted"}`}
+                      <Badge
+                        variant="outline"
+                        className={
+                          decisionState === "approved"
+                            ? "border-lime-500/30 bg-lime-500/10 text-lime-200"
+                            : decisionState === "rejected"
+                              ? "border-red-500/30 bg-red-500/10 text-red-200"
+                              : decisionState === "inactive"
+                                ? "border-zinc-700 bg-zinc-950 text-zinc-500"
+                                : "border-zinc-700 bg-zinc-950 text-zinc-300"
+                        }
                       >
-                        {isYou && (
-                          <div className="bg-primary/10 flex h-6 w-6 items-center justify-center rounded-full">
-                            <span className="text-primary text-xs font-bold">
-                              ✓
-                            </span>
-                          </div>
+                        {decisionState === "approved" ? (
+                          <Check className="mr-1 h-3.5 w-3.5" />
+                        ) : decisionState === "rejected" ? (
+                          <X className="mr-1 h-3.5 w-3.5" />
+                        ) : (
+                          <Minus className="mr-1 h-3.5 w-3.5" />
                         )}
-                        <div className="flex-1">
-                          <AddressWithLabel
-                            address={rejector.toString()}
-                            showFull
-                          />
-                        </div>
-                        {isYou && (
-                          <Badge variant="secondary" className="text-xs">
-                            You
-                          </Badge>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
+                        {decisionState === "approved"
+                          ? "Signed"
+                          : decisionState === "rejected"
+                            ? "Rejected"
+                            : decisionState === "inactive"
+                              ? "No action"
+                              : "Awaiting"}
+                      </Badge>
+                    </div>
+                  );
+                })}
               </div>
-            )}
+            </div>
+          ) : null}
 
-            <Separator />
-
-            {transactionPda && (
-              <div className="space-y-2">
-                <h3 className="text-sm font-semibold">Transaction PDA</h3>
-                <div className="flex items-center gap-2">
-                  <code className="bg-muted flex-1 rounded px-3 py-2 text-xs">
-                    {transactionPda}
-                  </code>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => {
-                      navigator.clipboard.writeText(transactionPda);
-                      toast.success("Transaction PDA copied");
-                    }}
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            <div className="space-y-2">
+          {activeTab === "payload" ? (
+            <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold">
-                  {configData ? "Config Transaction Data" : "Transaction Data"}
-                </h3>
+                <div>
+                  <p className="text-[0.68rem] tracking-[0.18em] text-zinc-500 uppercase">
+                    Payload
+                  </p>
+                  <h3 className="mt-1 text-sm font-semibold text-zinc-100">
+                    {configData
+                      ? "Config transaction data"
+                      : "Transaction data"}
+                  </h3>
+                </div>
                 {(txData || configData) && (
                   <Button
                     variant="ghost"
                     size="icon"
+                    className="border border-zinc-800 bg-zinc-950 text-zinc-200 hover:bg-zinc-900"
                     onClick={handleCopyTxData}
                   >
                     <Copy className="h-4 w-4" />
@@ -447,25 +613,25 @@ export function TransactionDetailDialog({
               </div>
 
               {loading && (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
+                <div className="flex min-h-[16rem] items-center justify-center rounded-2xl border border-zinc-800 bg-zinc-950/55 py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-zinc-500" />
                 </div>
               )}
 
               {!loading && error && (
-                <div className="bg-muted text-muted-foreground rounded px-3 py-4 text-sm">
+                <div className="rounded-2xl border border-dashed border-zinc-800 bg-zinc-950/55 px-4 py-5 text-sm text-zinc-400">
                   <p className="text-xs">{error}</p>
                 </div>
               )}
 
               {!loading && configData && (
-                <div className="space-y-3">
-                  <div className="bg-muted rounded px-3 py-4 text-sm">
-                    <p className="text-muted-foreground mb-3 text-xs">
+                <div className="space-y-3 rounded-2xl border border-zinc-800 bg-zinc-950/55 p-4">
+                  <div className="text-sm">
+                    <p className="mb-3 text-xs text-zinc-500">
                       This transaction modifies the multisig configuration.
                     </p>
                     <div>
-                      <p className="text-muted-foreground mb-2 text-xs font-medium">
+                      <p className="mb-2 text-xs font-medium text-zinc-500">
                         Actions ({configData.actions.length})
                       </p>
                       <div className="max-h-96 space-y-3 overflow-y-auto">
@@ -476,13 +642,16 @@ export function TransactionDetailDialog({
                           return (
                             <div
                               key={index}
-                              className="bg-background rounded-lg border p-4"
+                              className="rounded-xl border border-zinc-800 bg-zinc-950 p-4"
                             >
                               <div className="mb-3 flex items-center gap-2">
-                                <Badge variant="secondary">
+                                <Badge
+                                  variant="outline"
+                                  className="border-zinc-700 bg-zinc-900 text-zinc-300"
+                                >
                                   Action {index + 1}
                                 </Badge>
-                                <span className="text-sm font-semibold">
+                                <span className="text-sm font-semibold text-zinc-100">
                                   {formatted.type}
                                 </span>
                               </div>
@@ -499,7 +668,7 @@ export function TransactionDetailDialog({
 
                                   return (
                                     <div key={fieldIndex} className="space-y-1">
-                                      <p className="text-muted-foreground text-xs font-medium">
+                                      <p className="text-xs font-medium text-zinc-500">
                                         {field.label}
                                       </p>
                                       {typeof field.value === "string" ? (
@@ -510,13 +679,13 @@ export function TransactionDetailDialog({
                                           />
                                         ) : field.value.length > 40 ? (
                                           <div className="flex items-center gap-2">
-                                            <code className="bg-muted flex-1 rounded px-3 py-2 text-xs break-all">
+                                            <code className="flex-1 rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 font-mono text-xs break-all text-zinc-300">
                                               {field.value}
                                             </code>
                                             <Button
                                               variant="ghost"
                                               size="icon"
-                                              className="h-8 w-8 shrink-0"
+                                              className="h-8 w-8 shrink-0 border border-zinc-800 bg-zinc-950 text-zinc-200 hover:bg-zinc-900"
                                               onClick={() => {
                                                 navigator.clipboard.writeText(
                                                   field.value as string
@@ -530,7 +699,7 @@ export function TransactionDetailDialog({
                                             </Button>
                                           </div>
                                         ) : (
-                                          <p className="text-sm font-medium">
+                                          <p className="text-sm font-medium text-zinc-100">
                                             {field.value}
                                           </p>
                                         )
@@ -551,9 +720,9 @@ export function TransactionDetailDialog({
               )}
 
               {!loading && txData && (
-                <div className="space-y-3">
+                <div className="space-y-3 rounded-2xl border border-zinc-800 bg-zinc-950/55 p-4">
                   <div>
-                    <p className="text-muted-foreground mb-2 text-xs font-medium">
+                    <p className="mb-2 text-xs font-medium text-zinc-500">
                       Instructions ({txData.message.instructions.length})
                     </p>
                     <div className="space-y-3">
@@ -561,13 +730,16 @@ export function TransactionDetailDialog({
                         const programAddress =
                           txData.message.accountKeys[ix.programIdIndex];
                         return (
-                          <div key={index} className="bg-muted rounded p-3">
+                          <div
+                            key={index}
+                            className="rounded-xl border border-zinc-800 bg-zinc-950 p-3"
+                          >
                             <div className="mb-3 space-y-2">
-                              <span className="text-xs font-semibold">
+                              <span className="text-xs font-semibold text-zinc-100">
                                 Instruction {index + 1}
                               </span>
                               <div>
-                                <span className="text-muted-foreground mb-1 block text-xs">
+                                <span className="mb-1 block text-xs text-zinc-500">
                                   Program: {ix.programIdIndex}
                                 </span>
                                 <AddressWithLabel
@@ -580,7 +752,7 @@ export function TransactionDetailDialog({
 
                             <div className="space-y-3 text-xs">
                               <div>
-                                <span className="text-muted-foreground mb-2 block">
+                                <span className="mb-2 block text-zinc-500">
                                   Accounts ({ix.accountKeyIndexes.length})
                                 </span>
                                 {ix.accountKeyIndexes.length > 0 && (
@@ -591,7 +763,7 @@ export function TransactionDetailDialog({
                                           key={i}
                                           className="flex items-center gap-2"
                                         >
-                                          <span className="text-muted-foreground w-6 shrink-0 font-mono text-xs">
+                                          <span className="w-6 shrink-0 font-mono text-xs text-zinc-500">
                                             {accIdx}:
                                           </span>
                                           <AddressWithLabel
@@ -608,10 +780,10 @@ export function TransactionDetailDialog({
                                 )}
                               </div>
                               <div>
-                                <span className="text-muted-foreground">
+                                <span className="text-zinc-500">
                                   Data (base58):{" "}
                                 </span>
-                                <code className="bg-background mt-1 block rounded px-2 py-1 text-xs break-all">
+                                <code className="mt-1 block rounded-lg border border-zinc-800 bg-zinc-950 px-2 py-1 font-mono text-xs break-all text-zinc-300">
                                   {ix.data}
                                 </code>
                               </div>
@@ -624,15 +796,15 @@ export function TransactionDetailDialog({
                 </div>
               )}
             </div>
-          </div>
+          ) : null}
         </div>
 
-        <DialogFooter className="shrink-0 border-t px-6 py-4">
+        <DialogFooter className="shrink-0 border-t border-zinc-800 px-6 py-4">
           <div className="flex w-full gap-2">
             <Button
               variant="outline"
               onClick={handleCopyRawData}
-              className="flex-1"
+              className="flex-1 border-zinc-800 bg-transparent text-zinc-200 hover:bg-zinc-900"
             >
               <Copy className="mr-2 h-4 w-4" />
               Copy Proposal Data
@@ -640,7 +812,7 @@ export function TransactionDetailDialog({
             <Button
               variant="outline"
               onClick={handleOpenExplorer}
-              className="flex-1"
+              className="flex-1 border-zinc-800 bg-transparent text-zinc-200 hover:bg-zinc-900"
             >
               <ExternalLink className="mr-2 h-4 w-4" />
               View on Explorer
