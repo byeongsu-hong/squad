@@ -242,6 +242,7 @@ export function OperationsDashboard({
   const { handleViewSelect, handleRegistrySelect, toggleViewExpansion } =
     useOperationsSelection({
       setActiveViewKey,
+      setFocusedProposalKey,
       setSelectedRegistryKeys,
       setExpandedViewKeys,
     });

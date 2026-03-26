@@ -37,6 +37,15 @@ function isQueueFilter(
   return value === "all" || value === "waiting" || value === "executable";
 }
 
+function getProposalMultisigKey(proposalKey: string) {
+  const separatorIndex = proposalKey.lastIndexOf("-");
+  if (separatorIndex === -1) {
+    return null;
+  }
+
+  return proposalKey.slice(0, separatorIndex);
+}
+
 function replaceQuery(
   pathname: string,
   replace: (href: string) => void,
@@ -83,23 +92,23 @@ export function useOperationsWorkspaceQuerySync({
 
     const hasRequestedMultisigs =
       searchParams.has("multisigs") || searchParams.has("multisig");
-    if (hasRequestedMultisigs) {
-      const requestedMultisigs = searchParams.get("multisigs");
-      const requestedMultisig = searchParams.get("multisig");
-      const nextSelectedRegistryKeys = requestedMultisigs
-        ? requestedMultisigs
-            .split(",")
-            .map((value) => value.trim())
-            .filter(
-              (value, index, array) =>
-                value.length > 0 &&
-                array.indexOf(value) === index &&
-                availableMultisigKeys.includes(value)
-            )
-        : requestedMultisig && availableMultisigKeys.includes(requestedMultisig)
-          ? [requestedMultisig]
-          : [];
+    const requestedMultisigs = searchParams.get("multisigs");
+    const requestedMultisig = searchParams.get("multisig");
+    const nextSelectedRegistryKeys = requestedMultisigs
+      ? requestedMultisigs
+          .split(",")
+          .map((value) => value.trim())
+          .filter(
+            (value, index, array) =>
+              value.length > 0 &&
+              array.indexOf(value) === index &&
+              availableMultisigKeys.includes(value)
+          )
+      : requestedMultisig && availableMultisigKeys.includes(requestedMultisig)
+        ? [requestedMultisig]
+        : [];
 
+    if (hasRequestedMultisigs) {
       setSelectedRegistryKeys((current) =>
         current.length === nextSelectedRegistryKeys.length &&
         current.every(
@@ -116,8 +125,26 @@ export function useOperationsWorkspaceQuerySync({
 
     const hasRequestedProposal = searchParams.has("proposal");
     const requestedProposal = searchParams.get("proposal");
-    if (hasRequestedProposal && requestedProposal) {
+    const requestedProposalMultisigKey = requestedProposal
+      ? getProposalMultisigKey(requestedProposal)
+      : null;
+    const proposalMatchesSelectedScope =
+      !hasRequestedMultisigs ||
+      !requestedProposalMultisigKey ||
+      nextSelectedRegistryKeys.length === 0 ||
+      nextSelectedRegistryKeys.includes(requestedProposalMultisigKey);
+
+    if (
+      hasRequestedProposal &&
+      requestedProposal &&
+      proposalMatchesSelectedScope
+    ) {
       setFocusedProposalKey(requestedProposal);
+      return;
+    }
+
+    if (hasRequestedProposal && !proposalMatchesSelectedScope) {
+      setFocusedProposalKey(null);
     }
   }, [
     availableMultisigKeys,
