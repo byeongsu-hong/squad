@@ -1,6 +1,5 @@
 "use client";
 
-import { PublicKey } from "@solana/web3.js";
 import {
   ArrowRight,
   Check,
@@ -214,25 +213,39 @@ export function OperationsDashboard({
   const executableCount = queueItems.filter(
     (item) => item.readyToExecute
   ).length;
-  const { approve, reject, execute, actionLoading, isActionInProgress } =
-    useProposalActions({
-      onSuccess: () => loadForAllMultisigs(multisigs),
-    });
+  const {
+    approveByAddress,
+    rejectByAddress,
+    executeByAddress,
+    isActionLoading,
+    isActionInProgress,
+  } = useProposalActions({
+    onSuccess: () => loadForAllMultisigs(multisigs),
+  });
 
   const isApproveLoading = Boolean(
     focusedItem &&
-    actionLoading ===
-      `approve-${focusedItem.multisig.key}-${focusedItem.proposal.transactionIndex}`
+    isActionLoading(
+      "approve",
+      focusedItem.multisig.key,
+      focusedItem.proposal.transactionIndex
+    )
   );
   const isRejectLoading = Boolean(
     focusedItem &&
-    actionLoading ===
-      `reject-${focusedItem.multisig.key}-${focusedItem.proposal.transactionIndex}`
+    isActionLoading(
+      "reject",
+      focusedItem.multisig.key,
+      focusedItem.proposal.transactionIndex
+    )
   );
   const isExecuteLoading = Boolean(
     focusedItem &&
-    actionLoading ===
-      `execute-${focusedItem.multisig.key}-${focusedItem.proposal.transactionIndex}`
+    isActionLoading(
+      "execute",
+      focusedItem.multisig.key,
+      focusedItem.proposal.transactionIndex
+    )
   );
   const { handleViewSelect, handleRegistrySelect, toggleViewExpansion } =
     useOperationsSelection({
@@ -243,8 +256,8 @@ export function OperationsDashboard({
 
   const handleApprove = async () => {
     if (!focusedItem) return;
-    await approve(
-      new PublicKey(focusedItem.multisig.key),
+    await approveByAddress(
+      focusedItem.multisig.key,
       focusedItem.proposal.transactionIndex,
       focusedItem.multisig.chainId
     );
@@ -252,8 +265,8 @@ export function OperationsDashboard({
 
   const handleReject = async () => {
     if (!focusedItem) return;
-    await reject(
-      new PublicKey(focusedItem.multisig.key),
+    await rejectByAddress(
+      focusedItem.multisig.key,
       focusedItem.proposal.transactionIndex,
       focusedItem.multisig.chainId
     );
@@ -261,8 +274,8 @@ export function OperationsDashboard({
 
   const handleExecute = async () => {
     if (!focusedItem) return;
-    await execute(
-      new PublicKey(focusedItem.multisig.key),
+    await executeByAddress(
+      focusedItem.multisig.key,
       focusedItem.proposal.transactionIndex,
       focusedItem.multisig.chainId
     );

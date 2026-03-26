@@ -81,6 +81,49 @@ export async function loadSquadsWorkspaceProposals(
     );
 }
 
+export async function loadSquadsCreatorMultisigs(
+  chainId: string,
+  creatorAddress: string,
+  chains: ChainConfig[],
+  existingMultisigs: MultisigAccount[] = []
+): Promise<MultisigAccount[]> {
+  const chain = getChainConfig(chains, chainId);
+  if (!chain) {
+    return [];
+  }
+
+  const squadService = new SquadService(chain.rpcUrl, chain.squadsV4ProgramId);
+  const accounts = await squadService.getMultisigsByCreator(
+    new PublicKey(creatorAddress)
+  );
+  const existingByKey = new Map(
+    existingMultisigs.map((multisig) => [
+      multisig.publicKey.toString(),
+      multisig,
+    ])
+  );
+
+  return accounts.map((account) => {
+    const existing = existingByKey.get(account.publicKey.toString());
+
+    return {
+      publicKey: account.publicKey,
+      threshold: account.account.threshold,
+      members: account.account.members.map((member) => ({
+        key: member.key,
+        permissions: { mask: member.permissions.mask },
+      })),
+      transactionIndex: BigInt(account.account.transactionIndex.toString()),
+      msChangeIndex: existing?.msChangeIndex ?? 0,
+      programId: new PublicKey(chain.squadsV4ProgramId),
+      chainId: chain.id,
+      label: existing?.label,
+      tags: existing?.tags,
+      vaultPda: existing?.vaultPda,
+    } satisfies MultisigAccount;
+  });
+}
+
 export async function loadSquadsWorkspaceProposalsForMultisig(
   multisig: MultisigAccount,
   chains: ChainConfig[]
