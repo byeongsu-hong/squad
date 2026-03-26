@@ -23,8 +23,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Pagination } from "@/components/ui/pagination";
+import { useFocusedQueue } from "@/lib/hooks/use-focused-queue";
 import { useOperationsRegistry } from "@/lib/hooks/use-operations-registry";
-import { usePagination } from "@/lib/hooks/use-pagination";
+import { useOperationsSelection } from "@/lib/hooks/use-operations-selection";
 import { useProposalActions } from "@/lib/hooks/use-proposal-actions";
 import { useSquadsProposalLoader } from "@/lib/hooks/use-squads-proposal-loader";
 import { useWorkspacePayload } from "@/lib/hooks/use-workspace-payload";
@@ -157,73 +158,42 @@ export function OperationsDashboard({
     [activeView]
   );
 
-  const filteredQueueItems = useMemo(() => {
-    let nextItems = queueItems;
-
+  const scopedQueueItems = useMemo(() => {
     if (selectedRegistryKeys.length > 0) {
-      nextItems = nextItems.filter((item) =>
+      return queueItems.filter((item) =>
         selectedRegistryKeySet.has(item.multisig.key)
       );
-    } else if (activeViewKey !== "all") {
-      nextItems = nextItems.filter((item) =>
+    }
+
+    if (activeViewKey !== "all") {
+      return queueItems.filter((item) =>
         scopedMultisigKeys.has(item.multisig.key)
       );
     }
 
-    if (queueFilter === "waiting") {
-      nextItems = nextItems.filter((item) => item.needsYourSignature);
-    } else if (queueFilter === "executable") {
-      nextItems = nextItems.filter((item) => item.readyToExecute);
-    }
-
-    return nextItems;
+    return queueItems;
   }, [
     activeViewKey,
-    queueFilter,
     queueItems,
     scopedMultisigKeys,
     selectedRegistryKeySet,
     selectedRegistryKeys,
   ]);
 
-  const pagination = usePagination(filteredQueueItems, {
-    totalItems: filteredQueueItems.length,
+  const {
+    filteredItems: filteredQueueItems,
+    focusedItem,
+    pagination,
+  } = useFocusedQueue({
+    items: scopedQueueItems,
+    filter: queueFilter,
     itemsPerPage: 10,
+    focusedKey: focusedProposalKey,
+    setFocusedKey: setFocusedProposalKey,
+    getItemKey: (item) => item.focusKey,
+    isWaiting: (item) => item.needsYourSignature,
+    isExecutable: (item) => item.readyToExecute,
   });
-  const { goToPage } = pagination;
-
-  useEffect(() => {
-    const availableKeys = new Set(
-      filteredQueueItems.map((item) => item.focusKey)
-    );
-
-    if (focusedProposalKey && availableKeys.has(focusedProposalKey)) {
-      return;
-    }
-
-    setFocusedProposalKey(filteredQueueItems[0]?.focusKey ?? null);
-  }, [filteredQueueItems, focusedProposalKey, setFocusedProposalKey]);
-
-  useEffect(() => {
-    if (!focusedProposalKey) {
-      return;
-    }
-
-    const focusedIndex = filteredQueueItems.findIndex(
-      (item) => item.focusKey === focusedProposalKey
-    );
-
-    if (focusedIndex === -1) {
-      return;
-    }
-
-    goToPage(Math.floor(focusedIndex / 10) + 1);
-  }, [filteredQueueItems, focusedProposalKey, goToPage]);
-
-  const focusedItem =
-    filteredQueueItems.find((item) => item.focusKey === focusedProposalKey) ??
-    filteredQueueItems[0] ??
-    null;
   const {
     loading: payloadLoading,
     payload: focusedPayload,
@@ -264,6 +234,12 @@ export function OperationsDashboard({
     actionLoading ===
       `execute-${focusedItem.multisig.key}-${focusedItem.proposal.transactionIndex}`
   );
+  const { handleViewSelect, handleRegistrySelect, toggleViewExpansion } =
+    useOperationsSelection({
+      setActiveViewKey,
+      setSelectedRegistryKeys,
+      setExpandedViewKeys,
+    });
 
   const handleApprove = async () => {
     if (!focusedItem) return;
@@ -289,38 +265,6 @@ export function OperationsDashboard({
       new PublicKey(focusedItem.multisig.key),
       focusedItem.proposal.transactionIndex,
       focusedItem.multisig.chainId
-    );
-  };
-
-  const handleViewSelect = (viewId: string) => {
-    setActiveViewKey(viewId);
-    setSelectedRegistryKeys([]);
-  };
-
-  const handleRegistrySelect = (
-    multisigKey: string,
-    event?: Pick<MouseEvent, "metaKey" | "ctrlKey">
-  ) => {
-    const multiselect = Boolean(event?.metaKey || event?.ctrlKey);
-
-    setSelectedRegistryKeys((current) => {
-      if (!multiselect) {
-        return [multisigKey];
-      }
-
-      if (current.includes(multisigKey)) {
-        return current.filter((key) => key !== multisigKey);
-      }
-
-      return [...current, multisigKey];
-    });
-  };
-
-  const toggleViewExpansion = (viewId: string) => {
-    setExpandedViewKeys((current) =>
-      current.includes(viewId)
-        ? current.filter((id) => id !== viewId)
-        : [...current, viewId]
     );
   };
 

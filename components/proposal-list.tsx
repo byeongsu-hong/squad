@@ -22,7 +22,7 @@ import { ProposalCardSkeletonList } from "@/components/skeletons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Pagination } from "@/components/ui/pagination";
-import { usePagination } from "@/lib/hooks/use-pagination";
+import { useFocusedQueue } from "@/lib/hooks/use-focused-queue";
 import { useProposalActions } from "@/lib/hooks/use-proposal-actions";
 import { useSquadsProposalLoader } from "@/lib/hooks/use-squads-proposal-loader";
 import { useProposalDeskQuerySync } from "@/lib/hooks/use-workspace-query-sync";
@@ -155,64 +155,20 @@ export function ProposalList({
     multisigs: workspaceSelectedMultisig ? [workspaceSelectedMultisig] : [],
     viewerAddress: publicKey?.toString() ?? null,
   });
-
-  const filteredQueueItems = useMemo(() => {
-    if (queueFilter === "waiting") {
-      return queueItems.filter((item) => item.needsYourSignature);
-    }
-
-    if (queueFilter === "executable") {
-      return queueItems.filter((item) => item.readyToExecute);
-    }
-
-    return queueItems;
-  }, [queueFilter, queueItems]);
-
-  const pagination = usePagination(filteredQueueItems, {
-    totalItems: filteredQueueItems.length,
+  const {
+    filteredItems: filteredQueueItems,
+    focusedItem,
+    pagination,
+  } = useFocusedQueue({
+    items: queueItems,
+    filter: queueFilter,
     itemsPerPage: 12,
+    focusedKey: focusedProposalKey,
+    setFocusedKey: setFocusedProposalKey,
+    getItemKey: (item) => item.proposal.transactionIndex.toString(),
+    isWaiting: (item) => item.needsYourSignature,
+    isExecutable: (item) => item.readyToExecute,
   });
-  const { goToPage } = pagination;
-
-  useEffect(() => {
-    const availableKeys = new Set(
-      queueItems.map((item) => item.proposal.transactionIndex.toString())
-    );
-    if (focusedProposalKey && availableKeys.has(focusedProposalKey)) {
-      return;
-    }
-
-    const nextFocus = filteredQueueItems[0] ?? queueItems[0];
-    setFocusedProposalKey(
-      nextFocus?.proposal.transactionIndex.toString() ?? null
-    );
-  }, [
-    filteredQueueItems,
-    focusedProposalKey,
-    queueItems,
-    setFocusedProposalKey,
-  ]);
-
-  useEffect(() => {
-    if (!focusedProposalKey) {
-      return;
-    }
-
-    const focusedIndex = filteredQueueItems.findIndex(
-      (item) => item.proposal.transactionIndex.toString() === focusedProposalKey
-    );
-
-    if (focusedIndex === -1) {
-      return;
-    }
-
-    goToPage(Math.floor(focusedIndex / 12) + 1);
-  }, [filteredQueueItems, focusedProposalKey, goToPage]);
-
-  const focusedItem =
-    queueItems.find(
-      (item) => item.proposal.transactionIndex.toString() === focusedProposalKey
-    ) ?? queueItems[0];
 
   const waitingOnYouCount = queueItems.filter(
     (item) => item.needsYourSignature
