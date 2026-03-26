@@ -1,8 +1,8 @@
 "use client";
 
 import { Boxes, Database, Network, Tag } from "lucide-react";
-import { useSearchParams } from "next/navigation";
-import { useEffect, useMemo } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useMemo } from "react";
 
 import { AddMultisigActions } from "@/components/add-multisig-actions";
 import { AddressLabelManagerController } from "@/components/address-label-manager-dialog";
@@ -11,6 +11,7 @@ import { ExportImportController } from "@/components/export-import-dialog";
 import { MultisigList } from "@/components/multisig-list";
 import { ProviderAdaptersPanel } from "@/components/provider-adapters-panel";
 import { useAddressLabels } from "@/lib/hooks/use-address-label";
+import { useSettingsQuerySync } from "@/lib/hooks/use-settings-query-sync";
 import { cn } from "@/lib/utils";
 import { useChainStore } from "@/stores/chain-store";
 import { useMultisigStore } from "@/stores/multisig-store";
@@ -73,6 +74,8 @@ function StatPill({ label, value }: { label: string; value: string }) {
 }
 
 export default function SettingsPage() {
+  const pathname = usePathname();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const { chains } = useChainStore();
   const { multisigs } = useMultisigStore();
@@ -80,17 +83,13 @@ export default function SettingsPage() {
   const { settingsActiveSection, setSettingsActiveSection } =
     useWorkspaceStore();
 
-  useEffect(() => {
-    const requestedSection = searchParams.get("section");
-    if (
-      requestedSection === "chains" ||
-      requestedSection === "multisigs" ||
-      requestedSection === "registry" ||
-      requestedSection === "labels"
-    ) {
-      setSettingsActiveSection(requestedSection);
-    }
-  }, [searchParams, setSettingsActiveSection]);
+  useSettingsQuerySync({
+    searchParams,
+    pathname,
+    replace: (href) => router.replace(href, { scroll: false }),
+    activeSection: settingsActiveSection,
+    setActiveSection: setSettingsActiveSection,
+  });
 
   const sectionMeta = useMemo(
     () => [
