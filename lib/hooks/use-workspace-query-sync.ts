@@ -1,5 +1,5 @@
 import type { ReadonlyURLSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 interface OperationsQuerySyncOptions {
   searchParams: URLSearchParams | ReadonlyURLSearchParams;
@@ -67,7 +67,15 @@ export function useOperationsWorkspaceQuerySync({
   setSelectedRegistryKeys,
   setActiveViewKey,
 }: OperationsQuerySyncOptions) {
+  const lastWrittenQueryRef = useRef<string | null>(null);
+
   useEffect(() => {
+    const currentQuery = searchParams.toString();
+    if (lastWrittenQueryRef.current === currentQuery) {
+      lastWrittenQueryRef.current = null;
+      return;
+    }
+
     const requestedFilter = searchParams.get("filter");
     if (isQueueFilter(requestedFilter)) {
       setQueueFilter(requestedFilter);
@@ -149,6 +157,10 @@ export function useOperationsWorkspaceQuerySync({
       nextParams.delete("proposal");
     }
 
+    const nextQuery = nextParams.toString();
+    if (nextQuery !== searchParams.toString()) {
+      lastWrittenQueryRef.current = nextQuery;
+    }
     replaceQuery(pathname, replace, nextParams, searchParams);
   }, [
     activeViewKey,
@@ -173,7 +185,15 @@ export function useProposalDeskQuerySync({
   setQueueFilter,
   setFocusedProposalKey,
 }: ProposalDeskQuerySyncOptions) {
+  const lastWrittenQueryRef = useRef<string | null>(null);
+
   useEffect(() => {
+    const currentQuery = searchParams.toString();
+    if (lastWrittenQueryRef.current === currentQuery) {
+      lastWrittenQueryRef.current = null;
+      return;
+    }
+
     const requestedMultisig = searchParams.get("multisig");
     if (
       requestedMultisig &&
@@ -190,6 +210,12 @@ export function useProposalDeskQuerySync({
   ]);
 
   useEffect(() => {
+    const currentQuery = searchParams.toString();
+    if (lastWrittenQueryRef.current === currentQuery) {
+      lastWrittenQueryRef.current = null;
+      return;
+    }
+
     const requestedFilter = searchParams.get("filter");
     if (isQueueFilter(requestedFilter)) {
       setQueueFilter(requestedFilter);
@@ -197,6 +223,12 @@ export function useProposalDeskQuerySync({
   }, [searchParams, setQueueFilter]);
 
   useEffect(() => {
+    const currentQuery = searchParams.toString();
+    if (lastWrittenQueryRef.current === currentQuery) {
+      lastWrittenQueryRef.current = null;
+      return;
+    }
+
     const hasRequestedProposal = searchParams.has("proposal");
     const requestedProposal = searchParams.get("proposal");
     if (hasRequestedProposal && requestedProposal) {
@@ -221,6 +253,10 @@ export function useProposalDeskQuerySync({
       nextParams.delete("proposal");
     }
 
+    const nextQuery = nextParams.toString();
+    if (nextQuery !== searchParams.toString()) {
+      lastWrittenQueryRef.current = nextQuery;
+    }
     replaceQuery(pathname, replace, nextParams, searchParams);
   }, [
     focusedProposalKey,
