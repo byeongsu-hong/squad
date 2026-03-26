@@ -1,6 +1,5 @@
 "use client";
 
-import { PublicKey } from "@solana/web3.js";
 import {
   ArrowRight,
   Check,
@@ -25,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Pagination } from "@/components/ui/pagination";
 import { usePagination } from "@/lib/hooks/use-pagination";
 import { useProposalActions } from "@/lib/hooks/use-proposal-actions";
+import { useProposalDeskQuerySync } from "@/lib/hooks/use-workspace-query-sync";
 import { cn } from "@/lib/utils";
 import {
   buildWorkspaceQueueItem,
@@ -39,10 +39,7 @@ import { useMultisigStore } from "@/stores/multisig-store";
 import { useWalletStore } from "@/stores/wallet-store";
 import { useWorkspaceStore } from "@/stores/workspace-store";
 import type { ProposalAccount } from "@/types/multisig";
-import type {
-  WorkspaceQueueFilter,
-  WorkspaceQueueItem,
-} from "@/types/workspace";
+import type { WorkspaceQueueItem } from "@/types/workspace";
 
 import { TransactionDetailDialog } from "./transaction-detail-dialog";
 
@@ -106,6 +103,10 @@ export function ProposalList({
       selectedMultisig ? toWorkspaceMultisig(selectedMultisig, chains) : null,
     [chains, selectedMultisig]
   );
+  const availableMultisigKeys = useMemo(
+    () => multisigs.map((multisig) => multisig.publicKey.toString()),
+    [multisigs]
+  );
 
   const isMember = Boolean(
     publicKey &&
@@ -146,70 +147,18 @@ export function ProposalList({
     loadProposals();
   }, [loadProposals, refreshTrigger]);
 
-  useEffect(() => {
-    const requestedMultisig = searchParams.get("multisig");
-    if (
-      requestedMultisig &&
-      requestedMultisig !== selectedMultisigKey &&
-      multisigs.some(
-        (multisig) => multisig.publicKey.toString() === requestedMultisig
-      )
-    ) {
-      selectMultisig(requestedMultisig);
-    }
-  }, [multisigs, searchParams, selectMultisig, selectedMultisigKey]);
-
-  useEffect(() => {
-    const requestedFilter = searchParams.get("filter");
-    if (
-      requestedFilter === "all" ||
-      requestedFilter === "waiting" ||
-      requestedFilter === "executable"
-    ) {
-      setQueueFilter(requestedFilter);
-    }
-  }, [searchParams]);
-
-  useEffect(() => {
-    const requestedProposal = searchParams.get("proposal");
-    if (requestedProposal) {
-      setFocusedProposalKey(requestedProposal);
-    }
-  }, [searchParams]);
-
-  useEffect(() => {
-    const nextParams = new URLSearchParams(searchParams.toString());
-
-    if (selectedMultisigKey) {
-      nextParams.set("multisig", selectedMultisigKey);
-    } else {
-      nextParams.delete("multisig");
-    }
-
-    nextParams.set("filter", queueFilter);
-    if (focusedProposalKey) {
-      nextParams.set("proposal", focusedProposalKey);
-    } else {
-      nextParams.delete("proposal");
-    }
-
-    const nextQuery = nextParams.toString();
-    const currentQuery = searchParams.toString();
-
-    if (nextQuery !== currentQuery) {
-      router.replace(
-        nextQuery.length > 0 ? `${pathname}?${nextQuery}` : pathname,
-        { scroll: false }
-      );
-    }
-  }, [
-    focusedProposalKey,
-    pathname,
-    queueFilter,
-    router,
+  useProposalDeskQuerySync({
     searchParams,
+    pathname,
+    replace: (href) => router.replace(href, { scroll: false }),
+    availableMultisigKeys,
     selectedMultisigKey,
-  ]);
+    queueFilter,
+    focusedProposalKey,
+    selectMultisig,
+    setQueueFilter,
+    setFocusedProposalKey,
+  });
 
   const handleRefresh = async () => {
     const multisig = getSelectedMultisig();
@@ -281,7 +230,12 @@ export function ProposalList({
     setFocusedProposalKey(
       nextFocus?.proposal.transactionIndex.toString() ?? null
     );
-  }, [filteredQueueItems, focusedProposalKey, queueItems]);
+  }, [
+    filteredQueueItems,
+    focusedProposalKey,
+    queueItems,
+    setFocusedProposalKey,
+  ]);
 
   useEffect(() => {
     if (!focusedProposalKey) {

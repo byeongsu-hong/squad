@@ -25,6 +25,7 @@ import { Input } from "@/components/ui/input";
 import { Pagination } from "@/components/ui/pagination";
 import { usePagination } from "@/lib/hooks/use-pagination";
 import { useProposalActions } from "@/lib/hooks/use-proposal-actions";
+import { useOperationsWorkspaceQuerySync } from "@/lib/hooks/use-workspace-query-sync";
 import { cn } from "@/lib/utils";
 import {
   type ConfigAction,
@@ -35,7 +36,6 @@ import {
   buildWorkspaceQueueItem,
   buildWorkspaceRegistryItems,
   fromWorkspaceProposal,
-  invalidateSquadsProposalCache,
   loadSquadsWorkspacePayload,
   loadSquadsWorkspaceProposals,
   toWorkspaceMultisigs,
@@ -46,11 +46,8 @@ import { useMultisigStore } from "@/stores/multisig-store";
 import { useWalletStore } from "@/stores/wallet-store";
 import { useWorkspaceStore } from "@/stores/workspace-store";
 import type {
-  WorkspaceDetailTab,
   WorkspaceExplorerMode,
-  WorkspaceExplorerView,
   WorkspacePayload,
-  WorkspaceQueueFilter,
   WorkspaceQueueItem,
 } from "@/types/workspace";
 
@@ -115,6 +112,10 @@ export function OperationsDashboard({
     () => toWorkspaceMultisigs(multisigs, chains),
     [chains, multisigs]
   );
+  const availableMultisigKeys = useMemo(
+    () => workspaceMultisigs.map((multisig) => multisig.key),
+    [workspaceMultisigs]
+  );
 
   const loadAllProposals = useCallback(async () => {
     if (multisigs.length === 0) {
@@ -141,97 +142,20 @@ export function OperationsDashboard({
     void loadAllProposals();
   }, [loadAllProposals]);
 
-  useEffect(() => {
-    const requestedFilter = searchParams.get("filter");
-    if (
-      requestedFilter === "all" ||
-      requestedFilter === "waiting" ||
-      requestedFilter === "executable"
-    ) {
-      setQueueFilter(requestedFilter);
-    }
-
-    const requestedMultisigs = searchParams.get("multisigs");
-    const requestedMultisig = searchParams.get("multisig");
-    const nextSelectedRegistryKeys = requestedMultisigs
-      ? requestedMultisigs
-          .split(",")
-          .map((value) => value.trim())
-          .filter(
-            (value, index, array) =>
-              value.length > 0 &&
-              array.indexOf(value) === index &&
-              workspaceMultisigs.some((multisig) => multisig.key === value)
-          )
-      : requestedMultisig &&
-          workspaceMultisigs.some(
-            (multisig) => multisig.key === requestedMultisig
-          )
-        ? [requestedMultisig]
-        : [];
-
-    setSelectedRegistryKeys((current) =>
-      current.length === nextSelectedRegistryKeys.length &&
-      current.every((value, index) => value === nextSelectedRegistryKeys[index])
-        ? current
-        : nextSelectedRegistryKeys
-    );
-
-    const requestedView =
-      searchParams.get("view") ?? searchParams.get("folder");
-    if (requestedView) {
-      setActiveViewKey(requestedView);
-    } else {
-      setActiveViewKey("all");
-    }
-
-    const requestedProposal = searchParams.get("proposal");
-    if (requestedProposal) {
-      setFocusedProposalKey(requestedProposal);
-    }
-  }, [searchParams, workspaceMultisigs]);
-
-  useEffect(() => {
-    const nextParams = new URLSearchParams(searchParams.toString());
-    if (selectedRegistryKeys.length > 1) {
-      nextParams.set("multisigs", selectedRegistryKeys.join(","));
-      nextParams.delete("multisig");
-    } else if (selectedRegistryKeys.length === 1) {
-      nextParams.set("multisig", selectedRegistryKeys[0]);
-      nextParams.delete("multisigs");
-    } else {
-      nextParams.delete("multisig");
-      nextParams.delete("multisigs");
-    }
-    if (activeViewKey !== "all") {
-      nextParams.set("view", activeViewKey);
-    } else {
-      nextParams.delete("view");
-    }
-    nextParams.delete("folder");
-    nextParams.set("filter", queueFilter);
-    if (focusedProposalKey) {
-      nextParams.set("proposal", focusedProposalKey);
-    } else {
-      nextParams.delete("proposal");
-    }
-
-    const nextQuery = nextParams.toString();
-    if (nextQuery !== searchParams.toString()) {
-      router.replace(
-        nextQuery.length > 0 ? `${pathname}?${nextQuery}` : pathname,
-        { scroll: false }
-      );
-    }
-  }, [
+  useOperationsWorkspaceQuerySync({
+    searchParams,
+    pathname,
+    replace: (href) => router.replace(href, { scroll: false }),
+    availableMultisigKeys,
+    queueFilter,
+    focusedProposalKey,
     selectedRegistryKeys,
     activeViewKey,
-    focusedProposalKey,
-    pathname,
-    queueFilter,
-    router,
-    searchParams,
-  ]);
+    setQueueFilter,
+    setFocusedProposalKey,
+    setSelectedRegistryKeys,
+    setActiveViewKey,
+  });
 
   const primarySelectedRegistryKey = selectedRegistryKeys[0] ?? null;
   const selectedRegistryKeySet = useMemo(
@@ -294,7 +218,7 @@ export function OperationsDashboard({
     setExpandedViewKeys((current) =>
       current.includes(activeViewKey) ? current : [...current, activeViewKey]
     );
-  }, [activeViewKey]);
+  }, [activeViewKey, setExpandedViewKeys]);
 
   useEffect(() => {
     if (activeViewKey.startsWith("chain:")) {
@@ -306,7 +230,7 @@ export function OperationsDashboard({
       return;
     }
     setExplorerMode("views");
-  }, [activeViewKey]);
+  }, [activeViewKey, setExplorerMode]);
 
   const explorerSections = useMemo(
     () =>
@@ -390,7 +314,7 @@ export function OperationsDashboard({
     }
 
     setFocusedProposalKey(filteredQueueItems[0]?.focusKey ?? null);
-  }, [filteredQueueItems, focusedProposalKey]);
+  }, [filteredQueueItems, focusedProposalKey, setFocusedProposalKey]);
 
   useEffect(() => {
     if (!focusedProposalKey) {
@@ -415,7 +339,7 @@ export function OperationsDashboard({
 
   useEffect(() => {
     setDetailTab("overview");
-  }, [focusedProposalKey]);
+  }, [focusedProposalKey, setDetailTab]);
 
   const waitingOnYouCount = queueItems.filter(
     (item) => item.needsYourSignature
