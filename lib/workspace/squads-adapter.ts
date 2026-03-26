@@ -528,6 +528,7 @@ export const squadsWorkspaceAdapter: WorkspaceProviderAdapter = {
   label: "Squads",
   capabilities: {
     payload: true,
+    proposalActions: true,
   },
   loadPayload({ chains, multisig, proposal }: WorkspacePayloadLoaderOptions) {
     return loadSquadsWorkspacePayload(multisig, proposal, chains);
