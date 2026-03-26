@@ -1,4 +1,4 @@
-export type WorkspaceProviderId = "squads";
+export type WorkspaceProviderId = "squads" | "safe";
 
 export type WorkspaceQueueFilter = "all" | "waiting" | "executable";
 export type WorkspaceDetailTab = "overview" | "payload";

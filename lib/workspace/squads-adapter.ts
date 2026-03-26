@@ -3,6 +3,10 @@ import * as multisigSdk from "@sqds/multisig";
 import bs58 from "bs58";
 
 import { SquadService } from "@/lib/squad";
+import type {
+  WorkspacePayloadLoaderOptions,
+  WorkspaceProviderAdapter,
+} from "@/lib/workspace/provider-contract";
 import { type ChainConfig, isOperationalSquadsChain } from "@/types/chain";
 import type { MultisigAccount, ProposalAccount } from "@/types/multisig";
 import { toProposalStatus } from "@/types/multisig";
@@ -518,6 +522,17 @@ export function toWorkspaceMultisigs(
 ) {
   return multisigs.map((multisig) => toWorkspaceMultisig(multisig, chains));
 }
+
+export const squadsWorkspaceAdapter: WorkspaceProviderAdapter = {
+  id: "squads",
+  label: "Squads",
+  capabilities: {
+    payload: true,
+  },
+  loadPayload({ chains, multisig, proposal }: WorkspacePayloadLoaderOptions) {
+    return loadSquadsWorkspacePayload(multisig, proposal, chains);
+  },
+};
 
 export function fromWorkspaceProposal(
   proposal: WorkspaceProposal
