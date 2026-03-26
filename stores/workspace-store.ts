@@ -34,6 +34,13 @@ interface WorkspaceStore {
   setProposalDeskFocusedProposalKey: (key: string | null) => void;
 }
 
+function areStringArraysEqual(left: string[], right: string[]) {
+  return (
+    left.length === right.length &&
+    left.every((value, index) => value === right[index])
+  );
+}
+
 export const useWorkspaceStore = create<WorkspaceStore>((set) => ({
   operationsQueueFilter: "all",
   operationsDetailTab: "overview",
@@ -46,32 +53,79 @@ export const useWorkspaceStore = create<WorkspaceStore>((set) => ({
   proposalDeskQueueFilter: "all",
   proposalDeskFocusedProposalKey: null,
   setOperationsQueueFilter: (operationsQueueFilter) =>
-    set({ operationsQueueFilter }),
-  setOperationsDetailTab: (operationsDetailTab) => set({ operationsDetailTab }),
+    set((state) =>
+      state.operationsQueueFilter === operationsQueueFilter
+        ? state
+        : { operationsQueueFilter }
+    ),
+  setOperationsDetailTab: (operationsDetailTab) =>
+    set((state) =>
+      state.operationsDetailTab === operationsDetailTab
+        ? state
+        : { operationsDetailTab }
+    ),
   setOperationsExplorerMode: (operationsExplorerMode) =>
-    set({ operationsExplorerMode }),
+    set((state) =>
+      state.operationsExplorerMode === operationsExplorerMode
+        ? state
+        : { operationsExplorerMode }
+    ),
   setOperationsFocusedProposalKey: (operationsFocusedProposalKey) =>
-    set({ operationsFocusedProposalKey }),
+    set((state) =>
+      state.operationsFocusedProposalKey === operationsFocusedProposalKey
+        ? state
+        : { operationsFocusedProposalKey }
+    ),
   setOperationsSelectedRegistryKeys: (keysOrUpdater) =>
-    set((state) => ({
-      operationsSelectedRegistryKeys:
+    set((state) => {
+      const nextSelectedRegistryKeys =
         typeof keysOrUpdater === "function"
           ? keysOrUpdater(state.operationsSelectedRegistryKeys)
-          : keysOrUpdater,
-    })),
+          : keysOrUpdater;
+
+      return areStringArraysEqual(
+        state.operationsSelectedRegistryKeys,
+        nextSelectedRegistryKeys
+      )
+        ? state
+        : { operationsSelectedRegistryKeys: nextSelectedRegistryKeys };
+    }),
   setOperationsActiveViewKey: (operationsActiveViewKey) =>
-    set({ operationsActiveViewKey }),
+    set((state) =>
+      state.operationsActiveViewKey === operationsActiveViewKey
+        ? state
+        : { operationsActiveViewKey }
+    ),
   setOperationsExpandedViewKeys: (keysOrUpdater) =>
-    set((state) => ({
-      operationsExpandedViewKeys:
+    set((state) => {
+      const nextExpandedViewKeys =
         typeof keysOrUpdater === "function"
           ? keysOrUpdater(state.operationsExpandedViewKeys)
-          : keysOrUpdater,
-    })),
+          : keysOrUpdater;
+
+      return areStringArraysEqual(
+        state.operationsExpandedViewKeys,
+        nextExpandedViewKeys
+      )
+        ? state
+        : { operationsExpandedViewKeys: nextExpandedViewKeys };
+    }),
   setSettingsActiveSection: (settingsActiveSection) =>
-    set({ settingsActiveSection }),
+    set((state) =>
+      state.settingsActiveSection === settingsActiveSection
+        ? state
+        : { settingsActiveSection }
+    ),
   setProposalDeskQueueFilter: (proposalDeskQueueFilter) =>
-    set({ proposalDeskQueueFilter }),
+    set((state) =>
+      state.proposalDeskQueueFilter === proposalDeskQueueFilter
+        ? state
+        : { proposalDeskQueueFilter }
+    ),
   setProposalDeskFocusedProposalKey: (proposalDeskFocusedProposalKey) =>
-    set({ proposalDeskFocusedProposalKey }),
+    set((state) =>
+      state.proposalDeskFocusedProposalKey === proposalDeskFocusedProposalKey
+        ? state
+        : { proposalDeskFocusedProposalKey }
+    ),
 }));
