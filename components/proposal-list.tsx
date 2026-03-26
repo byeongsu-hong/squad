@@ -121,10 +121,15 @@ export function ProposalList({
       errorMessage: "Failed to load proposals",
     });
 
-  const { approve, reject, execute, actionLoading, isActionInProgress } =
-    useProposalActions({
-      onSuccess: () => loadForMultisig(getSelectedMultisig()),
-    });
+  const {
+    approveByAddress,
+    rejectByAddress,
+    executeByAddress,
+    isActionLoading,
+    isActionInProgress,
+  } = useProposalActions({
+    onSuccess: () => loadForMultisig(getSelectedMultisig()),
+  });
 
   useEffect(() => {
     void loadForMultisig(getSelectedMultisig());
@@ -181,27 +186,32 @@ export function ProposalList({
       selectedMultisig.chainId)
     : null;
 
-  const focusedActionPrefix = selectedMultisig
-    ? selectedMultisig.publicKey.toString()
-    : null;
-
   const isApproveLoading = Boolean(
     focusedItem &&
-    focusedActionPrefix &&
-    actionLoading ===
-      `approve-${focusedActionPrefix}-${focusedItem.proposal.transactionIndex}`
+    selectedMultisig &&
+    isActionLoading(
+      "approve",
+      selectedMultisig.publicKey.toString(),
+      focusedItem.proposal.transactionIndex
+    )
   );
   const isRejectLoading = Boolean(
     focusedItem &&
-    focusedActionPrefix &&
-    actionLoading ===
-      `reject-${focusedActionPrefix}-${focusedItem.proposal.transactionIndex}`
+    selectedMultisig &&
+    isActionLoading(
+      "reject",
+      selectedMultisig.publicKey.toString(),
+      focusedItem.proposal.transactionIndex
+    )
   );
   const isExecuteLoading = Boolean(
     focusedItem &&
-    focusedActionPrefix &&
-    actionLoading ===
-      `execute-${focusedActionPrefix}-${focusedItem.proposal.transactionIndex}`
+    selectedMultisig &&
+    isActionLoading(
+      "execute",
+      selectedMultisig.publicKey.toString(),
+      focusedItem.proposal.transactionIndex
+    )
   );
 
   const handleViewDetail = (proposal: ProposalAccount) => {
@@ -211,8 +221,8 @@ export function ProposalList({
 
   const handleApprove = async (transactionIndex: bigint) => {
     if (!selectedMultisig) return;
-    await approve(
-      selectedMultisig.publicKey,
+    await approveByAddress(
+      selectedMultisig.publicKey.toString(),
       transactionIndex,
       selectedMultisig.chainId
     );
@@ -220,8 +230,8 @@ export function ProposalList({
 
   const handleReject = async (transactionIndex: bigint) => {
     if (!selectedMultisig) return;
-    await reject(
-      selectedMultisig.publicKey,
+    await rejectByAddress(
+      selectedMultisig.publicKey.toString(),
       transactionIndex,
       selectedMultisig.chainId
     );
@@ -229,8 +239,8 @@ export function ProposalList({
 
   const handleExecute = async (transactionIndex: bigint) => {
     if (!selectedMultisig) return;
-    await execute(
-      selectedMultisig.publicKey,
+    await executeByAddress(
+      selectedMultisig.publicKey.toString(),
       transactionIndex,
       selectedMultisig.chainId
     );

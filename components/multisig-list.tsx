@@ -1,6 +1,5 @@
 "use client";
 
-import { PublicKey } from "@solana/web3.js";
 import {
   ArrowUpRight,
   Copy,
@@ -21,15 +20,14 @@ import { MultisigCardSkeletonList } from "@/components/skeletons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useCreatorMultisigs } from "@/lib/hooks/use-creator-multisigs";
 import { useDebounce } from "@/lib/hooks/use-debounce";
 import { useMultisigAttention } from "@/lib/hooks/use-multisig-attention";
-import { SquadService } from "@/lib/squad";
 import { cn } from "@/lib/utils";
 import { useChainStore } from "@/stores/chain-store";
 import { useMultisigStore } from "@/stores/multisig-store";
 import { useWalletStore } from "@/stores/wallet-store";
 import type { MultisigAccount } from "@/types/multisig";
-import type { SquadMember } from "@/types/squad";
 
 interface MultisigListProps {
   actions?: React.ReactNode;
@@ -43,7 +41,6 @@ export function MultisigList({
   embedded = false,
 }: MultisigListProps = {}) {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
   const [selectedForDeletion, setSelectedForDeletion] = useState<Set<string>>(
     new Set()
   );
@@ -64,6 +61,11 @@ export function MultisigList({
     selectMultisig,
     selectedMultisigKey,
   } = useMultisigStore();
+  const { loading, loadForCreator } = useCreatorMultisigs({
+    chains,
+    existingMultisigs: multisigs,
+    onLoaded: setMultisigs,
+  });
   const attentionByMultisig = useMultisigAttention({
     chains,
     multisigs,
@@ -71,65 +73,9 @@ export function MultisigList({
   });
 
   const loadMultisigs = useCallback(async () => {
-    if (!publicKey) return;
-
     const chain = getSelectedChain();
-    if (!chain) return;
-
-    setLoading(true);
-    try {
-      const squadService = new SquadService(
-        chain.rpcUrl,
-        chain.squadsV4ProgramId
-      );
-
-      const accounts = await squadService.getMultisigsByCreator(publicKey);
-
-      setMultisigs((currentMultisigs) => {
-        const currentMap = new Map(
-          currentMultisigs.map((multisig) => [
-            multisig.publicKey.toString(),
-            multisig,
-          ])
-        );
-
-        const loadedMultisigs = accounts.map((acc) => {
-          const existing = currentMap.get(acc.publicKey.toString());
-
-          return {
-            publicKey: acc.publicKey,
-            threshold: acc.account.threshold,
-            members: acc.account.members.map((m: SquadMember) => ({
-              key: m.key,
-              permissions: { mask: m.permissions.mask },
-            })),
-            transactionIndex: BigInt(acc.account.transactionIndex.toString()),
-            msChangeIndex: 0,
-            programId: new PublicKey(chain.squadsV4ProgramId),
-            chainId: chain.id,
-            label: existing?.label,
-            tags: existing?.tags,
-            vaultPda: existing?.vaultPda,
-          };
-        });
-
-        const loadedKeys = new Set(
-          loadedMultisigs.map((multisig) => multisig.publicKey.toString())
-        );
-
-        const storedOnly = currentMultisigs.filter(
-          (multisig) => !loadedKeys.has(multisig.publicKey.toString())
-        );
-
-        return [...storedOnly, ...loadedMultisigs];
-      });
-    } catch (error) {
-      console.error("Failed to load multisigs:", error);
-      toast.error("Failed to load multisigs");
-    } finally {
-      setLoading(false);
-    }
-  }, [getSelectedChain, publicKey, setMultisigs]);
+    await loadForCreator(chain?.id, publicKey?.toString() ?? null);
+  }, [getSelectedChain, loadForCreator, publicKey]);
 
   useEffect(() => {
     loadMultisigs();

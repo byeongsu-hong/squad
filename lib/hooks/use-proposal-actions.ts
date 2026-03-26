@@ -20,6 +20,16 @@ interface UseProposalActionsOptions {
   skipSuccessCallback?: boolean;
 }
 
+type ProposalActionType = "approve" | "reject" | "execute";
+
+function buildActionKey(
+  action: ProposalActionType,
+  multisigKey: string,
+  transactionIndex: bigint
+) {
+  return `${action}-${multisigKey}-${transactionIndex.toString()}`;
+}
+
 export function useProposalActions(options: UseProposalActionsOptions = {}) {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const { publicKey, derivationPath, walletType } = useWalletStore();
@@ -264,6 +274,28 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
     approve,
     reject,
     execute,
+    approveByAddress: (
+      multisigKey: string,
+      transactionIndex: bigint,
+      chainId: string
+    ) => approve(new PublicKey(multisigKey), transactionIndex, chainId),
+    rejectByAddress: (
+      multisigKey: string,
+      transactionIndex: bigint,
+      chainId: string
+    ) => reject(new PublicKey(multisigKey), transactionIndex, chainId),
+    executeByAddress: (
+      multisigKey: string,
+      transactionIndex: bigint,
+      chainId: string
+    ) => execute(new PublicKey(multisigKey), transactionIndex, chainId),
+    buildActionKey,
+    isActionLoading: (
+      action: ProposalActionType,
+      multisigKey: string,
+      transactionIndex: bigint
+    ) =>
+      actionLoading === buildActionKey(action, multisigKey, transactionIndex),
     actionLoading,
     isActionInProgress: actionLoading !== null,
   };

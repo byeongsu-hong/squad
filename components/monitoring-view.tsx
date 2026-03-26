@@ -100,10 +100,15 @@ export function MonitoringView() {
     chains,
   });
 
-  const { approve, reject, execute, actionLoading, isActionInProgress } =
-    useProposalActions({
-      onSuccess: loadAllProposals,
-    });
+  const {
+    approveByAddress,
+    rejectByAddress,
+    executeByAddress,
+    isActionLoading,
+    isActionInProgress,
+  } = useProposalActions({
+    onSuccess: loadAllProposals,
+  });
 
   // Batch operations hook - skip auto-reload after each action
   const { approve: batchApprove, reject: batchReject } = useProposalActions({
@@ -119,8 +124,8 @@ export function MonitoringView() {
     proposal: MonitoringProposal,
     transactionIndex: bigint
   ) => {
-    await approve(
-      proposal.multisig,
+    await approveByAddress(
+      proposal.multisig.toString(),
       transactionIndex,
       proposal.multisigAccount.chainId
     );
@@ -130,8 +135,8 @@ export function MonitoringView() {
     proposal: MonitoringProposal,
     transactionIndex: bigint
   ) => {
-    await reject(
-      proposal.multisig,
+    await rejectByAddress(
+      proposal.multisig.toString(),
       transactionIndex,
       proposal.multisigAccount.chainId
     );
@@ -141,8 +146,8 @@ export function MonitoringView() {
     proposal: MonitoringProposal,
     transactionIndex: bigint
   ) => {
-    await execute(
-      proposal.multisig,
+    await executeByAddress(
+      proposal.multisig.toString(),
       transactionIndex,
       proposal.multisigAccount.chainId
     );
@@ -353,14 +358,14 @@ export function MonitoringView() {
 
       try {
         if (batchPreviewAction === "approve") {
-          await approve(
-            proposal.multisig,
+          await approveByAddress(
+            proposal.multisig.toString(),
             proposal.transactionIndex,
             proposal.multisigAccount.chainId
           );
         } else {
-          await reject(
-            proposal.multisig,
+          await rejectByAddress(
+            proposal.multisig.toString(),
             proposal.transactionIndex,
             proposal.multisigAccount.chainId
           );
@@ -858,8 +863,11 @@ export function MonitoringView() {
                                             className="h-8 w-8 rounded-md p-0 hover:bg-green-500 hover:text-white"
                                             disabled
                                           >
-                                            {actionLoading ===
-                                            `approve-${actionKey}` ? (
+                                            {isActionLoading(
+                                              "approve",
+                                              proposal.multisig.toString(),
+                                              proposal.transactionIndex
+                                            ) ? (
                                               <Loader2 className="h-3 w-3 animate-spin" />
                                             ) : (
                                               <Check className="h-3 w-3" />
@@ -905,8 +913,11 @@ export function MonitoringView() {
                                             className="h-8 w-8 rounded-md p-0 hover:bg-red-500 hover:text-white"
                                             disabled
                                           >
-                                            {actionLoading ===
-                                            `reject-${actionKey}` ? (
+                                            {isActionLoading(
+                                              "reject",
+                                              proposal.multisig.toString(),
+                                              proposal.transactionIndex
+                                            ) ? (
                                               <Loader2 className="h-3 w-3 animate-spin" />
                                             ) : (
                                               <X className="h-3 w-3" />
@@ -952,8 +963,11 @@ export function MonitoringView() {
                                     }
                                     disabled={!isMember || isActionInProgress}
                                   >
-                                    {actionLoading ===
-                                    `execute-${actionKey}` ? (
+                                    {isActionLoading(
+                                      "execute",
+                                      proposal.multisig.toString(),
+                                      proposal.transactionIndex
+                                    ) ? (
                                       <Loader2 className="mr-1 h-3 w-3 animate-spin" />
                                     ) : null}
                                     Execute

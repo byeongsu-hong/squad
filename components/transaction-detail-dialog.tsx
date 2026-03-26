@@ -1,10 +1,7 @@
 "use client";
 
-import { PublicKey } from "@solana/web3.js";
-import * as multisigSdk from "@sqds/multisig";
-import bs58 from "bs58";
 import { Check, Copy, ExternalLink, Loader2, Minus, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { AddressWithLabel } from "@/components/address-with-label";
@@ -18,34 +15,24 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { SquadService } from "@/lib/squad";
+import { useWorkspacePayload } from "@/lib/hooks/use-workspace-payload";
 import {
   type ConfigAction,
   formatConfigAction,
 } from "@/lib/utils/transaction-formatter";
+import {
+  toWorkspaceMultisig,
+  toWorkspaceProposalFromRaw,
+} from "@/lib/workspace/squads-adapter";
 import { useChainStore } from "@/stores/chain-store";
+import { useMultisigStore } from "@/stores/multisig-store";
 import { useWalletStore } from "@/stores/wallet-store";
-import type { MultisigAccount, ProposalAccount } from "@/types/multisig";
+import type { ProposalAccount } from "@/types/multisig";
 
 interface TransactionDetailDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   proposal: ProposalAccount | null;
-}
-
-interface VaultTransactionData {
-  message: {
-    accountKeys: string[];
-    instructions: {
-      programIdIndex: number;
-      accountKeyIndexes: number[];
-      data: string;
-    }[];
-  };
-}
-
-interface ConfigTransactionData {
-  actions: unknown[];
 }
 
 function getDecisionState(
@@ -81,149 +68,41 @@ export function TransactionDetailDialog({
 }: TransactionDetailDialogProps) {
   const { publicKey } = useWalletStore();
   const { chains } = useChainStore();
-  const [transactionPda, setTransactionPda] = useState<string | null>(null);
-  const [txData, setTxData] = useState<VaultTransactionData | null>(null);
-  const [configData, setConfigData] = useState<ConfigTransactionData | null>(
-    null
-  );
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [multisigLabel, setMultisigLabel] = useState<string | null>(null);
-  const [chainName, setChainName] = useState<string | null>(null);
-  const [vaultAddress, setVaultAddress] = useState<string | null>(null);
-  const [multisigAccount, setMultisigAccount] =
-    useState<MultisigAccount | null>(null);
+  const { multisigs } = useMultisigStore();
   const [activeTab, setActiveTab] = useState<
     "overview" | "signers" | "payload"
   >("overview");
 
-  useEffect(() => {
-    if (open) {
-      setActiveTab("overview");
-    }
-  }, [open]);
-
-  useEffect(() => {
-    async function loadTransactionData() {
-      if (!proposal) return;
-
-      // Find the chain for this proposal's multisig
-      const { multisigs } = await import("@/stores/multisig-store").then((m) =>
-        m.useMultisigStore.getState()
-      );
-      const multisigAccount = multisigs.find(
-        (m) => m.publicKey.toString() === proposal.multisig.toString()
-      );
-
-      if (!multisigAccount) {
-        console.error("Multisig not found for proposal");
-        return;
-      }
-      setMultisigAccount(multisigAccount);
-
-      const chain = chains.find((c) => c.id === multisigAccount.chainId);
-      if (!chain) {
-        console.error("Chain configuration not found");
-        return;
-      }
-
-      // Set multisig label and chain name
-      setMultisigLabel(multisigAccount.label || null);
-      setChainName(chain.name);
-
-      const programId = new PublicKey(chain.squadsV4ProgramId);
-
-      const [txPda] = multisigSdk.getTransactionPda({
-        multisigPda: proposal.multisig,
-        index: proposal.transactionIndex,
-        programId,
-      });
-
-      setTransactionPda(txPda.toString());
-
-      // Use stored vault PDA or calculate if not available (default vault index is 0)
-      if (multisigAccount.vaultPda) {
-        setVaultAddress(multisigAccount.vaultPda.toString());
-      } else {
-        const [vaultPda] = multisigSdk.getVaultPda({
-          multisigPda: proposal.multisig,
-          index: 0,
-          programId,
-        });
-        setVaultAddress(vaultPda.toString());
-      }
-
-      // Try to load transaction data
-      setLoading(true);
-      setError(null);
-      setTxData(null);
-      setConfigData(null);
-
-      try {
-        const squadService = new SquadService(
-          chain.rpcUrl,
-          chain.squadsV4ProgramId
-        );
-
-        // Determine transaction type first
-        const txType = await squadService.getTransactionType(
-          proposal.multisig,
-          proposal.transactionIndex
-        );
-
-        if (txType === "config") {
-          const configTx = await squadService.getConfigTransaction(
-            proposal.multisig,
-            proposal.transactionIndex
-          );
-
-          setConfigData({
-            actions: configTx.actions,
-          });
-          return;
-        }
-
-        // Load VaultTransaction
-        const transactionAccount = await squadService.getVaultTransaction(
-          proposal.multisig,
-          proposal.transactionIndex
-        );
-
-        const txData: VaultTransactionData = {
-          message: {
-            accountKeys: transactionAccount.message.accountKeys.map((key) =>
-              key.toString()
-            ),
-            instructions: transactionAccount.message.instructions.map((ix) => {
-              const accountIndexes = Array.isArray(ix.accountIndexes)
-                ? ix.accountIndexes
-                : Array.from(ix.accountIndexes);
-
-              return {
-                programIdIndex: ix.programIdIndex,
-                accountKeyIndexes: accountIndexes,
-                data: bs58.encode(ix.data),
-              };
-            }),
-          },
-        };
-
-        setTxData(txData);
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error
-            ? err.message
-            : "Transaction data not available. The transaction may not have been created yet.";
-        setError(errorMessage);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    if (open) {
-      loadTransactionData();
-    }
-  }, [proposal, open, chains]);
+  const multisigAccount = useMemo(
+    () =>
+      proposal
+        ? (multisigs.find(
+            (item) => item.publicKey.toString() === proposal.multisig.toString()
+          ) ?? null)
+        : null,
+    [multisigs, proposal]
+  );
+  const workspaceMultisig = useMemo(
+    () =>
+      multisigAccount ? toWorkspaceMultisig(multisigAccount, chains) : null,
+    [chains, multisigAccount]
+  );
+  const workspaceProposal = useMemo(
+    () =>
+      proposal && workspaceMultisig
+        ? toWorkspaceProposalFromRaw(proposal, workspaceMultisig.chainId)
+        : null,
+    [proposal, workspaceMultisig]
+  );
+  const { loading, payload, error } = useWorkspacePayload({
+    chains,
+    multisig: open ? workspaceMultisig : null,
+    proposal: open ? workspaceProposal : null,
+  });
+  const transactionPda = payload?.transactionPda ?? null;
+  const vaultAddress = payload?.vaultAddress ?? null;
+  const chainName = workspaceMultisig?.chainName ?? null;
+  const multisigLabel = workspaceMultisig?.label ?? null;
 
   if (!proposal) return null;
 
@@ -252,43 +131,33 @@ export function TransactionDetailDialog({
   };
 
   const handleCopyTxData = () => {
-    const dataToCopy = txData || configData;
-    if (!dataToCopy) return;
-    navigator.clipboard.writeText(JSON.stringify(dataToCopy, null, 2));
+    if (!payload) return;
+    navigator.clipboard.writeText(JSON.stringify(payload, null, 2));
     toast.success("Transaction data copied to clipboard");
   };
 
-  const handleOpenExplorer = async () => {
-    if (!proposal) return;
-
-    const { multisigs } = await import("@/stores/multisig-store").then((m) =>
-      m.useMultisigStore.getState()
-    );
-    const multisigAccount = multisigs.find(
-      (m) => m.publicKey.toString() === proposal.multisig.toString()
-    );
-
-    if (!multisigAccount) {
+  const handleOpenExplorer = () => {
+    if (!proposal || !workspaceMultisig) {
       toast.error("Multisig not found");
       return;
     }
 
-    const chain = chains.find((c) => c.id === multisigAccount.chainId);
+    const chain = chains.find((c) => c.id === workspaceMultisig.chainId);
     if (!chain?.explorerUrl) {
       toast.error("Explorer URL not configured for this chain");
       return;
     }
 
-    const url = `${chain.explorerUrl}/address/${proposal.multisig.toString()}`;
+    const url = `${chain.explorerUrl}/address/${workspaceMultisig.key}`;
     window.open(url, "_blank");
   };
 
-  const signerSummary = multisigAccount
+  const signerSummary = workspaceMultisig
     ? {
-        threshold: multisigAccount.threshold,
-        members: multisigAccount.members.length,
+        threshold: workspaceMultisig.threshold,
+        members: workspaceMultisig.members.length,
         pending: Math.max(
-          multisigAccount.members.length -
+          workspaceMultisig.members.length -
             proposal.approvals.length -
             proposal.rejections.length,
           0
@@ -302,7 +171,15 @@ export function TransactionDetailDialog({
       : "border-zinc-800 bg-transparent text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100";
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (nextOpen) {
+          setActiveTab("overview");
+        }
+        onOpenChange(nextOpen);
+      }}
+    >
       <DialogContent className="flex max-h-[88vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-[860px]">
         <DialogHeader className="shrink-0 border-b border-zinc-800 px-6 py-5">
           <DialogTitle className="flex flex-wrap items-center gap-2 text-zinc-50">
@@ -413,7 +290,7 @@ export function TransactionDetailDialog({
                   </p>
                   <div className="flex items-center gap-2">
                     <code className="flex-1 rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 font-mono text-xs text-zinc-300">
-                      {proposal.multisig.toString()}
+                      {workspaceMultisig?.key ?? proposal.multisig.toString()}
                     </code>
                     <Button
                       variant="ghost"
@@ -421,7 +298,7 @@ export function TransactionDetailDialog({
                       className="border border-zinc-800 bg-zinc-950 text-zinc-200 hover:bg-zinc-900"
                       onClick={() => {
                         navigator.clipboard.writeText(
-                          proposal.multisig.toString()
+                          workspaceMultisig?.key ?? proposal.multisig.toString()
                         );
                         toast.success("Multisig address copied");
                       }}
@@ -530,8 +407,8 @@ export function TransactionDetailDialog({
               </div>
 
               <div className="divide-y divide-zinc-800 rounded-2xl border border-zinc-800 bg-zinc-950/55">
-                {multisigAccount?.members.map((member) => {
-                  const address = member.key.toString();
+                {workspaceMultisig?.members.map((member) => {
+                  const address = member.address;
                   const decisionState = getDecisionState(address, proposal);
                   const isYou = isCurrentUser(address);
 
@@ -595,12 +472,12 @@ export function TransactionDetailDialog({
                     Payload
                   </p>
                   <h3 className="mt-1 text-sm font-semibold text-zinc-100">
-                    {configData
+                    {payload?.type === "config"
                       ? "Config transaction data"
                       : "Transaction data"}
                   </h3>
                 </div>
-                {(txData || configData) && (
+                {payload && (
                   <Button
                     variant="ghost"
                     size="icon"
@@ -624,7 +501,7 @@ export function TransactionDetailDialog({
                 </div>
               )}
 
-              {!loading && configData && (
+              {!loading && payload?.type === "config" && (
                 <div className="space-y-3 rounded-2xl border border-zinc-800 bg-zinc-950/55 p-4">
                   <div className="text-sm">
                     <p className="mb-3 text-xs text-zinc-500">
@@ -632,10 +509,10 @@ export function TransactionDetailDialog({
                     </p>
                     <div>
                       <p className="mb-2 text-xs font-medium text-zinc-500">
-                        Actions ({configData.actions.length})
+                        Actions ({payload.actions.length})
                       </p>
                       <div className="max-h-96 space-y-3 overflow-y-auto">
-                        {configData.actions.map((action, index) => {
+                        {payload.actions.map((action, index) => {
                           const formatted = formatConfigAction(
                             action as ConfigAction
                           );
@@ -719,16 +596,15 @@ export function TransactionDetailDialog({
                 </div>
               )}
 
-              {!loading && txData && (
+              {!loading && payload?.type === "vault" && (
                 <div className="space-y-3 rounded-2xl border border-zinc-800 bg-zinc-950/55 p-4">
                   <div>
                     <p className="mb-2 text-xs font-medium text-zinc-500">
-                      Instructions ({txData.message.instructions.length})
+                      Instructions ({payload.instructions.length})
                     </p>
                     <div className="space-y-3">
-                      {txData.message.instructions.map((ix, index) => {
-                        const programAddress =
-                          txData.message.accountKeys[ix.programIdIndex];
+                      {payload.instructions.map((ix, index) => {
+                        const programAddress = ix.programAddress;
                         return (
                           <div
                             key={index}
@@ -740,7 +616,7 @@ export function TransactionDetailDialog({
                               </span>
                               <div>
                                 <span className="mb-1 block text-xs text-zinc-500">
-                                  Program: {ix.programIdIndex}
+                                  Program
                                 </span>
                                 <AddressWithLabel
                                   address={programAddress}
@@ -753,23 +629,21 @@ export function TransactionDetailDialog({
                             <div className="space-y-3 text-xs">
                               <div>
                                 <span className="mb-2 block text-zinc-500">
-                                  Accounts ({ix.accountKeyIndexes.length})
+                                  Accounts ({ix.accountIndexes.length})
                                 </span>
-                                {ix.accountKeyIndexes.length > 0 && (
+                                {ix.accountIndexes.length > 0 && (
                                   <div className="space-y-1.5">
-                                    {ix.accountKeyIndexes.map(
-                                      (accIdx: number, i: number) => (
+                                    {ix.accountAddresses.map(
+                                      (accountAddress, i) => (
                                         <div
                                           key={i}
                                           className="flex items-center gap-2"
                                         >
                                           <span className="w-6 shrink-0 font-mono text-xs text-zinc-500">
-                                            {accIdx}:
+                                            {ix.accountIndexes[i]}:
                                           </span>
                                           <AddressWithLabel
-                                            address={
-                                              txData.message.accountKeys[accIdx]
-                                            }
+                                            address={accountAddress}
                                             showFull
                                             vaultAddress={vaultAddress}
                                           />
