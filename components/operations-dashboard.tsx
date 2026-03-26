@@ -28,6 +28,7 @@ import { useProposalActions } from "@/lib/hooks/use-proposal-actions";
 import { useSquadsProposalLoader } from "@/lib/hooks/use-squads-proposal-loader";
 import { useWorkspacePayload } from "@/lib/hooks/use-workspace-payload";
 import { useOperationsWorkspaceQuerySync } from "@/lib/hooks/use-workspace-query-sync";
+import { useWorkspaceQueue } from "@/lib/hooks/use-workspace-queue";
 import { cn } from "@/lib/utils";
 import {
   type ConfigAction,
@@ -35,10 +36,8 @@ import {
 } from "@/lib/utils/transaction-formatter";
 import {
   buildWorkspaceExplorerViews,
-  buildWorkspaceQueueItem,
   buildWorkspaceRegistryItems,
   toWorkspaceMultisigs,
-  toWorkspaceProposalFromRaw,
 } from "@/lib/workspace/squads-adapter";
 import { useChainStore } from "@/stores/chain-store";
 import { useMultisigStore } from "@/stores/multisig-store";
@@ -139,36 +138,11 @@ export function OperationsDashboard({
     [selectedRegistryKeys]
   );
 
-  const multisigMap = useMemo(
-    () =>
-      new Map(workspaceMultisigs.map((multisig) => [multisig.key, multisig])),
-    [workspaceMultisigs]
-  );
-
-  const queueItems = useMemo(
-    () =>
-      proposals
-        .map((proposal) => {
-          const multisigKey = proposal.multisig.toString();
-          const multisig = multisigMap.get(multisigKey);
-          if (!multisig) return null;
-          return buildWorkspaceQueueItem(
-            toWorkspaceProposalFromRaw(proposal, multisig.chainId),
-            multisig,
-            publicKey?.toString() ?? null
-          );
-        })
-        .filter((item): item is WorkspaceQueueItem => item !== null)
-        .sort((left, right) => {
-          if (left.priority !== right.priority) {
-            return left.priority - right.priority;
-          }
-          return Number(
-            right.proposal.transactionIndex - left.proposal.transactionIndex
-          );
-        }),
-    [multisigMap, proposals, publicKey]
-  );
+  const queueItems = useWorkspaceQueue({
+    proposals,
+    multisigs: workspaceMultisigs,
+    viewerAddress: publicKey?.toString() ?? null,
+  });
 
   const searchNeedle = searchText.trim().toLowerCase();
 
