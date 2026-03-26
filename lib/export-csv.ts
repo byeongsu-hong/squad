@@ -109,6 +109,8 @@ export function exportMonitoringProposalsToCSV(
     multisig: string;
     multisigLabel: string;
     chain: string;
+    runtime: string;
+    provider: string;
     transactionIndex: string;
     status: string;
     approvalCount: number;
@@ -122,6 +124,8 @@ export function exportMonitoringProposalsToCSV(
     { key: "multisig", label: "Multisig Address" },
     { key: "multisigLabel", label: "Multisig Name" },
     { key: "chain", label: "Chain" },
+    { key: "runtime", label: "Runtime" },
+    { key: "provider", label: "Provider" },
     { key: "transactionIndex", label: "Proposal #" },
     { key: "status", label: "Status" },
     { key: "approvalCount", label: "Approvals" },
@@ -135,6 +139,8 @@ export function exportMonitoringProposalsToCSV(
     multisig: item.multisig.key,
     multisigLabel: item.multisig.label || "Unnamed",
     chain: item.multisig.chainName,
+    runtime: item.multisig.provider === "safe" ? "EVM" : "SVM",
+    provider: item.multisig.provider,
     transactionIndex: item.proposal.transactionIndex.toString(),
     status: item.proposal.status,
     approvalCount: item.proposal.approvals.length,
