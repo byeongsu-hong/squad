@@ -1,5 +1,6 @@
 "use client";
 
+import { PublicKey } from "@solana/web3.js";
 import bs58 from "bs58";
 import { AlertCircle, ChevronDown, ChevronRight, Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -125,15 +126,16 @@ export function BatchSigningPreviewDialog({
             chain.rpcUrl,
             chain.squadsV4ProgramId
           );
+          const multisigPda = new PublicKey(proposal.multisig.key);
 
           const txType = await squadService.getTransactionType(
-            proposal.rawProposal.multisig,
+            multisigPda,
             proposal.proposal.transactionIndex
           );
 
           if (txType === "config") {
             const configTx = await squadService.getConfigTransaction(
-              proposal.rawProposal.multisig,
+              multisigPda,
               proposal.proposal.transactionIndex
             );
 
@@ -154,7 +156,7 @@ export function BatchSigningPreviewDialog({
             );
           } else {
             const vaultTx = await squadService.getVaultTransaction(
-              proposal.rawProposal.multisig,
+              multisigPda,
               proposal.proposal.transactionIndex
             );
 

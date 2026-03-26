@@ -110,7 +110,10 @@ export function MonitoringView() {
   });
 
   // Batch operations hook - skip auto-reload after each action
-  const { approve: batchApprove, reject: batchReject } = useProposalActions({
+  const {
+    approveByAddress: batchApproveByAddress,
+    rejectByAddress: batchRejectByAddress,
+  } = useProposalActions({
     onSuccess: loadAllProposals,
     skipSuccessCallback: true,
   });
@@ -1024,14 +1027,14 @@ export function MonitoringView() {
         action={batchPreviewAction}
         onExecuteProposal={async (proposal) => {
           if (batchPreviewAction === "approve") {
-            await batchApprove(
-              proposal.rawProposal.multisig,
+            await batchApproveByAddress(
+              proposal.multisig.key,
               proposal.proposal.transactionIndex,
               proposal.multisig.chainId
             );
           } else {
-            await batchReject(
-              proposal.rawProposal.multisig,
+            await batchRejectByAddress(
+              proposal.multisig.key,
               proposal.proposal.transactionIndex,
               proposal.multisig.chainId
             );

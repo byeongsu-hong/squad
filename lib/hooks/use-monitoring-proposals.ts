@@ -9,10 +9,10 @@ import {
   type TransactionSummary,
   formatConfigAction,
 } from "@/lib/utils/transaction-formatter";
+import { toWorkspaceMultisig } from "@/lib/workspace/multisig-conversion";
 import {
   invalidateSquadsProposalCache,
   loadSquadsWorkspaceProposalsForMultisig,
-  toWorkspaceMultisig,
 } from "@/lib/workspace/squads-adapter";
 import {
   type ChainConfig,
