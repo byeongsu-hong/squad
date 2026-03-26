@@ -91,6 +91,8 @@ export function MultisigSidebar({ onRefresh, loading }: MultisigSidebarProps) {
             onClick={onRefresh}
             disabled={loading}
             className="h-8 w-8"
+            aria-label="Refresh multisigs"
+            title="Refresh multisigs"
           >
             <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
           </Button>
@@ -106,6 +108,7 @@ export function MultisigSidebar({ onRefresh, loading }: MultisigSidebarProps) {
             value={filterText}
             onChange={(e) => setFilterText(e.target.value)}
             className="pl-8"
+            aria-label="Search multisigs"
           />
         </div>
 
