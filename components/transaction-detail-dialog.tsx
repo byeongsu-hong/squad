@@ -15,6 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useWorkspaceMultisigs } from "@/lib/hooks/use-workspace-multisigs";
 import { useWorkspacePayload } from "@/lib/hooks/use-workspace-payload";
 import {
   type ConfigAction,
@@ -24,8 +25,6 @@ import {
   toWorkspaceMultisig,
   toWorkspaceProposalFromRaw,
 } from "@/lib/workspace/squads-adapter";
-import { useChainStore } from "@/stores/chain-store";
-import { useMultisigStore } from "@/stores/multisig-store";
 import { useWalletStore } from "@/stores/wallet-store";
 import type { ProposalAccount } from "@/types/multisig";
 
@@ -67,8 +66,7 @@ export function TransactionDetailDialog({
   proposal,
 }: TransactionDetailDialogProps) {
   const { publicKey } = useWalletStore();
-  const { chains } = useChainStore();
-  const { multisigs } = useMultisigStore();
+  const { chains, rawMultisigMap } = useWorkspaceMultisigs();
   const [activeTab, setActiveTab] = useState<
     "overview" | "signers" | "payload"
   >("overview");
@@ -76,11 +74,9 @@ export function TransactionDetailDialog({
   const multisigAccount = useMemo(
     () =>
       proposal
-        ? (multisigs.find(
-            (item) => item.publicKey.toString() === proposal.multisig.toString()
-          ) ?? null)
+        ? (rawMultisigMap.get(proposal.multisig.toString()) ?? null)
         : null,
-    [multisigs, proposal]
+    [proposal, rawMultisigMap]
   );
   const workspaceMultisig = useMemo(
     () =>

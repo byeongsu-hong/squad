@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useMultisigStore } from "@/stores/multisig-store";
+import { useWorkspaceMultisigs } from "@/lib/hooks/use-workspace-multisigs";
 import type { ProposalAccount } from "@/types/multisig";
 
 interface Activity {
@@ -21,22 +21,20 @@ interface ActivityFeedProps {
 }
 
 export function ActivityFeed({ proposals }: ActivityFeedProps) {
-  const { multisigs } = useMultisigStore();
+  const { workspaceMultisigMap } = useWorkspaceMultisigs();
 
   const activities = useMemo(() => {
     const acts: Activity[] = [];
 
     proposals.forEach((proposal) => {
-      const multisig = multisigs.find(
-        (m) => m.publicKey.toString() === proposal.multisig.toString()
-      );
+      const multisig = workspaceMultisigMap.get(proposal.multisig.toString());
 
       if (proposal.executed) {
         acts.push({
           id: `${proposal.multisig.toString()}-${proposal.transactionIndex}-executed`,
           type: "execution",
           proposalIndex: proposal.transactionIndex.toString(),
-          multisigName: multisig?.label || "Unnamed",
+          multisigName: multisig?.label || "Unnamed multisig",
           timestamp: new Date(),
           status: "Executed",
         });
@@ -47,7 +45,7 @@ export function ActivityFeed({ proposals }: ActivityFeedProps) {
           id: `${proposal.multisig.toString()}-${proposal.transactionIndex}-approved`,
           type: "approval",
           proposalIndex: proposal.transactionIndex.toString(),
-          multisigName: multisig?.label || "Unnamed",
+          multisigName: multisig?.label || "Unnamed multisig",
           timestamp: new Date(),
           status: "Approved",
         });
@@ -58,7 +56,7 @@ export function ActivityFeed({ proposals }: ActivityFeedProps) {
           id: `${proposal.multisig.toString()}-${proposal.transactionIndex}-rejected`,
           type: "rejection",
           proposalIndex: proposal.transactionIndex.toString(),
-          multisigName: multisig?.label || "Unnamed",
+          multisigName: multisig?.label || "Unnamed multisig",
           timestamp: new Date(),
           status: "Rejected",
         });
@@ -66,7 +64,7 @@ export function ActivityFeed({ proposals }: ActivityFeedProps) {
     });
 
     return acts.slice(0, 10);
-  }, [proposals, multisigs]);
+  }, [proposals, workspaceMultisigMap]);
 
   if (activities.length === 0) {
     return null;

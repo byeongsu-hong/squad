@@ -55,10 +55,9 @@ import { useMonitoringProposals } from "@/lib/hooks/use-monitoring-proposals";
 import type { MonitoringProposal } from "@/lib/hooks/use-monitoring-proposals";
 import { usePagination } from "@/lib/hooks/use-pagination";
 import { useProposalActions } from "@/lib/hooks/use-proposal-actions";
+import { useWorkspaceMultisigs } from "@/lib/hooks/use-workspace-multisigs";
 import { cn } from "@/lib/utils";
 import { formatTransactionSummary } from "@/lib/utils/transaction-formatter";
-import { useChainStore } from "@/stores/chain-store";
-import { useMultisigStore } from "@/stores/multisig-store";
 import { useWalletStore } from "@/stores/wallet-store";
 import type { ProposalAccount } from "@/types/multisig";
 
@@ -77,8 +76,7 @@ export function MonitoringView() {
   >("approve");
 
   const { publicKey } = useWalletStore();
-  const { chains } = useChainStore();
-  const { multisigs } = useMultisigStore();
+  const { chains, multisigs } = useWorkspaceMultisigs();
   const {
     loading,
     loadingProgress,

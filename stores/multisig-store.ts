@@ -25,6 +25,7 @@ interface MultisigStore {
     updates: Partial<ProposalAccount>
   ) => void;
   selectMultisig: (publicKey: string | null) => void;
+  getMultisigByKey: (publicKey: string | null) => MultisigAccount | undefined;
   getSelectedMultisig: () => MultisigAccount | undefined;
 }
 
@@ -121,10 +122,17 @@ export const useMultisigStore = create<MultisigStore>((set, get) => ({
     set({ selectedMultisigKey: publicKey });
   },
 
+  getMultisigByKey: (publicKey) => {
+    if (!publicKey) {
+      return undefined;
+    }
+
+    const { multisigs } = get();
+    return multisigs.find((m) => m.publicKey.toString() === publicKey);
+  },
+
   getSelectedMultisig: () => {
-    const { multisigs, selectedMultisigKey } = get();
-    return multisigs.find(
-      (m) => m.publicKey.toString() === selectedMultisigKey
-    );
+    const { getMultisigByKey, selectedMultisigKey } = get();
+    return getMultisigByKey(selectedMultisigKey);
   },
 }));

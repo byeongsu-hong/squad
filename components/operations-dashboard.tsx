@@ -27,6 +27,7 @@ import { useOperationsRegistry } from "@/lib/hooks/use-operations-registry";
 import { useOperationsSelection } from "@/lib/hooks/use-operations-selection";
 import { useProposalActions } from "@/lib/hooks/use-proposal-actions";
 import { useSquadsProposalLoader } from "@/lib/hooks/use-squads-proposal-loader";
+import { useWorkspaceMultisigs } from "@/lib/hooks/use-workspace-multisigs";
 import { useWorkspacePayload } from "@/lib/hooks/use-workspace-payload";
 import { useOperationsWorkspaceQuerySync } from "@/lib/hooks/use-workspace-query-sync";
 import { useWorkspaceQueue } from "@/lib/hooks/use-workspace-queue";
@@ -35,8 +36,6 @@ import {
   type ConfigAction,
   formatConfigAction,
 } from "@/lib/utils/transaction-formatter";
-import { toWorkspaceMultisigs } from "@/lib/workspace/squads-adapter";
-import { useChainStore } from "@/stores/chain-store";
 import { useMultisigStore } from "@/stores/multisig-store";
 import { useWalletStore } from "@/stores/wallet-store";
 import { useWorkspaceStore } from "@/stores/workspace-store";
@@ -78,8 +77,9 @@ export function OperationsDashboard({
   const [searchText, setSearchText] = useState("");
 
   const { publicKey, connected } = useWalletStore();
-  const { chains } = useChainStore();
   const { multisigs, setProposals, proposals } = useMultisigStore();
+  const { chains, workspaceMultisigs, availableMultisigKeys } =
+    useWorkspaceMultisigs();
   const {
     operationsFocusedProposalKey: focusedProposalKey,
     operationsQueueFilter: queueFilter,
@@ -96,14 +96,6 @@ export function OperationsDashboard({
     setOperationsActiveViewKey: setActiveViewKey,
     setOperationsExpandedViewKeys: setExpandedViewKeys,
   } = useWorkspaceStore();
-  const workspaceMultisigs = useMemo(
-    () => toWorkspaceMultisigs(multisigs, chains),
-    [chains, multisigs]
-  );
-  const availableMultisigKeys = useMemo(
-    () => workspaceMultisigs.map((multisig) => multisig.key),
-    [workspaceMultisigs]
-  );
   const { loading, loadForAllMultisigs } = useSquadsProposalLoader({
     chains,
     setProposals,
