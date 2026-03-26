@@ -14,7 +14,7 @@ import {
   X,
 } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { AddressWithLabel } from "@/components/address-with-label";
 import { RegistryManagementDialog } from "@/components/registry-management-dialog";
@@ -25,6 +25,7 @@ import { Input } from "@/components/ui/input";
 import { Pagination } from "@/components/ui/pagination";
 import { usePagination } from "@/lib/hooks/use-pagination";
 import { useProposalActions } from "@/lib/hooks/use-proposal-actions";
+import { useSquadsProposalLoader } from "@/lib/hooks/use-squads-proposal-loader";
 import { useOperationsWorkspaceQuerySync } from "@/lib/hooks/use-workspace-query-sync";
 import { cn } from "@/lib/utils";
 import {
@@ -35,9 +36,7 @@ import {
   buildWorkspaceExplorerViews,
   buildWorkspaceQueueItem,
   buildWorkspaceRegistryItems,
-  fromWorkspaceProposal,
   loadSquadsWorkspacePayload,
-  loadSquadsWorkspaceProposals,
   toWorkspaceMultisigs,
   toWorkspaceProposalFromRaw,
 } from "@/lib/workspace/squads-adapter";
@@ -81,7 +80,6 @@ export function OperationsDashboard({
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [payloadLoading, setPayloadLoading] = useState(false);
   const [payloadError, setPayloadError] = useState<string | null>(null);
@@ -116,31 +114,15 @@ export function OperationsDashboard({
     () => workspaceMultisigs.map((multisig) => multisig.key),
     [workspaceMultisigs]
   );
-
-  const loadAllProposals = useCallback(async () => {
-    if (multisigs.length === 0) {
-      setProposals([]);
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const loadedProposals = await loadSquadsWorkspaceProposals(
-        multisigs,
-        chains
-      );
-      setProposals(loadedProposals.map(fromWorkspaceProposal));
-    } catch (error) {
-      console.error("Failed to load dashboard proposals:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [chains, multisigs, setProposals]);
+  const { loading, loadForAllMultisigs } = useSquadsProposalLoader({
+    chains,
+    setProposals,
+    errorMessage: "Failed to load dashboard",
+  });
 
   useEffect(() => {
-    void loadAllProposals();
-  }, [loadAllProposals]);
+    void loadForAllMultisigs(multisigs);
+  }, [loadForAllMultisigs, multisigs]);
 
   useOperationsWorkspaceQuerySync({
     searchParams,
@@ -349,7 +331,7 @@ export function OperationsDashboard({
   ).length;
   const { approve, reject, execute, actionLoading, isActionInProgress } =
     useProposalActions({
-      onSuccess: loadAllProposals,
+      onSuccess: () => loadForAllMultisigs(multisigs),
     });
 
   const isApproveLoading = Boolean(
@@ -547,7 +529,7 @@ export function OperationsDashboard({
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => void loadAllProposals()}
+                  onClick={() => void loadForAllMultisigs(multisigs)}
                   disabled={loading}
                   className="rounded-md border border-zinc-800 bg-zinc-950 text-zinc-200 hover:bg-zinc-900"
                   aria-label="Refresh dashboard proposals"
