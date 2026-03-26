@@ -3,7 +3,11 @@ export type WorkspaceProviderId = "squads";
 export type WorkspaceQueueFilter = "all" | "waiting" | "executable";
 export type WorkspaceDetailTab = "overview" | "payload";
 export type WorkspaceExplorerMode = "views" | "chains" | "tags";
-export type WorkspaceSettingsSection = "chains" | "registry" | "labels";
+export type WorkspaceSettingsSection =
+  | "chains"
+  | "multisigs"
+  | "registry"
+  | "labels";
 
 export type WorkspaceProposalStatus =
   | "Active"

@@ -1,7 +1,7 @@
 "use client";
 
-import { Database, Network, Tag } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { Boxes, Database, Network, Tag } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo } from "react";
 
 import { AddMultisigActions } from "@/components/add-multisig-actions";
@@ -35,11 +35,19 @@ const SECTION_COPY: Record<
     icon: Network,
     accent: "text-cyan-300",
   },
+  multisigs: {
+    eyebrow: "Registry Management",
+    title: "Multisig registry",
+    description:
+      "Create, import, relabel, retag, and remove saved multisigs from one dedicated admin surface.",
+    icon: Boxes,
+    accent: "text-lime-300",
+  },
   registry: {
     eyebrow: "Registry Data",
-    title: "Registry and transport",
+    title: "Export and import",
     description:
-      "Manage saved multisigs, import or export local workspace data, and keep the registry ready for future runtimes.",
+      "Move chain and multisig YAML definitions between local environments without leaving settings.",
     icon: Database,
     accent: "text-amber-300",
   },
@@ -65,23 +73,18 @@ function StatPill({ label, value }: { label: string; value: string }) {
 }
 
 export default function SettingsPage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const { chains } = useChainStore();
   const { multisigs } = useMultisigStore();
   const { labels } = useAddressLabels();
   const { settingsActiveSection, setSettingsActiveSection } =
     useWorkspaceStore();
-  const registryPanel =
-    searchParams.get("panel") === "transport" ||
-    searchParams.get("panel") === "adapters"
-      ? searchParams.get("panel")
-      : "manage";
 
   useEffect(() => {
     const requestedSection = searchParams.get("section");
     if (
       requestedSection === "chains" ||
+      requestedSection === "multisigs" ||
       requestedSection === "registry" ||
       requestedSection === "labels"
     ) {
@@ -97,9 +100,14 @@ export default function SettingsPage() {
         summary: `${chains.filter((chain) => chain.id.startsWith("custom-")).length} custom`,
       },
       {
+        id: "multisigs" as const,
+        count: multisigs.length,
+        summary: "saved workspaces",
+      },
+      {
         id: "registry" as const,
         count: multisigs.length,
-        summary: "multisigs + transport",
+        summary: "yaml transport",
       },
       {
         id: "labels" as const,
@@ -234,72 +242,25 @@ export default function SettingsPage() {
               <ProviderAdaptersPanel />
             </div>
           ) : null}
+          {settingsActiveSection === "multisigs" ? (
+            <MultisigList
+              embedded
+              actions={<AddMultisigActions />}
+              statusText="Create, import, relabel, retag, and clean up stored multisigs from the main admin surface."
+            />
+          ) : null}
           {settingsActiveSection === "registry" ? (
-            <div className="space-y-5">
-              <div className="flex flex-wrap items-center gap-2 border-b border-zinc-800 pb-4">
-                {[
-                  {
-                    id: "manage",
-                    label: "Manage",
-                    copy: "Create, relabel, retag, and remove saved multisigs.",
-                  },
-                  {
-                    id: "transport",
-                    label: "Transport",
-                    copy: "Import or export local registry data.",
-                  },
-                  {
-                    id: "adapters",
-                    label: "Adapters",
-                    copy: "Prepare future provider settings such as Safe.",
-                  },
-                ].map((panel) => {
-                  const selected = registryPanel === panel.id;
-                  const href = `/settings?section=registry&panel=${panel.id}`;
-
-                  return (
-                    <button
-                      key={panel.id}
-                      type="button"
-                      onClick={() => router.replace(href, { scroll: false })}
-                      className={cn(
-                        "rounded-md border px-3 py-2 text-sm transition-colors",
-                        selected
-                          ? "border-zinc-100 bg-zinc-100 text-zinc-950"
-                          : "border-zinc-800 bg-zinc-950/60 text-zinc-300 hover:bg-zinc-900"
-                      )}
-                      title={panel.copy}
-                    >
-                      {panel.label}
-                    </button>
-                  );
-                })}
+            <div className="space-y-4 border border-zinc-800 bg-zinc-950/55 p-4">
+              <div className="space-y-1 border-b border-zinc-800 pb-4">
+                <p className="text-[0.68rem] tracking-[0.18em] text-zinc-500 uppercase">
+                  YAML Transport
+                </p>
+                <p className="text-sm leading-6 text-zinc-400">
+                  Move chain and multisig config between local environments
+                  without leaving settings.
+                </p>
               </div>
-
-              {registryPanel === "manage" ? (
-                <MultisigList
-                  embedded
-                  actions={<AddMultisigActions />}
-                  statusText="Create, import, relabel, retag, and clean up stored multisigs from the main admin surface."
-                />
-              ) : null}
-
-              {registryPanel === "transport" ? (
-                <div className="space-y-4 border border-zinc-800 bg-zinc-950/55 p-4">
-                  <div className="space-y-1 border-b border-zinc-800 pb-4">
-                    <p className="text-[0.68rem] tracking-[0.18em] text-zinc-500 uppercase">
-                      Registry Transport
-                    </p>
-                    <p className="text-sm leading-6 text-zinc-400">
-                      Move chain and multisig config between local environments
-                      without leaving settings.
-                    </p>
-                  </div>
-                  <ExportImportController embedded />
-                </div>
-              ) : null}
-
-              {registryPanel === "adapters" ? <ProviderAdaptersPanel /> : null}
+              <ExportImportController embedded />
             </div>
           ) : null}
           {settingsActiveSection === "labels" ? (
