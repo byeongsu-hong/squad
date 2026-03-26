@@ -20,7 +20,6 @@ const shortcuts = [
     items: [
       { keys: ["Cmd/Ctrl", "K"], description: "Quick search" },
       { keys: ["G", "H"], description: "Go to home" },
-      { keys: ["G", "M"], description: "Go to monitoring" },
       { keys: ["G", "P"], description: "Go to proposals" },
     ],
   },

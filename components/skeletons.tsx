@@ -5,34 +5,34 @@ import { UI_CONFIG } from "@/lib/config";
 
 export function ProposalCardSkeleton() {
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-6 w-32" />
-          <Skeleton className="h-6 w-16" />
-        </div>
-        <Skeleton className="h-4 w-48" />
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div className="flex gap-2">
-            <Skeleton className="h-4 w-24" />
-            <Skeleton className="h-4 w-24" />
+    <div className="border-b border-zinc-800 px-3 py-2.5 last:border-b-0">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Skeleton className="h-3 w-5 rounded-sm bg-zinc-800" />
+            <Skeleton className="h-4 w-24 rounded-sm bg-zinc-700" />
+            <Skeleton className="h-4 w-14 rounded-full bg-cyan-500/12" />
           </div>
-          <div className="flex gap-2">
-            <Skeleton className="h-9 w-20" />
-            <Skeleton className="h-9 w-16" />
-            <Skeleton className="h-9 w-16" />
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <Skeleton className="h-3 w-20 rounded-sm bg-zinc-800" />
+            <Skeleton className="h-3 w-24 rounded-sm bg-zinc-700" />
           </div>
         </div>
-      </CardContent>
-    </Card>
+        <div className="flex shrink-0 items-start gap-3">
+          <div className="space-y-1.5 pt-1">
+            <Skeleton className="ml-auto h-3 w-16 rounded-sm bg-zinc-800" />
+            <Skeleton className="ml-auto h-3 w-14 rounded-sm bg-zinc-800" />
+          </div>
+          <Skeleton className="mt-0.5 h-4 w-4 rounded-sm bg-zinc-800" />
+        </div>
+      </div>
+    </div>
   );
 }
 
 export function ProposalCardSkeletonList() {
   return (
-    <div className="space-y-4">
+    <div className="overflow-hidden border border-zinc-800 bg-zinc-950/45">
       {Array.from({ length: UI_CONFIG.SKELETON_COUNT }).map((_, i) => (
         <ProposalCardSkeleton key={i} />
       ))}

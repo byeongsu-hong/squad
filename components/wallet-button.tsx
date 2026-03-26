@@ -39,7 +39,7 @@ export function WalletButton() {
       <>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="default">
+            <Button>
               <Wallet className="mr-2 h-4 w-4" />
               Connect Wallet
             </Button>
@@ -81,7 +81,7 @@ export function WalletButton() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline">
+        <Button variant="outline" className="font-mono tabular-nums">
           <Wallet className="mr-2 h-4 w-4" />
           {publicKey.toString().slice(0, 4)}...
           {publicKey.toString().slice(-4)}
