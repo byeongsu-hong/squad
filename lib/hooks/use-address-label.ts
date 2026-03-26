@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 
 import { useAddressLabelStore } from "@/stores/address-label-store";
 
@@ -23,6 +23,7 @@ export function useAddressLabels() {
     labels,
     initialized,
     initializeLabels,
+    upsertLabels,
     addLabel,
     updateLabel,
     deleteLabel,
@@ -34,12 +35,14 @@ export function useAddressLabels() {
     }
   }, [initialized, initializeLabels]);
 
-  const sortedLabels = Array.from(labels.values()).sort(
-    (a, b) => b.updatedAt - a.updatedAt
+  const sortedLabels = useMemo(
+    () => Array.from(labels.values()).sort((a, b) => b.updatedAt - a.updatedAt),
+    [labels]
   );
 
   return {
     labels: sortedLabels,
+    upsertLabels,
     addLabel,
     updateLabel,
     deleteLabel,

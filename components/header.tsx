@@ -1,72 +1,83 @@
 "use client";
 
-import { Settings, Tag } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { usePathname } from "next/navigation";
 
-import { AddressLabelManagerDialog } from "@/components/address-label-manager-dialog";
-import { ExportImportDialog } from "@/components/export-import-dialog";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { Button } from "@/components/ui/button";
 import { WalletButton } from "@/components/wallet-button";
 
-import { ChainManagementDialog } from "./chain-management-dialog";
-
 export function Header() {
-  const [chainDialogOpen, setChainDialogOpen] = useState(false);
+  const pathname = usePathname();
+
+  const navItems = [
+    { href: "/", label: "Operations" },
+    { href: "/settings", label: "Settings" },
+  ];
 
   return (
-    <header className="border-b">
-      <div className="container mx-auto flex h-16 max-w-5xl items-center justify-between px-4 sm:px-6 md:px-8">
-        <div className="flex items-center gap-8">
-          <Link href="/" className="text-xl font-bold">
+    <header className="sticky top-0 z-30 border-b border-zinc-800 bg-zinc-950/88 backdrop-blur-md">
+      <div className="flex h-[4rem] w-full items-center justify-between gap-4 px-4 sm:px-6 md:px-8">
+        <div className="flex min-w-0 items-center gap-4 md:gap-6">
+          <Link
+            href="/"
+            className="shrink-0 text-lg font-semibold tracking-[-0.03em] text-zinc-100"
+          >
             Squad<sup>2</sup>
           </Link>
-          <nav className="hidden gap-6 md:flex">
-            <Link
-              href="/"
-              className="hover:text-primary text-sm font-medium transition-colors"
-            >
-              Multisigs
-            </Link>
-            <Link
-              href="/proposals"
-              className="hover:text-primary text-sm font-medium transition-colors"
-            >
-              Proposals
-            </Link>
-            <Link
-              href="/monitoring"
-              className="hover:text-primary text-sm font-medium transition-colors"
-            >
-              Monitoring
-            </Link>
-          </nav>
+
+          <div className="hidden min-w-0 items-center gap-5 lg:flex">
+            <nav className="flex items-center gap-5">
+              {navItems.map((item) => {
+                const active =
+                  item.href === "/"
+                    ? pathname === item.href
+                    : pathname.startsWith(item.href);
+
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`text-sm font-medium transition-colors ${
+                      active
+                        ? "text-zinc-100"
+                        : "text-zinc-500 hover:text-zinc-200"
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <AddressLabelManagerDialog>
-            <Button variant="ghost" size="icon" title="Manage Address Labels">
-              <Tag className="h-4 w-4" />
-            </Button>
-          </AddressLabelManagerDialog>
-          <ExportImportDialog />
-          <ThemeToggle />
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setChainDialogOpen(true)}
-            title="Chain Settings"
-          >
-            <Settings className="h-4 w-4" />
-          </Button>
+        <div className="flex items-center gap-2 sm:gap-3">
           <WalletButton />
         </div>
       </div>
-      <ChainManagementDialog
-        open={chainDialogOpen}
-        onOpenChange={setChainDialogOpen}
-      />
+      <div className="border-t border-zinc-800/80 px-4 py-2 lg:hidden">
+        <nav className="flex items-center gap-2">
+          {navItems.map((item) => {
+            const active =
+              item.href === "/"
+                ? pathname === item.href
+                : pathname.startsWith(item.href);
+
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`rounded-md px-3 py-2 text-[0.78rem] font-medium tracking-[0.14em] uppercase transition-colors ${
+                  active
+                    ? "bg-zinc-100 text-zinc-950"
+                    : "text-zinc-500 hover:bg-zinc-900 hover:text-zinc-200"
+                }`}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
     </header>
   );
 }
