@@ -8,6 +8,7 @@ interface AddressLabelStore {
   initialized: boolean;
   initializeLabels: () => void;
   getLabel: (address: string) => AddressLabel | undefined;
+  upsertLabels: (labels: AddressLabel[]) => void;
   addLabel: (label: Omit<AddressLabel, "createdAt" | "updatedAt">) => void;
   updateLabel: (
     address: string,
@@ -36,6 +37,19 @@ export const useAddressLabelStore = create<AddressLabelStore>((set, get) => ({
 
   getLabel: (address) => {
     return get().labels.get(address);
+  },
+
+  upsertLabels: (labels) => {
+    set((state) => {
+      const newLabels = new Map(state.labels);
+
+      labels.forEach((label) => {
+        newLabels.set(label.address, label);
+      });
+
+      addressLabelStorage.saveLabels(Array.from(newLabels.values()));
+      return { labels: newLabels };
+    });
   },
 
   addLabel: (labelData) => {

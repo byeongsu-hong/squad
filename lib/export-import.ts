@@ -1,5 +1,6 @@
 import yaml from "js-yaml";
 
+import type { AddressLabel } from "@/types/address-label";
 import type { ChainConfig } from "@/types/chain";
 import type { MultisigAccount } from "@/types/multisig";
 
@@ -8,13 +9,14 @@ export interface ExportData {
   exportedAt: string;
   chains?: ChainConfig[];
   multisigs?: SerializedMultisigAccount[];
+  addressLabels?: AddressLabel[];
 }
 
 interface SerializedMultisigAccount {
   publicKey: string;
   chainId: string;
   label?: string;
-  tags?: string[];
+  tags: string[];
 }
 
 export function serializeMultisigAccount(
@@ -24,7 +26,7 @@ export function serializeMultisigAccount(
     publicKey: multisig.publicKey.toString(),
     chainId: multisig.chainId,
     label: multisig.label,
-    tags: multisig.tags,
+    tags: multisig.tags ?? [],
   };
 }
 
@@ -46,6 +48,15 @@ export function importFromYaml(yamlContent: string): ExportData {
 
   if (!data.version) {
     throw new Error("Missing version field");
+  }
+
+  if (data.multisigs) {
+    data.multisigs = data.multisigs.map((multisig) => ({
+      ...multisig,
+      tags: Array.isArray(multisig.tags)
+        ? multisig.tags.filter((tag): tag is string => typeof tag === "string")
+        : [],
+    }));
   }
 
   return data;
@@ -75,7 +86,8 @@ export function exportMultisigs(multisigs: MultisigAccount[]): string {
 
 export function exportAll(
   chains: ChainConfig[],
-  multisigs: MultisigAccount[]
+  multisigs: MultisigAccount[],
+  addressLabels: AddressLabel[]
 ): string {
   const serializedMultisigs = multisigs.map(serializeMultisigAccount);
 
@@ -84,6 +96,7 @@ export function exportAll(
     exportedAt: new Date().toISOString(),
     chains,
     multisigs: serializedMultisigs,
+    addressLabels,
   };
 
   return exportToYaml(exportData);
