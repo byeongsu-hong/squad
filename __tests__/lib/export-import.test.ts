@@ -8,6 +8,7 @@ import {
   importFromYaml,
   serializeMultisigAccount,
 } from "@/lib/export-import";
+import type { AddressLabel } from "@/types/address-label";
 import type { ChainConfig } from "@/types/chain";
 import type { MultisigAccount } from "@/types/multisig";
 
@@ -38,6 +39,18 @@ describe("export-import", () => {
       programId: new PublicKey("SQDS4ep65T869zMMBKyuUq6aD6EgTu8psMjkvj52pCf"),
       chainId: "test-chain",
       label: "Test Multisig",
+      tags: ["ops", "treasury"],
+    },
+  ];
+
+  const mockAddressLabels: AddressLabel[] = [
+    {
+      address: "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS",
+      label: "Deployer",
+      description: "Primary signer",
+      color: "#3b82f6",
+      createdAt: 1700000000000,
+      updatedAt: 1700000000000,
     },
   ];
 
@@ -50,6 +63,7 @@ describe("export-import", () => {
       );
       expect(serialized.chainId).toBe("test-chain");
       expect(serialized.label).toBe("Test Multisig");
+      expect(serialized.tags).toEqual(["ops", "treasury"]);
       expect(serialized).not.toHaveProperty("threshold");
       expect(serialized).not.toHaveProperty("members");
       expect(serialized).not.toHaveProperty("transactionIndex");
@@ -81,20 +95,25 @@ describe("export-import", () => {
       );
       expect(yaml).toContain("chainId: test-chain");
       expect(yaml).toContain("label: Test Multisig");
+      expect(yaml).toContain("tags:");
+      expect(yaml).toContain("- ops");
+      expect(yaml).toContain("- treasury");
     });
   });
 
   describe("exportAll", () => {
     it("should export both chains and multisigs", () => {
-      const yaml = exportAll(mockChains, mockMultisigs);
+      const yaml = exportAll(mockChains, mockMultisigs, mockAddressLabels);
 
       expect(yaml).toContain("version:");
       expect(yaml).toContain("chains:");
       expect(yaml).toContain("multisigs:");
+      expect(yaml).toContain("addressLabels:");
       expect(yaml).toContain("id: test-chain");
       expect(yaml).toContain(
         "publicKey: GjwcWFQYzemBtpUoN5fMAP2FZviTtMRWCmrppGuTthJS"
       );
+      expect(yaml).toContain("label: Deployer");
     });
   });
 
@@ -119,15 +138,18 @@ describe("export-import", () => {
         "GjwcWFQYzemBtpUoN5fMAP2FZviTtMRWCmrppGuTthJS"
       );
       expect(imported.multisigs?.[0].chainId).toBe("test-chain");
+      expect(imported.multisigs?.[0].tags).toEqual(["ops", "treasury"]);
     });
 
     it("should import both chains and multisigs from YAML", () => {
-      const yaml = exportAll(mockChains, mockMultisigs);
+      const yaml = exportAll(mockChains, mockMultisigs, mockAddressLabels);
       const imported = importFromYaml(yaml);
 
       expect(imported.version).toBe("1.0");
       expect(imported.chains).toHaveLength(1);
       expect(imported.multisigs).toHaveLength(1);
+      expect(imported.addressLabels).toHaveLength(1);
+      expect(imported.addressLabels?.[0].label).toBe("Deployer");
     });
 
     it("should throw error for invalid YAML", () => {
@@ -159,18 +181,21 @@ describe("export-import", () => {
       );
       expect(serializedMultisigs[0].chainId).toBe(mockMultisigs[0].chainId);
       expect(serializedMultisigs[0].label).toBe(mockMultisigs[0].label);
+      expect(serializedMultisigs[0].tags).toEqual(["ops", "treasury"]);
     });
 
     it("should handle export/import of all data", () => {
-      const exported = exportAll(mockChains, mockMultisigs);
+      const exported = exportAll(mockChains, mockMultisigs, mockAddressLabels);
       const imported = importFromYaml(exported);
 
       expect(imported.chains).toHaveLength(1);
       expect(imported.multisigs).toHaveLength(1);
+      expect(imported.addressLabels).toHaveLength(1);
       expect(imported.chains![0]).toEqual(mockChains[0]);
       expect(imported.multisigs![0].publicKey).toBe(
         mockMultisigs[0].publicKey.toString()
       );
+      expect(imported.addressLabels![0]).toEqual(mockAddressLabels[0]);
     });
   });
 });
