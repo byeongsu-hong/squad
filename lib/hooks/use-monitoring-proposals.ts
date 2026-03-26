@@ -12,12 +12,18 @@ import {
   fromWorkspaceProposal,
   invalidateSquadsProposalCache,
   loadSquadsWorkspaceProposalsForMultisig,
+  toWorkspaceMultisig,
 } from "@/lib/workspace/squads-adapter";
 import type { ChainConfig } from "@/types/chain";
-import type { MultisigAccount, ProposalAccount } from "@/types/multisig";
+import type { MultisigAccount } from "@/types/multisig";
+import type { WorkspaceMultisig, WorkspaceProposal } from "@/types/workspace";
 
-export interface MonitoringProposal extends ProposalAccount {
-  multisigAccount: MultisigAccount;
+export interface MonitoringProposal {
+  key: string;
+  multisig: WorkspaceMultisig;
+  rawMultisig: MultisigAccount;
+  proposal: WorkspaceProposal;
+  rawProposal: ReturnType<typeof fromWorkspaceProposal>;
   timestamp?: number;
   transactionSummary?: TransactionSummary;
 }
@@ -73,6 +79,7 @@ export function useMonitoringProposals({
             chain.squadsV4ProgramId
           );
 
+          const workspaceMultisig = toWorkspaceMultisig(multisig, chains);
           const enriched = await Promise.all(
             workspaceProposals.map(async (proposal) => {
               let transactionSummary: TransactionSummary | undefined;
@@ -131,8 +138,11 @@ export function useMonitoringProposals({
               }
 
               return {
-                ...fromWorkspaceProposal(proposal),
-                multisigAccount: multisig,
+                key: `${proposal.multisigKey}-${proposal.transactionIndex.toString()}`,
+                multisig: workspaceMultisig,
+                rawMultisig: multisig,
+                proposal,
+                rawProposal: fromWorkspaceProposal(proposal),
                 ...(transactionSummary ? { transactionSummary } : {}),
               } satisfies MonitoringProposal;
             })
@@ -156,7 +166,9 @@ export function useMonitoringProposals({
       const allProposals = results
         .flat()
         .sort((left, right) =>
-          Number(right.transactionIndex - left.transactionIndex)
+          Number(
+            right.proposal.transactionIndex - left.proposal.transactionIndex
+          )
         );
 
       setProposals(allProposals);
@@ -193,7 +205,7 @@ export function useMonitoringProposals({
     () =>
       proposals.filter((proposal) => {
         if (statusFilters.size > 0 && !statusFilters.has("all")) {
-          const status = proposal.status.toLowerCase();
+          const status = proposal.proposal.status.toLowerCase();
           if (!statusFilters.has(status)) {
             return false;
           }
@@ -201,13 +213,13 @@ export function useMonitoringProposals({
 
         if (
           chainFilter !== "all" &&
-          proposal.multisigAccount.chainId !== chainFilter
+          proposal.multisig.chainId !== chainFilter
         ) {
           return false;
         }
 
         if (tagFilter !== "all") {
-          const multisigTags = proposal.multisigAccount.tags || [];
+          const multisigTags = proposal.multisig.tags;
           if (!multisigTags.includes(tagFilter)) {
             return false;
           }
@@ -215,8 +227,8 @@ export function useMonitoringProposals({
 
         if (debouncedSearchQuery.trim()) {
           const query = debouncedSearchQuery.toLowerCase();
-          const name = (proposal.multisigAccount.label || "").toLowerCase();
-          const address = proposal.multisig.toString().toLowerCase();
+          const name = (proposal.multisig.label || "").toLowerCase();
+          const address = proposal.multisig.key.toLowerCase();
           if (!name.includes(query) && !address.includes(query)) {
             return false;
           }
