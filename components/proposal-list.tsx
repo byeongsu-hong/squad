@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { AddressWithLabel } from "@/components/address-with-label";
@@ -24,13 +24,12 @@ import { Button } from "@/components/ui/button";
 import { Pagination } from "@/components/ui/pagination";
 import { usePagination } from "@/lib/hooks/use-pagination";
 import { useProposalActions } from "@/lib/hooks/use-proposal-actions";
+import { useSquadsProposalLoader } from "@/lib/hooks/use-squads-proposal-loader";
 import { useProposalDeskQuerySync } from "@/lib/hooks/use-workspace-query-sync";
 import { cn } from "@/lib/utils";
 import {
   buildWorkspaceQueueItem,
   fromWorkspaceProposal,
-  invalidateSquadsProposalCache,
-  loadSquadsWorkspaceProposalsForMultisig,
   toWorkspaceMultisig,
   toWorkspaceProposalFromRaw,
 } from "@/lib/workspace/squads-adapter";
@@ -72,7 +71,6 @@ export function ProposalList({
   onLoadingChange,
   refreshTrigger,
 }: ProposalListProps = {}) {
-  const [loading, setLoading] = useState(false);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedProposal, setSelectedProposal] =
     useState<ProposalAccount | null>(null);
@@ -116,36 +114,22 @@ export function ProposalList({
     )
   );
 
-  const loadProposals = useCallback(async () => {
-    const multisig = getSelectedMultisig();
-    if (!multisig) return;
-
-    setLoading(true);
-    onLoadingChange?.(true);
-
-    try {
-      const loadedProposals = await loadSquadsWorkspaceProposalsForMultisig(
-        multisig,
-        chains
-      );
-      setProposals(loadedProposals.map(fromWorkspaceProposal));
-    } catch (error) {
-      console.error("Failed to load proposals:", error);
-      toast.error("Failed to load proposals");
-    } finally {
-      setLoading(false);
-      onLoadingChange?.(false);
-    }
-  }, [chains, getSelectedMultisig, onLoadingChange, setProposals]);
+  const { loading, loadForMultisig, invalidateForMultisig } =
+    useSquadsProposalLoader({
+      chains,
+      setProposals,
+      onLoadingChange,
+      errorMessage: "Failed to load proposals",
+    });
 
   const { approve, reject, execute, actionLoading, isActionInProgress } =
     useProposalActions({
-      onSuccess: loadProposals,
+      onSuccess: () => loadForMultisig(getSelectedMultisig()),
     });
 
   useEffect(() => {
-    loadProposals();
-  }, [loadProposals, refreshTrigger]);
+    void loadForMultisig(getSelectedMultisig());
+  }, [getSelectedMultisig, loadForMultisig, refreshTrigger]);
 
   useProposalDeskQuerySync({
     searchParams,
@@ -163,12 +147,8 @@ export function ProposalList({
   const handleRefresh = async () => {
     const multisig = getSelectedMultisig();
     if (!multisig) return;
-    invalidateSquadsProposalCache(
-      multisig.chainId,
-      multisig.publicKey.toString(),
-      chains
-    );
-    await loadProposals();
+    invalidateForMultisig(multisig);
+    await loadForMultisig(multisig);
   };
 
   const queueItems = useMemo(
