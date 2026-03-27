@@ -64,6 +64,7 @@ export async function resolveInitialMultisigs(
           });
 
           const multisig: MultisigAccount = {
+            provider: "squads",
             publicKey,
             threshold: multisigAccount.threshold,
             members: multisigAccount.members.map((member: SquadMember) => ({

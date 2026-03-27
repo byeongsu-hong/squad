@@ -28,6 +28,7 @@ describe("export-import", () => {
 
   const mockMultisigs: MultisigAccount[] = [
     {
+      provider: "squads",
       publicKey: new PublicKey("GjwcWFQYzemBtpUoN5fMAP2FZviTtMRWCmrppGuTthJS"),
       threshold: 2,
       members: [

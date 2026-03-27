@@ -27,6 +27,7 @@ describe("exportProposalsToCSV", () => {
       [
         "So11111111111111111111111111111111111111112",
         {
+          provider: "squads",
           publicKey: new PublicKey(
             "So11111111111111111111111111111111111111112"
           ),
@@ -63,6 +64,7 @@ describe("exportMultisigsToCSV", () => {
   it("should export multisigs with correct data", () => {
     const multisigs: MultisigAccount[] = [
       {
+        provider: "squads",
         publicKey: new PublicKey("So11111111111111111111111111111111111111112"),
         threshold: 2,
         members: [

@@ -13,6 +13,7 @@ export interface ExportData {
 }
 
 interface SerializedMultisigAccount {
+  provider?: "squads" | "safe";
   publicKey: string;
   chainId: string;
   label?: string;
@@ -23,6 +24,7 @@ export function serializeMultisigAccount(
   multisig: MultisigAccount
 ): SerializedMultisigAccount {
   return {
+    provider: multisig.provider,
     publicKey: multisig.publicKey.toString(),
     chainId: multisig.chainId,
     label: multisig.label,
@@ -53,6 +55,7 @@ export function importFromYaml(yamlContent: string): ExportData {
   if (data.multisigs) {
     data.multisigs = data.multisigs.map((multisig) => ({
       ...multisig,
+      provider: multisig.provider ?? "squads",
       tags: Array.isArray(multisig.tags)
         ? multisig.tags.filter((tag): tag is string => typeof tag === "string")
         : [],

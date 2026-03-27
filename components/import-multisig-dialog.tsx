@@ -102,6 +102,7 @@ export function ImportMultisigDialog({
       });
 
       addMultisig({
+        provider: "squads",
         publicKey: multisigPubkey,
         threshold: multisigAccount.threshold,
         members: multisigAccount.members.map((m: SquadMember) => ({

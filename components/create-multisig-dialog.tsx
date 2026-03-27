@@ -167,6 +167,7 @@ export function CreateMultisigDialog({
       });
 
       addMultisig({
+        provider: "squads",
         publicKey: multisigPda,
         threshold: multisigAccount.threshold,
         members: multisigAccount.members.map((m: SquadMember) => ({
