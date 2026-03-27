@@ -58,6 +58,7 @@ import { useProposalActions } from "@/lib/hooks/use-proposal-actions";
 import { useWorkspaceMultisigs } from "@/lib/hooks/use-workspace-multisigs";
 import { cn } from "@/lib/utils";
 import { formatTransactionSummary } from "@/lib/utils/transaction-formatter";
+import { supportsProviderCapability } from "@/lib/workspace/provider-adapters";
 import { useWalletStore } from "@/stores/wallet-store";
 
 export function MonitoringView() {
@@ -186,7 +187,10 @@ export function MonitoringView() {
   };
 
   const supportsProposalActions = (proposal: MonitoringProposal) => {
-    return proposal.multisig.provider === "squads";
+    return supportsProviderCapability(
+      proposal.multisig.provider,
+      "proposalActions"
+    );
   };
 
   const formatProviderLabel = (provider: "squads" | "safe") =>

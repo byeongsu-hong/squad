@@ -37,6 +37,7 @@ import {
   type ConfigAction,
   formatConfigAction,
 } from "@/lib/utils/transaction-formatter";
+import { supportsProviderCapability } from "@/lib/workspace/provider-adapters";
 import { useMultisigStore } from "@/stores/multisig-store";
 import { useWalletStore } from "@/stores/wallet-store";
 import { useWorkspaceStore } from "@/stores/workspace-store";
@@ -223,7 +224,12 @@ export function OperationsDashboard({
   const executableCount = queueItems.filter(
     (item) => item.readyToExecute
   ).length;
-  const actionsSupported = focusedItem?.multisig.provider === "squads";
+  const actionsSupported = focusedItem
+    ? supportsProviderCapability(
+        focusedItem.multisig.provider,
+        "proposalActions"
+      )
+    : false;
   const {
     approveByAddress,
     rejectByAddress,
