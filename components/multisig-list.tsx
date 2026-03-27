@@ -48,6 +48,10 @@ function formatProviderLabel(provider: RegistrySummaryRow["multisigProvider"]) {
   return provider === "safe" ? "Safe" : "Squads";
 }
 
+function formatCompactMultisigAddress(address: string) {
+  return `${address.slice(0, 8)}...${address.slice(-8)}`;
+}
+
 export function MultisigList({
   actions,
   statusText,
@@ -212,6 +216,20 @@ export function MultisigList({
       return matchesTags;
     });
   }, [registryRows, selectedFilterTags]);
+
+  const registrySummary = useMemo(
+    () => ({
+      safe: filteredRegistryRows.filter(
+        (row) => row.multisigProvider === "safe"
+      ).length,
+      waiting: filteredRegistryRows.reduce((sum, row) => sum + row.waiting, 0),
+      executable: filteredRegistryRows.reduce(
+        (sum, row) => sum + row.executable,
+        0
+      ),
+    }),
+    [filteredRegistryRows]
+  );
 
   const toggleFilterTag = (tag: string) => {
     setSelectedFilterTags((prev) =>
@@ -390,32 +408,205 @@ export function MultisigList({
         hasMultisigs &&
         filteredRegistryRows.length > 0 &&
         embedded && (
-          <div className="space-y-2">
-            {filteredRegistryRows.map((row) => {
-              const multisig = getMultisigForRow(row);
-              if (!multisig) {
-                return null;
-              }
+          <div className="grid gap-4 xl:grid-cols-[17.5rem_minmax(0,1fr)]">
+            <aside className="space-y-4 border border-zinc-800 bg-zinc-950/40 p-4">
+              <div className="space-y-2 border-b border-zinc-800 pb-4">
+                <p className="text-[0.66rem] tracking-[0.18em] text-zinc-500 uppercase">
+                  Registry Tools
+                </p>
+                <p className="text-sm leading-6 text-zinc-400">
+                  Curate the saved registry before it reaches the operations
+                  workspace. Search, sync, batch-select, and clean up from one
+                  side rail.
+                </p>
+              </div>
 
-              const isSelected = selectedForDeletion.has(row.key);
-              const isActiveDesk = matchesMultisigSelectionKey(
-                multisig,
-                selectedMultisigKey
-              );
+              {actions ? (
+                <div className="space-y-2">
+                  <p className="text-[0.66rem] tracking-[0.18em] text-zinc-500 uppercase">
+                    Intake
+                  </p>
+                  <div className="flex flex-col gap-2">{actions}</div>
+                </div>
+              ) : null}
 
-              return (
-                <div
-                  key={row.key}
-                  className={cn(
-                    "border border-zinc-800 bg-zinc-950/55 p-4 transition-colors",
-                    isSelected || isActiveDesk
-                      ? "border-zinc-700 bg-zinc-900/70"
-                      : ""
-                  )}
-                >
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1 space-y-3">
-                      <div className="flex items-start gap-3">
+              <div className="space-y-2 border-t border-zinc-800 pt-4">
+                <p className="text-[0.66rem] tracking-[0.18em] text-zinc-500 uppercase">
+                  Current Scope
+                </p>
+                <div className="space-y-2">
+                  <div className="border border-zinc-800 bg-zinc-950/70 px-3 py-2">
+                    <p className="text-[0.62rem] tracking-[0.16em] text-zinc-500 uppercase">
+                      Visible
+                    </p>
+                    <p className="mt-1 font-mono text-sm text-zinc-100">
+                      {filteredRegistryRows.length}/{multisigs.length}
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="border border-zinc-800 bg-zinc-950/70 px-2.5 py-2">
+                      <p className="text-[0.58rem] tracking-[0.16em] text-zinc-500 uppercase">
+                        Wait
+                      </p>
+                      <p className="mt-1 font-mono text-sm text-zinc-100">
+                        {registrySummary.waiting}
+                      </p>
+                    </div>
+                    <div className="border border-zinc-800 bg-zinc-950/70 px-2.5 py-2">
+                      <p className="text-[0.58rem] tracking-[0.16em] text-zinc-500 uppercase">
+                        Exec
+                      </p>
+                      <p className="mt-1 font-mono text-sm text-zinc-100">
+                        {registrySummary.executable}
+                      </p>
+                    </div>
+                    <div className="border border-zinc-800 bg-zinc-950/70 px-2.5 py-2">
+                      <p className="text-[0.58rem] tracking-[0.16em] text-zinc-500 uppercase">
+                        Safe
+                      </p>
+                      <p className="mt-1 font-mono text-sm text-zinc-100">
+                        {registrySummary.safe}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {allTags.length > 0 ? (
+                <div className="space-y-2 border-t border-zinc-800 pt-4">
+                  <p className="text-[0.66rem] tracking-[0.18em] text-zinc-500 uppercase">
+                    Tag Filters
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {allTags.map((tag) => {
+                      const selected = selectedFilterTags.includes(tag);
+
+                      return (
+                        <Badge
+                          key={tag}
+                          variant={selected ? "default" : "outline"}
+                          className={cn(
+                            "cursor-pointer rounded-md text-xs",
+                            selected
+                              ? "bg-zinc-100 text-zinc-950"
+                              : "border-zinc-800 bg-transparent text-zinc-400"
+                          )}
+                          onClick={() => toggleFilterTag(tag)}
+                        >
+                          {tag}
+                        </Badge>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : null}
+
+              {selectedForDeletion.size > 0 ? (
+                <div className="space-y-3 border-t border-zinc-800 pt-4">
+                  <p className="text-[0.66rem] tracking-[0.18em] text-zinc-500 uppercase">
+                    Selection
+                  </p>
+                  <p className="text-sm leading-6 text-zinc-400">
+                    {selectedForDeletion.size} saved multisig
+                    {selectedForDeletion.size === 1 ? "" : "s"} selected for
+                    bulk cleanup.
+                  </p>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleDeleteSelected}
+                    className="w-full rounded-md"
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Remove Selected
+                  </Button>
+                </div>
+              ) : null}
+            </aside>
+
+            <div className="border border-zinc-800 bg-zinc-950/50">
+              <div className="flex flex-wrap items-start justify-between gap-3 border-b border-zinc-800 px-4 py-4">
+                <div className="space-y-1">
+                  <p className="text-[0.66rem] tracking-[0.18em] text-zinc-500 uppercase">
+                    Saved Multisigs
+                  </p>
+                  <p className="text-sm leading-6 text-zinc-400">
+                    Keep the registry dense and readable. Labels, runtime,
+                    signer threshold, and live queue pressure should all scan in
+                    one pass.
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  {publicKey && canSyncSelectedChain ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={loadMultisigs}
+                      disabled={loading}
+                      className="rounded-md border-zinc-800 bg-transparent text-zinc-200 hover:bg-zinc-900"
+                      aria-label="Refresh multisigs"
+                      title="Refresh multisigs"
+                    >
+                      {loading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <RefreshCw className="h-4 w-4" />
+                      )}
+                    </Button>
+                  ) : null}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={toggleSelectAll}
+                    className="rounded-md border-zinc-800 bg-transparent text-zinc-200 hover:bg-zinc-900"
+                  >
+                    {selectedForDeletion.size === multisigs.length
+                      ? "Deselect All"
+                      : "Select All"}
+                  </Button>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 border-b border-zinc-800 px-4 py-3">
+                <div className="relative min-w-[16rem] flex-1">
+                  <Filter className="absolute top-2.5 left-2.5 h-4 w-4 text-zinc-500" />
+                  <Input
+                    placeholder="Search multisigs, addresses, tags..."
+                    value={filterText}
+                    onChange={(e) => setFilterText(e.target.value)}
+                    className="w-full border-zinc-800 bg-zinc-950 pl-8 text-zinc-100 placeholder:text-zinc-600"
+                    aria-label="Search multisigs"
+                  />
+                </div>
+                <p className="text-xs text-zinc-500">
+                  {filteredRegistryRows.length} visible
+                </p>
+              </div>
+
+              <div className="divide-y divide-zinc-800">
+                {filteredRegistryRows.map((row) => {
+                  const multisig = getMultisigForRow(row);
+                  if (!multisig) {
+                    return null;
+                  }
+
+                  const isSelected = selectedForDeletion.has(row.key);
+                  const isActiveDesk = matchesMultisigSelectionKey(
+                    multisig,
+                    selectedMultisigKey
+                  );
+
+                  return (
+                    <div
+                      key={row.key}
+                      className={cn(
+                        "grid gap-3 px-4 py-4 transition-colors xl:grid-cols-[2rem_minmax(0,1.4fr)_minmax(11rem,0.72fr)_auto]",
+                        isSelected || isActiveDesk
+                          ? "bg-zinc-900/80"
+                          : "bg-transparent hover:bg-zinc-950/80"
+                      )}
+                    >
+                      <div className="flex items-start pt-1">
                         <input
                           type="checkbox"
                           checked={isSelected}
@@ -423,208 +614,208 @@ export function MultisigList({
                             event.stopPropagation();
                             toggleSelect(row.key);
                           }}
-                          className="mt-1 h-4 w-4 cursor-pointer"
+                          className="h-4 w-4 cursor-pointer"
                           aria-label={`Select ${row.label}`}
                         />
-                        <div className="min-w-0 flex-1 space-y-2">
-                          <div className="flex flex-wrap items-center gap-2">
-                            {editingLabel === row.key ? (
-                              <Input
-                                value={labelInput}
-                                onChange={(event) =>
-                                  setLabelInput(event.target.value)
+                      </div>
+
+                      <div className="min-w-0 space-y-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          {editingLabel === row.key ? (
+                            <Input
+                              value={labelInput}
+                              onChange={(event) =>
+                                setLabelInput(event.target.value)
+                              }
+                              onKeyDown={(event) => {
+                                if (event.key === "Enter") {
+                                  handleSaveLabel(multisig);
+                                } else if (event.key === "Escape") {
+                                  handleCancelEdit();
                                 }
-                                onKeyDown={(event) => {
-                                  if (event.key === "Enter") {
-                                    handleSaveLabel(multisig);
-                                  } else if (event.key === "Escape") {
-                                    handleCancelEdit();
-                                  }
-                                }}
-                                onBlur={() => handleSaveLabel(multisig)}
-                                placeholder="Enter label"
-                                className="h-8 max-w-[14rem] border-zinc-800 bg-zinc-950 text-zinc-100"
-                                autoFocus
-                              />
-                            ) : (
-                              <>
-                                <p className="truncate text-sm font-medium text-zinc-100">
-                                  {row.label}
-                                </p>
-                                <Badge
-                                  variant="outline"
-                                  className="rounded-md border-cyan-500/30 bg-cyan-500/10 text-cyan-200"
-                                >
-                                  {row.chainName}
-                                </Badge>
-                                <Badge
-                                  variant="outline"
-                                  className={cn(
-                                    "rounded-md",
-                                    row.multisigProvider === "safe"
-                                      ? "border-amber-500/30 bg-amber-500/10 text-amber-200"
-                                      : "border-zinc-700 bg-zinc-900 text-zinc-300"
-                                  )}
-                                >
-                                  {row.vmFamily.toUpperCase()} /{" "}
-                                  {formatProviderLabel(row.multisigProvider)}
-                                </Badge>
-                                {row.multisigProvider === "safe" ? (
-                                  <Badge
-                                    variant="outline"
-                                    className="rounded-md border-zinc-800 bg-zinc-950 text-zinc-400"
-                                  >
-                                    Read-only
-                                  </Badge>
-                                ) : null}
-                                {isActiveDesk ? (
-                                  <Badge
-                                    variant="outline"
-                                    className="rounded-md border-lime-500/30 bg-lime-500/10 text-lime-200"
-                                  >
-                                    Focused
-                                  </Badge>
-                                ) : null}
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-6 w-6 rounded-md text-zinc-500 hover:bg-zinc-900 hover:text-zinc-100"
-                                  onClick={() =>
-                                    handleStartEditLabel(
-                                      getMultisigAccountKey(multisig),
-                                      multisig.label
-                                    )
-                                  }
-                                  aria-label={`Edit label for ${row.label}`}
-                                  title={`Edit label for ${row.label}`}
-                                >
-                                  <Pencil className="h-3 w-3" />
-                                </Button>
-                              </>
-                            )}
-                          </div>
-
-                          <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-500">
-                            <span className="font-mono">
-                              {multisig.publicKey.toString().slice(0, 8)}...
-                              {multisig.publicKey.toString().slice(-8)}
-                            </span>
-                            <button
-                              type="button"
-                              className="text-zinc-500 transition-colors hover:text-zinc-100"
-                              onClick={() => {
-                                navigator.clipboard.writeText(
-                                  multisig.publicKey.toString()
-                                );
-                                toast.success("Address copied");
                               }}
-                              aria-label={`Copy address for ${row.label}`}
-                              title={`Copy address for ${row.label}`}
-                            >
-                              <Copy className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
+                              onBlur={() => handleSaveLabel(multisig)}
+                              placeholder="Enter label"
+                              className="h-8 max-w-[16rem] border-zinc-800 bg-zinc-950 text-zinc-100"
+                              autoFocus
+                            />
+                          ) : (
+                            <>
+                              <p className="truncate text-[0.95rem] font-medium tracking-[-0.02em] text-zinc-100">
+                                {row.label}
+                              </p>
+                              <Badge
+                                variant="outline"
+                                className="rounded-md border-cyan-500/25 bg-cyan-500/8 text-cyan-200"
+                              >
+                                {row.chainName}
+                              </Badge>
+                              <Badge
+                                variant="outline"
+                                className={cn(
+                                  "rounded-md",
+                                  row.multisigProvider === "safe"
+                                    ? "border-amber-500/25 bg-amber-500/8 text-amber-200"
+                                    : "border-zinc-700 bg-zinc-900 text-zinc-300"
+                                )}
+                              >
+                                {formatProviderLabel(row.multisigProvider)}
+                              </Badge>
+                              {row.multisigProvider === "safe" ? (
+                                <Badge
+                                  variant="outline"
+                                  className="rounded-md border-zinc-800 bg-zinc-950 text-zinc-400"
+                                >
+                                  Read-only
+                                </Badge>
+                              ) : null}
+                              {isActiveDesk ? (
+                                <Badge
+                                  variant="outline"
+                                  className="rounded-md border-lime-500/25 bg-lime-500/8 text-lime-200"
+                                >
+                                  Focused
+                                </Badge>
+                              ) : null}
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 rounded-md text-zinc-500 hover:bg-zinc-900 hover:text-zinc-100"
+                                onClick={() =>
+                                  handleStartEditLabel(
+                                    getMultisigAccountKey(multisig),
+                                    multisig.label
+                                  )
+                                }
+                                aria-label={`Edit label for ${row.label}`}
+                                title={`Edit label for ${row.label}`}
+                              >
+                                <Pencil className="h-3 w-3" />
+                              </Button>
+                            </>
+                          )}
+                        </div>
 
-                          <p className="text-xs text-zinc-500">
-                            {row.attentionLine}
-                          </p>
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.72rem] text-zinc-500">
+                          <span className="font-mono tabular-nums">
+                            {formatCompactMultisigAddress(
+                              multisig.publicKey.toString()
+                            )}
+                          </span>
+                          <button
+                            type="button"
+                            className="text-zinc-500 transition-colors hover:text-zinc-100"
+                            onClick={() => {
+                              navigator.clipboard.writeText(
+                                multisig.publicKey.toString()
+                              );
+                              toast.success("Address copied");
+                            }}
+                            aria-label={`Copy address for ${row.label}`}
+                            title={`Copy address for ${row.label}`}
+                          >
+                            <Copy className="h-3.5 w-3.5" />
+                          </button>
+                          <span>{row.attentionLine}</span>
+                        </div>
+
+                        <div className="flex flex-wrap gap-1.5">
+                          {row.tags.length > 0 ? (
+                            row.tags.map((tag) => (
+                              <Badge
+                                key={tag}
+                                variant="outline"
+                                className="rounded-md border-zinc-800 bg-zinc-900/70 text-xs text-zinc-300"
+                              >
+                                {tag}
+                              </Badge>
+                            ))
+                          ) : (
+                            <span className="text-xs text-zinc-600">
+                              No tags
+                            </span>
+                          )}
                         </div>
                       </div>
 
-                      <div className="grid gap-2 sm:grid-cols-4">
-                        <div className="border border-zinc-800 bg-zinc-950/55 px-3 py-2">
-                          <p className="text-[0.62rem] tracking-[0.16em] text-zinc-500 uppercase">
+                      <div className="grid grid-cols-2 gap-x-5 gap-y-2 border-l border-zinc-800/80 pl-4 xl:grid-cols-2">
+                        <div>
+                          <p className="text-[0.58rem] tracking-[0.16em] text-zinc-500 uppercase">
                             Threshold
                           </p>
                           <p className="mt-1 font-mono text-sm text-zinc-100">
                             {row.threshold}/{row.memberCount}
                           </p>
                         </div>
-                        <div className="border border-zinc-800 bg-zinc-950/55 px-3 py-2">
-                          <p className="text-[0.62rem] tracking-[0.16em] text-zinc-500 uppercase">
-                            Waiting
-                          </p>
-                          <p className="mt-1 font-mono text-sm text-zinc-100">
-                            {row.waiting}
-                          </p>
-                        </div>
-                        <div className="border border-zinc-800 bg-zinc-950/55 px-3 py-2">
-                          <p className="text-[0.62rem] tracking-[0.16em] text-zinc-500 uppercase">
-                            Executable
-                          </p>
-                          <p className="mt-1 font-mono text-sm text-zinc-100">
-                            {row.executable}
-                          </p>
-                        </div>
-                        <div className="border border-zinc-800 bg-zinc-950/55 px-3 py-2">
-                          <p className="text-[0.62rem] tracking-[0.16em] text-zinc-500 uppercase">
+                        <div>
+                          <p className="text-[0.58rem] tracking-[0.16em] text-zinc-500 uppercase">
                             Active
                           </p>
                           <p className="mt-1 font-mono text-sm text-zinc-100">
                             {row.active}
                           </p>
                         </div>
+                        <div>
+                          <p className="text-[0.58rem] tracking-[0.16em] text-zinc-500 uppercase">
+                            Waiting
+                          </p>
+                          <p className="mt-1 font-mono text-sm text-zinc-100">
+                            {row.waiting}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-[0.58rem] tracking-[0.16em] text-zinc-500 uppercase">
+                            Executable
+                          </p>
+                          <p className="mt-1 font-mono text-sm text-zinc-100">
+                            {row.executable}
+                          </p>
+                        </div>
                       </div>
 
-                      <div className="flex flex-wrap gap-1.5">
-                        {row.tags.length > 0 ? (
-                          row.tags.map((tag) => (
-                            <Badge
-                              key={tag}
-                              variant="outline"
-                              className="rounded-md border-zinc-800 bg-zinc-900/70 text-xs text-zinc-300"
-                            >
-                              {tag}
-                            </Badge>
-                          ))
-                        ) : (
-                          <span className="text-xs text-zinc-600">No tags</span>
-                        )}
+                      <div className="flex flex-wrap items-start justify-end gap-2 xl:min-w-[11.5rem]">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="rounded-md border-zinc-800 bg-transparent text-zinc-200 hover:bg-zinc-900"
+                          onClick={() => handleOpenTagDialog(multisig)}
+                        >
+                          <Tag className="mr-2 h-3 w-3" />
+                          Tags
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="rounded-md border-zinc-800 bg-transparent text-zinc-200 hover:bg-zinc-900"
+                          onClick={() =>
+                            deleteMultisig(
+                              multisig.publicKey.toString(),
+                              multisig.chainId
+                            )
+                          }
+                        >
+                          <Trash2 className="mr-2 h-3 w-3" />
+                          Remove
+                        </Button>
+                        <Button
+                          size="sm"
+                          className={cn(
+                            "rounded-md text-zinc-950",
+                            row.waiting > 0
+                              ? "bg-lime-300 hover:bg-lime-200"
+                              : "bg-zinc-100 hover:bg-zinc-200"
+                          )}
+                          onClick={() => handleOpenDesk(multisig)}
+                        >
+                          <ArrowUpRight className="mr-2 h-3 w-3" />
+                          Focus
+                        </Button>
                       </div>
                     </div>
-
-                    <div className="flex flex-wrap justify-end gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="rounded-md border-zinc-800 bg-transparent text-zinc-200 hover:bg-zinc-900"
-                        onClick={() => handleOpenTagDialog(multisig)}
-                      >
-                        <Tag className="mr-2 h-3 w-3" />
-                        Tags
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="rounded-md border-zinc-800 bg-transparent text-zinc-200 hover:bg-zinc-900"
-                        onClick={() =>
-                          deleteMultisig(
-                            multisig.publicKey.toString(),
-                            multisig.chainId
-                          )
-                        }
-                      >
-                        <Trash2 className="mr-2 h-3 w-3" />
-                        Remove
-                      </Button>
-                      <Button
-                        size="sm"
-                        className={cn(
-                          "rounded-md text-zinc-950",
-                          row.waiting
-                            ? "bg-lime-300 hover:bg-lime-200"
-                            : "bg-zinc-100 hover:bg-zinc-200"
-                        )}
-                        onClick={() => handleOpenDesk(multisig)}
-                      >
-                        <ArrowUpRight className="mr-2 h-3 w-3" />
-                        Focus
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+                  );
+                })}
+              </div>
+            </div>
           </div>
         )}
 
