@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Copy, Download, Upload } from "lucide-react";
+import { Check, Copy, Download, Loader2, Upload } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -33,11 +33,18 @@ import {
   DialogTrigger,
 } from "./ui/dialog";
 import { Label } from "./ui/label";
+import { Progress } from "./ui/progress";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 
 interface ExportImportControllerProps {
   embedded?: boolean;
   onClose?: () => void;
+}
+
+interface ImportProgressState {
+  current: number;
+  total: number;
+  label: string;
 }
 
 export function ExportImportDialog() {
@@ -79,6 +86,9 @@ export function ExportImportController({
   const [exportContent, setExportContent] = useState<string>("");
   const [importContent, setImportContent] = useState<string>("");
   const [copied, setCopied] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importProgress, setImportProgress] =
+    useState<ImportProgressState | null>(null);
 
   const { chains, addChain } = useChainStore();
   const { multisigs, addMultisig } = useMultisigStore();
@@ -122,6 +132,27 @@ export function ExportImportController({
       }
 
       const data: ExportData = importFromYaml(importContent);
+      const totalSteps =
+        (data.chains?.length ?? 0) +
+        (data.multisigs?.length ?? 0) +
+        ((data.addressLabels?.length ?? 0) > 0 ? 1 : 0);
+      let completedSteps = 0;
+
+      const updateImportProgress = (label: string) => {
+        setImportProgress({
+          current: completedSteps,
+          total: Math.max(totalSteps, 1),
+          label,
+        });
+      };
+
+      const completeImportStep = (label: string) => {
+        completedSteps += 1;
+        updateImportProgress(label);
+      };
+
+      setIsImporting(true);
+      updateImportProgress("Parsing YAML package...");
 
       let importedChains = 0;
       let importedMultisigs = 0;
@@ -131,24 +162,32 @@ export function ExportImportController({
       const newChains: typeof chains = [...chains];
       if (data.chains) {
         for (const chain of data.chains) {
+          updateImportProgress(`Checking chain ${chain.name}...`);
           const exists = newChains.some((c) => c.id === chain.id);
           if (!exists) {
             addChain(chain);
             newChains.push(chain);
             importedChains++;
           }
+          completeImportStep(`Processed chain ${chain.name}`);
         }
       }
 
       if (data.multisigs) {
         for (const serializedMultisig of data.multisigs) {
           try {
+            updateImportProgress(
+              `Importing multisig ${serializedMultisig.label ?? serializedMultisig.publicKey}...`
+            );
             const exists = multisigs.some(
               (m) =>
                 m.publicKey.toString() === serializedMultisig.publicKey &&
                 m.chainId === serializedMultisig.chainId
             );
             if (exists) {
+              completeImportStep(
+                `Skipped existing multisig ${serializedMultisig.label ?? serializedMultisig.publicKey}`
+              );
               continue;
             }
 
@@ -158,6 +197,9 @@ export function ExportImportController({
             if (!chain) {
               failedMultisigs.push(
                 `${serializedMultisig.publicKey} (chain not found: ${serializedMultisig.chainId})`
+              );
+              completeImportStep(
+                `Skipped multisig ${serializedMultisig.publicKey}`
               );
               continue;
             }
@@ -190,6 +232,9 @@ export function ExportImportController({
                 failedMultisigs.push(
                   `${serializedMultisig.publicKey} (${payload?.error ?? "Safe import failed"})`
                 );
+                completeImportStep(
+                  `Safe import failed for ${serializedMultisig.publicKey}`
+                );
                 continue;
               }
 
@@ -198,12 +243,18 @@ export function ExportImportController({
                 transactionIndex: BigInt(payload.multisig.transactionIndex),
               });
               importedMultisigs++;
+              completeImportStep(
+                `Imported Safe ${serializedMultisig.label ?? serializedMultisig.publicKey}`
+              );
               continue;
             }
 
             if (!isOperationalSquadsChain(chain)) {
               failedMultisigs.push(
                 `${serializedMultisig.publicKey} (chain ${chain.name} is not active for Squads imports)`
+              );
+              completeImportStep(
+                `Skipped multisig ${serializedMultisig.publicKey}`
               );
               continue;
             }
@@ -241,6 +292,9 @@ export function ExportImportController({
 
             addMultisig(multisigAccount);
             importedMultisigs++;
+            completeImportStep(
+              `Imported Squads multisig ${serializedMultisig.label ?? serializedMultisig.publicKey}`
+            );
           } catch (error) {
             console.error(
               `Failed to import multisig ${serializedMultisig.publicKey}:`,
@@ -249,16 +303,21 @@ export function ExportImportController({
             failedMultisigs.push(
               `${serializedMultisig.publicKey} (${error instanceof Error ? error.message : "unknown error"})`
             );
+            completeImportStep(
+              `Failed to import ${serializedMultisig.publicKey}`
+            );
           }
         }
       }
 
       if (data.addressLabels?.length) {
+        updateImportProgress("Merging address labels...");
         const existingAddresses = new Set(labels.map((label) => label.address));
         importedLabels = data.addressLabels.filter(
           (label) => !existingAddresses.has(label.address)
         ).length;
         upsertLabels(data.addressLabels);
+        completeImportStep("Merged address labels");
       }
 
       const messages = [];
@@ -290,6 +349,9 @@ export function ExportImportController({
         description:
           error instanceof Error ? error.message : "Unknown error occurred",
       });
+    } finally {
+      setIsImporting(false);
+      setImportProgress(null);
     }
   };
 
@@ -319,6 +381,7 @@ export function ExportImportController({
         <ExportImportModePicker
           embedded={embedded}
           mode={mode}
+          disabled={isImporting}
           onModeChange={handleModeChange}
         />
 
@@ -337,6 +400,8 @@ export function ExportImportController({
           <ExportImportImportPanel
             embedded={embedded}
             importContent={importContent}
+            importProgress={importProgress}
+            isImporting={isImporting}
             onImportContentChange={setImportContent}
           />
         )}
@@ -348,17 +413,25 @@ export function ExportImportController({
             Close
           </Button>
           {mode === "import" && (
-            <Button onClick={handleImport}>
-              <Upload className="mr-2 h-4 w-4" />
-              Import
+            <Button onClick={handleImport} disabled={isImporting}>
+              {isImporting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Upload className="mr-2 h-4 w-4" />
+              )}
+              {isImporting ? "Importing..." : "Import"}
             </Button>
           )}
         </DialogFooter>
       ) : mode === "import" ? (
         <div className="flex justify-end pt-4">
-          <Button onClick={handleImport}>
-            <Upload className="mr-2 h-4 w-4" />
-            Import
+          <Button onClick={handleImport} disabled={isImporting}>
+            {isImporting ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Upload className="mr-2 h-4 w-4" />
+            )}
+            {isImporting ? "Importing..." : "Import"}
           </Button>
         </div>
       ) : null}
@@ -369,16 +442,18 @@ export function ExportImportController({
 interface ExportImportModePickerProps {
   embedded: boolean;
   mode: "export" | "import";
+  disabled?: boolean;
   onModeChange: (mode: "export" | "import") => void;
 }
 
 function ExportImportModePicker({
   embedded,
   mode,
+  disabled = false,
   onModeChange,
 }: ExportImportModePickerProps) {
   return (
-    <RadioGroup value={mode} onValueChange={onModeChange}>
+    <RadioGroup value={mode} onValueChange={onModeChange} disabled={disabled}>
       <div className={embedded ? "grid gap-2 sm:grid-cols-2" : "space-y-2"}>
         <Label
           htmlFor={embedded ? "settings-export" : "export"}
@@ -562,14 +637,22 @@ function ExportImportExportPanel({
 interface ExportImportImportPanelProps {
   embedded: boolean;
   importContent: string;
+  importProgress: ImportProgressState | null;
+  isImporting: boolean;
   onImportContentChange: (value: string) => void;
 }
 
 function ExportImportImportPanel({
   embedded,
   importContent,
+  importProgress,
+  isImporting,
   onImportContentChange,
 }: ExportImportImportPanelProps) {
+  const progressValue = importProgress
+    ? (importProgress.current / importProgress.total) * 100
+    : 0;
+
   return (
     <div
       className={
@@ -596,9 +679,22 @@ function ExportImportImportPanel({
         <p className="text-muted-foreground text-sm">
           Existing items will be preserved. Only new items will be imported.
         </p>
+        {isImporting && importProgress ? (
+          <div className="space-y-2 border border-zinc-800 bg-zinc-950/50 px-3 py-3">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm text-zinc-200">{importProgress.label}</p>
+              <p className="text-xs text-zinc-500 tabular-nums">
+                {Math.min(importProgress.current, importProgress.total)} /{" "}
+                {importProgress.total}
+              </p>
+            </div>
+            <Progress value={progressValue} className="h-1.5" />
+          </div>
+        ) : null}
         <textarea
           value={importContent}
           onChange={(e) => onImportContentChange(e.target.value)}
+          disabled={isImporting}
           placeholder="Paste your YAML configuration here..."
           className={
             embedded
