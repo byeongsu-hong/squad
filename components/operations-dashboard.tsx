@@ -213,7 +213,9 @@ export function OperationsDashboard({
       );
     }
 
-    return [];
+    return workspaceMultisigs.filter(
+      (multisig) => multisig.provider !== "squads"
+    );
   }, [
     activeViewKey,
     selectedRegistryKeySet,
