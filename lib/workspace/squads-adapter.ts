@@ -522,6 +522,25 @@ export const squadsWorkspaceAdapter: WorkspaceProviderAdapter = {
     proposalLoading: true,
     proposalActions: true,
   },
+  loadProposalsForMultisig({ chains, multisig }) {
+    return loadSquadsWorkspaceProposalsForMultisig(
+      {
+        provider: "squads",
+        publicKey: new PublicKey(multisig.key),
+        threshold: multisig.threshold,
+        members: multisig.members.map((member) => ({
+          key: new PublicKey(member.address),
+          permissions: { mask: member.permissionsMask },
+        })),
+        transactionIndex: BigInt(0),
+        msChangeIndex: 0,
+        chainId: multisig.chainId,
+        label: multisig.label,
+        tags: multisig.tags,
+      },
+      chains
+    );
+  },
   loadPayload({ chains, multisig, proposal }: WorkspacePayloadLoaderOptions) {
     return loadSquadsWorkspacePayload(multisig, proposal, chains);
   },
