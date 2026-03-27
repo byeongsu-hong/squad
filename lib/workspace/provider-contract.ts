@@ -19,10 +19,15 @@ export interface WorkspaceProviderCapabilities {
   proposalActions: boolean;
 }
 
+export type WorkspaceProviderCapability = keyof WorkspaceProviderCapabilities;
+
 export interface WorkspaceProviderAdapter {
   id: WorkspaceProviderId;
   label: string;
   capabilities: WorkspaceProviderCapabilities;
+  getUnsupportedMessage?: (
+    capability: WorkspaceProviderCapability
+  ) => string | null;
   loadPayload(
     options: WorkspacePayloadLoaderOptions
   ): Promise<WorkspacePayload>;

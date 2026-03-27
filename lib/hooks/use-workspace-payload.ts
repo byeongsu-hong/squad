@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 
-import { getWorkspaceProviderAdapter } from "@/lib/workspace/provider-adapters";
+import {
+  getUnsupportedProviderMessage,
+  getWorkspaceProviderAdapter,
+} from "@/lib/workspace/provider-adapters";
 import type { ChainConfig } from "@/types/chain";
 import type {
   WorkspaceMultisig,
@@ -39,6 +42,11 @@ export function useWorkspacePayload({
 
       try {
         const adapter = getWorkspaceProviderAdapter(multisig.provider);
+        if (!adapter.capabilities.payload) {
+          throw new Error(
+            getUnsupportedProviderMessage(multisig.provider, "payload")
+          );
+        }
         const nextPayload = await adapter.loadPayload({
           chains,
           multisig,
