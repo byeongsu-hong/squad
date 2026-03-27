@@ -479,12 +479,12 @@ function ChainRegistry({
             }}
             className={
               embedded
-                ? "grid cursor-pointer items-center gap-2 border-b border-zinc-800 px-4 py-3 transition-colors last:border-b-0 hover:bg-zinc-900/60 focus-visible:ring-1 focus-visible:ring-zinc-600 focus-visible:outline-none md:grid-cols-[minmax(13rem,0.64fr)_minmax(0,1.16fr)_auto]"
+                ? "grid cursor-pointer gap-3 border-b border-zinc-800 px-4 py-3 transition-colors last:border-b-0 hover:bg-zinc-900/60 focus-visible:ring-1 focus-visible:ring-zinc-600 focus-visible:outline-none xl:grid-cols-[minmax(12rem,0.58fr)_minmax(0,1.22fr)_auto] xl:items-center"
                 : "hover:bg-accent/40 flex cursor-pointer items-center justify-between rounded-lg border p-3 transition-colors focus-visible:ring-1 focus-visible:ring-zinc-600 focus-visible:outline-none"
             }
           >
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
+            <div className="min-w-0 space-y-1">
+              <div className="flex flex-wrap items-center gap-2">
                 <p className="text-[0.95rem] font-medium text-zinc-100">
                   {chain.name}
                 </p>
@@ -514,7 +514,7 @@ function ChainRegistry({
                 </p>
               )}
             </div>
-            <div className="space-y-1 text-xs text-zinc-400">
+            <div className="min-w-0 space-y-1 text-xs text-zinc-400">
               <p className="font-mono break-all">RPC: {chain.rpcUrl}</p>
               {chain.explorerUrl ? (
                 <p className="font-mono break-all">
@@ -522,7 +522,7 @@ function ChainRegistry({
                 </p>
               ) : null}
             </div>
-            <div className="flex w-[4.25rem] gap-1 justify-self-start md:justify-self-end">
+            <div className="flex w-[4.25rem] gap-1 justify-self-start xl:justify-self-end">
               <Button
                 variant="ghost"
                 size="icon"
