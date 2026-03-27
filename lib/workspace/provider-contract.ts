@@ -3,6 +3,7 @@ import type {
   WorkspaceMultisig,
   WorkspacePayload,
   WorkspaceProposal,
+  WorkspaceProposalSummary,
   WorkspaceProviderId,
 } from "@/types/workspace";
 
@@ -17,10 +18,16 @@ export interface WorkspaceProposalLoaderOptions {
   multisig: WorkspaceMultisig;
 }
 
+export interface WorkspaceProposalSummaryLoaderOptions {
+  chains: ChainConfig[];
+  multisig: WorkspaceMultisig;
+}
+
 export interface WorkspaceProviderCapabilities {
   creatorSync: boolean;
   payload: boolean;
   proposalLoading: boolean;
+  proposalSummary: boolean;
   proposalActions: boolean;
 }
 
@@ -36,6 +43,9 @@ export interface WorkspaceProviderAdapter {
   loadProposalsForMultisig(
     options: WorkspaceProposalLoaderOptions
   ): Promise<WorkspaceProposal[]>;
+  loadProposalSummary?(
+    options: WorkspaceProposalSummaryLoaderOptions
+  ): Promise<WorkspaceProposalSummary>;
   loadPayload(
     options: WorkspacePayloadLoaderOptions
   ): Promise<WorkspacePayload>;

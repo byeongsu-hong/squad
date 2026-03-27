@@ -534,6 +534,7 @@ export const squadsWorkspaceAdapter: WorkspaceProviderAdapter = {
     creatorSync: true,
     payload: true,
     proposalLoading: true,
+    proposalSummary: false,
     proposalActions: true,
   },
   loadProposalsForMultisig({ chains, multisig }) {
