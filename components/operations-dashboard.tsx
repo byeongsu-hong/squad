@@ -652,8 +652,8 @@ export function OperationsDashboard({
                                               summaryError
                                             ? "Metadata unavailable"
                                             : proposalSummary
-                                              ? `${proposalSummary.totalCount} proposal${proposalSummary.totalCount === 1 ? "" : "s"}`
-                                              : "Proposal count unavailable"
+                                              ? "Proposal activity available"
+                                              : "Status unavailable"
                                       : `${item.active} active`;
 
                                   return (
@@ -714,7 +714,7 @@ export function OperationsDashboard({
                                                   summaryError
                                                 ? "error"
                                                 : proposalSummary
-                                                  ? `${proposalSummary.totalCount} total`
+                                                  ? "ready"
                                                   : "--"}
                                           </p>
                                         ) : (
@@ -833,9 +833,7 @@ export function OperationsDashboard({
                   primarySelectedSummary.totalCount > 0 ? (
                     <div className="space-y-1">
                       <p className="text-zinc-200">
-                        {primarySelectedSummary.totalCount} proposal
-                        {primarySelectedSummary.totalCount === 1 ? "" : "s"} are
-                        available for this Safe.
+                        Proposal activity is available for this Safe.
                       </p>
                       <p className="text-zinc-500">
                         Refresh this scope to retry loading the queue.
