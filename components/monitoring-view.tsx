@@ -75,7 +75,7 @@ export function MonitoringView() {
     "approve" | "reject"
   >("approve");
 
-  const { publicKey } = useWalletStore();
+  const { publicKey, getWalletAddressForProvider } = useWalletStore();
   const { chains, multisigs } = useWorkspaceMultisigs();
   const {
     loading,
@@ -162,23 +162,30 @@ export function MonitoringView() {
   });
 
   const isMemberOf = (proposal: MonitoringProposal) => {
+    const viewerAddress = getWalletAddressForProvider(
+      proposal.multisig.provider
+    );
     return (
-      publicKey &&
+      viewerAddress &&
       proposal.multisig.members.some(
-        (member) => member.address === publicKey.toString()
+        (member) => member.address === viewerAddress
       )
     );
   };
 
   const hasUserApproved = (proposal: MonitoringProposal) => {
-    return (
-      publicKey && proposal.proposal.approvals.includes(publicKey.toString())
+    const viewerAddress = getWalletAddressForProvider(
+      proposal.multisig.provider
     );
+    return viewerAddress && proposal.proposal.approvals.includes(viewerAddress);
   };
 
   const hasUserRejected = (proposal: MonitoringProposal) => {
+    const viewerAddress = getWalletAddressForProvider(
+      proposal.multisig.provider
+    );
     return (
-      publicKey && proposal.proposal.rejections.includes(publicKey.toString())
+      viewerAddress && proposal.proposal.rejections.includes(viewerAddress)
     );
   };
 

@@ -14,6 +14,7 @@ interface UseWorkspaceQueueOptions {
   multisigs: WorkspaceMultisig[];
   viewerAddress: string | null;
   workspaceProposals?: WorkspaceProposal[];
+  getViewerAddressForMultisig?: (multisig: WorkspaceMultisig) => string | null;
 }
 
 export function useWorkspaceQueue({
@@ -21,6 +22,7 @@ export function useWorkspaceQueue({
   multisigs,
   viewerAddress,
   workspaceProposals = [],
+  getViewerAddressForMultisig,
 }: UseWorkspaceQueueOptions) {
   const { records } = useWorkspaceProposalRecords({
     proposals,
@@ -58,7 +60,7 @@ export function useWorkspaceQueue({
           buildWorkspaceQueueItem(
             record.proposal,
             record.multisig,
-            viewerAddress
+            getViewerAddressForMultisig?.(record.multisig) ?? viewerAddress
           )
         )
         .filter((item): item is WorkspaceQueueItem => item !== null)
@@ -71,6 +73,6 @@ export function useWorkspaceQueue({
             right.proposal.transactionIndex - left.proposal.transactionIndex
           );
         }),
-    [allRecords, viewerAddress]
+    [allRecords, getViewerAddressForMultisig, viewerAddress]
   );
 }

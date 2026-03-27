@@ -9,6 +9,9 @@ export interface SerializedWalletState {
   walletName?: string;
   derivationPath?: string;
   deviceModel?: string;
+  evmConnected: boolean;
+  evmAddress: string | null;
+  evmWalletName?: string;
 }
 
 export function serializePublicKey(publicKey: PublicKey | null): string | null {
@@ -33,6 +36,9 @@ export function serializeWalletState(state: {
   walletName?: string;
   derivationPath?: string;
   deviceModel?: string;
+  evmConnected: boolean;
+  evmAddress: string | null;
+  evmWalletName?: string;
 }): SerializedWalletState {
   return {
     connected: state.connected,
@@ -41,6 +47,9 @@ export function serializeWalletState(state: {
     walletName: state.walletName,
     derivationPath: state.derivationPath,
     deviceModel: state.deviceModel,
+    evmConnected: state.evmConnected,
+    evmAddress: state.evmAddress,
+    evmWalletName: state.evmWalletName,
   };
 }
 
@@ -52,5 +61,8 @@ export function deserializeWalletState(serialized: SerializedWalletState) {
     walletName: serialized.walletName,
     derivationPath: serialized.derivationPath,
     deviceModel: serialized.deviceModel,
+    evmConnected: serialized.evmConnected ?? false,
+    evmAddress: serialized.evmAddress ?? null,
+    evmWalletName: serialized.evmWalletName,
   };
 }
