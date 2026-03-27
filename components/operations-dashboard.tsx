@@ -115,6 +115,7 @@ export function OperationsDashboard({
   const {
     loading: workspaceLoading,
     loadingKeys: workspaceLoadingKeys,
+    loadedKeys: workspaceLoadedKeys,
     errorsByMultisigKey: workspaceLoadErrorsByMultisigKey,
     proposals: workspaceProposals,
     loadForAllMultisigs: loadWorkspaceProposals,
@@ -635,20 +636,24 @@ export function OperationsDashboard({
                                     workspaceSummaryErrorsByMultisigKey[
                                       multisigKey
                                     ];
+                                  const hasLoadedWorkspaceQueue =
+                                    workspaceLoadedKeys.includes(multisigKey);
                                   const hasQueueAttention =
                                     item.active > 0 ||
                                     item.waiting > 0 ||
                                     item.executable > 0;
                                   const providerMetaLine =
                                     item.multisig.provider === "safe"
-                                      ? summaryLoading
-                                        ? "Loading proposals..."
-                                        : proposalSummary?.unavailableReason ||
-                                            summaryError
-                                          ? "Metadata unavailable"
-                                          : proposalSummary
-                                            ? `${proposalSummary.totalCount} proposal${proposalSummary.totalCount === 1 ? "" : "s"}`
-                                            : "Proposal count unavailable"
+                                      ? hasLoadedWorkspaceQueue
+                                        ? `${item.active} active`
+                                        : summaryLoading
+                                          ? "Loading proposals..."
+                                          : proposalSummary?.unavailableReason ||
+                                              summaryError
+                                            ? "Metadata unavailable"
+                                            : proposalSummary
+                                              ? `${proposalSummary.totalCount} proposal${proposalSummary.totalCount === 1 ? "" : "s"}`
+                                              : "Proposal count unavailable"
                                       : `${item.active} active`;
 
                                   return (
@@ -689,7 +694,9 @@ export function OperationsDashboard({
                                         </div>
                                       </div>
                                       <div className="shrink-0 text-right">
-                                        {hasQueueAttention ? (
+                                        {hasQueueAttention ||
+                                        (item.multisig.provider === "safe" &&
+                                          hasLoadedWorkspaceQueue) ? (
                                           <>
                                             <p className="font-mono text-[0.62rem] text-zinc-600 tabular-nums">
                                               {item.waiting} wait
