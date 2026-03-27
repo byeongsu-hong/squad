@@ -58,6 +58,16 @@ function getStatusBadgeClass(
   return "border-zinc-700 bg-zinc-900 text-zinc-200";
 }
 
+function getProviderBadgeClass(
+  provider: WorkspaceProposalRecord["proposal"]["provider"]
+) {
+  if (provider === "safe") {
+    return "border-amber-500/30 bg-amber-500/10 text-amber-200";
+  }
+
+  return "border-zinc-700 bg-zinc-900 text-zinc-200";
+}
+
 export function TransactionDetailDialog({
   open,
   onOpenChange,
@@ -174,6 +184,12 @@ export function TransactionDetailDialog({
                 {chainName}
               </Badge>
             ) : null}
+            <Badge
+              variant="outline"
+              className={getProviderBadgeClass(proposal.proposal.provider)}
+            >
+              {proposal.proposal.provider === "safe" ? "Safe" : "Squads"}
+            </Badge>
           </DialogTitle>
           <DialogDescription className="text-zinc-400">
             Review signer state, label unknown addresses, and inspect the

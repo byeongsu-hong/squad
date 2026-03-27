@@ -189,6 +189,9 @@ export function MonitoringView() {
     return proposal.multisig.provider === "squads";
   };
 
+  const formatProviderLabel = (provider: "squads" | "safe") =>
+    provider === "safe" ? "Safe" : "Squads";
+
   const handleViewDetail = (proposal: MonitoringProposal) => {
     setSelectedProposal(proposal);
     setDetailDialogOpen(true);
@@ -782,9 +785,22 @@ export function MonitoringView() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline">
-                            {proposal.multisig.chainName}
-                          </Badge>
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <Badge variant="outline">
+                              {proposal.multisig.chainName}
+                            </Badge>
+                            <Badge
+                              variant="outline"
+                              className={cn(
+                                "rounded-md",
+                                proposal.multisig.provider === "safe"
+                                  ? "border-amber-500/30 bg-amber-500/10 text-amber-200"
+                                  : "border-zinc-800 bg-zinc-950 text-zinc-400"
+                              )}
+                            >
+                              {formatProviderLabel(proposal.multisig.provider)}
+                            </Badge>
+                          </div>
                         </TableCell>
                         <TableCell>
                           #{proposal.proposal.transactionIndex.toString()}
@@ -815,7 +831,7 @@ export function MonitoringView() {
                                 className="w-fit rounded-md text-xs"
                               >
                                 {proposal.multisig.provider === "safe"
-                                  ? "safe"
+                                  ? "Safe"
                                   : "pending"}
                               </Badge>
                               <span className="text-xs text-zinc-500">
