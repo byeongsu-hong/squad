@@ -663,7 +663,7 @@ export function OperationsDashboard({
                                     (summaryLoading ||
                                       Boolean(
                                         proposalSummary?.unavailableReason ||
-                                          summaryError
+                                        summaryError
                                       ) ||
                                       !proposalSummary);
 
