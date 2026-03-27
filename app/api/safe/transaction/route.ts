@@ -5,6 +5,15 @@ import {
   fetchSafeTransactionByNonce,
 } from "@/lib/safe";
 
+const SAFE_TRANSACTION_CACHE_TTL_MS = 15_000;
+const safeTransactionCache = new Map<
+  string,
+  {
+    transaction: unknown;
+    expiresAt: number;
+  }
+>();
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const chainId = searchParams.get("chainId");
@@ -30,6 +39,17 @@ export async function GET(request: Request) {
     );
   }
 
+  const cacheKey = safeTxHash
+    ? `${chainId}:hash:${safeTxHash.toLowerCase()}`
+    : `${chainId}:${safeAddress!.toLowerCase()}:${nonce!}`;
+  const cachedTransaction = safeTransactionCache.get(cacheKey);
+  if (cachedTransaction && cachedTransaction.expiresAt > Date.now()) {
+    return NextResponse.json({
+      transaction: cachedTransaction.transaction,
+      cached: true,
+    });
+  }
+
   try {
     const transaction = safeTxHash
       ? await fetchSafeTransactionByHash(
@@ -42,8 +62,24 @@ export async function GET(request: Request) {
           BigInt(nonce!)
         );
 
+    safeTransactionCache.set(cacheKey, {
+      transaction,
+      expiresAt: Date.now() + SAFE_TRANSACTION_CACHE_TTL_MS,
+    });
+
     return NextResponse.json({ transaction });
   } catch (error) {
+    if (cachedTransaction) {
+      return NextResponse.json({
+        transaction: cachedTransaction.transaction,
+        cached: true,
+        unavailableReason:
+          error instanceof Error
+            ? error.message
+            : "Failed to refresh Safe transaction.",
+      });
+    }
+
     return NextResponse.json(
       {
         error:

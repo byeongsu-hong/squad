@@ -2,7 +2,7 @@
 
 import { Boxes, Database, Network, Tag } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useMemo } from "react";
+import { Suspense, useMemo } from "react";
 
 import { AddMultisigActions } from "@/components/add-multisig-actions";
 import { AddressLabelManagerController } from "@/components/address-label-manager-dialog";
@@ -73,7 +73,7 @@ function StatPill({ label, value }: { label: string; value: string }) {
   );
 }
 
-export default function SettingsPage() {
+function SettingsPageContent() {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -268,5 +268,13 @@ export default function SettingsPage() {
         </section>
       </div>
     </div>
+  );
+}
+
+export default function SettingsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-full" />}>
+      <SettingsPageContent />
+    </Suspense>
   );
 }

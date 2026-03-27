@@ -83,7 +83,8 @@ describe("safe helpers", () => {
 
     expect(proposal).toMatchObject({
       provider: "safe",
-      multisigKey: "0x562Dfaac27A84be6C96273F5c9594DA1681C0DA7",
+      multisigKey:
+        "ethereum-mainnet:0x562Dfaac27A84be6C96273F5c9594DA1681C0DA7",
       chainId: "ethereum-mainnet",
       creator: "0xa7ECcdb9Be08178f896c26b7BbD8C3D4E844d9Ba",
       status: "Executed",
