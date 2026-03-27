@@ -30,6 +30,7 @@ import { useSquadsProposalLoader } from "@/lib/hooks/use-squads-proposal-loader"
 import { useWorkspaceMultisigs } from "@/lib/hooks/use-workspace-multisigs";
 import { useWorkspacePayload } from "@/lib/hooks/use-workspace-payload";
 import { useWorkspaceProposalLoader } from "@/lib/hooks/use-workspace-proposal-loader";
+import { useWorkspaceProposalSummary } from "@/lib/hooks/use-workspace-proposal-summary";
 import { useOperationsWorkspaceQuerySync } from "@/lib/hooks/use-workspace-query-sync";
 import { useWorkspaceQueue } from "@/lib/hooks/use-workspace-queue";
 import { cn } from "@/lib/utils";
@@ -113,11 +114,21 @@ export function OperationsDashboard({
   });
   const {
     loading: workspaceLoading,
+    loadingKeys: workspaceLoadingKeys,
+    errorsByMultisigKey: workspaceLoadErrorsByMultisigKey,
     proposals: workspaceProposals,
     loadForAllMultisigs: loadWorkspaceProposals,
   } = useWorkspaceProposalLoader({
     chains,
     errorMessage: "Failed to load workspace proposals",
+  });
+  const {
+    summariesByMultisigKey,
+    loadingByMultisigKey: workspaceSummaryLoadingByMultisigKey,
+    errorsByMultisigKey: workspaceSummaryErrorsByMultisigKey,
+  } = useWorkspaceProposalSummary({
+    chains,
+    multisigs: workspaceMultisigs,
   });
 
   useEffect(() => {
@@ -213,6 +224,21 @@ export function OperationsDashboard({
     void loadWorkspaceProposals(scopedWorkspaceProposalMultisigs);
   }, [loadWorkspaceProposals, scopedWorkspaceProposalMultisigs]);
 
+  const scopedWorkspaceProposalKeys = useMemo(
+    () => scopedWorkspaceProposalMultisigs.map((multisig) => multisig.key),
+    [scopedWorkspaceProposalMultisigs]
+  );
+  const scopedWorkspaceLoadErrorKey =
+    scopedWorkspaceProposalKeys.find(
+      (key) => workspaceLoadErrorsByMultisigKey[key]
+    ) ?? null;
+  const scopedWorkspaceLoadError = scopedWorkspaceLoadErrorKey
+    ? (workspaceLoadErrorsByMultisigKey[scopedWorkspaceLoadErrorKey] ?? null)
+    : null;
+  const isScopedWorkspaceLoading = scopedWorkspaceProposalKeys.some((key) =>
+    workspaceLoadingKeys.includes(key)
+  );
+
   const scopedQueueItems = useMemo(() => {
     if (selectedRegistryKeys.length > 0) {
       return queueItems.filter((item) =>
@@ -264,6 +290,30 @@ export function OperationsDashboard({
   }, [focusedProposalKey, setDetailTab]);
 
   const hasConnectedWallet = connected || evmConnected;
+  const primarySelectedRegistryItem =
+    primarySelectedRegistryKey !== null
+      ? (registryItems.find(
+          (item) => item.multisig.key === primarySelectedRegistryKey
+        ) ?? null)
+      : null;
+  const primarySelectedSummary =
+    primarySelectedRegistryItem !== null
+      ? summariesByMultisigKey[primarySelectedRegistryItem.multisig.key]
+      : undefined;
+  const primarySelectedSummaryLoading =
+    primarySelectedRegistryItem !== null
+      ? Boolean(
+          workspaceSummaryLoadingByMultisigKey[
+            primarySelectedRegistryItem.multisig.key
+          ]
+        )
+      : false;
+  const primarySelectedSummaryError =
+    primarySelectedRegistryItem !== null
+      ? (workspaceSummaryErrorsByMultisigKey[
+          primarySelectedRegistryItem.multisig.key
+        ] ?? null)
+      : null;
   const waitingOnYouCount = queueItems.filter(
     (item) => item.needsYourSignature
   ).length;
@@ -574,6 +624,31 @@ export function OperationsDashboard({
                                   const multisigKey = item.multisig.key;
                                   const itemSelected =
                                     selectedRegistryKeySet.has(multisigKey);
+                                  const proposalSummary =
+                                    summariesByMultisigKey[multisigKey];
+                                  const summaryLoading = Boolean(
+                                    workspaceSummaryLoadingByMultisigKey[
+                                      multisigKey
+                                    ]
+                                  );
+                                  const summaryError =
+                                    workspaceSummaryErrorsByMultisigKey[
+                                      multisigKey
+                                    ];
+                                  const hasQueueAttention =
+                                    item.active > 0 ||
+                                    item.waiting > 0 ||
+                                    item.executable > 0;
+                                  const providerMetaLine =
+                                    item.multisig.provider === "safe"
+                                      ? summaryLoading
+                                        ? "Loading proposals..."
+                                        : summaryError
+                                          ? "Metadata unavailable"
+                                          : proposalSummary
+                                            ? `${proposalSummary.totalCount} proposal${proposalSummary.totalCount === 1 ? "" : "s"}`
+                                            : "Proposal count unavailable"
+                                      : `${item.active} active`;
 
                                   return (
                                     <button
@@ -607,16 +682,40 @@ export function OperationsDashboard({
                                           <span className="font-mono tabular-nums">
                                             {formatCompactAddress(multisigKey)}
                                           </span>
-                                          <span>{item.active} active</span>
+                                          <span>{providerMetaLine}</span>
                                         </div>
                                       </div>
                                       <div className="shrink-0 text-right">
-                                        <p className="font-mono text-[0.62rem] text-zinc-600 tabular-nums">
-                                          {item.waiting} wait
-                                        </p>
-                                        <p className="font-mono text-[0.62rem] text-zinc-600 tabular-nums">
-                                          {item.executable} exec
-                                        </p>
+                                        {hasQueueAttention ? (
+                                          <>
+                                            <p className="font-mono text-[0.62rem] text-zinc-600 tabular-nums">
+                                              {item.waiting} wait
+                                            </p>
+                                            <p className="font-mono text-[0.62rem] text-zinc-600 tabular-nums">
+                                              {item.executable} exec
+                                            </p>
+                                          </>
+                                        ) : item.multisig.provider ===
+                                          "safe" ? (
+                                          <p className="font-mono text-[0.62rem] text-zinc-600 tabular-nums">
+                                            {summaryLoading
+                                              ? "..."
+                                              : summaryError
+                                                ? "error"
+                                                : proposalSummary
+                                                  ? `${proposalSummary.totalCount} total`
+                                                  : "--"}
+                                          </p>
+                                        ) : (
+                                          <>
+                                            <p className="font-mono text-[0.62rem] text-zinc-600 tabular-nums">
+                                              {item.waiting} wait
+                                            </p>
+                                            <p className="font-mono text-[0.62rem] text-zinc-600 tabular-nums">
+                                              {item.executable} exec
+                                            </p>
+                                          </>
+                                        )}
                                       </div>
                                     </button>
                                   );
@@ -645,10 +744,8 @@ export function OperationsDashboard({
                   {selectedRegistryKeys.length > 1
                     ? `${selectedRegistryKeys.length} selected multisigs`
                     : primarySelectedRegistryKey
-                      ? registryItems.find(
-                          (item) =>
-                            item.multisig.key === primarySelectedRegistryKey
-                        )?.multisig.label || "Selected multisig"
+                      ? primarySelectedRegistryItem?.multisig.label ||
+                        "Selected multisig"
                       : activeView?.label || "All multisigs"}
                 </p>
               </div>
@@ -679,7 +776,55 @@ export function OperationsDashboard({
               <ProposalCardSkeletonList />
             ) : filteredQueueItems.length === 0 ? (
               <div className="border border-dashed border-zinc-800 px-4 py-5 text-sm text-zinc-400">
-                No proposals match the current scope.
+                {queueFilter !== "all" && scopedQueueItems.length > 0 ? (
+                  "No proposals match the current filter."
+                ) : isScopedWorkspaceLoading ? (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Loading proposals for the selected Safe scope...
+                  </div>
+                ) : scopedWorkspaceLoadError ? (
+                  <div className="space-y-1">
+                    <p className="text-zinc-200">
+                      Failed to load proposals for the selected Safe scope.
+                    </p>
+                    <p className="text-zinc-500">{scopedWorkspaceLoadError}</p>
+                  </div>
+                ) : primarySelectedRegistryItem?.multisig.provider === "safe" &&
+                  primarySelectedSummaryLoading ? (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Loading Safe proposal summary...
+                  </div>
+                ) : primarySelectedRegistryItem?.multisig.provider === "safe" &&
+                  primarySelectedSummaryError ? (
+                  <div className="space-y-1">
+                    <p className="text-zinc-200">
+                      Safe metadata is unavailable for this multisig.
+                    </p>
+                    <p className="text-zinc-500">
+                      {primarySelectedSummaryError}
+                    </p>
+                  </div>
+                ) : primarySelectedRegistryItem?.multisig.provider === "safe" &&
+                  primarySelectedSummary ? (
+                  primarySelectedSummary.totalCount > 0 ? (
+                    <div className="space-y-1">
+                      <p className="text-zinc-200">
+                        {primarySelectedSummary.totalCount} proposal
+                        {primarySelectedSummary.totalCount === 1 ? "" : "s"} are
+                        available for this Safe.
+                      </p>
+                      <p className="text-zinc-500">
+                        Refresh this scope to retry loading the queue.
+                      </p>
+                    </div>
+                  ) : (
+                    "No proposals were found for this Safe."
+                  )
+                ) : (
+                  "No proposals match the current scope."
+                )}
               </div>
             ) : (
               <div className="overflow-hidden border border-zinc-800 bg-zinc-950/55">
