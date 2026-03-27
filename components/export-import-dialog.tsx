@@ -18,6 +18,7 @@ import {
   type ChainConfig,
   getSquadsProgramId,
   isOperationalSquadsChain,
+  normalizeChainConfig,
 } from "@/types/chain";
 import type { MultisigAccount } from "@/types/multisig";
 
@@ -158,6 +159,45 @@ export function ExportImportController({
               failedMultisigs.push(
                 `${serializedMultisig.publicKey} (chain not found: ${serializedMultisig.chainId})`
               );
+              continue;
+            }
+
+            if (
+              serializedMultisig.provider === "safe" ||
+              chain.multisigProvider === "safe"
+            ) {
+              const response = await fetch("/api/safe/import", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  chain: normalizeChainConfig(chain),
+                  addressInput: serializedMultisig.publicKey,
+                  label: serializedMultisig.label,
+                  tags: serializedMultisig.tags,
+                }),
+              });
+
+              const payload = (await response.json().catch(() => null)) as {
+                error?: string;
+                multisig?: Omit<MultisigAccount, "transactionIndex"> & {
+                  transactionIndex: string;
+                };
+              } | null;
+
+              if (!response.ok || !payload?.multisig) {
+                failedMultisigs.push(
+                  `${serializedMultisig.publicKey} (${payload?.error ?? "Safe import failed"})`
+                );
+                continue;
+              }
+
+              addMultisig({
+                ...payload.multisig,
+                transactionIndex: BigInt(payload.multisig.transactionIndex),
+              });
+              importedMultisigs++;
               continue;
             }
 
