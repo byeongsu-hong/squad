@@ -30,6 +30,7 @@ import type {
   WorkspaceQueueItem,
   WorkspaceRegistryItem,
 } from "@/types/workspace";
+import { getWorkspaceMultisigKey } from "@/types/workspace";
 
 function getChainConfig(chains: ChainConfig[], chainId: string) {
   return chains.find((chain) => chain.id === chainId);
@@ -222,7 +223,8 @@ async function toWorkspaceProposal(
 
   return {
     provider: "squads",
-    multisigKey: multisigKey.toString(),
+    multisigKey: getWorkspaceMultisigKey(chain.id, multisigKey.toString()),
+    multisigAddress: multisigKey.toString(),
     chainId: chain.id,
     transactionIndex,
     creator: creator?.toString(),
@@ -308,7 +310,8 @@ export function toWorkspaceProposalFromRaw(
 ): WorkspaceProposal {
   return {
     provider: "squads",
-    multisigKey: proposal.multisig.toString(),
+    multisigKey: getWorkspaceMultisigKey(chainId, proposal.multisig.toString()),
+    multisigAddress: proposal.multisig.toString(),
     chainId,
     transactionIndex: proposal.transactionIndex,
     creator: proposal.creator?.toString(),
@@ -350,7 +353,7 @@ export function buildWorkspaceRegistryItems(
 
       return (
         item.multisig.label?.toLowerCase().includes(searchNeedle) ||
-        item.multisig.key.toLowerCase().includes(searchNeedle) ||
+        item.multisig.address.toLowerCase().includes(searchNeedle) ||
         item.multisig.chainName.toLowerCase().includes(searchNeedle)
       );
     });
@@ -447,7 +450,7 @@ export async function loadSquadsWorkspacePayload(
 
   const programIdString = getSquadsProgramId(chain);
   const programId = new PublicKey(programIdString);
-  const multisigPda = new PublicKey(multisig.key);
+  const multisigPda = new PublicKey(multisig.address);
   const [transactionPda] = multisigSdk.getTransactionPda({
     multisigPda,
     index: proposal.transactionIndex,
@@ -541,7 +544,7 @@ export const squadsWorkspaceAdapter: WorkspaceProviderAdapter = {
     return loadSquadsWorkspaceProposalsForMultisig(
       {
         provider: "squads",
-        publicKey: new PublicKey(multisig.key),
+        publicKey: new PublicKey(multisig.address),
         threshold: multisig.threshold,
         members: multisig.members.map((member) => ({
           key: new PublicKey(member.address),
@@ -565,7 +568,7 @@ export function fromWorkspaceProposal(
   proposal: WorkspaceProposal
 ): ProposalAccount {
   return {
-    multisig: new PublicKey(proposal.multisigKey),
+    multisig: new PublicKey(proposal.multisigAddress),
     transactionIndex: proposal.transactionIndex,
     creator: proposal.creator ? new PublicKey(proposal.creator) : undefined,
     status: proposal.status,

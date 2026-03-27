@@ -387,7 +387,7 @@ export function OperationsDashboard({
   const handleApprove = async () => {
     if (!focusedItem) return;
     await approveByAddress(
-      focusedItem.multisig.key,
+      focusedItem.multisig.address,
       focusedItem.proposal.transactionIndex,
       focusedItem.multisig.chainId
     );
@@ -396,7 +396,7 @@ export function OperationsDashboard({
   const handleReject = async () => {
     if (!focusedItem) return;
     await rejectByAddress(
-      focusedItem.multisig.key,
+      focusedItem.multisig.address,
       focusedItem.proposal.transactionIndex,
       focusedItem.multisig.chainId
     );
@@ -405,7 +405,7 @@ export function OperationsDashboard({
   const handleExecute = async () => {
     if (!focusedItem) return;
     await executeByAddress(
-      focusedItem.multisig.key,
+      focusedItem.multisig.address,
       focusedItem.proposal.transactionIndex,
       focusedItem.multisig.chainId
     );
@@ -681,7 +681,9 @@ export function OperationsDashboard({
                                         </div>
                                         <div className="mt-0.5 flex items-center gap-2 text-[0.62rem] text-zinc-500">
                                           <span className="font-mono tabular-nums">
-                                            {formatCompactAddress(multisigKey)}
+                                            {formatCompactAddress(
+                                              item.multisig.address
+                                            )}
                                           </span>
                                           <span>{providerMetaLine}</span>
                                         </div>
@@ -981,7 +983,7 @@ export function OperationsDashboard({
                         <div className="flex flex-wrap items-center gap-2">
                           <span>Multisig address</span>
                           <AddressWithLabel
-                            address={focusedItem.multisig.key}
+                            address={focusedItem.multisig.address}
                             showCopy={false}
                             showLabelButton={false}
                             copyOnClick

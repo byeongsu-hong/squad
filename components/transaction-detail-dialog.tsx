@@ -105,7 +105,7 @@ export function TransactionDetailDialog({
   const handleCopyRawData = () => {
     const rawData = JSON.stringify(
       {
-        multisig: proposal.multisig.key,
+        multisig: proposal.multisig.address,
         transactionIndex: proposal.proposal.transactionIndex.toString(),
         creator: proposal.proposal.creator || "Unknown",
         status: proposal.proposal.status,
@@ -140,7 +140,7 @@ export function TransactionDetailDialog({
       return;
     }
 
-    const url = `${chain.explorerUrl}/address/${proposal.multisig.key}`;
+    const url = `${chain.explorerUrl}/address/${proposal.multisig.address}`;
     window.open(url, "_blank");
   };
 
@@ -289,14 +289,16 @@ export function TransactionDetailDialog({
                   </p>
                   <div className="flex items-center gap-2">
                     <code className="flex-1 rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 font-mono text-xs text-zinc-300">
-                      {proposal.multisig.key}
+                      {proposal.multisig.address}
                     </code>
                     <Button
                       variant="ghost"
                       size="icon"
                       className="border border-zinc-800 bg-zinc-950 text-zinc-200 hover:bg-zinc-900"
                       onClick={() => {
-                        navigator.clipboard.writeText(proposal.multisig.key);
+                        navigator.clipboard.writeText(
+                          proposal.multisig.address
+                        );
                         toast.success("Multisig address copied");
                       }}
                     >

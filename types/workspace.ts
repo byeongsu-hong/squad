@@ -24,6 +24,7 @@ export interface WorkspaceMember {
 export interface WorkspaceMultisig {
   provider: WorkspaceProviderId;
   key: string;
+  address: string;
   chainId: string;
   chainName: string;
   label?: string;
@@ -36,6 +37,7 @@ export interface WorkspaceMultisig {
 export interface WorkspaceProposal {
   provider: WorkspaceProviderId;
   multisigKey: string;
+  multisigAddress: string;
   chainId: string;
   transactionIndex: bigint;
   creator?: string;
@@ -50,6 +52,10 @@ export interface WorkspaceProposal {
 export interface WorkspaceProposalSummary {
   totalCount: number;
   unavailableReason?: string;
+}
+
+export function getWorkspaceMultisigKey(chainId: string, address: string) {
+  return `${chainId}:${address}`;
 }
 
 export interface WorkspaceQueueItem {

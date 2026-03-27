@@ -22,11 +22,16 @@ export function buildWorkspaceProposalRecords(
   const multisigMap = new Map(
     multisigs.map((multisig) => [multisig.key, multisig] as const)
   );
+  const multisigByAddress = new Map(
+    multisigs.map((multisig) => [multisig.address, multisig] as const)
+  );
 
   return proposals
     .map((rawProposal) => {
-      const multisigKey = rawProposal.multisig.toString();
-      const multisig = multisigMap.get(multisigKey);
+      const multisigAddress = rawProposal.multisig.toString();
+      const multisig =
+        multisigByAddress.get(multisigAddress) ??
+        multisigMap.get(multisigAddress);
       if (!multisig) {
         return null;
       }

@@ -7,6 +7,7 @@ import type {
   WorkspaceProposal,
   WorkspaceProposalStatus,
 } from "@/types/workspace";
+import { getWorkspaceMultisigKey } from "@/types/workspace";
 
 const SAFE_ABI = [
   {
@@ -292,7 +293,7 @@ function toSafeProposalStatus(
 export function toWorkspaceProposalFromSafeTransaction(
   transaction: SafeServiceMultisigTransaction,
   chainId: string,
-  multisigKey: string
+  safeAddress: string
 ): WorkspaceProposal | null {
   if (transaction.txType && transaction.txType !== "MULTISIG_TRANSACTION") {
     return null;
@@ -307,7 +308,8 @@ export function toWorkspaceProposalFromSafeTransaction(
 
   return {
     provider: "safe",
-    multisigKey,
+    multisigKey: getWorkspaceMultisigKey(chainId, safeAddress),
+    multisigAddress: safeAddress,
     chainId,
     transactionIndex: BigInt(transaction.nonce),
     creator: transaction.proposer

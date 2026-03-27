@@ -131,7 +131,7 @@ export function MonitoringView() {
     transactionIndex: bigint
   ) => {
     await approveByAddress(
-      proposal.multisig.key,
+      proposal.multisig.address,
       transactionIndex,
       proposal.multisig.chainId
     );
@@ -142,7 +142,7 @@ export function MonitoringView() {
     transactionIndex: bigint
   ) => {
     await rejectByAddress(
-      proposal.multisig.key,
+      proposal.multisig.address,
       transactionIndex,
       proposal.multisig.chainId
     );
@@ -153,7 +153,7 @@ export function MonitoringView() {
     transactionIndex: bigint
   ) => {
     await executeByAddress(
-      proposal.multisig.key,
+      proposal.multisig.address,
       transactionIndex,
       proposal.multisig.chainId
     );
