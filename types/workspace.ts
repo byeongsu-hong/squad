@@ -5,6 +5,7 @@ export type WorkspaceDetailTab = "overview" | "payload";
 export type WorkspaceExplorerMode = "views" | "chains" | "tags";
 export type WorkspaceSettingsSection =
   | "chains"
+  | "adapters"
   | "multisigs"
   | "registry"
   | "labels";

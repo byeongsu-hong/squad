@@ -1,6 +1,6 @@
 "use client";
 
-import { Boxes, Database, Network, Tag } from "lucide-react";
+import { Boxes, Database, Layers3, Network, Tag } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useMemo } from "react";
 
@@ -35,6 +35,14 @@ const SECTION_COPY: Record<
       "Maintain the RPC and explorer endpoints that define where this workspace reads and signs.",
     icon: Network,
     accent: "text-cyan-300",
+  },
+  adapters: {
+    eyebrow: "Provider Infrastructure",
+    title: "Adapter readiness",
+    description:
+      "Keep Safe-specific transport and runtime addresses separate from chain definitions so provider setup stays visible without crowding chain operations.",
+    icon: Layers3,
+    accent: "text-violet-300",
   },
   multisigs: {
     eyebrow: "Registry Management",
@@ -97,6 +105,12 @@ function SettingsPageContent() {
         id: "chains" as const,
         count: chains.length,
         summary: `${chains.filter((chain) => chain.id.startsWith("custom-")).length} custom`,
+      },
+      {
+        id: "adapters" as const,
+        count: chains.filter((chain) => chain.multisigProvider === "safe")
+          .length,
+        summary: "provider endpoints",
       },
       {
         id: "multisigs" as const,
@@ -236,10 +250,10 @@ function SettingsPageContent() {
           </div>
 
           {settingsActiveSection === "chains" ? (
-            <div className="space-y-5">
-              <ChainManagementController embedded />
-              <ProviderAdaptersPanel />
-            </div>
+            <ChainManagementController embedded />
+          ) : null}
+          {settingsActiveSection === "adapters" ? (
+            <ProviderAdaptersPanel />
           ) : null}
           {settingsActiveSection === "multisigs" ? (
             <MultisigList
