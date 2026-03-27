@@ -53,6 +53,10 @@ function formatCompactAddress(value: string) {
   return `${value.slice(0, 6)}...${value.slice(-4)}`;
 }
 
+function formatProviderLabel(provider: "squads" | "safe") {
+  return provider === "safe" ? "Safe" : "Squads";
+}
+
 function getStatusTone(item: WorkspaceQueueItem) {
   if (item.needsYourSignature) {
     return "text-lime-300";
@@ -642,6 +646,16 @@ export function OperationsDashboard({
                             <span className="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-1.5 py-0.5 font-mono text-[0.58rem] tracking-[0.16em] text-cyan-300 uppercase">
                               {item.multisig.chainName}
                             </span>
+                            <span
+                              className={cn(
+                                "rounded-full px-1.5 py-0.5 font-mono text-[0.58rem] tracking-[0.16em] uppercase",
+                                item.multisig.provider === "safe"
+                                  ? "border border-amber-500/30 bg-amber-500/10 text-amber-200"
+                                  : "border border-zinc-700 bg-zinc-900 text-zinc-400"
+                              )}
+                            >
+                              {formatProviderLabel(item.multisig.provider)}
+                            </span>
                           </div>
                           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.78rem]">
                             <span className="text-zinc-400">
@@ -707,6 +721,17 @@ export function OperationsDashboard({
                         className="rounded-md border-zinc-700 bg-transparent px-2.5 py-1 text-zinc-300"
                       >
                         {focusedItem.multisig.chainName}
+                      </Badge>
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          "rounded-md px-2.5 py-1",
+                          focusedItem.multisig.provider === "safe"
+                            ? "border-amber-500/30 bg-amber-500/10 text-amber-200"
+                            : "border-zinc-700 bg-transparent text-zinc-300"
+                        )}
+                      >
+                        {formatProviderLabel(focusedItem.multisig.provider)}
                       </Badge>
                       {focusedItem.currentUserApproved ? (
                         <Badge
