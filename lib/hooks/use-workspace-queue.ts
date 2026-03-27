@@ -3,27 +3,57 @@ import { useMemo } from "react";
 import { useWorkspaceProposalRecords } from "@/lib/hooks/use-workspace-proposal-records";
 import { buildWorkspaceQueueItem } from "@/lib/workspace/squads-adapter";
 import type { ProposalAccount } from "@/types/multisig";
-import type { WorkspaceMultisig, WorkspaceQueueItem } from "@/types/workspace";
+import type {
+  WorkspaceMultisig,
+  WorkspaceProposal,
+  WorkspaceQueueItem,
+} from "@/types/workspace";
 
 interface UseWorkspaceQueueOptions {
   proposals: ProposalAccount[];
   multisigs: WorkspaceMultisig[];
   viewerAddress: string | null;
+  workspaceProposals?: WorkspaceProposal[];
 }
 
 export function useWorkspaceQueue({
   proposals,
   multisigs,
   viewerAddress,
+  workspaceProposals = [],
 }: UseWorkspaceQueueOptions) {
   const { records } = useWorkspaceProposalRecords({
     proposals,
     multisigs,
   });
+  const workspaceProposalRecords = useMemo(() => {
+    const multisigMap = new Map(
+      multisigs.map((multisig) => [multisig.key, multisig] as const)
+    );
+
+    return workspaceProposals
+      .map((proposal) => {
+        const multisig = multisigMap.get(proposal.multisigKey);
+        if (!multisig) {
+          return null;
+        }
+
+        return {
+          key: `${proposal.multisigKey}-${proposal.transactionIndex.toString()}`,
+          multisig,
+          proposal,
+        };
+      })
+      .filter((record) => record !== null);
+  }, [multisigs, workspaceProposals]);
+  const allRecords = useMemo(
+    () => [...records, ...workspaceProposalRecords],
+    [records, workspaceProposalRecords]
+  );
 
   return useMemo(
     () =>
-      records
+      allRecords
         .map((record) =>
           buildWorkspaceQueueItem(
             record.proposal,
@@ -41,6 +71,6 @@ export function useWorkspaceQueue({
             right.proposal.transactionIndex - left.proposal.transactionIndex
           );
         }),
-    [records, viewerAddress]
+    [allRecords, viewerAddress]
   );
 }
