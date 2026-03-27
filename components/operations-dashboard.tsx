@@ -124,10 +124,6 @@ export function OperationsDashboard({
     void loadForAllMultisigs(multisigs);
   }, [loadForAllMultisigs, multisigs]);
 
-  useEffect(() => {
-    void loadWorkspaceProposals(workspaceMultisigs);
-  }, [loadWorkspaceProposals, workspaceMultisigs]);
-
   useOperationsWorkspaceQuerySync({
     searchParams,
     pathname,
@@ -173,6 +169,49 @@ export function OperationsDashboard({
     () => new Set(activeView?.multisigKeys ?? []),
     [activeView]
   );
+  const scopedWorkspaceProposalMultisigs = useMemo(() => {
+    if (selectedRegistryKeys.length > 0) {
+      return workspaceMultisigs.filter(
+        (multisig) =>
+          multisig.provider !== "squads" &&
+          selectedRegistryKeySet.has(multisig.key)
+      );
+    }
+
+    if (activeViewKey.startsWith("chain:")) {
+      const chainLabel = activeViewKey.slice("chain:".length);
+      return workspaceMultisigs.filter(
+        (multisig) =>
+          multisig.provider !== "squads" && multisig.chainName === chainLabel
+      );
+    }
+
+    if (activeViewKey === "tag:none") {
+      return workspaceMultisigs.filter(
+        (multisig) =>
+          multisig.provider !== "squads" && multisig.tags.length === 0
+      );
+    }
+
+    if (activeViewKey.startsWith("tag:")) {
+      const tagLabel = activeViewKey.slice("tag:".length);
+      return workspaceMultisigs.filter(
+        (multisig) =>
+          multisig.provider !== "squads" && multisig.tags.includes(tagLabel)
+      );
+    }
+
+    return [];
+  }, [
+    activeViewKey,
+    selectedRegistryKeySet,
+    selectedRegistryKeys,
+    workspaceMultisigs,
+  ]);
+
+  useEffect(() => {
+    void loadWorkspaceProposals(scopedWorkspaceProposalMultisigs);
+  }, [loadWorkspaceProposals, scopedWorkspaceProposalMultisigs]);
 
   const scopedQueueItems = useMemo(() => {
     if (selectedRegistryKeys.length > 0) {
@@ -258,7 +297,7 @@ export function OperationsDashboard({
     onSuccess: async () => {
       await Promise.all([
         loadForAllMultisigs(multisigs),
-        loadWorkspaceProposals(workspaceMultisigs),
+        loadWorkspaceProposals(scopedWorkspaceProposalMultisigs),
       ]);
     },
   });
@@ -399,7 +438,7 @@ export function OperationsDashboard({
                   onClick={() =>
                     void Promise.all([
                       loadForAllMultisigs(multisigs),
-                      loadWorkspaceProposals(workspaceMultisigs),
+                      loadWorkspaceProposals(scopedWorkspaceProposalMultisigs),
                     ])
                   }
                   disabled={loading || workspaceLoading}
