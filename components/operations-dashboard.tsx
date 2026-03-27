@@ -82,7 +82,7 @@ export function OperationsDashboard({
   const searchParams = useSearchParams();
   const [searchText, setSearchText] = useState("");
 
-  const { publicKey, connected, getWalletAddressForProvider } =
+  const { publicKey, connected, evmConnected, getWalletAddressForProvider } =
     useWalletStore();
   const { multisigs, setProposals } = useMultisigStore();
   const { chains, proposals, workspaceMultisigs, availableMultisigKeys } =
@@ -221,6 +221,7 @@ export function OperationsDashboard({
     setDetailTab("overview");
   }, [focusedProposalKey, setDetailTab]);
 
+  const hasConnectedWallet = connected || evmConnected;
   const waitingOnYouCount = queueItems.filter(
     (item) => item.needsYourSignature
   ).length;
@@ -317,7 +318,7 @@ export function OperationsDashboard({
           <span className="text-sm text-zinc-100">No multisigs loaded.</span>
           <span className="hidden h-4 w-px bg-zinc-800 sm:block" />
           <span className="text-sm text-zinc-500">
-            {connected ? "Wallet connected" : "Wallet disconnected"}
+            {hasConnectedWallet ? "Wallet connected" : "Wallet disconnected"}
           </span>
           <div className="ml-auto">
             <RegistryManagementDialog />
@@ -347,12 +348,12 @@ export function OperationsDashboard({
               <span
                 className={cn(
                   "inline-flex items-center rounded-full border px-3 py-1 text-[0.72rem] font-medium tracking-[0.16em] uppercase",
-                  connected
+                  hasConnectedWallet
                     ? "border-lime-500/30 bg-lime-500/10 text-lime-200"
                     : "border-zinc-700 bg-zinc-900 text-zinc-300"
                 )}
               >
-                {connected ? "Signer ready" : "Wallet offline"}
+                {hasConnectedWallet ? "Signer ready" : "Wallet offline"}
               </span>
             </div>
             <p className="max-w-[54rem] text-sm leading-6 text-zinc-400">
