@@ -23,11 +23,17 @@ export const useChainStore = create<ChainStore>((set, get) => ({
   initializeChains: () => {
     const storedChains = chainStorage.getChains().map(normalizeChainConfig);
     const selectedId = chainStorage.getSelectedChainId();
+    const storedChainIds = new Set(storedChains.map((chain) => chain.id));
+    const missingDefaults = DEFAULT_CHAINS.filter(
+      (chain) => !storedChainIds.has(chain.id)
+    );
+    const chains =
+      storedChains.length > 0
+        ? [...storedChains, ...missingDefaults]
+        : DEFAULT_CHAINS;
 
-    const chains = storedChains.length > 0 ? storedChains : DEFAULT_CHAINS;
-
-    if (storedChains.length === 0) {
-      chainStorage.saveChains(DEFAULT_CHAINS);
+    if (storedChains.length === 0 || missingDefaults.length > 0) {
+      chainStorage.saveChains(chains);
     }
 
     const selectedChainId =
