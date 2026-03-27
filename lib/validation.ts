@@ -247,6 +247,10 @@ export function validatePublicKey(address: string): boolean {
   }
 }
 
+export function validateEvmAddress(address: string): boolean {
+  return /^0x[a-fA-F0-9]{40}$/.test(address.trim());
+}
+
 /**
  * Validate SOL amount
  */

@@ -15,7 +15,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useChainStore } from "@/stores/chain-store";
 import { useWalletStore } from "@/stores/wallet-store";
-import { getOperationalSquadsChains } from "@/types/chain";
+import {
+  getOperationalSquadsChains,
+  normalizeChainConfig,
+} from "@/types/chain";
 
 export function AddMultisigActions() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -24,6 +27,13 @@ export function AddMultisigActions() {
   const { chains } = useChainStore();
   const operationalChains = getOperationalSquadsChains(chains);
   const hasOperationalSquadsChains = operationalChains.length > 0;
+  const hasImportableChains = chains.some((chain) => {
+    const normalizedChain = normalizeChainConfig(chain);
+    return (
+      normalizedChain.multisigProvider === "safe" ||
+      operationalChains.some((item) => item.id === normalizedChain.id)
+    );
+  });
 
   const handleCreateClick = () => {
     if (!hasOperationalSquadsChains) {
@@ -42,7 +52,9 @@ export function AddMultisigActions() {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button disabled={!hasOperationalSquadsChains}>
+          <Button
+            disabled={!hasOperationalSquadsChains && !hasImportableChains}
+          >
             <Plus className="mr-2 h-4 w-4" />
             Add Multisig
             <ChevronDown className="ml-2 h-4 w-4" />
@@ -61,7 +73,7 @@ export function AddMultisigActions() {
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => setImportDialogOpen(true)}
-            disabled={!hasOperationalSquadsChains}
+            disabled={!hasImportableChains}
           >
             <FileDown className="mr-2 h-4 w-4" />
             Import Existing
