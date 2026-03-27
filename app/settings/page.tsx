@@ -40,7 +40,7 @@ const SECTION_COPY: Record<
     eyebrow: "Registry Management",
     title: "Multisig registry",
     description:
-      "Create, import, relabel, retag, and remove saved multisigs from one dedicated admin surface.",
+      "Create Squads multisigs, import existing Safe or Squads addresses, and keep saved workspaces organized from one admin surface.",
     icon: Boxes,
     accent: "text-lime-300",
   },

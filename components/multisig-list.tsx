@@ -40,6 +40,10 @@ interface MultisigListProps {
   embedded?: boolean;
 }
 
+function formatProviderLabel(provider: RegistrySummaryRow["multisigProvider"]) {
+  return provider === "safe" ? "Safe" : "Squads";
+}
+
 export function MultisigList({
   actions,
   statusText,
@@ -437,11 +441,24 @@ export function MultisigList({
                                 </Badge>
                                 <Badge
                                   variant="outline"
-                                  className="rounded-md border-zinc-700 bg-zinc-900 text-zinc-300"
+                                  className={cn(
+                                    "rounded-md",
+                                    row.multisigProvider === "safe"
+                                      ? "border-amber-500/30 bg-amber-500/10 text-amber-200"
+                                      : "border-zinc-700 bg-zinc-900 text-zinc-300"
+                                  )}
                                 >
                                   {row.vmFamily.toUpperCase()} /{" "}
-                                  {row.multisigProvider}
+                                  {formatProviderLabel(row.multisigProvider)}
                                 </Badge>
+                                {row.multisigProvider === "safe" ? (
+                                  <Badge
+                                    variant="outline"
+                                    className="rounded-md border-zinc-800 bg-zinc-950 text-zinc-400"
+                                  >
+                                    Read-only
+                                  </Badge>
+                                ) : null}
                                 {isActiveDesk ? (
                                   <Badge
                                     variant="outline"
@@ -708,12 +725,25 @@ export function MultisigList({
                     </div>
 
                     <div className="flex items-start">
-                      <Badge
-                        variant="outline"
-                        className="rounded-md border-zinc-800 bg-transparent text-zinc-300"
-                      >
-                        {row.chainName}
-                      </Badge>
+                      <div className="flex flex-wrap items-center gap-1">
+                        <Badge
+                          variant="outline"
+                          className="rounded-md border-zinc-800 bg-transparent text-zinc-300"
+                        >
+                          {row.chainName}
+                        </Badge>
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "rounded-md",
+                            row.multisigProvider === "safe"
+                              ? "border-amber-500/30 bg-amber-500/10 text-amber-200"
+                              : "border-zinc-800 bg-zinc-950 text-zinc-400"
+                          )}
+                        >
+                          {formatProviderLabel(row.multisigProvider)}
+                        </Badge>
+                      </div>
                     </div>
 
                     <div className="pt-1 text-sm font-medium text-zinc-100">
