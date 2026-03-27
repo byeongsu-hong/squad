@@ -1,244 +1,268 @@
-# Squad Multisig Manager
+# Squad Multisig Workspace
 
-A modern web application for managing Squads V4 multisig wallets across multiple SVM (Solana Virtual Machine) chains.
+Local-first multisig operations workspace for mixed-provider teams.
 
-## Features
+The app currently supports:
 
-### Core Functionality
+- `SVM / Squads` multisigs for full proposal operations
+- `EVM / Safe` multisigs for registry management, proposal review, and provider-aware actions
+- Dense operator workflows across `Operations`, `Proposals`, `Monitoring`, and `Settings`
 
-- 🔐 **Ledger Hardware Wallet Support** - Secure transaction signing with Ledger devices
-- 🌐 **Multi-Chain Support** - Manage multisigs across Solana, Soon, Eclipse, SonicSVM, Solaxy, and more
-- 📝 **Proposal Management** - Create, approve, reject, and execute multisig proposals
-- 📊 **Monitoring Dashboard** - View and manage proposals across all multisigs in a single table view
-- 🔍 **Transaction Details** - View detailed transaction data including instructions and account keys
-- ⚙️ **Custom RPC Configuration** - Configure custom RPC endpoints for each chain
-- 💾 **Local Storage** - All data stored locally in your browser
+Everything user-defined is stored in the browser. Chain definitions, registry entries, address labels, and YAML snapshots live in local storage unless you export them.
 
-### Performance & UX
+## What The App Does
 
-- ⚡ **Smart Caching** - Intelligent RPC response caching (30s TTL) to reduce network requests
-- 🔍 **Debounced Search** - Optimized search with 300ms debounce for smooth filtering
-- 📄 **Pagination** - Handle large proposal lists with 20 items per page
-- 💪 **Optimistic Updates** - Instant UI feedback during proposal actions
-- 🎨 **Loading Skeletons** - Beautiful loading states instead of spinners
-- 📈 **Proposal Statistics** - Real-time stats showing active, executed, and rejected proposals
+### Operations Workspace
 
-### Advanced Features
+- Registry explorer with chain, tag, and view-based grouping
+- Focused proposal review workspace
+- Queue filtering for `All`, `Waiting`, and `Executable`
+- Mixed-provider proposal rows with provider/runtime badges
+- Safe-aware loading states and unsupported-state handling
 
-- ✅ **Batch Operations** - Approve or reject multiple proposals at once
-- 🏷️ **Tagging System** - Organize multisigs with custom tags
-- 🏷️ **Address Labeling** - Label wallet addresses with custom names, descriptions, and colors
-- 📤 **CSV Export** - Export proposals and multisig data to CSV
-- 🎯 **Smart Filtering** - Filter by status (🟢 Active, ✅ Executed, ❌ Rejected, 🚫 Cancelled), chain, and tags
-- 🔄 **Transaction History** - View executed and cancelled proposals with default active filter
-- 📦 **Import/Export** - Backup and restore multisig configurations
-- 👥 **Member Management** - Propose changes to members and threshold via UI
-- ✈️ **Pre-flight Checks** - Transaction validation before execution
-- 👤 **User Highlighting** - See your address highlighted in transaction details
-- ⌨️ **Keyboard Shortcuts** - Quick access with Cmd+K for search, Shift+? for shortcuts
-- 🔎 **Quick Search** - Global search across multisigs and proposals
+### Proposal Review
+
+- Per-multisig proposal desk
+- Payload/detail review surface
+- Address labels and copyable address chips
+- Created-at timestamps and queue ordering
+- Keyboard-driven navigation and global search
+
+### Monitoring
+
+- Cross-multisig proposal table
+- Batch review and action flows
+- CSV export
+- Mixed-provider summaries with provider-aware gating
+
+### Settings
+
+- Chain configuration management
+- Multisig registry management
+- YAML export/import
+- Address label management
+- Provider adapter readiness for Safe infrastructure
+
+## Provider Support
+
+### Squads
+
+Current Squads support includes:
+
+- multisig import
+- proposal loading
+- approve / reject / execute
+- member and threshold change flows
+- proposal payload review
+
+### Safe
+
+Current Safe support includes:
+
+- Safe address import from raw address or `app.safe.global` URL
+- provider-aware registry rows and settings management
+- proposal loading through server-side routes
+- payload/detail review
+- proposal summary loading in explorer and operations queue
+- provider-aware confirm / execute flow
+
+Notes:
+
+- Safe reads are routed through Next.js server endpoints to avoid browser-side CORS problems.
+- Safe proposal availability still depends on external RPC and Safe transaction service health.
+
+## Key Product Behavior
+
+### Local-first storage
+
+The app stores the following locally:
+
+- chain definitions
+- multisig registry entries
+- address labels
+- wallet metadata used by the UI
+
+No hosted backend is required for basic usage.
+
+### YAML import/export
+
+YAML snapshots include chains, multisigs, and address labels.
+
+Import behavior:
+
+- existing items are preserved
+- new chains import before multisigs
+- duplicate multisigs are skipped
+- Safe multisigs restore through the Safe import API path
+- import progress is shown inline during restore
+
+### Safe infrastructure
+
+Safe-specific reads are proxied through app routes such as:
+
+- `/api/safe/import`
+- `/api/safe/count`
+- `/api/safe/transactions`
+- `/api/safe/transaction`
+- `/api/safe/payload`
+
+This keeps provider integration on the server boundary and avoids direct browser calls to RPC or transaction-service endpoints when that would fail due to network policy.
+
+## Routes
+
+- `/` landing and primary entry
+- `/operations` operations workspace
+- `/proposals` proposal review desk
+- `/monitoring` monitoring table
+- `/multisigs` multisig-focused workspace
+- `/settings` admin and registry configuration
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 18+ and pnpm
-- Ledger device (for signing transactions)
+- Node.js 18+
+- `pnpm`
+- A Solana wallet and/or browser-injected EVM wallet depending on the provider you operate
 
-### Installation
+### Install
 
 ```bash
-# Install dependencies
 pnpm install
-
-# Run development server
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to view the app.
+Open `http://localhost:3000`.
 
-### Build
+### Production build
 
 ```bash
-# Production build
 pnpm build
-
-# Start production server
 pnpm start
 ```
 
-## Usage
+## Common Workflows
 
-### 1. Connect Ledger
+### Add a Squads multisig
 
-Click "Connect Wallet" and connect your Ledger device with the Solana app installed.
+1. Open `Settings`
+2. Go to `Multisig registry`
+3. Choose the target Squads chain
+4. Import or create the multisig
 
-### 2. Create or Import Multisig
+### Add a Safe
 
-- **Create New**: Set up a new multisig with custom threshold and members
-- **Import Existing**: Import an existing multisig by address
+1. Open `Settings`
+2. Go to `Multisig registry`
+3. Choose a Safe-ready chain
+4. Paste a Safe address or a Safe app URL such as:
+   - `https://app.safe.global/home?safe=base:0x...`
+5. Save the imported multisig
 
-### 3. Manage Proposals
+### Review proposals
 
-#### Per-Multisig View
+1. Open `Operations`
+2. Select a multisig or grouped scope from the registry explorer
+3. Filter the queue if needed
+4. Inspect the proposal in the focus workspace
+5. Execute provider-supported actions from the action rail
 
-- Select a multisig from the sidebar to view its proposals
-- Approve, reject, or execute proposals inline
-- View threshold status and approval/rejection counts
-- **Sidebar Metrics**: See Members, Threshold, Active, and Executed counts in Alert badges
-- View your connected wallet highlighted with "You" badge
+### Export a workspace snapshot
 
-#### Monitoring Dashboard
-
-- View all proposals across all multisigs in a single table
-- **Batch Operations**: Select multiple proposals to approve/reject at once
-- **Smart Filtering**: Filter by status with emoji indicators (🟢 Active, ✅ Executed, ❌ Rejected, 🚫 Cancelled)
-- **Search**: Find proposals by multisig name or address with debounced search
-- **Pagination**: Navigate through large proposal lists (20 items per page)
-- **Statistics**: See real-time proposal counts and success rates
-- **Export**: Download proposal data to CSV for external analysis
-- **Pre-flight Checks**: Transactions are validated before execution
-- View detailed transaction data with your wallet highlighted
-
-### 4. Member Management
-
-- Open member management dialog from multisig options
-- Add new members by entering their Solana address
-- Remove existing members
-- Update the approval threshold
-- Preview changes before creating a configuration proposal
-
-### 5. Keyboard Shortcuts
-
-- `Cmd+K` (or `Ctrl+K`): Open quick search
-- `Shift+?`: View all keyboard shortcuts
-- Navigate search results with arrow keys
-- Press `Enter` to select
-
-### 6. Address Labeling
-
-Label wallet addresses for easier identification:
-
-- Click the Tag icon in the header to open the Address Label Manager
-- **Add Label**: Enter address, label name, optional description, and choose a color
-- **Search Labels**: Filter through saved labels
-- **Edit/Delete**: Manage existing labels from the list
-- **Quick Access**: Add labels directly from member lists and transaction details
-- **Visual Display**: Labeled addresses show colored badges with custom names
-
-### 7. Configure Chains
-
-Click the Settings icon to:
-
-- Edit RPC URLs
-- Add custom chains
-- Update program IDs
-- Reset to defaults
-
-## Performance Optimization
-
-### Smart Caching
-
-The app implements an intelligent caching layer to optimize RPC requests:
-
-- **Automatic Caching**: RPC responses are cached for 30 seconds by default
-- **Cache Invalidation**: Cache is automatically cleared when:
-  - Manual refresh is triggered
-  - Proposals are approved, rejected, or executed
-- **Pattern-Based Invalidation**: Supports invalidating related cache entries
-- **TTL Management**: Configurable time-to-live for different data types
-
-### UI/UX Optimizations
-
-- **Debounced Search**: Search inputs wait 300ms before filtering to reduce unnecessary re-renders
-- **Pagination**: Large lists are paginated (20 items/page) to maintain smooth scrolling
-- **Loading Skeletons**: Skeleton loaders provide visual feedback during data fetching
-- **Optimistic Updates**: UI updates immediately during actions, reverting only on error
-
-These optimizations reduce unnecessary RPC calls, provide instant feedback, and ensure smooth performance even with 100+ proposals.
-
-## Tech Stack
-
-- **Framework**: Next.js 16 (App Router)
-- **Styling**: Tailwind CSS + shadcn/ui
-- **State Management**: Zustand
-- **Blockchain**: @sqds/multisig, @solana/web3.js
-- **Hardware Wallet**: @ledgerhq/device-management-kit
-- **Testing**: Vitest + @testing-library/react
-- **Form Validation**: Zod + React Hook Form
-- **Icons**: Lucide React
-
-## Project Structure
-
-```
-squad/
-├── app/                    # Next.js app router pages
-│   ├── page.tsx           # Home page (multisig list)
-│   ├── monitoring/        # Monitoring dashboard
-│   └── proposals/         # Proposals page
-├── components/            # React components
-│   ├── ui/               # shadcn/ui components (Button, Card, Alert, Badge, etc.)
-│   ├── skeletons.tsx     # Loading skeleton components
-│   ├── monitoring-view.tsx              # Main monitoring dashboard
-│   ├── proposal-list.tsx                # Per-multisig proposal view
-│   ├── proposal-stats.tsx               # Proposal statistics cards
-│   ├── multisig-stats-card.tsx          # Alert/Badge based metrics
-│   ├── member-management-dialog.tsx     # Member & threshold management
-│   ├── address-label-manager-dialog.tsx # Address labeling UI
-│   ├── address-with-label.tsx           # Address display with labels
-│   ├── keyboard-shortcuts-dialog.tsx    # Shortcuts reference
-│   ├── quick-search-dialog.tsx          # Global search
-│   └── ...               # Feature components
-├── lib/                   # Utility functions
-│   ├── hooks/            # Custom React hooks
-│   │   ├── use-proposal-actions.ts    # Shared proposal actions
-│   │   ├── use-address-label.ts       # Address label hooks
-│   │   ├── use-debounce.ts            # Debounce hook
-│   │   ├── use-pagination.ts          # Pagination hook
-│   │   ├── use-local-storage.ts       # localStorage hook
-│   │   ├── use-clipboard.ts           # Clipboard operations
-│   │   └── use-keyboard-shortcuts.ts  # Keyboard shortcut manager
-│   ├── utils/            # Utility functions
-│   │   └── format-address.ts          # Address formatting utilities
-│   ├── squad.ts              # SquadService (blockchain interaction)
-│   ├── cache.ts              # Smart caching layer
-│   ├── config.ts             # Centralized configuration
-│   ├── export-csv.ts         # CSV export utilities
-│   ├── transaction-simulator.ts  # Pre-flight checks
-│   ├── storage.ts            # localStorage abstractions
-│   └── validation.ts         # Zod schemas & validators
-├── stores/               # Zustand stores
-│   ├── chain-store.ts         # Chain configuration
-│   ├── multisig-store.ts      # Multisig management
-│   ├── address-label-store.ts # Address label management
-│   └── wallet-store.ts        # Wallet state
-├── types/                # TypeScript types
-│   ├── multisig.ts       # Multisig & Proposal types
-│   ├── chain.ts          # Chain types
-│   ├── address-label.ts  # Address label types
-│   └── wallet.ts         # Wallet types
-└── __tests__/            # Test files (74 tests)
-    └── lib/              # Library tests
-        ├── hooks/        # Hook tests
-        ├── cache.test.ts
-        ├── address-label.test.ts
-        ├── format-address.test.ts
-        ├── export-csv.test.ts
-        └── validation.test.ts
-```
+1. Open `Settings`
+2. Go to `Export and import`
+3. Switch to `Export to YAML`
+4. Copy the generated YAML or store it externally
 
 ## Development
 
+### Scripts
+
 ```bash
-# Run tests
-pnpm test
-
-# Run linter
+pnpm dev
+pnpm build
+pnpm start
 pnpm lint
-
-# Format code
+pnpm test
 pnpm format
 ```
+
+### Validation
+
+Typical validation flow:
+
+```bash
+pnpm exec eslint .
+pnpm exec tsc --noEmit
+pnpm test
+pnpm build
+```
+
+## Tech Stack
+
+- Next.js 16 App Router
+- React 19
+- Tailwind CSS
+- shadcn/ui + Radix primitives
+- Zustand
+- `@sqds/multisig`
+- `@solana/web3.js`
+- `viem`
+- `@safe-global/api-kit`
+- `@safe-global/protocol-kit`
+- Vitest + Testing Library
+
+## Project Structure
+
+```text
+app/
+  layout.tsx
+  page.tsx
+  operations/page.tsx
+  proposals/page.tsx
+  monitoring/page.tsx
+  multisigs/page.tsx
+  settings/page.tsx
+
+components/
+  operations-dashboard.tsx
+  proposal-list.tsx
+  monitoring-view.tsx
+  multisig-list.tsx
+  export-import-dialog.tsx
+  chain-management-dialog.tsx
+  address-label-manager-dialog.tsx
+  provider-adapters-panel.tsx
+
+lib/
+  hooks/
+  workspace/
+  export-import.ts
+  safe.ts
+  squad.ts
+  storage.ts
+
+stores/
+  chain-store.ts
+  multisig-store.ts
+  wallet-store.ts
+  workspace-store.ts
+```
+
+## Operational Notes
+
+- The app ships without seeded demo multisigs.
+- Safe explorer rows preload proposal metadata and become actionable once provider data is ready.
+- Shared Safe addresses on different chains are keyed by chain plus address to avoid collisions.
+- External RPC and Safe transaction service instability can still degrade Safe loading, but the UI now surfaces those states explicitly.
+
+## Security
+
+Please report vulnerabilities through GitHub Security Advisories:
+
+- [Security Advisories](https://github.com/byeongsu-hong/squad/security/advisories/new)
+
+See [SECURITY.md](./SECURITY.md) for reporting policy.
 
 ## License
 
