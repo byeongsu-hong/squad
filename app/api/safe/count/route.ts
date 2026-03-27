@@ -24,14 +24,12 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ totalCount: response.count });
   } catch (error) {
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Failed to load Safe proposal summary.",
-      },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      totalCount: 0,
+      unavailableReason:
+        error instanceof Error
+          ? error.message
+          : "Failed to load Safe proposal summary.",
+    });
   }
 }

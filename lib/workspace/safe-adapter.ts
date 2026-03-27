@@ -121,10 +121,12 @@ export async function loadSafeWorkspaceProposalSummary({
 
   const payload = (await response.json()) as {
     totalCount?: number;
+    unavailableReason?: string;
   };
 
   return {
     totalCount: payload.totalCount ?? 0,
+    unavailableReason: payload.unavailableReason,
   };
 }
 

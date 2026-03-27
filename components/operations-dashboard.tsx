@@ -643,7 +643,8 @@ export function OperationsDashboard({
                                     item.multisig.provider === "safe"
                                       ? summaryLoading
                                         ? "Loading proposals..."
-                                        : summaryError
+                                        : proposalSummary?.unavailableReason ||
+                                            summaryError
                                           ? "Metadata unavailable"
                                           : proposalSummary
                                             ? `${proposalSummary.totalCount} proposal${proposalSummary.totalCount === 1 ? "" : "s"}`
@@ -652,7 +653,7 @@ export function OperationsDashboard({
 
                                   return (
                                     <button
-                                      key={multisigKey}
+                                      key={`${item.multisig.chainId}:${multisigKey}`}
                                       type="button"
                                       onClick={(event) =>
                                         handleRegistrySelect(multisigKey, event)
@@ -700,7 +701,8 @@ export function OperationsDashboard({
                                           <p className="font-mono text-[0.62rem] text-zinc-600 tabular-nums">
                                             {summaryLoading
                                               ? "..."
-                                              : summaryError
+                                              : proposalSummary?.unavailableReason ||
+                                                  summaryError
                                                 ? "error"
                                                 : proposalSummary
                                                   ? `${proposalSummary.totalCount} total`
@@ -795,6 +797,17 @@ export function OperationsDashboard({
                   <div className="flex items-center gap-2">
                     <Loader2 className="h-4 w-4 animate-spin" />
                     Loading Safe proposal summary...
+                  </div>
+                ) : primarySelectedRegistryItem?.multisig.provider === "safe" &&
+                  primarySelectedSummary?.unavailableReason ? (
+                  <div className="space-y-1">
+                    <p className="text-zinc-200">
+                      Safe metadata is temporarily unavailable for this
+                      multisig.
+                    </p>
+                    <p className="text-zinc-500">
+                      {primarySelectedSummary.unavailableReason}
+                    </p>
                   </div>
                 ) : primarySelectedRegistryItem?.multisig.provider === "safe" &&
                   primarySelectedSummaryError ? (
