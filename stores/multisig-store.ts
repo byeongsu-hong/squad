@@ -1,7 +1,12 @@
 import { create } from "zustand";
 
 import { multisigStorage } from "@/lib/storage";
-import type { MultisigAccount, ProposalAccount } from "@/types/multisig";
+import {
+  type MultisigAccount,
+  type ProposalAccount,
+  getMultisigAccountKey,
+  resolveMultisigSelectionKey,
+} from "@/types/multisig";
 
 interface MultisigStore {
   multisigs: MultisigAccount[];
@@ -45,7 +50,10 @@ export const useMultisigStore = create<MultisigStore>((set, get) => ({
 
   initializeMultisigs: () => {
     const storedMultisigs = multisigStorage.getMultisigs();
-    const selectedKey = multisigStorage.getSelectedMultisigKey();
+    const selectedKey = resolveMultisigSelectionKey(
+      storedMultisigs,
+      multisigStorage.getSelectedMultisigKey()
+    );
 
     set({
       multisigs: storedMultisigs,
@@ -80,9 +88,15 @@ export const useMultisigStore = create<MultisigStore>((set, get) => ({
             (chainId ? m.chainId === chainId : true)
           )
       );
+      const deletedSelectionKey = chainId
+        ? `${chainId}:${publicKey}`
+        : publicKey;
       const selectedMultisigKey =
+        state.selectedMultisigKey === deletedSelectionKey ||
         state.selectedMultisigKey === publicKey
-          ? multisigs[0]?.publicKey.toString() || null
+          ? multisigs[0]
+            ? getMultisigAccountKey(multisigs[0])
+            : null
           : state.selectedMultisigKey;
 
       if (selectedMultisigKey) {
@@ -133,20 +147,34 @@ export const useMultisigStore = create<MultisigStore>((set, get) => ({
       ),
     })),
 
-  selectMultisig: (publicKey) => {
-    if (publicKey) {
-      multisigStorage.setSelectedMultisigKey(publicKey);
+  selectMultisig: (selectionKey) => {
+    const resolvedSelectionKey = selectionKey
+      ? (resolveMultisigSelectionKey(get().multisigs, selectionKey) ??
+        selectionKey)
+      : null;
+
+    if (resolvedSelectionKey) {
+      multisigStorage.setSelectedMultisigKey(resolvedSelectionKey);
     }
-    set({ selectedMultisigKey: publicKey });
+    set({ selectedMultisigKey: resolvedSelectionKey });
   },
 
-  getMultisigByKey: (publicKey) => {
-    if (!publicKey) {
+  getMultisigByKey: (selectionKey) => {
+    if (!selectionKey) {
       return undefined;
     }
 
     const { multisigs } = get();
-    return multisigs.find((m) => m.publicKey.toString() === publicKey);
+    const resolvedSelectionKey = resolveMultisigSelectionKey(
+      multisigs,
+      selectionKey
+    );
+
+    return multisigs.find(
+      (multisig) =>
+        getMultisigAccountKey(multisig) === resolvedSelectionKey ||
+        multisig.publicKey.toString() === selectionKey
+    );
   },
 
   getSelectedMultisig: () => {

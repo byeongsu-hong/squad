@@ -32,7 +32,11 @@ import { useChainStore } from "@/stores/chain-store";
 import { useMultisigStore } from "@/stores/multisig-store";
 import { useWalletStore } from "@/stores/wallet-store";
 import { normalizeChainConfig } from "@/types/chain";
-import { type MultisigAccount, getMultisigAccountKey } from "@/types/multisig";
+import {
+  type MultisigAccount,
+  getMultisigAccountKey,
+  matchesMultisigSelectionKey,
+} from "@/types/multisig";
 
 interface MultisigListProps {
   actions?: React.ReactNode;
@@ -230,8 +234,8 @@ export function MultisigList({
     : "Connect a wallet to sync creator-owned Squads multisigs. Manual create and import stay available where supported.";
 
   const handleOpenDesk = (multisig: MultisigAccount) => {
-    const multisigKey = multisig.publicKey.toString();
-    const attention = attentionByMultisig[multisig.publicKey.toString()];
+    const multisigKey = getMultisigAccountKey(multisig);
+    const attention = attentionByMultisig[multisigKey];
     const filter = attention?.waiting
       ? "waiting"
       : attention?.executable
@@ -394,8 +398,10 @@ export function MultisigList({
               }
 
               const isSelected = selectedForDeletion.has(row.key);
-              const isActiveDesk =
-                selectedMultisigKey === multisig.publicKey.toString();
+              const isActiveDesk = matchesMultisigSelectionKey(
+                multisig,
+                selectedMultisigKey
+              );
 
               return (
                 <div
@@ -645,8 +651,10 @@ export function MultisigList({
                 }
 
                 const isSelected = selectedForDeletion.has(row.key);
-                const isActiveDesk =
-                  selectedMultisigKey === multisig.publicKey.toString();
+                const isActiveDesk = matchesMultisigSelectionKey(
+                  multisig,
+                  selectedMultisigKey
+                );
 
                 return (
                   <div

@@ -33,8 +33,8 @@ export function QuickSearchDialog({
     );
   });
 
-  const handleSelect = (multisigKey: string, multisigAddress: string) => {
-    selectMultisig(multisigAddress);
+  const handleSelect = (multisigKey: string) => {
+    selectMultisig(multisigKey);
     router.push(`/?multisig=${multisigKey}`);
     onOpenChange(false);
     setQuery("");
@@ -69,7 +69,7 @@ export function QuickSearchDialog({
         `${multisig.address.slice(0, 12)}...`,
         ...(multisig.tags.length > 0 ? [multisig.tags.join(", ")] : []),
       ].join(" • "),
-      onSelect: () => handleSelect(multisig.key, multisig.address),
+      onSelect: () => handleSelect(multisig.key),
     })),
   ];
 
@@ -192,9 +192,7 @@ export function QuickSearchDialog({
                     <button
                       id={`multisig-${multisig.key}`}
                       key={multisig.key}
-                      onClick={() =>
-                        handleSelect(multisig.key, multisig.address)
-                      }
+                      onClick={() => handleSelect(multisig.key)}
                       className={`flex min-h-11 w-full flex-col gap-1 rounded-lg px-3 py-2.5 text-left transition-colors ${
                         combinedResults[activeIndex]?.id ===
                         `multisig-${multisig.key}`

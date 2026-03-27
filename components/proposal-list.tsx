@@ -33,6 +33,7 @@ import { cn } from "@/lib/utils";
 import { useMultisigStore } from "@/stores/multisig-store";
 import { useWalletStore } from "@/stores/wallet-store";
 import { useWorkspaceStore } from "@/stores/workspace-store";
+import { getMultisigAccountKey } from "@/types/multisig";
 import type { WorkspaceQueueItem } from "@/types/workspace";
 
 import { TransactionDetailDialog } from "./transaction-detail-dialog";
@@ -310,10 +311,10 @@ export function ProposalList({
 
                 return (
                   <button
-                    key={multisig.publicKey.toString()}
+                    key={getMultisigAccountKey(multisig)}
                     type="button"
                     onClick={() =>
-                      selectMultisig(multisig.publicKey.toString())
+                      selectMultisig(getMultisigAccountKey(multisig))
                     }
                     className="min-w-[17rem] rounded-[1.15rem] border border-zinc-800 bg-zinc-950/80 px-4 py-4 text-left transition-colors hover:border-zinc-700 hover:bg-zinc-900"
                   >
@@ -421,16 +422,16 @@ export function ProposalList({
         <div className="flex min-w-max items-center gap-3 text-sm">
           {multisigs.map((multisig) => {
             const selected =
-              multisig.publicKey.toString() === selectedMultisigKey;
+              getMultisigAccountKey(multisig) === selectedMultisigKey;
             const chainName =
               chains.find((item) => item.id === multisig.chainId)?.name ??
               multisig.chainId;
 
             return (
               <button
-                key={multisig.publicKey.toString()}
+                key={getMultisigAccountKey(multisig)}
                 type="button"
-                onClick={() => selectMultisig(multisig.publicKey.toString())}
+                onClick={() => selectMultisig(getMultisigAccountKey(multisig))}
                 className={cn(
                   "text-left transition-colors",
                   selected

@@ -68,6 +68,45 @@ export function getMultisigAccountKey(
   return `${multisig.chainId}:${multisig.publicKey.toString()}`;
 }
 
+export function matchesMultisigSelectionKey(
+  multisig: Pick<MultisigAccount, "chainId" | "publicKey">,
+  selectionKey: string | null | undefined
+) {
+  if (!selectionKey) {
+    return false;
+  }
+
+  return (
+    getMultisigAccountKey(multisig) === selectionKey ||
+    multisig.publicKey.toString() === selectionKey
+  );
+}
+
+export function resolveMultisigSelectionKey(
+  multisigs: Pick<MultisigAccount, "chainId" | "publicKey">[],
+  selectionKey: string | null | undefined
+) {
+  if (!selectionKey) {
+    return null;
+  }
+
+  const exactMatch = multisigs.find(
+    (multisig) => getMultisigAccountKey(multisig) === selectionKey
+  );
+  if (exactMatch) {
+    return getMultisigAccountKey(exactMatch);
+  }
+
+  const legacyMatches = multisigs.filter(
+    (multisig) => multisig.publicKey.toString() === selectionKey
+  );
+  if (legacyMatches.length > 0) {
+    return getMultisigAccountKey(legacyMatches[0]!);
+  }
+
+  return null;
+}
+
 export type ProposalStatus =
   | "Active"
   | "Approved"

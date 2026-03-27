@@ -19,7 +19,11 @@ import {
 import { cn } from "@/lib/utils";
 import { useChainStore } from "@/stores/chain-store";
 import { useMultisigStore } from "@/stores/multisig-store";
-import type { MultisigAccount } from "@/types/multisig";
+import {
+  type MultisigAccount,
+  getMultisigAccountKey,
+  matchesMultisigSelectionKey,
+} from "@/types/multisig";
 
 interface MultisigSidebarProps {
   onRefresh?: () => void;
@@ -149,13 +153,15 @@ export function MultisigSidebar({ onRefresh, loading }: MultisigSidebarProps) {
           )}
 
           {filteredMultisigs.map((multisig) => {
-            const isSelected =
-              selectedMultisigKey === multisig.publicKey.toString();
+            const isSelected = matchesMultisigSelectionKey(
+              multisig,
+              selectedMultisigKey
+            );
 
             return (
               <div
-                key={multisig.publicKey.toString()}
-                onClick={() => selectMultisig(multisig.publicKey.toString())}
+                key={getMultisigAccountKey(multisig)}
+                onClick={() => selectMultisig(getMultisigAccountKey(multisig))}
                 className={cn(
                   "w-full cursor-pointer rounded-lg border p-3 text-left transition-colors",
                   isSelected
