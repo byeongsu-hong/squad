@@ -82,7 +82,8 @@ export function OperationsDashboard({
   const searchParams = useSearchParams();
   const [searchText, setSearchText] = useState("");
 
-  const { publicKey, connected } = useWalletStore();
+  const { publicKey, connected, getWalletAddressForProvider } =
+    useWalletStore();
   const { multisigs, setProposals } = useMultisigStore();
   const { chains, proposals, workspaceMultisigs, availableMultisigKeys } =
     useWorkspaceMultisigs();
@@ -144,6 +145,8 @@ export function OperationsDashboard({
     multisigs: workspaceMultisigs,
     viewerAddress: publicKey?.toString() ?? null,
     workspaceProposals,
+    getViewerAddressForMultisig: (multisig) =>
+      getWalletAddressForProvider(multisig.provider),
   });
   const {
     primarySelectedRegistryKey,
