@@ -6,6 +6,8 @@ import { safeWorkspaceAdapter } from "@/lib/workspace/safe-adapter";
 import { squadsWorkspaceAdapter } from "@/lib/workspace/squads-adapter";
 import type { WorkspaceProviderId } from "@/types/workspace";
 
+type ProposalActionKind = "approve" | "reject" | "execute";
+
 const adapters: Record<WorkspaceProviderId, WorkspaceProviderAdapter> = {
   squads: squadsWorkspaceAdapter,
   safe: safeWorkspaceAdapter,
@@ -31,4 +33,15 @@ export function supportsProviderCapability(
   capability: WorkspaceProviderCapability
 ) {
   return getWorkspaceProviderAdapter(provider).capabilities[capability];
+}
+
+export function supportsProviderAction(
+  provider: WorkspaceProviderId,
+  action: ProposalActionKind
+) {
+  if (provider === "safe") {
+    return action !== "reject";
+  }
+
+  return true;
 }

@@ -95,13 +95,9 @@ export const safeWorkspaceAdapter: WorkspaceProviderAdapter = {
     creatorSync: false,
     payload: true,
     proposalLoading: true,
-    proposalActions: false,
+    proposalActions: true,
   },
   getUnsupportedMessage(capability) {
-    if (capability === "proposalActions") {
-      return "Safe proposal actions are not implemented yet.";
-    }
-
     if (capability === "creatorSync") {
       return "Safe creator sync is not implemented yet.";
     }

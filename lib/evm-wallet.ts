@@ -2,7 +2,10 @@ import { getAddress, isAddress } from "viem";
 
 interface Eip1193Provider {
   isMetaMask?: boolean;
-  request(args: { method: string; params?: unknown[] }): Promise<unknown>;
+  request(args: {
+    method: string;
+    params?: readonly unknown[] | object;
+  }): Promise<unknown>;
   on?(event: string, listener: (...args: unknown[]) => void): void;
   removeListener?(event: string, listener: (...args: unknown[]) => void): void;
 }
@@ -51,6 +54,23 @@ export class EvmWalletService {
 
     const address = accounts[0];
     return address && isAddress(address) ? getAddress(address) : null;
+  }
+
+  async switchToChain(chainId: bigint) {
+    const provider = this.getProvider();
+
+    try {
+      await provider.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: `0x${chainId.toString(16)}` }],
+      });
+    } catch (error) {
+      throw new Error(
+        error instanceof Error
+          ? error.message
+          : "Failed to switch the EVM wallet to the required chain."
+      );
+    }
   }
 }
 

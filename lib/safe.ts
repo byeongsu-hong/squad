@@ -33,6 +33,14 @@ const SAFE_CHAIN_ALIAS_MAP = {
   arb1: ["arbitrum", "arb"],
 } as const;
 
+const SAFE_CHAIN_ID_MAP: Record<string, bigint> = {
+  eth: BigInt(1),
+  base: BigInt(8453),
+  oeth: BigInt(10),
+  bnb: BigInt(56),
+  arb1: BigInt(42161),
+} as const;
+
 export interface SafeServiceTransactionConfirmation {
   owner: string;
   signature?: string | null;
@@ -159,6 +167,11 @@ export function getSafeTransactionServiceBaseUrl(
   return `https://api.safe.global/tx-service/${alias}/api/v2`;
 }
 
+export function getSafeChainNumericId(chain: Pick<ChainConfig, "id" | "name">) {
+  const alias = getSafeChainAlias(chain.id, chain.name);
+  return alias ? (SAFE_CHAIN_ID_MAP[alias] ?? null) : null;
+}
+
 export async function fetchSafeTransactions(
   chain: Pick<ChainConfig, "id" | "name">,
   safeAddress: string,
@@ -188,11 +201,39 @@ export async function fetchSafeTransactions(
   return (await response.json()) as SafeTransactionsResponse;
 }
 
-export async function loadSafeWorkspacePayload(
+export async function fetchSafeTransactionByHash(
+  chain: Pick<ChainConfig, "id" | "name">,
+  safeTxHash: string
+) {
+  const baseUrl = getSafeTransactionServiceBaseUrl(chain);
+  if (!baseUrl) {
+    throw new Error(
+      `No Safe transaction service is configured for ${chain.name}.`
+    );
+  }
+
+  const response = await fetch(
+    `${baseUrl}/multisig-transactions/${safeTxHash}/`,
+    {
+      headers: {
+        accept: "application/json",
+      },
+      cache: "no-store",
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Safe transaction service returned ${response.status}.`);
+  }
+
+  return (await response.json()) as SafeServiceMultisigTransaction;
+}
+
+export async function fetchSafeTransactionByNonce(
   chain: Pick<ChainConfig, "id" | "name">,
   safeAddress: string,
   nonce: bigint
-): Promise<WorkspacePayload> {
+) {
   const response = await fetchSafeTransactions(chain, safeAddress, 100);
   const transaction = response.results.find(
     (item) =>
@@ -201,9 +242,23 @@ export async function loadSafeWorkspacePayload(
 
   if (!transaction) {
     throw new Error(
-      `Safe transaction payload for nonce ${nonce.toString()} is not available.`
+      `Safe transaction for nonce ${nonce.toString()} is not available.`
     );
   }
+
+  return transaction;
+}
+
+export async function loadSafeWorkspacePayload(
+  chain: Pick<ChainConfig, "id" | "name">,
+  safeAddress: string,
+  nonce: bigint
+): Promise<WorkspacePayload> {
+  const transaction = await fetchSafeTransactionByNonce(
+    chain,
+    safeAddress,
+    nonce
+  );
 
   return {
     type: "safe",
