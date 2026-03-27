@@ -1,129 +1,134 @@
 # Squad Multisig Workspace
 
-Local-first multisig operations workspace for mixed-provider teams.
+<p align="center">
+  Local-first multisig operations workspace for teams running across
+  <strong>Squads on SVM</strong> and <strong>Safe on EVM</strong>.
+</p>
 
-The app currently supports:
+<p align="center">
+  Review proposals, manage registries, inspect payloads, export portable YAML snapshots,
+  and operate mixed-provider multisig fleets from a single operator surface.
+</p>
 
-- `SVM / Squads` multisigs for full proposal operations
-- `EVM / Safe` multisigs for registry management, proposal review, and provider-aware actions
-- Dense operator workflows across `Operations`, `Proposals`, `Monitoring`, and `Settings`
+<p align="center">
+  <img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-111111?style=flat-square" />
+  <img alt="React" src="https://img.shields.io/badge/React-19-149ECA?style=flat-square" />
+  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square" />
+  <img alt="Providers" src="https://img.shields.io/badge/Providers-Squads%20%7C%20Safe-CB6D51?style=flat-square" />
+  <img alt="Storage" src="https://img.shields.io/badge/Storage-Local--first-5A6B4D?style=flat-square" />
+  <img alt="License" src="https://img.shields.io/badge/License-MIT-6E56CF?style=flat-square" />
+</p>
 
-Everything user-defined is stored in the browser. Chain definitions, registry entries, address labels, and YAML snapshots live in local storage unless you export them.
+---
 
-## What The App Does
+## Why This Exists
 
-### Operations Workspace
+Most multisig tools optimize for a single provider and a single workspace shape. This project is built for operators who need:
 
-- Registry explorer with chain, tag, and view-based grouping
-- Focused proposal review workspace
-- Queue filtering for `All`, `Waiting`, and `Executable`
-- Mixed-provider proposal rows with provider/runtime badges
-- Safe-aware loading states and unsupported-state handling
+- one registry for many multisigs
+- one queue for many proposal streams
+- one review surface for payloads and signer context
+- one settings area for chains, adapters, imports, labels, and registry state
 
-### Proposal Review
+The result is a dense operations app rather than a marketing dashboard.
 
-- Per-multisig proposal desk
-- Payload/detail review surface
-- Address labels and copyable address chips
+## Highlights
+
+### Unified operator workflow
+
+- Registry explorer with chain, tag, and smart view grouping
+- Proposal queue with focus workspace
+- Cross-multisig monitoring table
+- Quick search and keyboard-driven navigation
+
+### Mixed-provider support
+
+- `SVM / Squads` for full multisig proposal operations
+- `EVM / Safe` for provider-aware registry, review, payload, and action flows
+- Shared provider/runtime badges across explorer, queue, monitoring, and detail views
+
+### Local-first configuration
+
+- Chains, multisigs, address labels, and UI metadata live in browser storage
+- YAML export/import for portable workspace snapshots
+- No hosted app backend required for normal operation
+
+### Operator-grade review
+
+- Payload inspection and proposal detail views
+- Address labels and copy-first address chips
 - Created-at timestamps and queue ordering
-- Keyboard-driven navigation and global search
+- Provider-aware loading, empty, and degraded states
 
-### Monitoring
+## Current Provider Support
 
-- Cross-multisig proposal table
-- Batch review and action flows
+| Provider | Status | Capabilities                                                                                                           |
+| -------- | ------ | ---------------------------------------------------------------------------------------------------------------------- |
+| Squads   | Full   | Import, proposal loading, approve, reject, execute, member changes, threshold changes, payload review                  |
+| Safe     | Active | Import, server-routed reads, payload review, summary loading, confirm, execute, provider-aware settings and monitoring |
+
+### Safe Notes
+
+- Safe reads go through Next.js server routes to avoid browser-side CORS and gateway restrictions.
+- Safe availability still depends on external RPC and Safe transaction service health.
+- The UI surfaces unavailable or delayed metadata instead of silently failing.
+
+## Product Surfaces
+
+### `Operations`
+
+The primary operations workspace:
+
+- registry explorer
+- grouped multisig scopes
+- queue filters for `All`, `Waiting`, and `Executable`
+- focus workspace for proposal review and actioning
+
+### `Proposals`
+
+A proposal-centric review desk:
+
+- per-multisig proposal list
+- payload-focused review
+- approval context and created-at visibility
+
+### `Monitoring`
+
+Cross-multisig oversight:
+
+- mixed-provider proposal table
+- batch review workflows
 - CSV export
-- Mixed-provider summaries with provider-aware gating
+- provider-aware unsupported handling
 
-### Settings
+### `Settings`
 
-- Chain configuration management
-- Multisig registry management
-- YAML export/import
-- Address label management
-- Provider adapter readiness for Safe infrastructure
+Admin surface for:
 
-## Provider Support
-
-### Squads
-
-Current Squads support includes:
-
-- multisig import
-- proposal loading
-- approve / reject / execute
-- member and threshold change flows
-- proposal payload review
-
-### Safe
-
-Current Safe support includes:
-
-- Safe address import from raw address or `app.safe.global` URL
-- provider-aware registry rows and settings management
-- proposal loading through server-side routes
-- payload/detail review
-- proposal summary loading in explorer and operations queue
-- provider-aware confirm / execute flow
-
-Notes:
-
-- Safe reads are routed through Next.js server endpoints to avoid browser-side CORS problems.
-- Safe proposal availability still depends on external RPC and Safe transaction service health.
-
-## Key Product Behavior
-
-### Local-first storage
-
-The app stores the following locally:
-
-- chain definitions
-- multisig registry entries
+- chain configuration
+- multisig registry management
+- YAML import/export
 - address labels
-- wallet metadata used by the UI
-
-No hosted backend is required for basic usage.
-
-### YAML import/export
-
-YAML snapshots include chains, multisigs, and address labels.
-
-Import behavior:
-
-- existing items are preserved
-- new chains import before multisigs
-- duplicate multisigs are skipped
-- Safe multisigs restore through the Safe import API path
-- import progress is shown inline during restore
-
-### Safe infrastructure
-
-Safe-specific reads are proxied through app routes such as:
-
-- `/api/safe/import`
-- `/api/safe/count`
-- `/api/safe/transactions`
-- `/api/safe/transaction`
-- `/api/safe/payload`
-
-This keeps provider integration on the server boundary and avoids direct browser calls to RPC or transaction-service endpoints when that would fail due to network policy.
+- adapter readiness
 
 ## Routes
 
-- `/` landing and primary entry
-- `/operations` operations workspace
-- `/proposals` proposal review desk
-- `/monitoring` monitoring table
-- `/multisigs` multisig-focused workspace
-- `/settings` admin and registry configuration
+| Route         | Purpose                           |
+| ------------- | --------------------------------- |
+| `/`           | Landing and primary entry         |
+| `/operations` | Main operator workspace           |
+| `/proposals`  | Proposal review desk              |
+| `/monitoring` | Monitoring table                  |
+| `/multisigs`  | Multisig-focused registry view    |
+| `/settings`   | Admin and configuration workspace |
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js `18+`
 - `pnpm`
-- A Solana wallet and/or browser-injected EVM wallet depending on the provider you operate
+- A Solana wallet and/or injected EVM wallet depending on the provider you operate
 
 ### Install
 
@@ -134,45 +139,127 @@ pnpm dev
 
 Open `http://localhost:3000`.
 
-### Production build
+### Build
 
 ```bash
 pnpm build
 pnpm start
 ```
 
-## Common Workflows
+## Quick Start
 
 ### Add a Squads multisig
 
 1. Open `Settings`
 2. Go to `Multisig registry`
-3. Choose the target Squads chain
+3. Select a Squads-capable chain
 4. Import or create the multisig
 
 ### Add a Safe
 
 1. Open `Settings`
 2. Go to `Multisig registry`
-3. Choose a Safe-ready chain
-4. Paste a Safe address or a Safe app URL such as:
-   - `https://app.safe.global/home?safe=base:0x...`
-5. Save the imported multisig
+3. Select a Safe-ready chain
+4. Paste either a raw Safe address or a Safe app URL
 
-### Review proposals
+Example:
 
-1. Open `Operations`
-2. Select a multisig or grouped scope from the registry explorer
-3. Filter the queue if needed
-4. Inspect the proposal in the focus workspace
-5. Execute provider-supported actions from the action rail
+```text
+https://app.safe.global/home?safe=base:0x...
+```
 
 ### Export a workspace snapshot
 
 1. Open `Settings`
 2. Go to `Export and import`
 3. Switch to `Export to YAML`
-4. Copy the generated YAML or store it externally
+4. Copy the generated document
+
+### Import a workspace snapshot
+
+1. Open `Settings`
+2. Go to `Export and import`
+3. Switch to `Import from YAML`
+4. Paste the snapshot
+5. Follow the inline import progress state while chains, multisigs, and labels are restored
+
+## YAML Import / Export
+
+Snapshots include:
+
+- chains
+- multisigs
+- address labels
+
+Import behavior:
+
+- existing items are preserved
+- new chains import before multisigs
+- duplicate multisigs are skipped
+- Safe multisigs restore through the Safe import path
+- progress is shown inline during import
+
+## Safe Server Routes
+
+Safe-specific reads are proxied through app routes:
+
+- `/api/safe/import`
+- `/api/safe/count`
+- `/api/safe/transactions`
+- `/api/safe/transaction`
+- `/api/safe/payload`
+
+This keeps browser-side provider logic smaller and avoids direct reads against endpoints that may reject cross-origin traffic.
+
+## Architecture
+
+```text
+app/
+  operations/
+  proposals/
+  monitoring/
+  multisigs/
+  settings/
+
+components/
+  operations-dashboard.tsx
+  proposal-list.tsx
+  monitoring-view.tsx
+  multisig-list.tsx
+  export-import-dialog.tsx
+  chain-management-dialog.tsx
+  address-label-manager-dialog.tsx
+  provider-adapters-panel.tsx
+
+lib/
+  workspace/
+  hooks/
+  export-import.ts
+  safe.ts
+  squad.ts
+  storage.ts
+
+stores/
+  chain-store.ts
+  multisig-store.ts
+  wallet-store.ts
+  workspace-store.ts
+```
+
+## Tech Stack
+
+- Next.js 16 App Router
+- React 19
+- TypeScript
+- Tailwind CSS
+- shadcn/ui + Radix primitives
+- Zustand
+- `@sqds/multisig`
+- `@solana/web3.js`
+- `viem`
+- `@safe-global/api-kit`
+- `@safe-global/protocol-kit`
+- Vitest + Testing Library
 
 ## Development
 
@@ -189,8 +276,6 @@ pnpm format
 
 ### Validation
 
-Typical validation flow:
-
 ```bash
 pnpm exec eslint .
 pnpm exec tsc --noEmit
@@ -198,63 +283,12 @@ pnpm test
 pnpm build
 ```
 
-## Tech Stack
-
-- Next.js 16 App Router
-- React 19
-- Tailwind CSS
-- shadcn/ui + Radix primitives
-- Zustand
-- `@sqds/multisig`
-- `@solana/web3.js`
-- `viem`
-- `@safe-global/api-kit`
-- `@safe-global/protocol-kit`
-- Vitest + Testing Library
-
-## Project Structure
-
-```text
-app/
-  layout.tsx
-  page.tsx
-  operations/page.tsx
-  proposals/page.tsx
-  monitoring/page.tsx
-  multisigs/page.tsx
-  settings/page.tsx
-
-components/
-  operations-dashboard.tsx
-  proposal-list.tsx
-  monitoring-view.tsx
-  multisig-list.tsx
-  export-import-dialog.tsx
-  chain-management-dialog.tsx
-  address-label-manager-dialog.tsx
-  provider-adapters-panel.tsx
-
-lib/
-  hooks/
-  workspace/
-  export-import.ts
-  safe.ts
-  squad.ts
-  storage.ts
-
-stores/
-  chain-store.ts
-  multisig-store.ts
-  wallet-store.ts
-  workspace-store.ts
-```
-
 ## Operational Notes
 
 - The app ships without seeded demo multisigs.
-- Safe explorer rows preload proposal metadata and become actionable once provider data is ready.
-- Shared Safe addresses on different chains are keyed by chain plus address to avoid collisions.
-- External RPC and Safe transaction service instability can still degrade Safe loading, but the UI now surfaces those states explicitly.
+- Shared Safe addresses on different chains are keyed by `chain + address` to avoid identity collisions.
+- Safe explorer rows preload provider metadata and unlock once the proposal stream is ready.
+- External RPC or Safe transaction-service instability can still degrade Safe reads, but those states are surfaced in the UI.
 
 ## Security
 
