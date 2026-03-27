@@ -26,10 +26,10 @@ import { useFocusedQueue } from "@/lib/hooks/use-focused-queue";
 import { useOperationsRegistry } from "@/lib/hooks/use-operations-registry";
 import { useOperationsSelection } from "@/lib/hooks/use-operations-selection";
 import { useProposalActions } from "@/lib/hooks/use-proposal-actions";
-import { useSafeProposalLoader } from "@/lib/hooks/use-safe-proposal-loader";
 import { useSquadsProposalLoader } from "@/lib/hooks/use-squads-proposal-loader";
 import { useWorkspaceMultisigs } from "@/lib/hooks/use-workspace-multisigs";
 import { useWorkspacePayload } from "@/lib/hooks/use-workspace-payload";
+import { useWorkspaceProposalLoader } from "@/lib/hooks/use-workspace-proposal-loader";
 import { useOperationsWorkspaceQuerySync } from "@/lib/hooks/use-workspace-query-sync";
 import { useWorkspaceQueue } from "@/lib/hooks/use-workspace-queue";
 import { cn } from "@/lib/utils";
@@ -107,11 +107,12 @@ export function OperationsDashboard({
     errorMessage: "Failed to load dashboard",
   });
   const {
-    loading: safeLoading,
-    proposals: safeProposals,
-    loadForAllMultisigs: loadSafeProposals,
-  } = useSafeProposalLoader({
+    loading: workspaceLoading,
+    proposals: workspaceProposals,
+    loadForAllMultisigs: loadWorkspaceProposals,
+  } = useWorkspaceProposalLoader({
     chains,
+    errorMessage: "Failed to load workspace proposals",
   });
 
   useEffect(() => {
@@ -119,8 +120,8 @@ export function OperationsDashboard({
   }, [loadForAllMultisigs, multisigs]);
 
   useEffect(() => {
-    void loadSafeProposals(workspaceMultisigs);
-  }, [loadSafeProposals, workspaceMultisigs]);
+    void loadWorkspaceProposals(workspaceMultisigs);
+  }, [loadWorkspaceProposals, workspaceMultisigs]);
 
   useOperationsWorkspaceQuerySync({
     searchParams,
@@ -141,7 +142,7 @@ export function OperationsDashboard({
     proposals,
     multisigs: workspaceMultisigs,
     viewerAddress: publicKey?.toString() ?? null,
-    workspaceProposals: safeProposals,
+    workspaceProposals,
   });
   const {
     primarySelectedRegistryKey,
@@ -233,7 +234,7 @@ export function OperationsDashboard({
     onSuccess: async () => {
       await Promise.all([
         loadForAllMultisigs(multisigs),
-        loadSafeProposals(workspaceMultisigs),
+        loadWorkspaceProposals(workspaceMultisigs),
       ]);
     },
   });
@@ -374,15 +375,15 @@ export function OperationsDashboard({
                   onClick={() =>
                     void Promise.all([
                       loadForAllMultisigs(multisigs),
-                      loadSafeProposals(workspaceMultisigs),
+                      loadWorkspaceProposals(workspaceMultisigs),
                     ])
                   }
-                  disabled={loading || safeLoading}
+                  disabled={loading || workspaceLoading}
                   className="rounded-md border border-zinc-800 bg-zinc-950 text-zinc-200 hover:bg-zinc-900"
                   aria-label="Refresh dashboard proposals"
                   title="Refresh dashboard proposals"
                 >
-                  {loading || safeLoading ? (
+                  {loading || workspaceLoading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
                     <RefreshCw className="h-4 w-4" />
@@ -611,7 +612,7 @@ export function OperationsDashboard({
               </div>
             </div>
 
-            {loading || safeLoading ? (
+            {loading || workspaceLoading ? (
               <ProposalCardSkeletonList />
             ) : filteredQueueItems.length === 0 ? (
               <div className="border border-dashed border-zinc-800 px-4 py-5 text-sm text-zinc-400">
