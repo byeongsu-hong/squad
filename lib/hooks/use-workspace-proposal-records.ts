@@ -8,7 +8,6 @@ export interface WorkspaceProposalRecord {
   key: string;
   multisig: WorkspaceMultisig;
   proposal: WorkspaceProposal;
-  rawProposal: ProposalAccount;
 }
 
 interface UseWorkspaceProposalRecordsOptions {
@@ -41,7 +40,6 @@ export function buildWorkspaceProposalRecords(
         key: `${proposal.multisigKey}-${proposal.transactionIndex.toString()}`,
         multisig,
         proposal,
-        rawProposal,
       } satisfies WorkspaceProposalRecord;
     })
     .filter((record): record is WorkspaceProposalRecord => record !== null);

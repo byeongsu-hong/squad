@@ -191,22 +191,6 @@ export function useMonitoringProposals({
                 multisig: workspaceMultisig,
                 rawMultisig: multisig,
                 proposal,
-                rawProposal: {
-                  multisig: new PublicKey(proposal.multisigKey),
-                  transactionIndex: proposal.transactionIndex,
-                  creator: proposal.creator
-                    ? new PublicKey(proposal.creator)
-                    : undefined,
-                  status: proposal.status,
-                  approvals: proposal.approvals.map(
-                    (item) => new PublicKey(item)
-                  ),
-                  rejections: proposal.rejections.map(
-                    (item) => new PublicKey(item)
-                  ),
-                  cancelled: proposal.cancelled,
-                  executed: proposal.executed,
-                },
                 ...(transactionSummary ? { transactionSummary } : {}),
               } satisfies MonitoringProposal;
             })
