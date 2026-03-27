@@ -26,6 +26,7 @@ import { useFocusedQueue } from "@/lib/hooks/use-focused-queue";
 import { useOperationsRegistry } from "@/lib/hooks/use-operations-registry";
 import { useOperationsSelection } from "@/lib/hooks/use-operations-selection";
 import { useProposalActions } from "@/lib/hooks/use-proposal-actions";
+import { useSafeProposalLoader } from "@/lib/hooks/use-safe-proposal-loader";
 import { useSquadsProposalLoader } from "@/lib/hooks/use-squads-proposal-loader";
 import { useWorkspaceMultisigs } from "@/lib/hooks/use-workspace-multisigs";
 import { useWorkspacePayload } from "@/lib/hooks/use-workspace-payload";
@@ -101,10 +102,21 @@ export function OperationsDashboard({
     setProposals,
     errorMessage: "Failed to load dashboard",
   });
+  const {
+    loading: safeLoading,
+    proposals: safeProposals,
+    loadForAllMultisigs: loadSafeProposals,
+  } = useSafeProposalLoader({
+    chains,
+  });
 
   useEffect(() => {
     void loadForAllMultisigs(multisigs);
   }, [loadForAllMultisigs, multisigs]);
+
+  useEffect(() => {
+    void loadSafeProposals(workspaceMultisigs);
+  }, [loadSafeProposals, workspaceMultisigs]);
 
   useOperationsWorkspaceQuerySync({
     searchParams,
@@ -125,6 +137,7 @@ export function OperationsDashboard({
     proposals,
     multisigs: workspaceMultisigs,
     viewerAddress: publicKey?.toString() ?? null,
+    workspaceProposals: safeProposals,
   });
   const {
     primarySelectedRegistryKey,
@@ -205,6 +218,7 @@ export function OperationsDashboard({
   const executableCount = queueItems.filter(
     (item) => item.readyToExecute
   ).length;
+  const actionsSupported = focusedItem?.multisig.provider === "squads";
   const {
     approveByAddress,
     rejectByAddress,
@@ -212,7 +226,12 @@ export function OperationsDashboard({
     isActionLoading,
     isActionInProgress,
   } = useProposalActions({
-    onSuccess: () => loadForAllMultisigs(multisigs),
+    onSuccess: async () => {
+      await Promise.all([
+        loadForAllMultisigs(multisigs),
+        loadSafeProposals(workspaceMultisigs),
+      ]);
+    },
   });
 
   const isApproveLoading = Boolean(
@@ -348,13 +367,18 @@ export function OperationsDashboard({
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => void loadForAllMultisigs(multisigs)}
-                  disabled={loading}
+                  onClick={() =>
+                    void Promise.all([
+                      loadForAllMultisigs(multisigs),
+                      loadSafeProposals(workspaceMultisigs),
+                    ])
+                  }
+                  disabled={loading || safeLoading}
                   className="rounded-md border border-zinc-800 bg-zinc-950 text-zinc-200 hover:bg-zinc-900"
                   aria-label="Refresh dashboard proposals"
                   title="Refresh dashboard proposals"
                 >
-                  {loading ? (
+                  {loading || safeLoading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
                     <RefreshCw className="h-4 w-4" />
@@ -583,7 +607,7 @@ export function OperationsDashboard({
               </div>
             </div>
 
-            {loading ? (
+            {loading || safeLoading ? (
               <ProposalCardSkeletonList />
             ) : filteredQueueItems.length === 0 ? (
               <div className="border border-dashed border-zinc-800 px-4 py-5 text-sm text-zinc-400">
@@ -928,54 +952,65 @@ export function OperationsDashboard({
                       <p className="text-[0.68rem] tracking-[0.18em] text-zinc-500 uppercase">
                         Actions
                       </p>
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        <Button
-                          className="rounded-md bg-lime-300 text-zinc-950 hover:bg-lime-200"
-                          onClick={handleApprove}
-                          disabled={
-                            !focusedItem.needsYourSignature ||
-                            isActionInProgress
-                          }
-                        >
-                          {isApproveLoading ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Check className="h-4 w-4" />
-                          )}
-                          Approve
-                        </Button>
-                        <Button
-                          variant="outline"
-                          className="rounded-md border-zinc-800 bg-transparent text-zinc-200 hover:bg-zinc-900"
-                          onClick={handleReject}
-                          disabled={
-                            !focusedItem.needsYourSignature ||
-                            isActionInProgress
-                          }
-                        >
-                          {isRejectLoading ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <X className="h-4 w-4" />
-                          )}
-                          Reject
-                        </Button>
-                        <Button
-                          variant="outline"
-                          className="rounded-md border-zinc-800 bg-zinc-100 text-zinc-950 hover:bg-zinc-200"
-                          onClick={handleExecute}
-                          disabled={
-                            !focusedItem.readyToExecute || isActionInProgress
-                          }
-                        >
-                          {isExecuteLoading ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <ArrowRight className="h-4 w-4" />
-                          )}
-                          Execute
-                        </Button>
-                      </div>
+                      {actionsSupported ? (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <Button
+                            className="rounded-md bg-lime-300 text-zinc-950 hover:bg-lime-200"
+                            onClick={handleApprove}
+                            disabled={
+                              !focusedItem.needsYourSignature ||
+                              isActionInProgress
+                            }
+                          >
+                            {isApproveLoading ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Check className="h-4 w-4" />
+                            )}
+                            Approve
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="rounded-md border-zinc-800 bg-transparent text-zinc-200 hover:bg-zinc-900"
+                            onClick={handleReject}
+                            disabled={
+                              !focusedItem.needsYourSignature ||
+                              isActionInProgress
+                            }
+                          >
+                            {isRejectLoading ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <X className="h-4 w-4" />
+                            )}
+                            Reject
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="rounded-md border-zinc-800 bg-zinc-100 text-zinc-950 hover:bg-zinc-200"
+                            onClick={handleExecute}
+                            disabled={
+                              !focusedItem.readyToExecute || isActionInProgress
+                            }
+                          >
+                            {isExecuteLoading ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <ArrowRight className="h-4 w-4" />
+                            )}
+                            Execute
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="mt-3">
+                          <Badge
+                            variant="outline"
+                            className="border-zinc-800 bg-zinc-950 text-zinc-400"
+                          >
+                            Read-only via Safe transaction service
+                          </Badge>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
