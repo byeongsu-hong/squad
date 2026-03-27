@@ -20,6 +20,14 @@ const SAFE_ABI = [
   },
 ] as const;
 
+const SAFE_CHAIN_ALIAS_MAP = {
+  eth: ["ethereum", "eth"],
+  base: ["base"],
+  oeth: ["optimism", "op", "oeth"],
+  bnb: ["bnb", "bsc"],
+  arb1: ["arbitrum", "arb"],
+} as const;
+
 export function validateEvmAddress(address: string) {
   return isAddress(address);
 }
@@ -43,6 +51,48 @@ export function parseSafeAddressInput(input: string) {
   } catch {
     return null;
   }
+}
+
+export function parseSafeReference(input: string) {
+  const trimmed = input.trim();
+
+  try {
+    const url = new URL(trimmed);
+    const safeParam = url.searchParams.get("safe");
+    if (!safeParam) {
+      return null;
+    }
+
+    const [chainAlias, address] = safeParam.split(":");
+    const normalizedAddress =
+      address && isAddress(address) ? getAddress(address) : null;
+
+    if (!chainAlias || !normalizedAddress) {
+      return null;
+    }
+
+    return {
+      chainAlias,
+      address: normalizedAddress,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export function matchesSafeChainAlias(
+  chainId: string,
+  chainName: string,
+  alias: string
+) {
+  const needles =
+    SAFE_CHAIN_ALIAS_MAP[alias as keyof typeof SAFE_CHAIN_ALIAS_MAP];
+  if (!needles) {
+    return false;
+  }
+
+  const haystack = `${chainId} ${chainName}`.toLowerCase();
+  return needles.some((needle) => haystack.includes(needle));
 }
 
 export async function loadSafeMultisig(

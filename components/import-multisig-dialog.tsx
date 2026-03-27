@@ -35,7 +35,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { RPC_ERROR_PATTERNS, getErrorMessage } from "@/lib/error-handler";
-import { loadSafeMultisig } from "@/lib/safe";
+import {
+  loadSafeMultisig,
+  matchesSafeChainAlias,
+  parseSafeReference,
+} from "@/lib/safe";
 import { SquadService } from "@/lib/squad";
 import { chainIdSchema, labelSchema } from "@/lib/validation";
 import { useChainStore } from "@/stores/chain-store";
@@ -85,6 +89,27 @@ export function ImportMultisigDialog({
       label: "",
     },
   });
+  const selectedChainId = form.watch("chainId");
+
+  const handleAddressInputChange = (value: string) => {
+    form.setValue("multisigAddress", value, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+
+    const safeReference = parseSafeReference(value);
+    if (!safeReference) {
+      return;
+    }
+
+    const matchedChain = importableChains.find((chain) =>
+      matchesSafeChainAlias(chain.id, chain.name, safeReference.chainAlias)
+    );
+
+    if (matchedChain && matchedChain.id !== selectedChainId) {
+      form.setValue("chainId", matchedChain.id, { shouldDirty: true });
+    }
+  };
 
   const handleSubmit = form.handleSubmit(async (data) => {
     const chain = importableChains.find((c) => c.id === data.chainId);
@@ -239,6 +264,9 @@ export function ImportMultisigDialog({
                       placeholder="Enter multisig address or Safe URL"
                       disabled={loading}
                       {...field}
+                      onChange={(event) =>
+                        handleAddressInputChange(event.target.value)
+                      }
                     />
                   </FormControl>
                   <FormMessage />
