@@ -39,6 +39,7 @@ export interface WorkspaceProposal {
   chainId: string;
   transactionIndex: bigint;
   creator?: string;
+  createdAt?: string;
   status: WorkspaceProposalStatus;
   approvals: string[];
   rejections: string[];

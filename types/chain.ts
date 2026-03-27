@@ -137,7 +137,7 @@ export const DEFAULT_CHAINS: ChainConfig[] = [
   {
     id: "optimism-mainnet",
     name: "Optimism",
-    rpcUrl: "https://optimism.llamarpc.com",
+    rpcUrl: "https://mainnet.optimism.io",
     explorerUrl: "https://optimistic.etherscan.io",
     vmFamily: "evm",
     multisigProvider: "safe",
@@ -145,7 +145,7 @@ export const DEFAULT_CHAINS: ChainConfig[] = [
   {
     id: "bnb-mainnet",
     name: "BNB Chain",
-    rpcUrl: "https://binance.llamarpc.com",
+    rpcUrl: "https://bsc-dataseed.bnbchain.org",
     explorerUrl: "https://bscscan.com",
     vmFamily: "evm",
     multisigProvider: "safe",
@@ -153,7 +153,7 @@ export const DEFAULT_CHAINS: ChainConfig[] = [
   {
     id: "arbitrum-mainnet",
     name: "Arbitrum",
-    rpcUrl: "https://arbitrum.llamarpc.com",
+    rpcUrl: "https://arb1.arbitrum.io/rpc",
     explorerUrl: "https://arbiscan.io",
     vmFamily: "evm",
     multisigProvider: "safe",

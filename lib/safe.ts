@@ -313,6 +313,7 @@ export function toWorkspaceProposalFromSafeTransaction(
     creator: transaction.proposer
       ? getAddress(transaction.proposer)
       : undefined,
+    createdAt: transaction.submissionDate ?? undefined,
     status,
     approvals,
     rejections: [],
