@@ -1,7 +1,3 @@
-<p align="center">
-  <samp>local-first multisig operations workspace</samp>
-</p>
-
 <h1 align="center">Squad Multisig Workspace</h1>
 
 <p align="center">
