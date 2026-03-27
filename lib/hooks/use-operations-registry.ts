@@ -68,8 +68,9 @@ export function useOperationsRegistry({
     [registryRows]
   );
 
-  const activeView =
-    explorerViews.find((view) => view.id === activeViewKey) ?? explorerViews[0];
+  const activeView = activeViewKey
+    ? (explorerViews.find((view) => view.id === activeViewKey) ?? null)
+    : null;
 
   useEffect(() => {
     if (!activeViewKey) {

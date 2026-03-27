@@ -9,6 +9,7 @@ import {
   Copy,
   Loader2,
   RefreshCw,
+  RotateCcw,
   ShieldCheck,
   X,
 } from "lucide-react";
@@ -45,6 +46,7 @@ import {
 import { useMultisigStore } from "@/stores/multisig-store";
 import { useWalletStore } from "@/stores/wallet-store";
 import { useWorkspaceStore } from "@/stores/workspace-store";
+import { getMultisigAccountKey } from "@/types/multisig";
 import type {
   WorkspaceExplorerMode,
   WorkspaceQueueItem,
@@ -123,19 +125,6 @@ export function OperationsDashboard({
     chains,
     errorMessage: "Failed to load workspace proposals",
   });
-  const {
-    summariesByMultisigKey,
-    loadingByMultisigKey: workspaceSummaryLoadingByMultisigKey,
-    errorsByMultisigKey: workspaceSummaryErrorsByMultisigKey,
-  } = useWorkspaceProposalSummary({
-    chains,
-    multisigs: workspaceMultisigs,
-  });
-
-  useEffect(() => {
-    void loadForAllMultisigs(multisigs);
-  }, [loadForAllMultisigs, multisigs]);
-
   useOperationsWorkspaceQuerySync({
     searchParams,
     pathname,
@@ -177,51 +166,51 @@ export function OperationsDashboard({
     setExpandedViewKeys,
   });
 
-  const scopedMultisigKeys = useMemo(
-    () => new Set(activeView?.multisigKeys ?? []),
-    [activeView]
-  );
-  const scopedWorkspaceProposalMultisigs = useMemo(() => {
+  const selectedScopeKeys = useMemo(() => {
     if (selectedRegistryKeys.length > 0) {
-      return workspaceMultisigs.filter(
+      return selectedRegistryKeys;
+    }
+
+    if (activeView) {
+      return activeView.multisigKeys;
+    }
+
+    return [];
+  }, [activeView, selectedRegistryKeys]);
+  const selectedScopeKeySet = useMemo(
+    () => new Set(selectedScopeKeys),
+    [selectedScopeKeys]
+  );
+  const hasSelectedScope = selectedScopeKeys.length > 0;
+  const scopedSquadsMultisigs = useMemo(
+    () =>
+      multisigs.filter((multisig) =>
+        selectedScopeKeySet.has(getMultisigAccountKey(multisig))
+      ),
+    [multisigs, selectedScopeKeySet]
+  );
+  const scopedWorkspaceProposalMultisigs = useMemo(
+    () =>
+      workspaceMultisigs.filter(
         (multisig) =>
           multisig.provider !== "squads" &&
-          selectedRegistryKeySet.has(multisig.key)
-      );
-    }
+          selectedScopeKeySet.has(multisig.key)
+      ),
+    [selectedScopeKeySet, workspaceMultisigs]
+  );
+  const {
+    summariesByMultisigKey,
+    loadingByMultisigKey: workspaceSummaryLoadingByMultisigKey,
+    errorsByMultisigKey: workspaceSummaryErrorsByMultisigKey,
+    retrySummary,
+  } = useWorkspaceProposalSummary({
+    chains,
+    multisigs: workspaceMultisigs,
+  });
 
-    if (activeViewKey.startsWith("chain:")) {
-      const chainLabel = activeViewKey.slice("chain:".length);
-      return workspaceMultisigs.filter(
-        (multisig) =>
-          multisig.provider !== "squads" && multisig.chainName === chainLabel
-      );
-    }
-
-    if (activeViewKey === "tag:none") {
-      return workspaceMultisigs.filter(
-        (multisig) =>
-          multisig.provider !== "squads" && multisig.tags.length === 0
-      );
-    }
-
-    if (activeViewKey.startsWith("tag:")) {
-      const tagLabel = activeViewKey.slice("tag:".length);
-      return workspaceMultisigs.filter(
-        (multisig) =>
-          multisig.provider !== "squads" && multisig.tags.includes(tagLabel)
-      );
-    }
-
-    return workspaceMultisigs.filter(
-      (multisig) => multisig.provider !== "squads"
-    );
-  }, [
-    activeViewKey,
-    selectedRegistryKeySet,
-    selectedRegistryKeys,
-    workspaceMultisigs,
-  ]);
+  useEffect(() => {
+    void loadForAllMultisigs(scopedSquadsMultisigs);
+  }, [loadForAllMultisigs, scopedSquadsMultisigs]);
 
   useEffect(() => {
     void loadWorkspaceProposals(scopedWorkspaceProposalMultisigs);
@@ -243,26 +232,14 @@ export function OperationsDashboard({
   );
 
   const scopedQueueItems = useMemo(() => {
-    if (selectedRegistryKeys.length > 0) {
+    if (hasSelectedScope) {
       return queueItems.filter((item) =>
-        selectedRegistryKeySet.has(item.multisig.key)
+        selectedScopeKeySet.has(item.multisig.key)
       );
     }
 
-    if (activeViewKey !== "all") {
-      return queueItems.filter((item) =>
-        scopedMultisigKeys.has(item.multisig.key)
-      );
-    }
-
-    return queueItems;
-  }, [
-    activeViewKey,
-    queueItems,
-    scopedMultisigKeys,
-    selectedRegistryKeySet,
-    selectedRegistryKeys,
-  ]);
+    return [];
+  }, [hasSelectedScope, queueItems, selectedScopeKeySet]);
 
   const {
     filteredItems: filteredQueueItems,
@@ -317,10 +294,10 @@ export function OperationsDashboard({
           primarySelectedRegistryItem.multisig.key
         ] ?? null)
       : null;
-  const waitingOnYouCount = queueItems.filter(
+  const waitingOnYouCount = scopedQueueItems.filter(
     (item) => item.needsYourSignature
   ).length;
-  const executableCount = queueItems.filter(
+  const executableCount = scopedQueueItems.filter(
     (item) => item.readyToExecute
   ).length;
   const actionsSupported = focusedItem
@@ -349,7 +326,7 @@ export function OperationsDashboard({
   } = useProposalActions({
     onSuccess: async () => {
       await Promise.all([
-        loadForAllMultisigs(multisigs),
+        loadForAllMultisigs(scopedSquadsMultisigs),
         loadWorkspaceProposals(scopedWorkspaceProposalMultisigs),
       ]);
     },
@@ -490,11 +467,11 @@ export function OperationsDashboard({
                   size="icon"
                   onClick={() =>
                     void Promise.all([
-                      loadForAllMultisigs(multisigs),
+                      loadForAllMultisigs(scopedSquadsMultisigs),
                       loadWorkspaceProposals(scopedWorkspaceProposalMultisigs),
                     ])
                   }
-                  disabled={loading || workspaceLoading}
+                  disabled={loading || workspaceLoading || !hasSelectedScope}
                   className="rounded-md border border-zinc-800 bg-zinc-950 text-zinc-200 hover:bg-zinc-900"
                   aria-label="Refresh dashboard proposals"
                   title="Refresh dashboard proposals"
@@ -638,6 +615,10 @@ export function OperationsDashboard({
                                     workspaceSummaryErrorsByMultisigKey[
                                       multisigKey
                                     ];
+                                  const safeSummaryErrorMessage =
+                                    proposalSummary?.unavailableReason ??
+                                    summaryError ??
+                                    null;
                                   const hasLoadedWorkspaceQueue =
                                     workspaceLoadedKeys.includes(multisigKey);
                                   const hasQueueAttention =
@@ -649,106 +630,130 @@ export function OperationsDashboard({
                                       ? hasLoadedWorkspaceQueue
                                         ? `${item.active} active`
                                         : summaryLoading
-                                          ? "Loading proposals..."
-                                          : proposalSummary?.unavailableReason ||
-                                              summaryError
-                                            ? "Metadata unavailable"
+                                          ? "loading"
+                                          : safeSummaryErrorMessage
+                                            ? null
                                             : proposalSummary
-                                              ? "Proposal activity available"
-                                              : "Status unavailable"
+                                              ? `${proposalSummary.totalCount} proposals`
+                                              : "--"
                                       : `${item.active} active`;
                                   const safeSelectionBlocked =
                                     item.multisig.provider === "safe" &&
                                     !hasLoadedWorkspaceQueue &&
                                     (summaryLoading ||
-                                      Boolean(
-                                        proposalSummary?.unavailableReason ||
-                                        summaryError
-                                      ) ||
+                                      Boolean(safeSummaryErrorMessage) ||
                                       !proposalSummary);
+                                  const showSafeRetryInline =
+                                    item.multisig.provider === "safe" &&
+                                    !hasLoadedWorkspaceQueue &&
+                                    Boolean(safeSummaryErrorMessage);
 
                                   return (
-                                    <button
+                                    <div
                                       key={`${item.multisig.chainId}:${multisigKey}`}
-                                      type="button"
-                                      onClick={
-                                        safeSelectionBlocked
-                                          ? undefined
-                                          : (event) =>
-                                              handleRegistrySelect(
-                                                multisigKey,
-                                                event
-                                              )
-                                      }
-                                      disabled={safeSelectionBlocked}
                                       className={cn(
-                                        "flex w-full items-center justify-between gap-2 rounded-sm px-2 py-1.5 text-left transition-colors",
-                                        itemSelected
-                                          ? "bg-lime-500/10 text-zinc-50"
-                                          : safeSelectionBlocked
-                                            ? "cursor-not-allowed bg-zinc-950/45 text-zinc-600 opacity-65"
-                                            : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100"
+                                        "rounded-sm",
+                                        showSafeRetryInline && "bg-zinc-950/35"
                                       )}
                                     >
-                                      <div className="min-w-0 flex-1">
-                                        <div className="flex items-center gap-2">
-                                          <p className="truncate text-[0.83rem] font-medium">
-                                            {item.multisig.label ||
-                                              "Unnamed multisig"}
-                                          </p>
-                                          <span className="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-1.5 py-0.5 font-mono text-[0.58rem] tracking-[0.16em] text-cyan-300 uppercase">
-                                            {item.multisig.chainName}
-                                          </span>
-                                          <span className="font-mono text-[0.62rem] text-zinc-600 tabular-nums">
-                                            {item.multisig.threshold}/
-                                            {item.multisig.members.length}
-                                          </span>
-                                        </div>
-                                        <div className="mt-0.5 flex items-center gap-2 text-[0.62rem] text-zinc-500">
-                                          <span className="font-mono tabular-nums">
-                                            {formatCompactAddress(
-                                              item.multisig.address
-                                            )}
-                                          </span>
-                                          <span>{providerMetaLine}</span>
-                                        </div>
-                                      </div>
-                                      <div className="shrink-0 text-right">
-                                        {hasQueueAttention ||
-                                        (item.multisig.provider === "safe" &&
-                                          hasLoadedWorkspaceQueue) ? (
-                                          <>
-                                            <p className="font-mono text-[0.62rem] text-zinc-600 tabular-nums">
-                                              {item.waiting} wait
-                                            </p>
-                                            <p className="font-mono text-[0.62rem] text-zinc-600 tabular-nums">
-                                              {item.executable} exec
-                                            </p>
-                                          </>
-                                        ) : item.multisig.provider ===
-                                          "safe" ? (
-                                          <p className="font-mono text-[0.62rem] text-zinc-600 tabular-nums">
-                                            {summaryLoading
-                                              ? "..."
-                                              : proposalSummary?.unavailableReason ||
-                                                  summaryError
-                                                ? "error"
-                                                : proposalSummary
-                                                  ? "ready"
-                                                  : "--"}
-                                          </p>
-                                        ) : (
-                                          <>
-                                            <p className="font-mono text-[0.62rem] text-zinc-600 tabular-nums">
-                                              {item.waiting} wait
-                                            </p>
-                                            <p className="font-mono text-[0.62rem] text-zinc-600 tabular-nums">
-                                              {item.executable} exec
-                                            </p>
-                                          </>
+                                      <button
+                                        type="button"
+                                        onClick={
+                                          safeSelectionBlocked
+                                            ? undefined
+                                            : (event) =>
+                                                handleRegistrySelect(
+                                                  multisigKey,
+                                                  event
+                                                )
+                                        }
+                                        disabled={safeSelectionBlocked}
+                                        className={cn(
+                                          "flex w-full items-center justify-between gap-2 rounded-sm px-2 py-1.5 text-left transition-colors",
+                                          itemSelected
+                                            ? "bg-lime-500/10 text-zinc-50"
+                                            : safeSelectionBlocked
+                                              ? "cursor-not-allowed bg-zinc-950/45 text-zinc-600"
+                                              : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100"
                                         )}
-                                      </div>
-                                    </button>
+                                      >
+                                        <div className="min-w-0 flex-1">
+                                          <div className="flex items-center gap-2">
+                                            <p className="truncate text-[0.83rem] font-medium">
+                                              {item.multisig.label ||
+                                                "Unnamed multisig"}
+                                            </p>
+                                            <span className="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-1.5 py-0.5 font-mono text-[0.58rem] tracking-[0.16em] text-cyan-300 uppercase">
+                                              {item.multisig.chainName}
+                                            </span>
+                                            <span className="font-mono text-[0.62rem] text-zinc-600 tabular-nums">
+                                              {item.multisig.threshold}/
+                                              {item.multisig.members.length}
+                                            </span>
+                                          </div>
+                                          <div className="mt-0.5 flex items-center gap-2 text-[0.62rem] text-zinc-500">
+                                            <span className="font-mono tabular-nums">
+                                              {formatCompactAddress(
+                                                item.multisig.address
+                                              )}
+                                            </span>
+                                            {providerMetaLine ? (
+                                              <span>{providerMetaLine}</span>
+                                            ) : null}
+                                          </div>
+                                        </div>
+                                        <div className="shrink-0 text-right">
+                                          {hasQueueAttention ||
+                                          (item.multisig.provider === "safe" &&
+                                            hasLoadedWorkspaceQueue) ? (
+                                            <>
+                                              <p className="font-mono text-[0.62rem] text-zinc-600 tabular-nums">
+                                                {item.waiting} wait
+                                              </p>
+                                              <p className="font-mono text-[0.62rem] text-zinc-600 tabular-nums">
+                                                {item.executable} exec
+                                              </p>
+                                            </>
+                                          ) : item.multisig.provider ===
+                                            "safe" ? (
+                                            safeSummaryErrorMessage ? (
+                                              <button
+                                                type="button"
+                                                className="inline-flex items-center gap-1 font-mono text-[0.62rem] text-zinc-400 tabular-nums transition-colors hover:text-zinc-100"
+                                                onClick={(event) => {
+                                                  event.stopPropagation();
+                                                  retrySummary(multisigKey);
+                                                }}
+                                              >
+                                                <RotateCcw className="h-3 w-3" />
+                                                Retry
+                                              </button>
+                                            ) : (
+                                              <p className="font-mono text-[0.62rem] text-zinc-600 tabular-nums">
+                                                {summaryLoading
+                                                  ? "..."
+                                                  : proposalSummary
+                                                    ? proposalSummary.totalCount
+                                                    : "--"}
+                                              </p>
+                                            )
+                                          ) : (
+                                            <>
+                                              <p className="font-mono text-[0.62rem] text-zinc-600 tabular-nums">
+                                                {item.waiting} wait
+                                              </p>
+                                              <p className="font-mono text-[0.62rem] text-zinc-600 tabular-nums">
+                                                {item.executable} exec
+                                              </p>
+                                            </>
+                                          )}
+                                        </div>
+                                      </button>
+
+                                      {showSafeRetryInline ? (
+                                        <div className="px-2 pb-2" />
+                                      ) : null}
+                                    </div>
                                   );
                                 })}
                               </div>
@@ -770,14 +775,15 @@ export function OperationsDashboard({
                   Priority Queue
                 </p>
                 <p className="mt-1 text-sm text-zinc-400">
-                  {waitingOnYouCount} waiting on you · {executableCount}{" "}
-                  executable ·{" "}
+                  {!hasSelectedScope
+                    ? "Select a multisig or scope from the registry to load the queue."
+                    : `${waitingOnYouCount} waiting on you · ${executableCount} executable · `}
                   {selectedRegistryKeys.length > 1
                     ? `${selectedRegistryKeys.length} selected multisigs`
                     : primarySelectedRegistryKey
                       ? primarySelectedRegistryItem?.multisig.label ||
                         "Selected multisig"
-                      : activeView?.label || "All multisigs"}
+                      : activeView?.label || "Selected scope"}
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
@@ -803,7 +809,12 @@ export function OperationsDashboard({
               </div>
             </div>
 
-            {loading || workspaceLoading ? (
+            {!hasSelectedScope ? (
+              <div className="border border-dashed border-zinc-800 px-4 py-5 text-sm text-zinc-400">
+                Select a multisig, chain, or saved scope from the registry to
+                load proposals.
+              </div>
+            ) : loading || workspaceLoading ? (
               <ProposalCardSkeletonList />
             ) : filteredQueueItems.length === 0 ? (
               <div className="border border-dashed border-zinc-800 px-4 py-5 text-sm text-zinc-400">
@@ -850,18 +861,7 @@ export function OperationsDashboard({
                   </div>
                 ) : primarySelectedRegistryItem?.multisig.provider === "safe" &&
                   primarySelectedSummary ? (
-                  primarySelectedSummary.totalCount > 0 ? (
-                    <div className="space-y-1">
-                      <p className="text-zinc-200">
-                        Proposal activity is available for this Safe.
-                      </p>
-                      <p className="text-zinc-500">
-                        Refresh this scope to retry loading the queue.
-                      </p>
-                    </div>
-                  ) : (
-                    "No proposals were found for this Safe."
-                  )
+                  "No proposals were found for this Safe."
                 ) : (
                   "No proposals match the current scope."
                 )}
@@ -955,7 +955,9 @@ export function OperationsDashboard({
           <div className="h-full overflow-hidden border border-zinc-800 bg-zinc-950/82 xl:ml-1">
             {!focusedItem ? (
               <div className="flex h-full min-h-full items-start px-4 py-10 text-sm text-zinc-400">
-                No proposal available for the current scope.
+                {hasSelectedScope
+                  ? "No proposal available for the current scope."
+                  : "Select a multisig from the left to inspect proposal details."}
               </div>
             ) : (
               <div className="space-y-5 px-4 py-4">

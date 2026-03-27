@@ -173,6 +173,10 @@ export const multisigStorage = {
   setSelectedMultisigKey(key: string): void {
     selectedMultisigStorage.set(key);
   },
+
+  clearSelectedMultisigKey(): void {
+    selectedMultisigStorage.remove();
+  },
 };
 
 const addressLabelListStorage = createListStorage<AddressLabel>(

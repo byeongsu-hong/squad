@@ -1,6 +1,13 @@
 "use client";
 
-import { Check, Copy, Download, Loader2, Upload } from "lucide-react";
+import {
+  AlertTriangle,
+  Check,
+  Copy,
+  Download,
+  Loader2,
+  Upload,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -14,6 +21,8 @@ import { SquadService } from "@/lib/squad";
 import { useAddressLabelStore } from "@/stores/address-label-store";
 import { useChainStore } from "@/stores/chain-store";
 import { useMultisigStore } from "@/stores/multisig-store";
+import { useProviderAdapterStore } from "@/stores/provider-adapter-store";
+import { useWorkspaceStore } from "@/stores/workspace-store";
 import {
   type ChainConfig,
   getSquadsProgramId,
@@ -87,12 +96,27 @@ export function ExportImportController({
   const [importContent, setImportContent] = useState<string>("");
   const [copied, setCopied] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [importProgress, setImportProgress] =
     useState<ImportProgressState | null>(null);
 
-  const { chains, addChain } = useChainStore();
-  const { multisigs, addMultisig } = useMultisigStore();
+  const { chains, addChain, resetToDefaults: resetChains } = useChainStore();
+  const {
+    multisigs,
+    addMultisig,
+    resetAll: resetMultisigs,
+  } = useMultisigStore();
   const { labels, upsertLabels } = useAddressLabels();
+  const resetLabels = useAddressLabelStore((state) => state.resetAll);
+  const resetProviderSettings = useProviderAdapterStore(
+    (state) => state.resetSettings
+  );
+  const resetWorkspace = useWorkspaceStore((state) => state.resetAll);
+  const customChainCount = chains.filter((chain) =>
+    chain.id.startsWith("custom-")
+  ).length;
+  const multisigCount = multisigs.length;
+  const labelCount = labels.length;
 
   const generateExport = () => {
     try {
@@ -355,6 +379,27 @@ export function ExportImportController({
     }
   };
 
+  const handleResetImportedState = () => {
+    resetMultisigs();
+    resetChains();
+    resetLabels();
+    resetProviderSettings();
+    resetWorkspace();
+    setImportContent("");
+    setImportProgress(null);
+    setIsImporting(false);
+    setResetDialogOpen(false);
+
+    toast.success("Workspace reset complete", {
+      description:
+        "Saved multisigs, labels, custom chains, and provider settings were cleared.",
+    });
+  };
+
+  const handleOpenResetDialog = () => {
+    setResetDialogOpen(true);
+  };
+
   const handleModeChange = (newMode: "export" | "import") => {
     setMode(newMode);
     setExportContent("");
@@ -403,6 +448,7 @@ export function ExportImportController({
             importProgress={importProgress}
             isImporting={isImporting}
             onImportContentChange={setImportContent}
+            onResetImportedState={handleOpenResetDialog}
           />
         )}
       </div>
@@ -435,6 +481,92 @@ export function ExportImportController({
           </Button>
         </div>
       ) : null}
+
+      <Dialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
+        <DialogContent
+          showCloseButton={false}
+          className="max-w-[30rem] gap-0 overflow-hidden border-red-500/20 bg-[linear-gradient(180deg,rgba(35,20,20,0.98),rgba(20,15,18,0.99))] p-0"
+        >
+          <div className="border-b border-red-500/15 px-6 py-5">
+            <div className="flex items-start gap-4">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-red-500/20 bg-red-500/10">
+                <AlertTriangle className="h-5 w-5 text-red-300" />
+              </div>
+              <div className="space-y-2">
+                <DialogTitle className="text-[1.1rem]">
+                  Reset imported workspace state?
+                </DialogTitle>
+                <DialogDescription className="max-w-md">
+                  Use this only when a YAML import left the local workspace in a
+                  broken state. This action cannot be undone.
+                </DialogDescription>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4 px-6 py-5">
+            <div className="grid gap-2 border border-zinc-800 bg-zinc-950/50 p-4">
+              <p className="text-[0.68rem] tracking-[0.18em] text-zinc-500 uppercase">
+                What gets cleared
+              </p>
+              <p className="text-sm text-zinc-300">
+                Saved multisigs, custom chains, address labels, provider
+                settings, and current workspace selections.
+              </p>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-3">
+              <div className="border border-zinc-800 bg-zinc-950/50 px-3 py-3">
+                <p className="text-[0.62rem] tracking-[0.16em] text-zinc-500 uppercase">
+                  Multisigs
+                </p>
+                <p className="mt-1 text-lg font-medium text-zinc-100">
+                  {multisigCount}
+                </p>
+              </div>
+              <div className="border border-zinc-800 bg-zinc-950/50 px-3 py-3">
+                <p className="text-[0.62rem] tracking-[0.16em] text-zinc-500 uppercase">
+                  Custom chains
+                </p>
+                <p className="mt-1 text-lg font-medium text-zinc-100">
+                  {customChainCount}
+                </p>
+              </div>
+              <div className="border border-zinc-800 bg-zinc-950/50 px-3 py-3">
+                <p className="text-[0.62rem] tracking-[0.16em] text-zinc-500 uppercase">
+                  Labels
+                </p>
+                <p className="mt-1 text-lg font-medium text-zinc-100">
+                  {labelCount}
+                </p>
+              </div>
+            </div>
+            <p className="text-sm leading-6 text-zinc-500">
+              Default chain presets remain available after reset. Right now this
+              action will remove {multisigCount} multisig
+              {multisigCount === 1 ? "" : "s"}, {customChainCount} custom chain
+              {customChainCount === 1 ? "" : "s"}, and {labelCount} label
+              {labelCount === 1 ? "" : "s"}.
+            </p>
+          </div>
+
+          <DialogFooter className="border-t border-zinc-800 px-6 py-5 sm:justify-between">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setResetDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleResetImportedState}
+            >
+              Reset Workspace State
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
@@ -640,6 +772,7 @@ interface ExportImportImportPanelProps {
   importProgress: ImportProgressState | null;
   isImporting: boolean;
   onImportContentChange: (value: string) => void;
+  onResetImportedState: () => void;
 }
 
 function ExportImportImportPanel({
@@ -648,6 +781,7 @@ function ExportImportImportPanel({
   importProgress,
   isImporting,
   onImportContentChange,
+  onResetImportedState,
 }: ExportImportImportPanelProps) {
   const progressValue = importProgress
     ? (importProgress.current / importProgress.total) * 100
@@ -679,6 +813,24 @@ function ExportImportImportPanel({
         <p className="text-muted-foreground text-sm">
           Existing items will be preserved. Only new items will be imported.
         </p>
+        <div className="flex items-start justify-between gap-3 border border-zinc-800 bg-zinc-950/50 px-3 py-3">
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-zinc-100">Reset state</p>
+            <p className="text-xs leading-5 text-zinc-500">
+              If a YAML import left local state broken, clear saved multisigs,
+              custom chains, labels, and provider settings.
+            </p>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={isImporting}
+            className="shrink-0"
+            onClick={onResetImportedState}
+          >
+            Reset
+          </Button>
+        </div>
         {isImporting && importProgress ? (
           <div className="space-y-2 border border-zinc-800 bg-zinc-950/50 px-3 py-3">
             <div className="flex items-center justify-between gap-3">

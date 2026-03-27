@@ -32,6 +32,7 @@ interface WorkspaceStore {
   setSettingsActiveSection: (section: WorkspaceSettingsSection) => void;
   setProposalDeskQueueFilter: (filter: WorkspaceQueueFilter) => void;
   setProposalDeskFocusedProposalKey: (key: string | null) => void;
+  resetAll: () => void;
 }
 
 function areStringArraysEqual(left: string[], right: string[]) {
@@ -47,7 +48,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set) => ({
   operationsExplorerMode: "views",
   operationsFocusedProposalKey: null,
   operationsSelectedRegistryKeys: [],
-  operationsActiveViewKey: "all",
+  operationsActiveViewKey: "",
   operationsExpandedViewKeys: ["all", "attention"],
   settingsActiveSection: "chains",
   proposalDeskQueueFilter: "all",
@@ -128,4 +129,17 @@ export const useWorkspaceStore = create<WorkspaceStore>((set) => ({
         ? state
         : { proposalDeskFocusedProposalKey }
     ),
+  resetAll: () =>
+    set({
+      operationsQueueFilter: "all",
+      operationsDetailTab: "overview",
+      operationsExplorerMode: "views",
+      operationsFocusedProposalKey: null,
+      operationsSelectedRegistryKeys: [],
+      operationsActiveViewKey: "",
+      operationsExpandedViewKeys: ["all", "attention"],
+      settingsActiveSection: "chains",
+      proposalDeskQueueFilter: "all",
+      proposalDeskFocusedProposalKey: null,
+    }),
 }));

@@ -126,7 +126,7 @@ export function useOperationsWorkspaceQuerySync({
 
     const requestedView =
       searchParams.get("view") ?? searchParams.get("folder");
-    setActiveViewKey(requestedView || "all");
+    setActiveViewKey(requestedView || "");
 
     const hasRequestedProposal = searchParams.has("proposal");
     const requestedProposal = searchParams.get("proposal");
@@ -178,7 +178,7 @@ export function useOperationsWorkspaceQuerySync({
       nextParams.delete("multisigs");
     }
 
-    if (activeViewKey !== "all") {
+    if (activeViewKey) {
       nextParams.set("view", activeViewKey);
     } else {
       nextParams.delete("view");

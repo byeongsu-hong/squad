@@ -37,6 +37,7 @@ interface MultisigStore {
     transactionIndex: bigint,
     updates: Partial<ProposalAccount>
   ) => void;
+  resetAll: () => void;
   selectMultisig: (publicKey: string | null) => void;
   getMultisigByKey: (publicKey: string | null) => MultisigAccount | undefined;
   getSelectedMultisig: () => MultisigAccount | undefined;
@@ -146,6 +147,17 @@ export const useMultisigStore = create<MultisigStore>((set, get) => ({
           : proposal
       ),
     })),
+
+  resetAll: () => {
+    multisigStorage.saveMultisigs([]);
+    multisigStorage.clearSelectedMultisigKey();
+    set({
+      multisigs: [],
+      proposals: [],
+      selectedMultisigKey: null,
+      initialized: true,
+    });
+  },
 
   selectMultisig: (selectionKey) => {
     const resolvedSelectionKey = selectionKey

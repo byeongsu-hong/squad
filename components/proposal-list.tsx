@@ -270,7 +270,7 @@ export function ProposalList({
               asChild
               className="ml-auto rounded-md bg-zinc-100 text-zinc-950 hover:bg-zinc-200"
             >
-              <Link href="/">
+              <Link href="/operations">
                 <FolderOpen className="h-4 w-4" />
                 Open dashboard
               </Link>
@@ -293,7 +293,7 @@ export function ProposalList({
               asChild
               className="rounded-md bg-zinc-100 text-zinc-950 hover:bg-zinc-200"
             >
-              <Link href="/">
+              <Link href="/operations">
                 <FolderOpen className="h-4 w-4" />
                 Open dashboard
               </Link>

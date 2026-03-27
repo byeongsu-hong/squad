@@ -28,6 +28,23 @@ export function useWorkspaceProposalSummary({
   );
   const [errorsByMultisigKey, setErrorsByMultisigKey] = useState<ErrorMap>({});
 
+  const retrySummary = (multisigKey: string) => {
+    inFlightKeysRef.current.delete(multisigKey);
+
+    setSummariesByMultisigKey((current) => ({
+      ...current,
+      [multisigKey]: undefined,
+    }));
+    setErrorsByMultisigKey((current) => ({
+      ...current,
+      [multisigKey]: undefined,
+    }));
+    setLoadingByMultisigKey((current) => ({
+      ...current,
+      [multisigKey]: false,
+    }));
+  };
+
   const summaryMultisigs = useMemo(
     () =>
       multisigs.filter(
@@ -122,5 +139,6 @@ export function useWorkspaceProposalSummary({
     summariesByMultisigKey,
     loadingByMultisigKey,
     errorsByMultisigKey,
+    retrySummary,
   };
 }
