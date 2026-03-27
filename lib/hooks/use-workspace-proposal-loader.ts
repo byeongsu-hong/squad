@@ -17,6 +17,7 @@ export function useWorkspaceProposalLoader({
   const [loading, setLoading] = useState(false);
   const [proposals, setProposals] = useState<WorkspaceProposal[]>([]);
   const [loadingKeys, setLoadingKeys] = useState<string[]>([]);
+  const [loadedKeys, setLoadedKeys] = useState<string[]>([]);
   const [errorsByMultisigKey, setErrorsByMultisigKey] = useState<
     Record<string, string | undefined>
   >({});
@@ -35,6 +36,7 @@ export function useWorkspaceProposalLoader({
       if (loadableMultisigs.length === 0) {
         setProposals([]);
         setLoadingKeys([]);
+        setLoadedKeys([]);
         setErrorsByMultisigKey({});
         return [];
       }
@@ -85,6 +87,13 @@ export function useWorkspaceProposalLoader({
           ...current,
           ...nextErrors,
         }));
+        setLoadedKeys((current) => {
+          const next = new Set(current);
+          for (const multisig of loadableMultisigs) {
+            next.add(multisig.key);
+          }
+          return Array.from(next);
+        });
         setProposals(nextProposals);
 
         if (Object.keys(nextErrors).length > 0) {
@@ -107,6 +116,7 @@ export function useWorkspaceProposalLoader({
   return {
     loading,
     loadingKeys,
+    loadedKeys,
     errorsByMultisigKey,
     proposals,
     loadForAllMultisigs,
