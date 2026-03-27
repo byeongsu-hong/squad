@@ -15,6 +15,20 @@ interface InitialMultisigSeed {
   tags?: string[];
 }
 
+function createSafeSeedPlaceholder(seed: InitialMultisigSeed): MultisigAccount {
+  return {
+    provider: "safe",
+    publicKey: seed.publicKey,
+    threshold: 0,
+    members: [],
+    transactionIndex: BigInt(0),
+    msChangeIndex: 0,
+    chainId: seed.chainId,
+    label: seed.label,
+    tags: seed.tags,
+  };
+}
+
 export const INITIAL_MULTISIG_SEEDS: InitialMultisigSeed[] = [
   {
     publicKey: "3tQm2hkauvqoRsfJg6NmUA6eMEWqFdvbiJUZUBFHXD6A",
@@ -111,9 +125,10 @@ export async function resolveInitialMultisigs(
             } | null;
 
             if (!response.ok || !payload?.multisig) {
-              throw new Error(
+              console.warn(
                 payload?.error ?? `Failed to seed Safe ${seed.publicKey}`
               );
+              return createSafeSeedPlaceholder(seed);
             }
 
             return {
@@ -154,6 +169,14 @@ export async function resolveInitialMultisigs(
 
           return multisig;
         } catch (error) {
+          if (seed.provider === "safe") {
+            console.warn(
+              `Falling back to placeholder seed for Safe ${seed.publicKey}:`,
+              error
+            );
+            return createSafeSeedPlaceholder(seed);
+          }
+
           console.warn(
             `Failed to seed initial multisig ${seed.publicKey}:`,
             error
