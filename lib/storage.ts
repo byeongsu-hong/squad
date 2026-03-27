@@ -149,15 +149,21 @@ export const multisigStorage = {
 
   addMultisig(multisig: MultisigAccount): void {
     const exists = multisigListStorage.find(
-      (m) => m.publicKey.toString() === multisig.publicKey.toString()
+      (m) =>
+        m.chainId === multisig.chainId &&
+        m.publicKey.toString() === multisig.publicKey.toString()
     );
     if (!exists) {
       multisigListStorage.add(multisig);
     }
   },
 
-  deleteMultisig(publicKey: string): void {
-    multisigListStorage.remove((m) => m.publicKey.toString() === publicKey);
+  deleteMultisig(publicKey: string, chainId?: string): void {
+    multisigListStorage.remove(
+      (m) =>
+        m.publicKey.toString() === publicKey &&
+        (chainId ? m.chainId === chainId : true)
+    );
   },
 
   getSelectedMultisigKey(): string | null {

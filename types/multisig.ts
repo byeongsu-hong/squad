@@ -62,6 +62,12 @@ export function isSafeMultisig(
   return Boolean(multisig && multisig.provider === "safe");
 }
 
+export function getMultisigAccountKey(
+  multisig: Pick<MultisigAccount, "chainId" | "publicKey">
+) {
+  return `${multisig.chainId}:${multisig.publicKey.toString()}`;
+}
+
 export type ProposalStatus =
   | "Active"
   | "Approved"
