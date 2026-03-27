@@ -15,9 +15,17 @@ interface MultisigStore {
       | ((prev: MultisigAccount[]) => MultisigAccount[])
   ) => void;
   addMultisig: (multisig: MultisigAccount) => void;
-  deleteMultisig: (publicKey: string) => void;
-  updateMultisigLabel: (publicKey: string, label: string) => void;
-  updateMultisigTags: (publicKey: string, tags: string[]) => void;
+  deleteMultisig: (publicKey: string, chainId?: string) => void;
+  updateMultisigLabel: (
+    publicKey: string,
+    label: string,
+    chainId?: string
+  ) => void;
+  updateMultisigTags: (
+    publicKey: string,
+    tags: string[],
+    chainId?: string
+  ) => void;
   setProposals: (proposals: ProposalAccount[]) => void;
   addProposal: (proposal: ProposalAccount) => void;
   updateProposal: (
@@ -62,11 +70,15 @@ export const useMultisigStore = create<MultisigStore>((set, get) => ({
     set((state) => ({ multisigs: [...state.multisigs, multisig] }));
   },
 
-  deleteMultisig: (publicKey) => {
-    multisigStorage.deleteMultisig(publicKey);
+  deleteMultisig: (publicKey, chainId) => {
+    multisigStorage.deleteMultisig(publicKey, chainId);
     set((state) => {
       const multisigs = state.multisigs.filter(
-        (m) => m.publicKey.toString() !== publicKey
+        (m) =>
+          !(
+            m.publicKey.toString() === publicKey &&
+            (chainId ? m.chainId === chainId : true)
+          )
       );
       const selectedMultisigKey =
         state.selectedMultisigKey === publicKey
@@ -81,20 +93,26 @@ export const useMultisigStore = create<MultisigStore>((set, get) => ({
     });
   },
 
-  updateMultisigLabel: (publicKey, label) => {
+  updateMultisigLabel: (publicKey, label, chainId) => {
     set((state) => {
       const multisigs = state.multisigs.map((m) =>
-        m.publicKey.toString() === publicKey ? { ...m, label } : m
+        m.publicKey.toString() === publicKey &&
+        (chainId ? m.chainId === chainId : true)
+          ? { ...m, label }
+          : m
       );
       multisigStorage.saveMultisigs(multisigs);
       return { multisigs };
     });
   },
 
-  updateMultisigTags: (publicKey, tags) => {
+  updateMultisigTags: (publicKey, tags, chainId) => {
     set((state) => {
       const multisigs = state.multisigs.map((m) =>
-        m.publicKey.toString() === publicKey ? { ...m, tags } : m
+        m.publicKey.toString() === publicKey &&
+        (chainId ? m.chainId === chainId : true)
+          ? { ...m, tags }
+          : m
       );
       multisigStorage.saveMultisigs(multisigs);
       return { multisigs };

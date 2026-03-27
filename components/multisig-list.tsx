@@ -32,7 +32,7 @@ import { useChainStore } from "@/stores/chain-store";
 import { useMultisigStore } from "@/stores/multisig-store";
 import { useWalletStore } from "@/stores/wallet-store";
 import { normalizeChainConfig } from "@/types/chain";
-import type { MultisigAccount } from "@/types/multisig";
+import { type MultisigAccount, getMultisigAccountKey } from "@/types/multisig";
 
 interface MultisigListProps {
   actions?: React.ReactNode;
@@ -83,7 +83,7 @@ export function MultisigList({
   const multisigByKey = useMemo(
     () =>
       new Map(
-        multisigs.map((multisig) => [multisig.publicKey.toString(), multisig])
+        multisigs.map((multisig) => [getMultisigAccountKey(multisig), multisig])
       ),
     [multisigs]
   );
@@ -122,7 +122,7 @@ export function MultisigList({
       setSelectedForDeletion(new Set());
     } else {
       setSelectedForDeletion(
-        new Set(multisigs.map((m) => m.publicKey.toString()))
+        new Set(multisigs.map((multisig) => getMultisigAccountKey(multisig)))
       );
     }
   };
@@ -135,7 +135,14 @@ export function MultisigList({
         `Are you sure you want to remove ${selectedForDeletion.size} multisig(s) from your list?`
       )
     ) {
-      selectedForDeletion.forEach((key) => deleteMultisig(key));
+      selectedForDeletion.forEach((key) => {
+        const multisig = multisigByKey.get(key);
+        if (!multisig) {
+          return;
+        }
+
+        deleteMultisig(multisig.publicKey.toString(), multisig.chainId);
+      });
       setSelectedForDeletion(new Set());
       toast.success(
         `${selectedForDeletion.size} multisig(s) removed from list`
@@ -148,8 +155,12 @@ export function MultisigList({
     setLabelInput(currentLabel || "");
   };
 
-  const handleSaveLabel = (publicKey: string) => {
-    updateMultisigLabel(publicKey, labelInput.trim());
+  const handleSaveLabel = (multisig: MultisigAccount) => {
+    updateMultisigLabel(
+      multisig.publicKey.toString(),
+      labelInput.trim(),
+      multisig.chainId
+    );
     setEditingLabel(null);
     setLabelInput("");
     if (labelInput.trim()) {
@@ -383,7 +394,8 @@ export function MultisigList({
               }
 
               const isSelected = selectedForDeletion.has(row.key);
-              const isActiveDesk = selectedMultisigKey === row.key;
+              const isActiveDesk =
+                selectedMultisigKey === multisig.publicKey.toString();
 
               return (
                 <div
@@ -418,12 +430,12 @@ export function MultisigList({
                                 }
                                 onKeyDown={(event) => {
                                   if (event.key === "Enter") {
-                                    handleSaveLabel(row.key);
+                                    handleSaveLabel(multisig);
                                   } else if (event.key === "Escape") {
                                     handleCancelEdit();
                                   }
                                 }}
-                                onBlur={() => handleSaveLabel(row.key)}
+                                onBlur={() => handleSaveLabel(multisig)}
                                 placeholder="Enter label"
                                 className="h-8 max-w-[14rem] border-zinc-800 bg-zinc-950 text-zinc-100"
                                 autoFocus
@@ -473,7 +485,7 @@ export function MultisigList({
                                   className="h-6 w-6 rounded-md text-zinc-500 hover:bg-zinc-900 hover:text-zinc-100"
                                   onClick={() =>
                                     handleStartEditLabel(
-                                      row.key,
+                                      getMultisigAccountKey(multisig),
                                       multisig.label
                                     )
                                   }
@@ -579,7 +591,12 @@ export function MultisigList({
                         variant="outline"
                         size="sm"
                         className="rounded-md border-zinc-800 bg-transparent text-zinc-200 hover:bg-zinc-900"
-                        onClick={() => deleteMultisig(row.key)}
+                        onClick={() =>
+                          deleteMultisig(
+                            multisig.publicKey.toString(),
+                            multisig.chainId
+                          )
+                        }
                       >
                         <Trash2 className="mr-2 h-3 w-3" />
                         Remove
@@ -628,7 +645,8 @@ export function MultisigList({
                 }
 
                 const isSelected = selectedForDeletion.has(row.key);
-                const isActiveDesk = selectedMultisigKey === row.key;
+                const isActiveDesk =
+                  selectedMultisigKey === multisig.publicKey.toString();
 
                 return (
                   <div
@@ -660,12 +678,12 @@ export function MultisigList({
                           onChange={(e) => setLabelInput(e.target.value)}
                           onKeyDown={(e) => {
                             if (e.key === "Enter") {
-                              handleSaveLabel(row.key);
+                              handleSaveLabel(multisig);
                             } else if (e.key === "Escape") {
                               handleCancelEdit();
                             }
                           }}
-                          onBlur={() => handleSaveLabel(row.key)}
+                          onBlur={() => handleSaveLabel(multisig)}
                           placeholder="Enter label"
                           className="h-8 border-zinc-800 bg-zinc-950 text-zinc-100"
                           autoFocus
@@ -690,7 +708,10 @@ export function MultisigList({
                                 size="icon"
                                 className="h-6 w-6 rounded-md text-zinc-500 hover:bg-zinc-900 hover:text-zinc-100"
                                 onClick={() =>
-                                  handleStartEditLabel(row.key, multisig.label)
+                                  handleStartEditLabel(
+                                    getMultisigAccountKey(multisig),
+                                    multisig.label
+                                  )
                                 }
                                 aria-label={`Edit label for ${row.label}`}
                                 title={`Edit label for ${row.label}`}
@@ -700,14 +721,17 @@ export function MultisigList({
                             </div>
                             <div className="mt-1 flex items-center gap-1">
                               <span className="truncate font-mono text-xs text-zinc-500">
-                                {row.key.slice(0, 8)}...{row.key.slice(-8)}
+                                {multisig.publicKey.toString().slice(0, 8)}...
+                                {multisig.publicKey.toString().slice(-8)}
                               </span>
                               <button
                                 type="button"
                                 className="shrink-0 text-zinc-500 transition-colors hover:text-zinc-100"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  navigator.clipboard.writeText(row.key);
+                                  navigator.clipboard.writeText(
+                                    multisig.publicKey.toString()
+                                  );
                                   toast.success("Address copied");
                                 }}
                                 aria-label={`Copy address for ${row.label}`}

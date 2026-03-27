@@ -1,5 +1,5 @@
 import { type ChainConfig, normalizeChainConfig } from "@/types/chain";
-import type { MultisigAccount } from "@/types/multisig";
+import { type MultisigAccount, getMultisigAccountKey } from "@/types/multisig";
 import type {
   WorkspaceExplorerView,
   WorkspaceRegistryItem,
@@ -76,7 +76,7 @@ export function buildRegistrySummaryRowsFromMultisigs({
         attentionByMultisig[multisig.publicKey.toString()] ?? null;
 
       return {
-        key: multisig.publicKey.toString(),
+        key: getMultisigAccountKey(multisig),
         label: multisig.label || "Unnamed",
         chainId: multisig.chainId,
         chainName,
