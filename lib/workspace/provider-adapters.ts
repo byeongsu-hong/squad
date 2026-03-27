@@ -6,7 +6,9 @@ const unsupportedSafeAdapter: WorkspaceProviderAdapter = {
   id: "safe",
   label: "Safe",
   capabilities: {
+    creatorSync: false,
     payload: false,
+    proposalLoading: false,
     proposalActions: false,
   },
   async loadPayload() {

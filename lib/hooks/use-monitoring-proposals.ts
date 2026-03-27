@@ -10,6 +10,7 @@ import {
   formatConfigAction,
 } from "@/lib/utils/transaction-formatter";
 import { toWorkspaceMultisig } from "@/lib/workspace/multisig-conversion";
+import { getWorkspaceProviderAdapter } from "@/lib/workspace/provider-adapters";
 import {
   invalidateSquadsProposalCache,
   loadSquadsWorkspaceProposalsForMultisig,
@@ -74,7 +75,12 @@ export function useMonitoringProposals({
         }
 
         const normalizedChain = normalizeChainConfig(chain);
-        return isOperationalSquadsChain(normalizedChain)
+        const adapter = getWorkspaceProviderAdapter(
+          normalizedChain.multisigProvider ?? "squads"
+        );
+
+        return adapter.capabilities.proposalLoading &&
+          isOperationalSquadsChain(normalizedChain)
           ? []
           : [
               {
@@ -93,7 +99,19 @@ export function useMonitoringProposals({
     () =>
       multisigs.filter((multisig) => {
         const chain = chains.find((item) => item.id === multisig.chainId);
-        return Boolean(chain && isOperationalSquadsChain(chain));
+        if (!chain) {
+          return false;
+        }
+
+        const normalizedChain = normalizeChainConfig(chain);
+        const adapter = getWorkspaceProviderAdapter(
+          normalizedChain.multisigProvider ?? "squads"
+        );
+
+        return (
+          adapter.capabilities.proposalLoading &&
+          isOperationalSquadsChain(normalizedChain)
+        );
       }),
     [chains, multisigs]
   );

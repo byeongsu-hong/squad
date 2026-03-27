@@ -504,7 +504,9 @@ export const squadsWorkspaceAdapter: WorkspaceProviderAdapter = {
   id: "squads",
   label: "Squads",
   capabilities: {
+    creatorSync: true,
     payload: true,
+    proposalLoading: true,
     proposalActions: true,
   },
   loadPayload({ chains, multisig, proposal }: WorkspacePayloadLoaderOptions) {

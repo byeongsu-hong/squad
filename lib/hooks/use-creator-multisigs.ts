@@ -1,8 +1,13 @@
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 
+import { getWorkspaceProviderAdapter } from "@/lib/workspace/provider-adapters";
 import { loadSquadsCreatorMultisigs } from "@/lib/workspace/squads-adapter";
-import { type ChainConfig, isOperationalSquadsChain } from "@/types/chain";
+import {
+  type ChainConfig,
+  isOperationalSquadsChain,
+  normalizeChainConfig,
+} from "@/types/chain";
 import type { MultisigAccount } from "@/types/multisig";
 
 interface UseCreatorMultisigsOptions {
@@ -32,7 +37,15 @@ export function useCreatorMultisigs({
       }
 
       const chain = chains.find((item) => item.id === chainId);
-      if (!chain || !isOperationalSquadsChain(chain)) {
+      const normalizedChain = chain ? normalizeChainConfig(chain) : null;
+      const adapter = getWorkspaceProviderAdapter(
+        normalizedChain?.multisigProvider ?? "squads"
+      );
+      if (
+        !normalizedChain ||
+        !adapter.capabilities.creatorSync ||
+        !isOperationalSquadsChain(normalizedChain)
+      ) {
         toast.error("Selected chain is not configured for Squads loading");
         return;
       }
@@ -95,7 +108,19 @@ export function useCreatorMultisigs({
       }
 
       const chain = chains.find((item) => item.id === chainId);
-      return Boolean(chain && isOperationalSquadsChain(chain));
+      const normalizedChain = chain ? normalizeChainConfig(chain) : null;
+      if (!normalizedChain) {
+        return false;
+      }
+
+      const adapter = getWorkspaceProviderAdapter(
+        normalizedChain.multisigProvider ?? "squads"
+      );
+
+      return (
+        adapter.capabilities.creatorSync &&
+        isOperationalSquadsChain(normalizedChain)
+      );
     },
   };
 }

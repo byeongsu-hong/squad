@@ -13,7 +13,9 @@ export interface WorkspacePayloadLoaderOptions {
 }
 
 export interface WorkspaceProviderCapabilities {
+  creatorSync: boolean;
   payload: boolean;
+  proposalLoading: boolean;
   proposalActions: boolean;
 }
 
