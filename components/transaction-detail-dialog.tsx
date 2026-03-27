@@ -68,6 +68,12 @@ function getProviderBadgeClass(
   return "border-zinc-700 bg-zinc-900 text-zinc-200";
 }
 
+function getProviderLabel(
+  provider: WorkspaceProposalRecord["proposal"]["provider"]
+) {
+  return provider === "safe" ? "Safe · Read-only" : "Squads";
+}
+
 export function TransactionDetailDialog({
   open,
   onOpenChange,
@@ -188,12 +194,13 @@ export function TransactionDetailDialog({
               variant="outline"
               className={getProviderBadgeClass(proposal.proposal.provider)}
             >
-              {proposal.proposal.provider === "safe" ? "Safe" : "Squads"}
+              {getProviderLabel(proposal.proposal.provider)}
             </Badge>
           </DialogTitle>
           <DialogDescription className="text-zinc-400">
             Review signer state, label unknown addresses, and inspect the
-            underlying transaction payload.
+            underlying transaction payload. Safe proposals stay read-only in
+            this view.
           </DialogDescription>
         </DialogHeader>
 

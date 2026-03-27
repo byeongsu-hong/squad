@@ -190,7 +190,7 @@ export function MonitoringView() {
   };
 
   const formatProviderLabel = (provider: "squads" | "safe") =>
-    provider === "safe" ? "Safe" : "Squads";
+    provider === "safe" ? "Safe · Read-only" : "Squads";
 
   const handleViewDetail = (proposal: MonitoringProposal) => {
     setSelectedProposal(proposal);
@@ -661,7 +661,7 @@ export function MonitoringView() {
         {unsupportedMultisigs.length > 0 ? (
           <div className="border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-sm text-amber-100">
             <span className="font-medium">
-              Monitoring is loading Squads-only multisigs.
+              Some multisigs are read-only or excluded in this monitoring view.
             </span>{" "}
             {unsupportedMultisigs
               .slice(0, 3)
@@ -831,7 +831,7 @@ export function MonitoringView() {
                                 className="w-fit rounded-md text-xs"
                               >
                                 {proposal.multisig.provider === "safe"
-                                  ? "Safe"
+                                  ? "Safe · Read-only"
                                   : "pending"}
                               </Badge>
                               <span className="text-xs text-zinc-500">
@@ -899,7 +899,9 @@ export function MonitoringView() {
                                       variant="outline"
                                       className="ml-2 border-zinc-800 bg-zinc-950 text-zinc-400"
                                     >
-                                      Read-only
+                                      {proposal.multisig.provider === "safe"
+                                        ? "Safe · Read-only"
+                                        : "Read-only"}
                                     </Badge>
                                   ) : null}
                                   {!isMember ||
@@ -931,7 +933,10 @@ export function MonitoringView() {
                                         </TooltipTrigger>
                                         <TooltipContent>
                                           {!actionsSupported
-                                            ? "Safe actions are not implemented yet"
+                                            ? proposal.multisig.provider ===
+                                              "safe"
+                                              ? "Safe multisigs are read-only in monitoring"
+                                              : "This provider is read-only in monitoring"
                                             : userApproved
                                               ? "Already Approved"
                                               : !isMember
@@ -985,7 +990,10 @@ export function MonitoringView() {
                                         </TooltipTrigger>
                                         <TooltipContent>
                                           {!actionsSupported
-                                            ? "Safe actions are not implemented yet"
+                                            ? proposal.multisig.provider ===
+                                              "safe"
+                                              ? "Safe multisigs are read-only in monitoring"
+                                              : "This provider is read-only in monitoring"
                                             : userRejected
                                               ? "Already Rejected"
                                               : !isMember
