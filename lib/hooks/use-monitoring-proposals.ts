@@ -11,16 +11,10 @@ import {
 } from "@/lib/utils/transaction-formatter";
 import { toWorkspaceMultisig } from "@/lib/workspace/multisig-conversion";
 import { getWorkspaceProviderAdapter } from "@/lib/workspace/provider-adapters";
-import {
-  invalidateSquadsProposalCache,
-  loadSquadsWorkspaceProposalsForMultisig,
-} from "@/lib/workspace/squads-adapter";
-import {
-  type ChainConfig,
-  isOperationalSquadsChain,
-  normalizeChainConfig,
-} from "@/types/chain";
+import { invalidateSquadsProposalCache } from "@/lib/workspace/squads-adapter";
+import { type ChainConfig, normalizeChainConfig } from "@/types/chain";
 import type { MultisigAccount } from "@/types/multisig";
+import type { WorkspaceProviderId } from "@/types/workspace";
 
 export interface MonitoringProposal extends WorkspaceProposalRecord {
   rawMultisig: MultisigAccount;
@@ -34,7 +28,7 @@ export interface UnsupportedMonitoringMultisig {
   chainId: string;
   chainName: string;
   vmFamily: string;
-  provider: string;
+  provider: WorkspaceProviderId | "unknown";
 }
 
 interface UseMonitoringProposalsOptions {
@@ -56,10 +50,77 @@ export function useMonitoringProposals({
   );
   const [proposals, setProposals] = useState<MonitoringProposal[]>([]);
 
+  const loadSquadsTransactionSummary = useCallback(
+    async (
+      proposal: WorkspaceProposalRecord["proposal"],
+      chain: ChainConfig
+    ): Promise<TransactionSummary | undefined> => {
+      const squadService = new SquadService(
+        chain.rpcUrl,
+        chain.squadsV4ProgramId
+      );
+
+      try {
+        const txType = await squadService.getTransactionType(
+          new PublicKey(proposal.multisigKey),
+          proposal.transactionIndex
+        );
+
+        if (txType === "vault") {
+          const vaultTx = await squadService.getVaultTransaction(
+            new PublicKey(proposal.multisigKey),
+            proposal.transactionIndex
+          );
+          const accountKeys = vaultTx.message.accountKeys.map((key) =>
+            key.toString()
+          );
+          const instructions = vaultTx.message.instructions;
+          const uniqueProgramIds = [
+            ...new Set(
+              instructions.map((ix) => accountKeys[ix.programIdIndex])
+            ),
+          ];
+
+          return {
+            type: "vault",
+            instructionCount: instructions.length,
+            accountCount: accountKeys.length,
+            programIds: uniqueProgramIds,
+          };
+        }
+
+        const configTx = await squadService.getConfigTransaction(
+          new PublicKey(proposal.multisigKey),
+          proposal.transactionIndex
+        );
+        const configActions = configTx.actions.map((action) =>
+          formatConfigAction(
+            action as unknown as import("@/lib/utils/transaction-formatter").ConfigAction
+          )
+        );
+
+        return {
+          type: "config",
+          configActions: configActions.map((action) => ({
+            type: action.type,
+            summary: action.summary,
+          })),
+        };
+      } catch (error) {
+        console.warn(
+          `Failed to load transaction data for proposal ${proposal.transactionIndex.toString()}:`,
+          error
+        );
+        return undefined;
+      }
+    },
+    []
+  );
+
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const unsupportedMultisigs = useMemo<UnsupportedMonitoringMultisig[]>(
     () =>
-      multisigs.flatMap((multisig) => {
+      multisigs.flatMap<UnsupportedMonitoringMultisig>((multisig) => {
         const chain = chains.find((item) => item.id === multisig.chainId);
         if (!chain) {
           return [
@@ -79,8 +140,7 @@ export function useMonitoringProposals({
           normalizedChain.multisigProvider ?? "squads"
         );
 
-        return adapter.capabilities.proposalLoading &&
-          isOperationalSquadsChain(normalizedChain)
+        return adapter.capabilities.proposalLoading
           ? []
           : [
               {
@@ -108,10 +168,7 @@ export function useMonitoringProposals({
           normalizedChain.multisigProvider ?? "squads"
         );
 
-        return (
-          adapter.capabilities.proposalLoading &&
-          isOperationalSquadsChain(normalizedChain)
-        );
+        return adapter.capabilities.proposalLoading;
       }),
     [chains, multisigs]
   );
@@ -138,71 +195,21 @@ export function useMonitoringProposals({
         }
 
         try {
-          const workspaceProposals =
-            await loadSquadsWorkspaceProposalsForMultisig(multisig, chains);
-
-          const squadService = new SquadService(
-            chain.rpcUrl,
-            chain.squadsV4ProgramId
-          );
-
           const workspaceMultisig = toWorkspaceMultisig(multisig, chains);
+          const adapter = getWorkspaceProviderAdapter(
+            workspaceMultisig.provider
+          );
+          const workspaceProposals = await adapter.loadProposalsForMultisig({
+            chains,
+            multisig: workspaceMultisig,
+          });
+
           const enriched = await Promise.all(
             workspaceProposals.map(async (proposal) => {
-              let transactionSummary: TransactionSummary | undefined;
-
-              try {
-                const txType = await squadService.getTransactionType(
-                  new PublicKey(proposal.multisigKey),
-                  proposal.transactionIndex
-                );
-
-                if (txType === "vault") {
-                  const vaultTx = await squadService.getVaultTransaction(
-                    new PublicKey(proposal.multisigKey),
-                    proposal.transactionIndex
-                  );
-                  const accountKeys = vaultTx.message.accountKeys.map((key) =>
-                    key.toString()
-                  );
-                  const instructions = vaultTx.message.instructions;
-                  const uniqueProgramIds = [
-                    ...new Set(
-                      instructions.map((ix) => accountKeys[ix.programIdIndex])
-                    ),
-                  ];
-
-                  transactionSummary = {
-                    type: "vault",
-                    instructionCount: instructions.length,
-                    accountCount: accountKeys.length,
-                    programIds: uniqueProgramIds,
-                  };
-                } else {
-                  const configTx = await squadService.getConfigTransaction(
-                    new PublicKey(proposal.multisigKey),
-                    proposal.transactionIndex
-                  );
-                  const configActions = configTx.actions.map((action) =>
-                    formatConfigAction(
-                      action as unknown as import("@/lib/utils/transaction-formatter").ConfigAction
-                    )
-                  );
-
-                  transactionSummary = {
-                    type: "config",
-                    configActions: configActions.map((action) => ({
-                      type: action.type,
-                      summary: action.summary,
-                    })),
-                  };
-                }
-              } catch (error) {
-                console.warn(
-                  `Failed to load transaction data for proposal ${proposal.transactionIndex.toString()}:`,
-                  error
-                );
-              }
+              const transactionSummary =
+                multisig.provider === "squads"
+                  ? await loadSquadsTransactionSummary(proposal, chain)
+                  : undefined;
 
               return {
                 key: `${proposal.multisigKey}-${proposal.transactionIndex.toString()}`,
@@ -245,7 +252,7 @@ export function useMonitoringProposals({
       setLoading(false);
       setLoadingProgress(0);
     }
-  }, [chains, supportedMultisigs]);
+  }, [chains, loadSquadsTransactionSummary, supportedMultisigs]);
 
   const handleRefresh = useCallback(async () => {
     supportedMultisigs.forEach((multisig) => {

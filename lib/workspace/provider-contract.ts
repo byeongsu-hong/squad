@@ -12,6 +12,11 @@ export interface WorkspacePayloadLoaderOptions {
   proposal: WorkspaceProposal;
 }
 
+export interface WorkspaceProposalLoaderOptions {
+  chains: ChainConfig[];
+  multisig: WorkspaceMultisig;
+}
+
 export interface WorkspaceProviderCapabilities {
   creatorSync: boolean;
   payload: boolean;
@@ -28,6 +33,9 @@ export interface WorkspaceProviderAdapter {
   getUnsupportedMessage?: (
     capability: WorkspaceProviderCapability
   ) => string | null;
+  loadProposalsForMultisig(
+    options: WorkspaceProposalLoaderOptions
+  ): Promise<WorkspaceProposal[]>;
   loadPayload(
     options: WorkspacePayloadLoaderOptions
   ): Promise<WorkspacePayload>;

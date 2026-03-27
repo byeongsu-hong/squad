@@ -185,6 +185,10 @@ export function MonitoringView() {
     return proposal.proposal.approvals.length >= proposal.multisig.threshold;
   };
 
+  const supportsProposalActions = (proposal: MonitoringProposal) => {
+    return proposal.multisig.provider === "squads";
+  };
+
   const handleViewDetail = (proposal: MonitoringProposal) => {
     setSelectedProposal(proposal);
     setDetailDialogOpen(true);
@@ -209,7 +213,10 @@ export function MonitoringView() {
 
   const selectAllProposals = () => {
     const activeProposals = pagination.pageItems.filter(
-      (p) => !p.proposal.executed && !p.proposal.cancelled
+      (p) =>
+        supportsProposalActions(p) &&
+        !p.proposal.executed &&
+        !p.proposal.cancelled
     );
     setSelectedProposals(new Set(activeProposals.map((p) => p.key)));
   };
@@ -723,9 +730,11 @@ export function MonitoringView() {
                     const userApproved = hasUserApproved(proposal);
                     const userRejected = hasUserRejected(proposal);
                     const thresholdMet = hasMetThreshold(proposal);
+                    const actionsSupported = supportsProposalActions(proposal);
                     const actionKey = proposal.key;
                     const isSelected = selectedProposals.has(actionKey);
                     const canSelect =
+                      actionsSupported &&
                       !proposal.proposal.executed &&
                       !proposal.proposal.cancelled;
 
@@ -800,10 +809,19 @@ export function MonitoringView() {
                               </span>
                             </div>
                           ) : (
-                            <div className="flex items-center gap-1">
-                              <Loader2 className="h-3 w-3 animate-spin" />
+                            <div className="flex flex-col gap-1">
+                              <Badge
+                                variant="outline"
+                                className="w-fit rounded-md text-xs"
+                              >
+                                {proposal.multisig.provider === "safe"
+                                  ? "safe"
+                                  : "pending"}
+                              </Badge>
                               <span className="text-xs text-zinc-500">
-                                Loading...
+                                {proposal.multisig.provider === "safe"
+                                  ? "Read-only via Safe transaction service"
+                                  : "Loading..."}
                               </span>
                             </div>
                           )}
@@ -860,7 +878,16 @@ export function MonitoringView() {
                             {!proposal.proposal.executed &&
                               !proposal.proposal.cancelled && (
                                 <>
+                                  {!actionsSupported ? (
+                                    <Badge
+                                      variant="outline"
+                                      className="ml-2 border-zinc-800 bg-zinc-950 text-zinc-400"
+                                    >
+                                      Read-only
+                                    </Badge>
+                                  ) : null}
                                   {!isMember ||
+                                  !actionsSupported ||
                                   isActionInProgress ||
                                   userApproved ? (
                                     <TooltipProvider>
@@ -887,11 +914,13 @@ export function MonitoringView() {
                                           </span>
                                         </TooltipTrigger>
                                         <TooltipContent>
-                                          {userApproved
-                                            ? "Already Approved"
-                                            : !isMember
-                                              ? "Not a member"
-                                              : "Action in progress"}
+                                          {!actionsSupported
+                                            ? "Safe actions are not implemented yet"
+                                            : userApproved
+                                              ? "Already Approved"
+                                              : !isMember
+                                                ? "Not a member"
+                                                : "Action in progress"}
                                         </TooltipContent>
                                       </Tooltip>
                                     </TooltipProvider>
@@ -912,6 +941,7 @@ export function MonitoringView() {
                                   )}
 
                                   {!isMember ||
+                                  !actionsSupported ||
                                   isActionInProgress ||
                                   userRejected ? (
                                     <TooltipProvider>
@@ -938,11 +968,13 @@ export function MonitoringView() {
                                           </span>
                                         </TooltipTrigger>
                                         <TooltipContent>
-                                          {userRejected
-                                            ? "Already Rejected"
-                                            : !isMember
-                                              ? "Not a member"
-                                              : "Action in progress"}
+                                          {!actionsSupported
+                                            ? "Safe actions are not implemented yet"
+                                            : userRejected
+                                              ? "Already Rejected"
+                                              : !isMember
+                                                ? "Not a member"
+                                                : "Action in progress"}
                                         </TooltipContent>
                                       </Tooltip>
                                     </TooltipProvider>
@@ -962,7 +994,7 @@ export function MonitoringView() {
                                     </Button>
                                   )}
 
-                                  {thresholdMet && (
+                                  {actionsSupported && thresholdMet && (
                                     <Button
                                       size="sm"
                                       variant="secondary"
