@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { toWorkspaceMultisig } from "@/lib/workspace/multisig-conversion";
 import { loadSquadsWorkspaceProposalsForMultisig } from "@/lib/workspace/squads-adapter";
 import type { ChainConfig } from "@/types/chain";
-import type { MultisigAccount } from "@/types/multisig";
+import { type MultisigAccount, getMultisigAccountKey } from "@/types/multisig";
 
 export interface AttentionSummary {
   waiting: number;
@@ -78,7 +78,7 @@ export function useMultisigAttention({
             }
 
             return [
-              multisig.publicKey.toString(),
+              getMultisigAccountKey(multisig),
               { waiting, executable, active },
             ] as const;
           } catch (error) {
@@ -86,7 +86,7 @@ export function useMultisigAttention({
               `Failed to load proposal attention for ${multisig.publicKey.toString()}:`,
               error
             );
-            return [multisig.publicKey.toString(), null] as const;
+            return [getMultisigAccountKey(multisig), null] as const;
           }
         })
       );

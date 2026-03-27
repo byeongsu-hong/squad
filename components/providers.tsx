@@ -8,6 +8,7 @@ import { resolveInitialMultisigs } from "@/lib/initial-config";
 import { useChainStore } from "@/stores/chain-store";
 import { useMultisigStore } from "@/stores/multisig-store";
 import { useProviderAdapterStore } from "@/stores/provider-adapter-store";
+import { getMultisigAccountKey } from "@/types/multisig";
 
 import { WalletAdapterProvider } from "./wallet-adapter-provider";
 import { WalletSync } from "./wallet-sync";
@@ -62,7 +63,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       setMultisigs([...multisigs, ...missingSeeds]);
 
       if (!selectedMultisigKey) {
-        selectMultisig((multisigs[0] ?? missingSeeds[0]).publicKey.toString());
+        selectMultisig(getMultisigAccountKey(multisigs[0] ?? missingSeeds[0]));
       }
     };
 

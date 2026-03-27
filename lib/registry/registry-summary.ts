@@ -73,7 +73,7 @@ export function buildRegistrySummaryRowsFromMultisigs({
         : null;
       const chainName = normalizedChain?.name ?? multisig.chainId;
       const attention =
-        attentionByMultisig[multisig.publicKey.toString()] ?? null;
+        attentionByMultisig[getMultisigAccountKey(multisig)] ?? null;
 
       return {
         key: getMultisigAccountKey(multisig),
