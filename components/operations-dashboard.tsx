@@ -659,10 +659,11 @@ export function OperationsDashboard({
                                       : `${item.active} active`;
                                   const safeSelectionBlocked =
                                     item.multisig.provider === "safe" &&
+                                    !hasLoadedWorkspaceQueue &&
                                     (summaryLoading ||
                                       Boolean(
                                         proposalSummary?.unavailableReason ||
-                                        summaryError
+                                          summaryError
                                       ) ||
                                       !proposalSummary);
 
