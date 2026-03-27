@@ -1,4 +1,8 @@
-# Squad Multisig Workspace
+<p align="center">
+  <samp>local-first multisig operations workspace</samp>
+</p>
+
+<h1 align="center">Squad Multisig Workspace</h1>
 
 <p align="center">
   Local-first multisig operations workspace for teams running across
