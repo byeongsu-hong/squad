@@ -42,6 +42,7 @@ import { useChainStore } from "@/stores/chain-store";
 import { useMultisigStore } from "@/stores/multisig-store";
 import {
   getOperationalSquadsChains,
+  getSquadsProgramId,
   normalizeChainConfig,
 } from "@/types/chain";
 import type { SquadMember } from "@/types/squad";
@@ -159,14 +160,12 @@ export function ImportMultisigDialog({
         addMultisig(safeMultisig);
       } else {
         const multisigPubkey = new PublicKey(data.multisigAddress);
-        const squadService = new SquadService(
-          chain.rpcUrl,
-          chain.squadsV4ProgramId
-        );
+        const programIdString = getSquadsProgramId(chain);
+        const squadService = new SquadService(chain.rpcUrl, programIdString);
 
         const multisigAccount = await squadService.getMultisig(multisigPubkey);
 
-        const programId = new PublicKey(chain.squadsV4ProgramId);
+        const programId = new PublicKey(programIdString);
         const [vaultPda] = multisigSdk.getVaultPda({
           multisigPda: multisigPubkey,
           index: 0,

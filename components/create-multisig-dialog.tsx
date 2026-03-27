@@ -40,7 +40,7 @@ import { createMultisigSchema } from "@/lib/validation";
 import { useChainStore } from "@/stores/chain-store";
 import { useMultisigStore } from "@/stores/multisig-store";
 import { useWalletStore } from "@/stores/wallet-store";
-import { getOperationalSquadsChains } from "@/types/chain";
+import { getOperationalSquadsChains, getSquadsProgramId } from "@/types/chain";
 import type { SquadMember } from "@/types/squad";
 import { WalletType, parseLedgerError } from "@/types/wallet";
 
@@ -109,10 +109,8 @@ export function CreateMultisigDialog({
 
     setLoading(true);
     try {
-      const squadService = new SquadService(
-        chain.rpcUrl,
-        chain.squadsV4ProgramId
-      );
+      const programIdString = getSquadsProgramId(chain);
+      const squadService = new SquadService(chain.rpcUrl, programIdString);
 
       const { multisigPda, createKey, instruction } =
         await squadService.createMultisig({
@@ -159,7 +157,7 @@ export function CreateMultisigDialog({
       const multisigAccount = await squadService.getMultisig(multisigPda);
 
       // Calculate vault PDA (default vault index is 0)
-      const programId = new PublicKey(chain.squadsV4ProgramId);
+      const programId = new PublicKey(programIdString);
       const [vaultPda] = multisigSdk.getVaultPda({
         multisigPda,
         index: 0,

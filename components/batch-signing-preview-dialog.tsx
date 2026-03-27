@@ -23,6 +23,7 @@ import {
   formatConfigAction,
 } from "@/lib/utils/transaction-formatter";
 import { useChainStore } from "@/stores/chain-store";
+import { getSquadsProgramId } from "@/types/chain";
 
 interface BatchSigningPreviewDialogProps {
   open: boolean;
@@ -124,7 +125,7 @@ export function BatchSigningPreviewDialog({
         try {
           const squadService = new SquadService(
             chain.rpcUrl,
-            chain.squadsV4ProgramId
+            getSquadsProgramId(chain)
           );
           const multisigPda = new PublicKey(proposal.multisig.key);
 

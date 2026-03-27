@@ -129,7 +129,9 @@ export function ChainManagementController({
         multisigProvider: data.multisigProvider,
         rpcUrl: data.rpcUrl,
         squadsV4ProgramId:
-          data.multisigProvider === "squads" ? data.squadsV4ProgramId : "",
+          data.multisigProvider === "squads"
+            ? data.squadsV4ProgramId
+            : undefined,
         explorerUrl: data.explorerUrl || undefined,
       });
       toast.success("Chain updated successfully");
@@ -141,7 +143,9 @@ export function ChainManagementController({
         multisigProvider: data.multisigProvider,
         rpcUrl: data.rpcUrl,
         squadsV4ProgramId:
-          data.multisigProvider === "squads" ? data.squadsV4ProgramId : "",
+          data.multisigProvider === "squads"
+            ? data.squadsV4ProgramId
+            : undefined,
         explorerUrl: data.explorerUrl || undefined,
       };
       addChain(newChain);
@@ -158,7 +162,7 @@ export function ChainManagementController({
       vmFamily: chain.vmFamily ?? "svm",
       multisigProvider: chain.multisigProvider ?? "squads",
       rpcUrl: chain.rpcUrl,
-      squadsV4ProgramId: chain.squadsV4ProgramId,
+      squadsV4ProgramId: chain.squadsV4ProgramId ?? "",
       explorerUrl: chain.explorerUrl || "",
     });
   };

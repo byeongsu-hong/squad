@@ -2,11 +2,13 @@ import { PublicKey } from "@solana/web3.js";
 import * as multisigSdk from "@sqds/multisig";
 
 import { SquadService } from "@/lib/squad";
+import { getSquadsProgramId, normalizeChainConfig } from "@/types/chain";
 import type { ChainConfig } from "@/types/chain";
 import type { MultisigAccount } from "@/types/multisig";
 import type { SquadMember } from "@/types/squad";
 
 interface InitialMultisigSeed {
+  provider?: "squads" | "safe";
   publicKey: string;
   chainId: string;
   label: string;
@@ -35,6 +37,41 @@ export const INITIAL_MULTISIG_SEEDS: InitialMultisigSeed[] = [
     chainId: "solaxy-mainnet",
     label: "Hyperlane",
   },
+  {
+    provider: "safe",
+    publicKey: "0x562Dfaac27A84be6C96273F5c9594DA1681C0DA7",
+    chainId: "ethereum-mainnet",
+    label: "Sample Safe",
+    tags: ["sample", "safe"],
+  },
+  {
+    provider: "safe",
+    publicKey: "0x890ac177Fe3052B8676A65f32C1589Bc329f3d50",
+    chainId: "base-mainnet",
+    label: "Sample Safe",
+    tags: ["sample", "safe"],
+  },
+  {
+    provider: "safe",
+    publicKey: "0x890ac177Fe3052B8676A65f32C1589Bc329f3d50",
+    chainId: "optimism-mainnet",
+    label: "Sample Safe",
+    tags: ["sample", "safe"],
+  },
+  {
+    provider: "safe",
+    publicKey: "0x7379D7bB2ccA68982E467632B6554fD4e72e9431",
+    chainId: "bnb-mainnet",
+    label: "Sample Safe",
+    tags: ["sample", "safe"],
+  },
+  {
+    provider: "safe",
+    publicKey: "0x7379D7bB2ccA68982E467632B6554fD4e72e9431",
+    chainId: "arbitrum-mainnet",
+    label: "Sample Safe",
+    tags: ["sample", "safe"],
+  },
 ];
 
 export async function resolveInitialMultisigs(
@@ -49,14 +86,47 @@ export async function resolveInitialMultisigs(
           return null;
         }
 
+        const normalizedChain = normalizeChainConfig(chain);
+
         try {
+          if (seed.provider === "safe") {
+            const response = await fetch("/api/safe/import", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                chain: normalizedChain,
+                addressInput: seed.publicKey,
+                label: seed.label,
+                tags: seed.tags,
+              }),
+            });
+
+            const payload = (await response.json().catch(() => null)) as {
+              error?: string;
+              multisig?: Omit<MultisigAccount, "transactionIndex"> & {
+                transactionIndex: string;
+              };
+            } | null;
+
+            if (!response.ok || !payload?.multisig) {
+              throw new Error(
+                payload?.error ?? `Failed to seed Safe ${seed.publicKey}`
+              );
+            }
+
+            return {
+              ...payload.multisig,
+              transactionIndex: BigInt(payload.multisig.transactionIndex),
+            };
+          }
+
           const publicKey = new PublicKey(seed.publicKey);
-          const squadService = new SquadService(
-            chain.rpcUrl,
-            chain.squadsV4ProgramId
-          );
+          const programIdString = getSquadsProgramId(chain);
+          const squadService = new SquadService(chain.rpcUrl, programIdString);
           const multisigAccount = await squadService.getMultisig(publicKey);
-          const programId = new PublicKey(chain.squadsV4ProgramId);
+          const programId = new PublicKey(programIdString);
           const [vaultPda] = multisigSdk.getVaultPda({
             multisigPda: publicKey,
             index: 0,

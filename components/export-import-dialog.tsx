@@ -13,7 +13,11 @@ import { useAddressLabels } from "@/lib/hooks/use-address-label";
 import { SquadService } from "@/lib/squad";
 import { useChainStore } from "@/stores/chain-store";
 import { useMultisigStore } from "@/stores/multisig-store";
-import { type ChainConfig, isOperationalSquadsChain } from "@/types/chain";
+import {
+  type ChainConfig,
+  getSquadsProgramId,
+  isOperationalSquadsChain,
+} from "@/types/chain";
 import type { MultisigAccount } from "@/types/multisig";
 
 import { Button } from "./ui/button";
@@ -157,9 +161,10 @@ export function ExportImportController({
               continue;
             }
 
+            const programIdString = getSquadsProgramId(chain);
             const squadService = new SquadService(
               chain.rpcUrl,
-              chain.squadsV4ProgramId
+              programIdString
             );
 
             const { PublicKey } = await import("@solana/web3.js");
@@ -181,7 +186,7 @@ export function ExportImportController({
                 multisigData.transactionIndex.toString()
               ),
               msChangeIndex: 0,
-              programId: new PublicKey(chain.squadsV4ProgramId),
+              programId: new PublicKey(programIdString),
               chainId: chain.id,
               label: serializedMultisig.label,
               tags: serializedMultisig.tags,
