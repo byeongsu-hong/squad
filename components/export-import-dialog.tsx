@@ -11,6 +11,7 @@ import {
 } from "@/lib/export-import";
 import { useAddressLabels } from "@/lib/hooks/use-address-label";
 import { SquadService } from "@/lib/squad";
+import { useAddressLabelStore } from "@/stores/address-label-store";
 import { useChainStore } from "@/stores/chain-store";
 import { useMultisigStore } from "@/stores/multisig-store";
 import {
@@ -84,7 +85,13 @@ export function ExportImportController({
 
   const generateExport = () => {
     try {
-      const content = exportAll(chains, multisigs, labels);
+      const currentChains = useChainStore.getState().chains;
+      const currentMultisigs = useMultisigStore.getState().multisigs;
+      const currentLabels = Array.from(
+        useAddressLabelStore.getState().labels.values()
+      ).sort((a, b) => b.updatedAt - a.updatedAt);
+
+      const content = exportAll(currentChains, currentMultisigs, currentLabels);
       setExportContent(content);
     } catch (error) {
       console.error("Export failed:", error);
@@ -260,7 +267,6 @@ export function ExportImportController({
     if (mode === "export") {
       generateExport();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chains, labels, mode, multisigs]);
 
   return (
