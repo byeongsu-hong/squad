@@ -11,7 +11,10 @@ import { toast } from "sonner";
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from "@/lib/config";
 import { SquadService } from "@/lib/squad";
 import { transactionSignerService } from "@/lib/transaction-signer";
-import { getWorkspaceProviderAdapter } from "@/lib/workspace/provider-adapters";
+import {
+  getUnsupportedProviderMessage,
+  getWorkspaceProviderAdapter,
+} from "@/lib/workspace/provider-adapters";
 import { useChainStore } from "@/stores/chain-store";
 import { useWalletStore } from "@/stores/wallet-store";
 import { isOperationalSquadsChain } from "@/types/chain";
@@ -49,7 +52,7 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
       );
       if (!adapter.capabilities.proposalActions) {
         throw new Error(
-          `${adapter.label} proposal actions are not implemented yet.`
+          getUnsupportedProviderMessage(adapter.id, "proposalActions")
         );
       }
       if (!isOperationalSquadsChain(chain)) {
