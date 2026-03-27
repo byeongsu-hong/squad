@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { getWorkspaceProviderAdapter } from "@/lib/workspace/provider-adapters";
 import type { ChainConfig } from "@/types/chain";
@@ -20,6 +20,7 @@ export function useWorkspaceProposalSummary({
   chains,
   multisigs,
 }: UseWorkspaceProposalSummaryOptions) {
+  const inFlightKeysRef = useRef<Set<string>>(new Set());
   const [summariesByMultisigKey, setSummariesByMultisigKey] =
     useState<SummaryMap>({});
   const [loadingByMultisigKey, setLoadingByMultisigKey] = useState<LoadingMap>(
@@ -38,12 +39,10 @@ export function useWorkspaceProposalSummary({
   );
 
   useEffect(() => {
-    let cancelled = false;
-
     const missingSummaries = summaryMultisigs.filter(
       (multisig) =>
         summariesByMultisigKey[multisig.key] === undefined &&
-        !loadingByMultisigKey[multisig.key] &&
+        !inFlightKeysRef.current.has(multisig.key) &&
         !errorsByMultisigKey[multisig.key]
     );
 
@@ -52,6 +51,10 @@ export function useWorkspaceProposalSummary({
     }
 
     void (async () => {
+      missingSummaries.forEach((multisig) => {
+        inFlightKeysRef.current.add(multisig.key);
+      });
+
       setLoadingByMultisigKey((current) => {
         const next = { ...current };
         for (const multisig of missingSummaries) {
@@ -75,10 +78,6 @@ export function useWorkspaceProposalSummary({
         })
       );
 
-      if (cancelled) {
-        return;
-      }
-
       const nextSummaries: SummaryMap = {};
       const nextErrors: ErrorMap = {};
       const nextLoading: LoadingMap = {};
@@ -89,6 +88,7 @@ export function useWorkspaceProposalSummary({
           return;
         }
 
+        inFlightKeysRef.current.delete(multisigKey);
         nextLoading[multisigKey] = false;
 
         if (result.status === "fulfilled") {
@@ -116,17 +116,7 @@ export function useWorkspaceProposalSummary({
         ...nextLoading,
       }));
     })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    chains,
-    errorsByMultisigKey,
-    loadingByMultisigKey,
-    summariesByMultisigKey,
-    summaryMultisigs,
-  ]);
+  }, [chains, errorsByMultisigKey, summariesByMultisigKey, summaryMultisigs]);
 
   return {
     summariesByMultisigKey,
