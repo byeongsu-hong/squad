@@ -1,9 +1,9 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 
-export default function ProposalsPage() {
+function ProposalsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -13,4 +13,12 @@ export default function ProposalsPage() {
   }, [router, searchParams]);
 
   return null;
+}
+
+export default function ProposalsPage() {
+  return (
+    <Suspense fallback={null}>
+      <ProposalsPageContent />
+    </Suspense>
+  );
 }
