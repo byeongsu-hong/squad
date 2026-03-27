@@ -24,6 +24,15 @@ export function useWorkspaceQueue({
   workspaceProposals = [],
   getViewerAddressForMultisig,
 }: UseWorkspaceQueueOptions) {
+  const getCreatedAtValue = (createdAt?: string) => {
+    if (!createdAt) {
+      return null;
+    }
+
+    const timestamp = Date.parse(createdAt);
+    return Number.isNaN(timestamp) ? null : timestamp;
+  };
+
   const { records } = useWorkspaceProposalRecords({
     proposals,
     multisigs,
@@ -67,6 +76,23 @@ export function useWorkspaceQueue({
         .sort((left, right) => {
           if (left.priority !== right.priority) {
             return left.priority - right.priority;
+          }
+
+          const leftCreatedAt = getCreatedAtValue(left.proposal.createdAt);
+          const rightCreatedAt = getCreatedAtValue(right.proposal.createdAt);
+
+          if (leftCreatedAt !== null || rightCreatedAt !== null) {
+            if (leftCreatedAt === null) {
+              return 1;
+            }
+
+            if (rightCreatedAt === null) {
+              return -1;
+            }
+
+            if (leftCreatedAt !== rightCreatedAt) {
+              return rightCreatedAt - leftCreatedAt;
+            }
           }
 
           return Number(

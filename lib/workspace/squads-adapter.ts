@@ -226,6 +226,7 @@ async function toWorkspaceProposal(
     chainId: chain.id,
     transactionIndex,
     creator: creator?.toString(),
+    createdAt: undefined,
     status,
     approvals: (proposalAccount.account.approved ?? []).map((item) =>
       item.toString()
@@ -311,6 +312,7 @@ export function toWorkspaceProposalFromRaw(
     chainId,
     transactionIndex: proposal.transactionIndex,
     creator: proposal.creator?.toString(),
+    createdAt: undefined,
     status: proposal.status,
     approvals: proposal.approvals.map((item) => item.toString()),
     rejections: proposal.rejections.map((item) => item.toString()),

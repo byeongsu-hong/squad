@@ -46,6 +46,24 @@ function formatCompactAddress(value: string) {
   return `${value.slice(0, 6)}...${value.slice(-4)}`;
 }
 
+function formatCreatedAt(value?: string) {
+  if (!value) {
+    return null;
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(date);
+}
+
 function getStatusTone(item: WorkspaceQueueItem) {
   if (item.needsYourSignature) {
     return "text-lime-300";
@@ -453,6 +471,7 @@ export function ProposalList({
               {pagination.pageItems.map((item, index) => {
                 const proposalKey = item.proposal.transactionIndex.toString();
                 const isFocused = proposalKey === focusedProposalKey;
+                const createdAtLabel = formatCreatedAt(item.proposal.createdAt);
 
                 return (
                   <button
@@ -479,6 +498,11 @@ export function ProposalList({
                           <span className="text-sm font-medium text-zinc-100">
                             Proposal #{proposalKey}
                           </span>
+                          {createdAtLabel ? (
+                            <span className="text-[0.68rem] tracking-[0.14em] text-zinc-500 uppercase">
+                              {createdAtLabel}
+                            </span>
+                          ) : null}
                         </div>
                         <p
                           className={cn("text-[0.82rem]", getStatusTone(item))}
