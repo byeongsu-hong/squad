@@ -16,6 +16,10 @@ export function useWorkspaceProposalLoader({
 }: UseWorkspaceProposalLoaderOptions) {
   const [loading, setLoading] = useState(false);
   const [proposals, setProposals] = useState<WorkspaceProposal[]>([]);
+  const [loadingKeys, setLoadingKeys] = useState<string[]>([]);
+  const [errorsByMultisigKey, setErrorsByMultisigKey] = useState<
+    Record<string, string | undefined>
+  >({});
 
   const loadForAllMultisigs = useCallback(
     async (multisigs: WorkspaceMultisig[]) => {
@@ -30,13 +34,23 @@ export function useWorkspaceProposalLoader({
 
       if (loadableMultisigs.length === 0) {
         setProposals([]);
+        setLoadingKeys([]);
+        setErrorsByMultisigKey({});
         return [];
       }
 
       setLoading(true);
+      setLoadingKeys(loadableMultisigs.map((multisig) => multisig.key));
+      setErrorsByMultisigKey((current) => {
+        const next = { ...current };
+        for (const multisig of loadableMultisigs) {
+          next[multisig.key] = undefined;
+        }
+        return next;
+      });
 
       try {
-        const loaded = await Promise.all(
+        const loaded = await Promise.allSettled(
           loadableMultisigs.map((multisig) => {
             const adapter = getWorkspaceProviderAdapter(multisig.provider);
 
@@ -47,13 +61,36 @@ export function useWorkspaceProposalLoader({
           })
         );
 
+        const nextErrors: Record<string, string | undefined> = {};
         const nextProposals = loaded
-          .flat()
+          .flatMap((result, index) => {
+            if (result.status === "fulfilled") {
+              return result.value;
+            }
+
+            const multisigKey = loadableMultisigs[index]?.key;
+            if (multisigKey) {
+              nextErrors[multisigKey] =
+                result.reason instanceof Error
+                  ? result.reason.message
+                  : errorMessage;
+            }
+            return [];
+          })
           .sort((left, right) =>
             Number(right.transactionIndex - left.transactionIndex)
           );
 
+        setErrorsByMultisigKey((current) => ({
+          ...current,
+          ...nextErrors,
+        }));
         setProposals(nextProposals);
+
+        if (Object.keys(nextErrors).length > 0) {
+          toast.error(errorMessage);
+        }
+
         return nextProposals;
       } catch (error) {
         console.error(errorMessage, error);
@@ -61,6 +98,7 @@ export function useWorkspaceProposalLoader({
         return [];
       } finally {
         setLoading(false);
+        setLoadingKeys([]);
       }
     },
     [chains, errorMessage]
@@ -68,6 +106,8 @@ export function useWorkspaceProposalLoader({
 
   return {
     loading,
+    loadingKeys,
+    errorsByMultisigKey,
     proposals,
     loadForAllMultisigs,
   };

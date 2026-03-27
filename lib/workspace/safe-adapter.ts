@@ -1,8 +1,13 @@
 import type {
   WorkspaceProposalLoaderOptions,
+  WorkspaceProposalSummaryLoaderOptions,
   WorkspaceProviderAdapter,
 } from "@/lib/workspace/provider-contract";
-import type { WorkspacePayload, WorkspaceProposal } from "@/types/workspace";
+import type {
+  WorkspacePayload,
+  WorkspaceProposal,
+  WorkspaceProposalSummary,
+} from "@/types/workspace";
 
 export async function loadSafeWorkspaceProposalsForMultisig({
   chains,
@@ -88,6 +93,41 @@ export async function loadSafeWorkspacePayload({
   return payload.payload;
 }
 
+export async function loadSafeWorkspaceProposalSummary({
+  chains,
+  multisig,
+}: WorkspaceProposalSummaryLoaderOptions): Promise<WorkspaceProposalSummary> {
+  const chain = chains.find((item) => item.id === multisig.chainId);
+  if (!chain) {
+    throw new Error("Chain configuration not found for Safe proposal summary.");
+  }
+
+  const params = new URLSearchParams({
+    chainId: chain.id,
+    chainName: chain.name,
+    safeAddress: multisig.key,
+  });
+
+  const response = await fetch(`/api/safe/count?${params.toString()}`, {
+    method: "GET",
+  });
+
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => null)) as {
+      error?: string;
+    } | null;
+    throw new Error(payload?.error ?? "Failed to load Safe proposal summary.");
+  }
+
+  const payload = (await response.json()) as {
+    totalCount?: number;
+  };
+
+  return {
+    totalCount: payload.totalCount ?? 0,
+  };
+}
+
 export const safeWorkspaceAdapter: WorkspaceProviderAdapter = {
   id: "safe",
   label: "Safe",
@@ -95,6 +135,7 @@ export const safeWorkspaceAdapter: WorkspaceProviderAdapter = {
     creatorSync: false,
     payload: true,
     proposalLoading: true,
+    proposalSummary: true,
     proposalActions: true,
   },
   getUnsupportedMessage(capability) {
@@ -106,6 +147,9 @@ export const safeWorkspaceAdapter: WorkspaceProviderAdapter = {
   },
   loadProposalsForMultisig(options) {
     return loadSafeWorkspaceProposalsForMultisig(options);
+  },
+  loadProposalSummary(options) {
+    return loadSafeWorkspaceProposalSummary(options);
   },
   loadPayload({ chains, multisig, proposal }) {
     return loadSafeWorkspacePayload({ chains, multisig, proposal });

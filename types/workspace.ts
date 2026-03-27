@@ -47,6 +47,10 @@ export interface WorkspaceProposal {
   cancelled: boolean;
 }
 
+export interface WorkspaceProposalSummary {
+  totalCount: number;
+}
+
 export interface WorkspaceQueueItem {
   focusKey: string;
   provider: WorkspaceProviderId;

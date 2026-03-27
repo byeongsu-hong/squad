@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 
 import { usePagination } from "@/lib/hooks/use-pagination";
 
@@ -23,6 +23,7 @@ export function useFocusedQueue<T>({
   isWaiting,
   isExecutable,
 }: UseFocusedQueueOptions<T>) {
+  const lastSyncedFocusedKeyRef = useRef<string | null>(null);
   const filteredItems = useMemo(() => {
     if (filter === "waiting") {
       return items.filter(isWaiting);
@@ -46,6 +47,7 @@ export function useFocusedQueue<T>({
 
   useEffect(() => {
     if (filteredItems.length === 0) {
+      lastSyncedFocusedKeyRef.current = null;
       return;
     }
 
@@ -58,6 +60,11 @@ export function useFocusedQueue<T>({
 
   useEffect(() => {
     if (!focusedKey) {
+      lastSyncedFocusedKeyRef.current = null;
+      return;
+    }
+
+    if (lastSyncedFocusedKeyRef.current === focusedKey) {
       return;
     }
 
@@ -70,6 +77,7 @@ export function useFocusedQueue<T>({
     }
 
     pagination.goToPage(Math.floor(focusedIndex / itemsPerPage) + 1);
+    lastSyncedFocusedKeyRef.current = focusedKey;
   }, [filteredItems, focusedKey, getItemKey, itemsPerPage, pagination]);
 
   const focusedItem =
