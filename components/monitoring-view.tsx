@@ -58,7 +58,10 @@ import { useProposalActions } from "@/lib/hooks/use-proposal-actions";
 import { useWorkspaceMultisigs } from "@/lib/hooks/use-workspace-multisigs";
 import { cn } from "@/lib/utils";
 import { formatTransactionSummary } from "@/lib/utils/transaction-formatter";
-import { supportsProviderCapability } from "@/lib/workspace/provider-adapters";
+import {
+  supportsProviderAction,
+  supportsProviderCapability,
+} from "@/lib/workspace/provider-adapters";
 import { useWalletStore } from "@/stores/wallet-store";
 
 export function MonitoringView() {
@@ -200,8 +203,25 @@ export function MonitoringView() {
     );
   };
 
+  const supportsAnyProposalAction = (proposal: MonitoringProposal) => {
+    return (
+      supportsProposalActions(proposal) &&
+      (supportsProviderAction(proposal.multisig.provider, "approve") ||
+        supportsProviderAction(proposal.multisig.provider, "reject") ||
+        supportsProviderAction(proposal.multisig.provider, "execute"))
+    );
+  };
+
+  const supportsBatchProposalActions = (proposal: MonitoringProposal) => {
+    return (
+      supportsProposalActions(proposal) &&
+      supportsProviderAction(proposal.multisig.provider, "approve") &&
+      supportsProviderAction(proposal.multisig.provider, "reject")
+    );
+  };
+
   const formatProviderLabel = (provider: "squads" | "safe") =>
-    provider === "safe" ? "Safe · Read-only" : "Squads";
+    provider === "safe" ? "Safe" : "Squads";
 
   const handleViewDetail = (proposal: MonitoringProposal) => {
     setSelectedProposal(proposal);
@@ -228,7 +248,7 @@ export function MonitoringView() {
   const selectAllProposals = () => {
     const activeProposals = pagination.pageItems.filter(
       (p) =>
-        supportsProposalActions(p) &&
+        supportsBatchProposalActions(p) &&
         !p.proposal.executed &&
         !p.proposal.cancelled
     );
@@ -744,11 +764,28 @@ export function MonitoringView() {
                     const userApproved = hasUserApproved(proposal);
                     const userRejected = hasUserRejected(proposal);
                     const thresholdMet = hasMetThreshold(proposal);
-                    const actionsSupported = supportsProposalActions(proposal);
+                    const anyActionSupported =
+                      supportsAnyProposalAction(proposal);
+                    const approveSupported = supportsProviderAction(
+                      proposal.multisig.provider,
+                      "approve"
+                    );
+                    const rejectSupported = supportsProviderAction(
+                      proposal.multisig.provider,
+                      "reject"
+                    );
+                    const executeSupported = supportsProviderAction(
+                      proposal.multisig.provider,
+                      "execute"
+                    );
+                    const approveLabel =
+                      proposal.multisig.provider === "safe"
+                        ? "Confirm"
+                        : "Approve";
                     const actionKey = proposal.key;
                     const isSelected = selectedProposals.has(actionKey);
                     const canSelect =
-                      actionsSupported &&
+                      supportsBatchProposalActions(proposal) &&
                       !proposal.proposal.executed &&
                       !proposal.proposal.cancelled;
 
@@ -905,18 +942,18 @@ export function MonitoringView() {
                             {!proposal.proposal.executed &&
                               !proposal.proposal.cancelled && (
                                 <>
-                                  {!actionsSupported ? (
+                                  {!anyActionSupported ? (
                                     <Badge
                                       variant="outline"
                                       className="ml-2 border-zinc-800 bg-zinc-950 text-zinc-400"
                                     >
                                       {proposal.multisig.provider === "safe"
-                                        ? "Safe · Read-only"
+                                        ? "Safe · No actions here"
                                         : "Read-only"}
                                     </Badge>
                                   ) : null}
-                                  {!isMember ||
-                                  !actionsSupported ||
+                                  {!approveSupported ||
+                                  !isMember ||
                                   isActionInProgress ||
                                   userApproved ? (
                                     <TooltipProvider>
@@ -943,13 +980,16 @@ export function MonitoringView() {
                                           </span>
                                         </TooltipTrigger>
                                         <TooltipContent>
-                                          {!actionsSupported
+                                          {!approveSupported
                                             ? proposal.multisig.provider ===
                                               "safe"
-                                              ? "Safe multisigs are read-only in monitoring"
+                                              ? "Confirm is unavailable for this Safe row"
                                               : "This provider is read-only in monitoring"
                                             : userApproved
-                                              ? "Already Approved"
+                                              ? proposal.multisig.provider ===
+                                                "safe"
+                                                ? "Already Confirmed"
+                                                : "Already Approved"
                                               : !isMember
                                                 ? "Not a member"
                                                 : "Action in progress"}
@@ -967,13 +1007,14 @@ export function MonitoringView() {
                                           proposal.proposal.transactionIndex
                                         )
                                       }
+                                      title={approveLabel}
                                     >
                                       <Check className="h-3 w-3" />
                                     </Button>
                                   )}
 
-                                  {!isMember ||
-                                  !actionsSupported ||
+                                  {!rejectSupported ||
+                                  !isMember ||
                                   isActionInProgress ||
                                   userRejected ? (
                                     <TooltipProvider>
@@ -1000,10 +1041,10 @@ export function MonitoringView() {
                                           </span>
                                         </TooltipTrigger>
                                         <TooltipContent>
-                                          {!actionsSupported
+                                          {!rejectSupported
                                             ? proposal.multisig.provider ===
                                               "safe"
-                                              ? "Safe multisigs are read-only in monitoring"
+                                              ? "Safe uses confirm and execute instead of reject here"
                                               : "This provider is read-only in monitoring"
                                             : userRejected
                                               ? "Already Rejected"
@@ -1029,7 +1070,7 @@ export function MonitoringView() {
                                     </Button>
                                   )}
 
-                                  {actionsSupported && thresholdMet && (
+                                  {executeSupported && thresholdMet && (
                                     <Button
                                       size="sm"
                                       variant="secondary"

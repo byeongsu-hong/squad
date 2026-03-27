@@ -71,7 +71,7 @@ function getProviderBadgeClass(
 function getProviderLabel(
   provider: WorkspaceProposalRecord["proposal"]["provider"]
 ) {
-  return provider === "safe" ? "Safe · Read-only" : "Squads";
+  return provider === "safe" ? "Safe" : "Squads";
 }
 
 export function TransactionDetailDialog({

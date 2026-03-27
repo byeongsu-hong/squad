@@ -37,7 +37,10 @@ import {
   type ConfigAction,
   formatConfigAction,
 } from "@/lib/utils/transaction-formatter";
-import { supportsProviderCapability } from "@/lib/workspace/provider-adapters";
+import {
+  supportsProviderAction,
+  supportsProviderCapability,
+} from "@/lib/workspace/provider-adapters";
 import { useMultisigStore } from "@/stores/multisig-store";
 import { useWalletStore } from "@/stores/wallet-store";
 import { useWorkspaceStore } from "@/stores/workspace-store";
@@ -234,6 +237,17 @@ export function OperationsDashboard({
         "proposalActions"
       )
     : false;
+  const approveSupported = focusedItem
+    ? supportsProviderAction(focusedItem.multisig.provider, "approve")
+    : false;
+  const rejectSupported = focusedItem
+    ? supportsProviderAction(focusedItem.multisig.provider, "reject")
+    : false;
+  const executeSupported = focusedItem
+    ? supportsProviderAction(focusedItem.multisig.provider, "execute")
+    : false;
+  const approveLabel =
+    focusedItem?.multisig.provider === "safe" ? "Confirm" : "Approve";
   const {
     approveByAddress,
     rejectByAddress,
@@ -990,52 +1004,59 @@ export function OperationsDashboard({
                       </p>
                       {actionsSupported ? (
                         <div className="mt-3 flex flex-wrap gap-2">
-                          <Button
-                            className="rounded-md bg-lime-300 text-zinc-950 hover:bg-lime-200"
-                            onClick={handleApprove}
-                            disabled={
-                              !focusedItem.needsYourSignature ||
-                              isActionInProgress
-                            }
-                          >
-                            {isApproveLoading ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <Check className="h-4 w-4" />
-                            )}
-                            Approve
-                          </Button>
-                          <Button
-                            variant="outline"
-                            className="rounded-md border-zinc-800 bg-transparent text-zinc-200 hover:bg-zinc-900"
-                            onClick={handleReject}
-                            disabled={
-                              !focusedItem.needsYourSignature ||
-                              isActionInProgress
-                            }
-                          >
-                            {isRejectLoading ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <X className="h-4 w-4" />
-                            )}
-                            Reject
-                          </Button>
-                          <Button
-                            variant="outline"
-                            className="rounded-md border-zinc-800 bg-zinc-100 text-zinc-950 hover:bg-zinc-200"
-                            onClick={handleExecute}
-                            disabled={
-                              !focusedItem.readyToExecute || isActionInProgress
-                            }
-                          >
-                            {isExecuteLoading ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <ArrowRight className="h-4 w-4" />
-                            )}
-                            Execute
-                          </Button>
+                          {approveSupported ? (
+                            <Button
+                              className="rounded-md bg-lime-300 text-zinc-950 hover:bg-lime-200"
+                              onClick={handleApprove}
+                              disabled={
+                                !focusedItem.needsYourSignature ||
+                                isActionInProgress
+                              }
+                            >
+                              {isApproveLoading ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Check className="h-4 w-4" />
+                              )}
+                              {approveLabel}
+                            </Button>
+                          ) : null}
+                          {rejectSupported ? (
+                            <Button
+                              variant="outline"
+                              className="rounded-md border-zinc-800 bg-transparent text-zinc-200 hover:bg-zinc-900"
+                              onClick={handleReject}
+                              disabled={
+                                !focusedItem.needsYourSignature ||
+                                isActionInProgress
+                              }
+                            >
+                              {isRejectLoading ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <X className="h-4 w-4" />
+                              )}
+                              Reject
+                            </Button>
+                          ) : null}
+                          {executeSupported ? (
+                            <Button
+                              variant="outline"
+                              className="rounded-md border-zinc-800 bg-zinc-100 text-zinc-950 hover:bg-zinc-200"
+                              onClick={handleExecute}
+                              disabled={
+                                !focusedItem.readyToExecute ||
+                                isActionInProgress
+                              }
+                            >
+                              {isExecuteLoading ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <ArrowRight className="h-4 w-4" />
+                              )}
+                              Execute
+                            </Button>
+                          ) : null}
                         </div>
                       ) : (
                         <div className="mt-3">

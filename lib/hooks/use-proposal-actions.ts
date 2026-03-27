@@ -9,11 +9,16 @@ import { useCallback, useState } from "react";
 import { toast } from "sonner";
 
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from "@/lib/config";
+import {
+  confirmSafeTransaction,
+  executeSafeTransaction,
+} from "@/lib/safe-client";
 import { SquadService } from "@/lib/squad";
 import { transactionSignerService } from "@/lib/transaction-signer";
 import {
   getUnsupportedProviderMessage,
   getWorkspaceProviderAdapter,
+  supportsProviderAction,
 } from "@/lib/workspace/provider-adapters";
 import { useChainStore } from "@/stores/chain-store";
 import { useWalletStore } from "@/stores/wallet-store";
@@ -37,7 +42,8 @@ function buildActionKey(
 
 export function useProposalActions(options: UseProposalActionsOptions = {}) {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const { publicKey, derivationPath, walletType } = useWalletStore();
+  const { publicKey, derivationPath, walletType, evmAddress } =
+    useWalletStore();
   const { chains } = useChainStore();
   const { signTransaction, connected: walletAdapterConnected } = useWallet();
 
@@ -292,21 +298,142 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
     approve,
     reject,
     execute,
-    approveByAddress: (
+    approveByAddress: async (
       multisigKey: string,
       transactionIndex: bigint,
       chainId: string
-    ) => approve(new PublicKey(multisigKey), transactionIndex, chainId),
-    rejectByAddress: (
+    ) => {
+      const chain = chains.find((item) => item.id === chainId);
+      if (!chain) {
+        throw new Error(ERROR_MESSAGES.CHAIN_NOT_FOUND);
+      }
+
+      const provider = chain.multisigProvider ?? "squads";
+      if (!supportsProviderAction(provider, "approve")) {
+        throw new Error(
+          getUnsupportedProviderMessage(provider, "proposalActions")
+        );
+      }
+
+      if (provider === "safe") {
+        if (!evmAddress) {
+          toast.error("Connect an EVM wallet first.");
+          return;
+        }
+
+        const actionKey = buildActionKey(
+          "approve",
+          multisigKey,
+          transactionIndex
+        );
+        setActionLoading(actionKey);
+
+        try {
+          await confirmSafeTransaction({
+            chain,
+            safeAddress: multisigKey,
+            signer: evmAddress,
+            nonce: transactionIndex,
+          });
+          toast.success("Safe transaction confirmed.");
+          if (!options.skipSuccessCallback) {
+            await options.onSuccess?.();
+          }
+        } catch (error) {
+          console.error("Failed to confirm Safe transaction:", error);
+          toast.error(
+            error instanceof Error
+              ? error.message
+              : "Failed to confirm Safe transaction."
+          );
+          throw error;
+        } finally {
+          setActionLoading(null);
+        }
+        return;
+      }
+
+      return approve(new PublicKey(multisigKey), transactionIndex, chainId);
+    },
+    rejectByAddress: async (
       multisigKey: string,
       transactionIndex: bigint,
       chainId: string
-    ) => reject(new PublicKey(multisigKey), transactionIndex, chainId),
-    executeByAddress: (
+    ) => {
+      const chain = chains.find((item) => item.id === chainId);
+      if (!chain) {
+        throw new Error(ERROR_MESSAGES.CHAIN_NOT_FOUND);
+      }
+
+      const provider = chain.multisigProvider ?? "squads";
+      if (!supportsProviderAction(provider, "reject")) {
+        const message =
+          provider === "safe"
+            ? "Safe does not expose a direct reject action here."
+            : getUnsupportedProviderMessage(provider, "proposalActions");
+        toast.error(message);
+        throw new Error(message);
+      }
+
+      return reject(new PublicKey(multisigKey), transactionIndex, chainId);
+    },
+    executeByAddress: async (
       multisigKey: string,
       transactionIndex: bigint,
       chainId: string
-    ) => execute(new PublicKey(multisigKey), transactionIndex, chainId),
+    ) => {
+      const chain = chains.find((item) => item.id === chainId);
+      if (!chain) {
+        throw new Error(ERROR_MESSAGES.CHAIN_NOT_FOUND);
+      }
+
+      const provider = chain.multisigProvider ?? "squads";
+      if (!supportsProviderAction(provider, "execute")) {
+        throw new Error(
+          getUnsupportedProviderMessage(provider, "proposalActions")
+        );
+      }
+
+      if (provider === "safe") {
+        if (!evmAddress) {
+          toast.error("Connect an EVM wallet first.");
+          return;
+        }
+
+        const actionKey = buildActionKey(
+          "execute",
+          multisigKey,
+          transactionIndex
+        );
+        setActionLoading(actionKey);
+
+        try {
+          await executeSafeTransaction({
+            chain,
+            safeAddress: multisigKey,
+            signer: evmAddress,
+            nonce: transactionIndex,
+          });
+          toast.success("Safe transaction submitted.");
+          if (!options.skipSuccessCallback) {
+            await options.onSuccess?.();
+          }
+        } catch (error) {
+          console.error("Failed to execute Safe transaction:", error);
+          toast.error(
+            error instanceof Error
+              ? error.message
+              : "Failed to execute Safe transaction."
+          );
+          throw error;
+        } finally {
+          setActionLoading(null);
+        }
+        return;
+      }
+
+      return execute(new PublicKey(multisigKey), transactionIndex, chainId);
+    },
     buildActionKey,
     isActionLoading: (
       action: ProposalActionType,
