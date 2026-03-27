@@ -35,11 +35,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { RPC_ERROR_PATTERNS, getErrorMessage } from "@/lib/error-handler";
+import { loadSafeMultisig } from "@/lib/safe";
 import { SquadService } from "@/lib/squad";
-import { chainIdSchema, labelSchema, publicKeySchema } from "@/lib/validation";
+import { chainIdSchema, labelSchema } from "@/lib/validation";
 import { useChainStore } from "@/stores/chain-store";
 import { useMultisigStore } from "@/stores/multisig-store";
-import { getOperationalSquadsChains } from "@/types/chain";
+import {
+  getOperationalSquadsChains,
+  normalizeChainConfig,
+} from "@/types/chain";
 import type { SquadMember } from "@/types/squad";
 
 interface ImportMultisigDialogProps {
@@ -49,7 +53,7 @@ interface ImportMultisigDialogProps {
 
 const importMultisigFormSchema = z.object({
   chainId: chainIdSchema,
-  multisigAddress: publicKeySchema,
+  multisigAddress: z.string().min(1, "Address or Safe URL is required"),
   label: labelSchema,
   tags: z.string().optional(),
 });
@@ -65,6 +69,13 @@ export function ImportMultisigDialog({
   const { getSelectedChain, chains } = useChainStore();
   const { addMultisig } = useMultisigStore();
   const operationalChains = getOperationalSquadsChains(chains);
+  const importableChains = chains.filter((chain) => {
+    const normalizedChain = normalizeChainConfig(chain);
+    return (
+      normalizedChain.multisigProvider === "safe" ||
+      operationalChains.some((item) => item.id === normalizedChain.id)
+    );
+  });
 
   const form = useForm<ImportFormValues>({
     resolver: zodResolver(importMultisigFormSchema),
@@ -76,52 +87,63 @@ export function ImportMultisigDialog({
   });
 
   const handleSubmit = form.handleSubmit(async (data) => {
-    const chain = operationalChains.find((c) => c.id === data.chainId);
+    const chain = importableChains.find((c) => c.id === data.chainId);
     if (!chain) {
       toast.error("Selected chain not found");
       return;
     }
 
-    const multisigPubkey = new PublicKey(data.multisigAddress);
+    const normalizedChain = normalizeChainConfig(chain);
+    const tags = data.tags
+      ? data.tags
+          .split(",")
+          .map((tag) => tag.trim())
+          .filter((tag) => tag)
+      : undefined;
 
     setLoading(true);
     try {
-      const squadService = new SquadService(
-        chain.rpcUrl,
-        chain.squadsV4ProgramId
-      );
+      if (normalizedChain.multisigProvider === "safe") {
+        const safeMultisig = await loadSafeMultisig(
+          normalizedChain,
+          data.multisigAddress,
+          data.label,
+          tags
+        );
+        addMultisig(safeMultisig);
+      } else {
+        const multisigPubkey = new PublicKey(data.multisigAddress);
+        const squadService = new SquadService(
+          chain.rpcUrl,
+          chain.squadsV4ProgramId
+        );
 
-      const multisigAccount = await squadService.getMultisig(multisigPubkey);
+        const multisigAccount = await squadService.getMultisig(multisigPubkey);
 
-      // Calculate vault PDA (default vault index is 0)
-      const programId = new PublicKey(chain.squadsV4ProgramId);
-      const [vaultPda] = multisigSdk.getVaultPda({
-        multisigPda: multisigPubkey,
-        index: 0,
-        programId,
-      });
+        const programId = new PublicKey(chain.squadsV4ProgramId);
+        const [vaultPda] = multisigSdk.getVaultPda({
+          multisigPda: multisigPubkey,
+          index: 0,
+          programId,
+        });
 
-      addMultisig({
-        provider: "squads",
-        publicKey: multisigPubkey,
-        threshold: multisigAccount.threshold,
-        members: multisigAccount.members.map((m: SquadMember) => ({
-          key: m.key,
-          permissions: { mask: m.permissions.mask },
-        })),
-        transactionIndex: BigInt(multisigAccount.transactionIndex.toString()),
-        msChangeIndex: 0,
-        programId,
-        chainId: chain.id,
-        label: data.label,
-        tags: data.tags
-          ? data.tags
-              .split(",")
-              .map((tag) => tag.trim())
-              .filter((tag) => tag)
-          : undefined,
-        vaultPda,
-      });
+        addMultisig({
+          provider: "squads",
+          publicKey: multisigPubkey,
+          threshold: multisigAccount.threshold,
+          members: multisigAccount.members.map((m: SquadMember) => ({
+            key: m.key,
+            permissions: { mask: m.permissions.mask },
+          })),
+          transactionIndex: BigInt(multisigAccount.transactionIndex.toString()),
+          msChangeIndex: 0,
+          programId,
+          chainId: chain.id,
+          label: data.label,
+          tags,
+          vaultPda,
+        });
+      }
 
       toast.success("Multisig imported successfully!");
       onOpenChange(false);
@@ -137,19 +159,19 @@ export function ImportMultisigDialog({
 
   // Set default chain when dialog opens
   useEffect(() => {
-    if (open && !form.getValues("chainId") && operationalChains.length > 0) {
+    if (open && !form.getValues("chainId") && importableChains.length > 0) {
       const currentChain = getSelectedChain();
-      const nextChainId = operationalChains.some(
+      const nextChainId = importableChains.some(
         (chain) => chain.id === currentChain?.id
       )
         ? currentChain?.id
-        : operationalChains[0]?.id;
+        : importableChains[0]?.id;
 
       if (nextChainId) {
         form.setValue("chainId", nextChainId);
       }
     }
-  }, [open, operationalChains, form, getSelectedChain]);
+  }, [open, importableChains, form, getSelectedChain]);
 
   useEffect(() => {
     if (!open) {
@@ -188,7 +210,7 @@ export function ImportMultisigDialog({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {operationalChains.map((chain) => (
+                      {importableChains.map((chain) => (
                         <SelectItem key={chain.id} value={chain.id}>
                           {chain.name}
                         </SelectItem>
@@ -197,8 +219,8 @@ export function ImportMultisigDialog({
                   </Select>
                   <FormMessage />
                   <FormDescription>
-                    Only chains with active SVM / Squads support are available
-                    for import.
+                    Safe-ready EVM chains and active SVM / Squads chains are
+                    available for import.
                   </FormDescription>
                 </FormItem>
               )}
@@ -214,14 +236,15 @@ export function ImportMultisigDialog({
                   </FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Enter multisig public key"
+                      placeholder="Enter multisig address or Safe URL"
                       disabled={loading}
                       {...field}
                     />
                   </FormControl>
                   <FormMessage />
                   <FormDescription>
-                    The public key of an existing Squads V4 multisig
+                    Paste a Squads public key, a Safe address, or a full Safe
+                    URL like `app.safe.global/home?safe=eth:0x...`
                   </FormDescription>
                 </FormItem>
               )}
