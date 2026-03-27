@@ -12,7 +12,11 @@ import {
 import { toWorkspaceMultisig } from "@/lib/workspace/multisig-conversion";
 import { getWorkspaceProviderAdapter } from "@/lib/workspace/provider-adapters";
 import { invalidateSquadsProposalCache } from "@/lib/workspace/squads-adapter";
-import { type ChainConfig, normalizeChainConfig } from "@/types/chain";
+import {
+  type ChainConfig,
+  getSquadsProgramId,
+  normalizeChainConfig,
+} from "@/types/chain";
 import type { MultisigAccount } from "@/types/multisig";
 import type { WorkspaceProviderId } from "@/types/workspace";
 
@@ -57,7 +61,7 @@ export function useMonitoringProposals({
     ): Promise<TransactionSummary | undefined> => {
       const squadService = new SquadService(
         chain.rpcUrl,
-        chain.squadsV4ProgramId
+        getSquadsProgramId(chain)
       );
 
       try {

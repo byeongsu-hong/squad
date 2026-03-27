@@ -5,7 +5,7 @@ export interface ChainConfig {
   id: string;
   name: string;
   rpcUrl: string;
-  squadsV4ProgramId: string;
+  squadsV4ProgramId?: string;
   explorerUrl?: string;
   vmFamily?: ChainVmFamily;
   multisigProvider?: ChainMultisigProvider;
@@ -13,10 +13,16 @@ export interface ChainConfig {
 }
 
 export function normalizeChainConfig(chain: ChainConfig): ChainConfig {
+  const normalizedProvider = chain.multisigProvider ?? "squads";
+
   return {
     ...chain,
     vmFamily: chain.vmFamily ?? "svm",
-    multisigProvider: chain.multisigProvider ?? "squads",
+    multisigProvider: normalizedProvider,
+    squadsV4ProgramId:
+      normalizedProvider === "squads"
+        ? (chain.squadsV4ProgramId ?? "")
+        : undefined,
   };
 }
 
@@ -26,12 +32,27 @@ export function isOperationalSquadsChain(chain: ChainConfig) {
   return (
     normalizedChain.vmFamily === "svm" &&
     normalizedChain.multisigProvider === "squads" &&
-    normalizedChain.squadsV4ProgramId.length > 0
+    (normalizedChain.squadsV4ProgramId?.length ?? 0) > 0
   );
 }
 
 export function getOperationalSquadsChains(chains: ChainConfig[]) {
   return chains.filter(isOperationalSquadsChain);
+}
+
+export function getSquadsProgramId(chain: ChainConfig): string {
+  const normalizedChain = normalizeChainConfig(chain);
+
+  if (!isOperationalSquadsChain(normalizedChain)) {
+    throw new Error(`Chain ${chain.name} is not configured for Squads.`);
+  }
+
+  const programId = normalizedChain.squadsV4ProgramId;
+  if (!programId) {
+    throw new Error(`Chain ${chain.name} is missing a Squads program ID.`);
+  }
+
+  return programId;
 }
 
 // Note: Public RPC endpoints have strict rate limits and may return 403 errors.
@@ -101,7 +122,6 @@ export const DEFAULT_CHAINS: ChainConfig[] = [
     id: "ethereum-mainnet",
     name: "Ethereum",
     rpcUrl: "https://eth.llamarpc.com",
-    squadsV4ProgramId: "",
     explorerUrl: "https://etherscan.io",
     vmFamily: "evm",
     multisigProvider: "safe",
@@ -110,7 +130,6 @@ export const DEFAULT_CHAINS: ChainConfig[] = [
     id: "base-mainnet",
     name: "Base",
     rpcUrl: "https://base.llamarpc.com",
-    squadsV4ProgramId: "",
     explorerUrl: "https://basescan.org",
     vmFamily: "evm",
     multisigProvider: "safe",
@@ -119,7 +138,6 @@ export const DEFAULT_CHAINS: ChainConfig[] = [
     id: "optimism-mainnet",
     name: "Optimism",
     rpcUrl: "https://optimism.llamarpc.com",
-    squadsV4ProgramId: "",
     explorerUrl: "https://optimistic.etherscan.io",
     vmFamily: "evm",
     multisigProvider: "safe",
@@ -128,7 +146,6 @@ export const DEFAULT_CHAINS: ChainConfig[] = [
     id: "bnb-mainnet",
     name: "BNB Chain",
     rpcUrl: "https://binance.llamarpc.com",
-    squadsV4ProgramId: "",
     explorerUrl: "https://bscscan.com",
     vmFamily: "evm",
     multisigProvider: "safe",
@@ -137,7 +154,6 @@ export const DEFAULT_CHAINS: ChainConfig[] = [
     id: "arbitrum-mainnet",
     name: "Arbitrum",
     rpcUrl: "https://arbitrum.llamarpc.com",
-    squadsV4ProgramId: "",
     explorerUrl: "https://arbiscan.io",
     vmFamily: "evm",
     multisigProvider: "safe",

@@ -22,7 +22,7 @@ import {
 } from "@/lib/workspace/provider-adapters";
 import { useChainStore } from "@/stores/chain-store";
 import { useWalletStore } from "@/stores/wallet-store";
-import { isOperationalSquadsChain } from "@/types/chain";
+import { getSquadsProgramId, isOperationalSquadsChain } from "@/types/chain";
 import { WalletType, parseLedgerError } from "@/types/wallet";
 
 interface UseProposalActionsOptions {
@@ -67,7 +67,7 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
         );
       }
       return {
-        service: new SquadService(chain.rpcUrl, chain.squadsV4ProgramId),
+        service: new SquadService(chain.rpcUrl, getSquadsProgramId(chain)),
         chain,
       };
     },

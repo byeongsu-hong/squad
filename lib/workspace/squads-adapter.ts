@@ -11,7 +11,11 @@ import type {
   WorkspacePayloadLoaderOptions,
   WorkspaceProviderAdapter,
 } from "@/lib/workspace/provider-contract";
-import { type ChainConfig, isOperationalSquadsChain } from "@/types/chain";
+import {
+  type ChainConfig,
+  getSquadsProgramId,
+  isOperationalSquadsChain,
+} from "@/types/chain";
 import {
   type MultisigAccount,
   type ProposalAccount,
@@ -57,7 +61,7 @@ export async function loadSquadsWorkspaceProposals(
 
       const squadService = new SquadService(
         chain.rpcUrl,
-        chain.squadsV4ProgramId
+        getSquadsProgramId(chain)
       );
       const proposalAccounts = await squadService.getProposalsByMultisig(
         multisig.publicKey
@@ -95,7 +99,8 @@ export async function loadSquadsCreatorMultisigs(
     return [];
   }
 
-  const squadService = new SquadService(chain.rpcUrl, chain.squadsV4ProgramId);
+  const programIdString = getSquadsProgramId(chain);
+  const squadService = new SquadService(chain.rpcUrl, programIdString);
   const accounts = await squadService.getMultisigsByCreator(
     new PublicKey(creatorAddress)
   );
@@ -119,7 +124,7 @@ export async function loadSquadsCreatorMultisigs(
       })),
       transactionIndex: BigInt(account.account.transactionIndex.toString()),
       msChangeIndex: existing?.msChangeIndex ?? 0,
-      programId: new PublicKey(chain.squadsV4ProgramId),
+      programId: new PublicKey(programIdString),
       chainId: chain.id,
       label: existing?.label,
       tags: existing?.tags,
@@ -141,7 +146,10 @@ export async function loadSquadsWorkspaceProposalsForMultisig(
     return [];
   }
 
-  const squadService = new SquadService(chain.rpcUrl, chain.squadsV4ProgramId);
+  const squadService = new SquadService(
+    chain.rpcUrl,
+    getSquadsProgramId(chain)
+  );
   const proposalAccounts = await squadService.getProposalsByMultisig(
     multisig.publicKey
   );
@@ -435,7 +443,8 @@ export async function loadSquadsWorkspacePayload(
     throw new Error("Chain configuration is not available for Squads payloads");
   }
 
-  const programId = new PublicKey(chain.squadsV4ProgramId);
+  const programIdString = getSquadsProgramId(chain);
+  const programId = new PublicKey(programIdString);
   const multisigPda = new PublicKey(multisig.key);
   const [transactionPda] = multisigSdk.getTransactionPda({
     multisigPda,
@@ -453,7 +462,7 @@ export async function loadSquadsWorkspacePayload(
       })[0]
       .toString();
 
-  const squadService = new SquadService(chain.rpcUrl, chain.squadsV4ProgramId);
+  const squadService = new SquadService(chain.rpcUrl, programIdString);
   const txType = await squadService.getTransactionType(
     multisigPda,
     proposal.transactionIndex
@@ -507,7 +516,10 @@ export function invalidateSquadsProposalCache(
     return;
   }
 
-  const squadService = new SquadService(chain.rpcUrl, chain.squadsV4ProgramId);
+  const squadService = new SquadService(
+    chain.rpcUrl,
+    getSquadsProgramId(chain)
+  );
   squadService.invalidateProposalCache(new PublicKey(multisigKey));
 }
 
