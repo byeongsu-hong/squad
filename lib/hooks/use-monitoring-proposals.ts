@@ -66,13 +66,13 @@ export function useMonitoringProposals({
 
       try {
         const txType = await squadService.getTransactionType(
-          new PublicKey(proposal.multisigKey),
+          new PublicKey(proposal.multisigAddress),
           proposal.transactionIndex
         );
 
         if (txType === "vault") {
           const vaultTx = await squadService.getVaultTransaction(
-            new PublicKey(proposal.multisigKey),
+            new PublicKey(proposal.multisigAddress),
             proposal.transactionIndex
           );
           const accountKeys = vaultTx.message.accountKeys.map((key) =>
@@ -94,7 +94,7 @@ export function useMonitoringProposals({
         }
 
         const configTx = await squadService.getConfigTransaction(
-          new PublicKey(proposal.multisigKey),
+          new PublicKey(proposal.multisigAddress),
           proposal.transactionIndex
         );
         const configActions = configTx.actions.map((action) =>
@@ -305,7 +305,7 @@ export function useMonitoringProposals({
         if (debouncedSearchQuery.trim()) {
           const query = debouncedSearchQuery.toLowerCase();
           const name = (proposal.multisig.label || "").toLowerCase();
-          const address = proposal.multisig.key.toLowerCase();
+          const address = proposal.multisig.address.toLowerCase();
           if (!name.includes(query) && !address.includes(query)) {
             return false;
           }

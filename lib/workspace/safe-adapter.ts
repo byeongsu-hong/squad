@@ -21,7 +21,7 @@ export async function loadSafeWorkspaceProposalsForMultisig({
   const params = new URLSearchParams({
     chainId: chain.id,
     chainName: chain.name,
-    safeAddress: multisig.key,
+    safeAddress: multisig.address,
     limit: "100",
   });
 
@@ -46,6 +46,8 @@ export async function loadSafeWorkspaceProposalsForMultisig({
 
   return (payload.proposals ?? []).map((proposal) => ({
     ...proposal,
+    multisigKey: multisig.key,
+    multisigAddress: multisig.address,
     transactionIndex: BigInt(proposal.transactionIndex),
   }));
 }
@@ -67,7 +69,7 @@ export async function loadSafeWorkspacePayload({
   const params = new URLSearchParams({
     chainId: chain.id,
     chainName: chain.name,
-    safeAddress: multisig.key,
+    safeAddress: multisig.address,
     nonce: proposal.transactionIndex.toString(),
   });
 
@@ -105,7 +107,7 @@ export async function loadSafeWorkspaceProposalSummary({
   const params = new URLSearchParams({
     chainId: chain.id,
     chainName: chain.name,
-    safeAddress: multisig.key,
+    safeAddress: multisig.address,
   });
 
   const response = await fetch(`/api/safe/count?${params.toString()}`, {

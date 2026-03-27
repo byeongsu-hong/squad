@@ -136,7 +136,7 @@ export function exportMonitoringProposalsToCSV(
   ];
 
   const data = proposals.map((item) => ({
-    multisig: item.multisig.key,
+    multisig: item.multisig.address,
     multisigLabel: item.multisig.label || "Unnamed",
     chain: item.multisig.chainName,
     runtime: item.multisig.provider === "safe" ? "EVM" : "SVM",

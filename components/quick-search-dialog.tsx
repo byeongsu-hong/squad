@@ -28,13 +28,13 @@ export function QuickSearchDialog({
     const lowerQuery = query.toLowerCase();
     return (
       m.label?.toLowerCase().includes(lowerQuery) ||
-      m.key.toLowerCase().includes(lowerQuery) ||
+      m.address.toLowerCase().includes(lowerQuery) ||
       m.tags.some((tag) => tag.toLowerCase().includes(lowerQuery))
     );
   });
 
-  const handleSelect = (multisigKey: string) => {
-    selectMultisig(multisigKey);
+  const handleSelect = (multisigKey: string, multisigAddress: string) => {
+    selectMultisig(multisigAddress);
     router.push(`/?multisig=${multisigKey}`);
     onOpenChange(false);
     setQuery("");
@@ -66,9 +66,10 @@ export function QuickSearchDialog({
       sublabel: [
         multisig.chainName,
         `${multisig.key.slice(0, 12)}...`,
+        `${multisig.address.slice(0, 12)}...`,
         ...(multisig.tags.length > 0 ? [multisig.tags.join(", ")] : []),
       ].join(" • "),
-      onSelect: () => handleSelect(multisig.key),
+      onSelect: () => handleSelect(multisig.key, multisig.address),
     })),
   ];
 
@@ -191,7 +192,9 @@ export function QuickSearchDialog({
                     <button
                       id={`multisig-${multisig.key}`}
                       key={multisig.key}
-                      onClick={() => handleSelect(multisig.key)}
+                      onClick={() =>
+                        handleSelect(multisig.key, multisig.address)
+                      }
                       className={`flex min-h-11 w-full flex-col gap-1 rounded-lg px-3 py-2.5 text-left transition-colors ${
                         combinedResults[activeIndex]?.id ===
                         `multisig-${multisig.key}`
@@ -209,7 +212,7 @@ export function QuickSearchDialog({
                       </span>
                       <div className="flex min-w-0 flex-wrap items-center gap-2">
                         <code className="text-muted-foreground max-w-full truncate font-mono text-xs tabular-nums">
-                          {multisig.key.slice(0, 12)}...
+                          {multisig.address.slice(0, 12)}...
                         </code>
                         <span className="text-muted-foreground text-xs">
                           • {multisig.chainName}

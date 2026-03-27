@@ -127,7 +127,7 @@ export function BatchSigningPreviewDialog({
             chain.rpcUrl,
             getSquadsProgramId(chain)
           );
-          const multisigPda = new PublicKey(proposal.multisig.key);
+          const multisigPda = new PublicKey(proposal.multisig.address);
 
           const txType = await squadService.getTransactionType(
             multisigPda,
@@ -418,7 +418,7 @@ export function BatchSigningPreviewDialog({
                         !preview.error &&
                         preview.proposal.multisig && (
                           <code className="text-muted-foreground mt-2 block truncate text-[10px]">
-                            {preview.proposal.multisig.key}
+                            {preview.proposal.multisig.address}
                           </code>
                         )}
                     </div>

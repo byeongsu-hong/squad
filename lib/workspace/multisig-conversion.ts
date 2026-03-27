@@ -1,6 +1,9 @@
 import { type ChainConfig, normalizeChainConfig } from "@/types/chain";
 import type { MultisigAccount } from "@/types/multisig";
-import type { WorkspaceMultisig } from "@/types/workspace";
+import {
+  type WorkspaceMultisig,
+  getWorkspaceMultisigKey,
+} from "@/types/workspace";
 
 function getChainConfig(chains: ChainConfig[], chainId: string) {
   return chains.find((chain) => chain.id === chainId);
@@ -15,7 +18,11 @@ export function toWorkspaceMultisig(
 
   return {
     provider: normalizedChain?.multisigProvider ?? "squads",
-    key: multisig.publicKey.toString(),
+    key: getWorkspaceMultisigKey(
+      multisig.chainId,
+      multisig.publicKey.toString()
+    ),
+    address: multisig.publicKey.toString(),
     chainId: multisig.chainId,
     chainName: normalizedChain?.name ?? multisig.chainId,
     label: multisig.label,
