@@ -56,6 +56,13 @@ interface OperationsDashboardProps {
   actions?: React.ReactNode;
 }
 
+interface SafeRegistryPresentation {
+  metaLine: string | null;
+  sideValue: string;
+  selectionBlocked: boolean;
+  showRetry: boolean;
+}
+
 function formatCompactAddress(value: string) {
   return `${value.slice(0, 6)}...${value.slice(-4)}`;
 }
@@ -78,6 +85,55 @@ function getStatusTone(item: WorkspaceQueueItem) {
     return "text-zinc-300";
   }
   return "text-zinc-400";
+}
+
+function getSafeRegistryPresentation({
+  activeCount,
+  hasLoadedWorkspaceQueue,
+  summaryLoading,
+  summaryErrorMessage,
+  summaryTotalCount,
+}: {
+  activeCount: number;
+  hasLoadedWorkspaceQueue: boolean;
+  summaryLoading: boolean;
+  summaryErrorMessage: string | null;
+  summaryTotalCount: number | null;
+}): SafeRegistryPresentation {
+  if (hasLoadedWorkspaceQueue) {
+    return {
+      metaLine: `${activeCount} active`,
+      sideValue: `${activeCount}`,
+      selectionBlocked: false,
+      showRetry: false,
+    };
+  }
+
+  if (summaryLoading) {
+    return {
+      metaLine: "loading",
+      sideValue: "...",
+      selectionBlocked: true,
+      showRetry: false,
+    };
+  }
+
+  if (summaryErrorMessage) {
+    return {
+      metaLine: null,
+      sideValue: "Retry",
+      selectionBlocked: true,
+      showRetry: true,
+    };
+  }
+
+  return {
+    metaLine:
+      summaryTotalCount === null ? "--" : `${summaryTotalCount} proposals`,
+    sideValue: summaryTotalCount === null ? "--" : `${summaryTotalCount}`,
+    selectionBlocked: summaryTotalCount === null,
+    showRetry: false,
+  };
 }
 
 export function OperationsDashboard({
@@ -562,21 +618,13 @@ export function OperationsDashboard({
                               </button>
                               <button
                                 type="button"
-                                onClick={() => toggleViewExpansion(view.id)}
+                                onClick={() => handleViewSelect(view.id)}
                                 className={cn(
                                   "min-w-0 flex-1 rounded-sm py-1 text-left transition-colors hover:text-zinc-50",
                                   selected ? "text-zinc-50" : "text-zinc-300"
                                 )}
-                                aria-label={
-                                  expanded
-                                    ? `Collapse ${view.label}`
-                                    : `Expand ${view.label}`
-                                }
-                                title={
-                                  expanded
-                                    ? `Collapse ${view.label}`
-                                    : `Expand ${view.label}`
-                                }
+                                aria-label={`Select ${view.label} scope`}
+                                title={`Select ${view.label} scope`}
                               >
                                 <span className="truncate text-sm">
                                   {view.label}
@@ -625,41 +673,39 @@ export function OperationsDashboard({
                                     item.active > 0 ||
                                     item.waiting > 0 ||
                                     item.executable > 0;
+                                  const safePresentation =
+                                    item.multisig.provider === "safe"
+                                      ? getSafeRegistryPresentation({
+                                          activeCount: item.active,
+                                          hasLoadedWorkspaceQueue,
+                                          summaryLoading,
+                                          summaryErrorMessage:
+                                            safeSummaryErrorMessage,
+                                          summaryTotalCount:
+                                            proposalSummary?.totalCount ?? null,
+                                        })
+                                      : null;
                                   const providerMetaLine =
                                     item.multisig.provider === "safe"
-                                      ? hasLoadedWorkspaceQueue
-                                        ? `${item.active} active`
-                                        : summaryLoading
-                                          ? "loading"
-                                          : safeSummaryErrorMessage
-                                            ? null
-                                            : proposalSummary
-                                              ? `${proposalSummary.totalCount} proposals`
-                                              : "--"
+                                      ? (safePresentation?.metaLine ?? null)
                                       : `${item.active} active`;
-                                  const safeSelectionBlocked =
-                                    item.multisig.provider === "safe" &&
-                                    !hasLoadedWorkspaceQueue &&
-                                    (summaryLoading ||
-                                      Boolean(safeSummaryErrorMessage) ||
-                                      !proposalSummary);
-                                  const showSafeRetryInline =
-                                    item.multisig.provider === "safe" &&
-                                    !hasLoadedWorkspaceQueue &&
-                                    Boolean(safeSummaryErrorMessage);
+                                  const isSelectionBlocked =
+                                    item.multisig.provider === "safe"
+                                      ? (safePresentation?.selectionBlocked ??
+                                        false)
+                                      : false;
+                                  const showRetryAction =
+                                    safePresentation?.showRetry ?? false;
 
                                   return (
                                     <div
                                       key={`${item.multisig.chainId}:${multisigKey}`}
-                                      className={cn(
-                                        "rounded-sm",
-                                        showSafeRetryInline && "bg-zinc-950/35"
-                                      )}
+                                      className={cn("rounded-sm")}
                                     >
                                       <button
                                         type="button"
                                         onClick={
-                                          safeSelectionBlocked
+                                          isSelectionBlocked
                                             ? undefined
                                             : (event) =>
                                                 handleRegistrySelect(
@@ -667,12 +713,12 @@ export function OperationsDashboard({
                                                   event
                                                 )
                                         }
-                                        disabled={safeSelectionBlocked}
+                                        disabled={isSelectionBlocked}
                                         className={cn(
                                           "flex w-full items-center justify-between gap-2 rounded-sm px-2 py-1.5 text-left transition-colors",
                                           itemSelected
                                             ? "bg-lime-500/10 text-zinc-50"
-                                            : safeSelectionBlocked
+                                            : isSelectionBlocked
                                               ? "cursor-not-allowed bg-zinc-950/45 text-zinc-600"
                                               : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100"
                                         )}
@@ -726,15 +772,13 @@ export function OperationsDashboard({
                                                 }}
                                               >
                                                 <RotateCcw className="h-3 w-3" />
-                                                Retry
+                                                {safePresentation?.sideValue ??
+                                                  "Retry"}
                                               </button>
                                             ) : (
                                               <p className="font-mono text-[0.62rem] text-zinc-600 tabular-nums">
-                                                {summaryLoading
-                                                  ? "..."
-                                                  : proposalSummary
-                                                    ? proposalSummary.totalCount
-                                                    : "--"}
+                                                {safePresentation?.sideValue ??
+                                                  "--"}
                                               </p>
                                             )
                                           ) : (
@@ -749,10 +793,7 @@ export function OperationsDashboard({
                                           )}
                                         </div>
                                       </button>
-
-                                      {showSafeRetryInline ? (
-                                        <div className="px-2 pb-2" />
-                                      ) : null}
+                                      {showRetryAction ? null : null}
                                     </div>
                                   );
                                 })}

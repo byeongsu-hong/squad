@@ -1,4 +1,3 @@
-import { PublicKey } from "@solana/web3.js";
 import { ReactNode } from "react";
 
 export interface ConfigAction {
