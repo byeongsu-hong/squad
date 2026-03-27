@@ -2,7 +2,7 @@ import type {
   WorkspaceProposalLoaderOptions,
   WorkspaceProviderAdapter,
 } from "@/lib/workspace/provider-contract";
-import type { WorkspaceProposal } from "@/types/workspace";
+import type { WorkspacePayload, WorkspaceProposal } from "@/types/workspace";
 
 export async function loadSafeWorkspaceProposalsForMultisig({
   chains,
@@ -45,8 +45,47 @@ export async function loadSafeWorkspaceProposalsForMultisig({
   }));
 }
 
-function getSafeUnsupportedMessage() {
-  return "Safe payload loading is not implemented yet.";
+export async function loadSafeWorkspacePayload({
+  chains,
+  multisig,
+  proposal,
+}: {
+  chains: WorkspaceProposalLoaderOptions["chains"];
+  multisig: WorkspaceProposalLoaderOptions["multisig"];
+  proposal: WorkspaceProposal;
+}): Promise<WorkspacePayload> {
+  const chain = chains.find((item) => item.id === multisig.chainId);
+  if (!chain) {
+    throw new Error("Chain configuration not found for Safe payload loading.");
+  }
+
+  const params = new URLSearchParams({
+    chainId: chain.id,
+    chainName: chain.name,
+    safeAddress: multisig.key,
+    nonce: proposal.transactionIndex.toString(),
+  });
+
+  const response = await fetch(`/api/safe/payload?${params.toString()}`, {
+    method: "GET",
+  });
+
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => null)) as {
+      error?: string;
+    } | null;
+    throw new Error(payload?.error ?? "Failed to load Safe payload.");
+  }
+
+  const payload = (await response.json()) as {
+    payload?: WorkspacePayload;
+  };
+
+  if (!payload.payload) {
+    throw new Error("Safe payload response was empty.");
+  }
+
+  return payload.payload;
 }
 
 export const safeWorkspaceAdapter: WorkspaceProviderAdapter = {
@@ -54,17 +93,13 @@ export const safeWorkspaceAdapter: WorkspaceProviderAdapter = {
   label: "Safe",
   capabilities: {
     creatorSync: false,
-    payload: false,
+    payload: true,
     proposalLoading: true,
     proposalActions: false,
   },
   getUnsupportedMessage(capability) {
     if (capability === "proposalActions") {
       return "Safe proposal actions are not implemented yet.";
-    }
-
-    if (capability === "payload") {
-      return getSafeUnsupportedMessage();
     }
 
     if (capability === "creatorSync") {
@@ -76,7 +111,7 @@ export const safeWorkspaceAdapter: WorkspaceProviderAdapter = {
   loadProposalsForMultisig(options) {
     return loadSafeWorkspaceProposalsForMultisig(options);
   },
-  async loadPayload() {
-    throw new Error(getSafeUnsupportedMessage());
+  loadPayload({ chains, multisig, proposal }) {
+    return loadSafeWorkspacePayload({ chains, multisig, proposal });
   },
 };

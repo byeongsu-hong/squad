@@ -3,6 +3,7 @@ import { createPublicClient, getAddress, http, isAddress } from "viem";
 import { type ChainConfig, normalizeChainConfig } from "@/types/chain";
 import type { MultisigAccount } from "@/types/multisig";
 import type {
+  WorkspacePayload,
   WorkspaceProposal,
   WorkspaceProposalStatus,
 } from "@/types/workspace";
@@ -185,6 +186,35 @@ export async function fetchSafeTransactions(
   }
 
   return (await response.json()) as SafeTransactionsResponse;
+}
+
+export async function loadSafeWorkspacePayload(
+  chain: Pick<ChainConfig, "id" | "name">,
+  safeAddress: string,
+  nonce: bigint
+): Promise<WorkspacePayload> {
+  const response = await fetchSafeTransactions(chain, safeAddress, 100);
+  const transaction = response.results.find(
+    (item) =>
+      item.txType === "MULTISIG_TRANSACTION" && BigInt(item.nonce) === nonce
+  );
+
+  if (!transaction) {
+    throw new Error(
+      `Safe transaction payload for nonce ${nonce.toString()} is not available.`
+    );
+  }
+
+  return {
+    type: "safe",
+    safeTxHash: transaction.safeTxHash ?? null,
+    nonce: transaction.nonce,
+    toAddress: transaction.to ? getAddress(transaction.to) : null,
+    value: transaction.value ?? null,
+    operation: transaction.operation ?? null,
+    data: transaction.data ?? null,
+    dataDecoded: transaction.dataDecoded ?? null,
+  };
 }
 
 function toSafeProposalStatus(
