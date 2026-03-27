@@ -170,6 +170,7 @@ export function ExportImportController({
             );
 
             const multisigAccount: MultisigAccount = {
+              provider: "squads",
               publicKey: multisigPda,
               threshold: multisigData.threshold,
               members: multisigData.members.map((m) => ({

@@ -57,6 +57,7 @@ export const chainStorage = {
 };
 
 interface StoredMultisig {
+  provider?: "squads" | "safe";
   publicKey: string;
   threshold: number;
   members: Array<{
@@ -65,16 +66,18 @@ interface StoredMultisig {
   }>;
   transactionIndex: string;
   msChangeIndex: number;
-  programId: string;
+  programId?: string;
   chainId: string;
   label?: string;
   tags?: string[];
+  vaultPda?: string;
 }
 
 const multisigListStorage = createListStorage<MultisigAccount, StoredMultisig>(
   STORAGE_KEYS.MULTISIGS,
   {
     serialize: (m) => ({
+      provider: m.provider,
       publicKey: m.publicKey.toString(),
       threshold: m.threshold,
       members: m.members.map((member) => ({
@@ -83,25 +86,51 @@ const multisigListStorage = createListStorage<MultisigAccount, StoredMultisig>(
       })),
       transactionIndex: m.transactionIndex.toString(),
       msChangeIndex: m.msChangeIndex,
-      programId: m.programId.toString(),
+      programId: m.programId?.toString(),
       chainId: m.chainId,
       label: m.label,
       tags: m.tags,
+      vaultPda: m.vaultPda?.toString(),
     }),
-    deserialize: (m) => ({
-      publicKey: new PublicKey(m.publicKey),
-      threshold: m.threshold,
-      members: m.members.map((member) => ({
-        key: new PublicKey(member.key),
-        permissions: { mask: member.permissions.mask },
-      })),
-      transactionIndex: BigInt(m.transactionIndex),
-      msChangeIndex: m.msChangeIndex,
-      programId: new PublicKey(m.programId),
-      chainId: m.chainId,
-      label: m.label,
-      tags: m.tags,
-    }),
+    deserialize: (m) => {
+      const provider = m.provider ?? "squads";
+
+      if (provider === "safe") {
+        return {
+          provider,
+          publicKey: m.publicKey,
+          threshold: m.threshold,
+          members: m.members.map((member) => ({
+            key: member.key,
+            permissions: { mask: member.permissions.mask },
+          })),
+          transactionIndex: BigInt(m.transactionIndex),
+          msChangeIndex: m.msChangeIndex,
+          programId: m.programId,
+          chainId: m.chainId,
+          label: m.label,
+          tags: m.tags,
+          vaultPda: m.vaultPda,
+        };
+      }
+
+      return {
+        provider,
+        publicKey: new PublicKey(m.publicKey),
+        threshold: m.threshold,
+        members: m.members.map((member) => ({
+          key: new PublicKey(member.key),
+          permissions: { mask: member.permissions.mask },
+        })),
+        transactionIndex: BigInt(m.transactionIndex),
+        msChangeIndex: m.msChangeIndex,
+        programId: m.programId ? new PublicKey(m.programId) : undefined,
+        chainId: m.chainId,
+        label: m.label,
+        tags: m.tags,
+        vaultPda: m.vaultPda ? new PublicKey(m.vaultPda) : undefined,
+      };
+    },
   }
 );
 

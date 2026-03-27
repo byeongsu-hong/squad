@@ -1,23 +1,65 @@
 import type { PublicKey } from "@solana/web3.js";
 
+export type MultisigProvider = "squads" | "safe";
+export type MultisigAddress = PublicKey | string;
+
 export interface MultisigAccount {
-  publicKey: PublicKey;
+  provider: MultisigProvider;
+  publicKey: MultisigAddress;
   threshold: number;
   members: MultisigMember[];
   transactionIndex: bigint;
   msChangeIndex: number;
-  programId: PublicKey;
+  programId?: MultisigAddress;
   chainId: string;
   label?: string;
   tags?: string[];
-  vaultPda?: PublicKey;
+  vaultPda?: MultisigAddress;
 }
 
 export interface MultisigMember {
-  key: PublicKey;
+  key: MultisigAddress;
   permissions: {
     mask: number;
   };
+}
+
+export interface SquadsMultisigAccount extends MultisigAccount {
+  provider: "squads";
+  publicKey: PublicKey;
+  members: Array<{
+    key: PublicKey;
+    permissions: {
+      mask: number;
+    };
+  }>;
+  programId?: PublicKey;
+  vaultPda?: PublicKey;
+}
+
+export interface SafeMultisigAccount extends MultisigAccount {
+  provider: "safe";
+  publicKey: string;
+  members: Array<{
+    key: string;
+    permissions: {
+      mask: number;
+    };
+  }>;
+  programId?: string;
+  vaultPda?: string;
+}
+
+export function isSquadsMultisig(
+  multisig: MultisigAccount | null | undefined
+): multisig is SquadsMultisigAccount {
+  return Boolean(multisig && multisig.provider === "squads");
+}
+
+export function isSafeMultisig(
+  multisig: MultisigAccount | null | undefined
+): multisig is SafeMultisigAccount {
+  return Boolean(multisig && multisig.provider === "safe");
 }
 
 export type ProposalStatus =

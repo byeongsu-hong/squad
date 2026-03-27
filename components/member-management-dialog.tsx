@@ -21,7 +21,7 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { validatePublicKey } from "@/lib/validation";
-import type { MultisigAccount } from "@/types/multisig";
+import { type MultisigAccount, isSquadsMultisig } from "@/types/multisig";
 
 interface MemberManagementDialogProps {
   open: boolean;
@@ -42,6 +42,24 @@ export function MemberManagementDialog({
   const [membersToRemove, setMembersToRemove] = useState<PublicKey[]>([]);
 
   if (!multisig) return null;
+  if (!isSquadsMultisig(multisig)) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Manage Members & Threshold
+            </DialogTitle>
+            <DialogDescription>
+              Member management is only available for active Squads multisigs in
+              the current build.
+            </DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   const currentMembers = multisig.members.map((m) => m.key);
   const proposedMembers = currentMembers

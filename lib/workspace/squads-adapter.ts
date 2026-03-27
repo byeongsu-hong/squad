@@ -12,7 +12,11 @@ import type {
   WorkspaceProviderAdapter,
 } from "@/lib/workspace/provider-contract";
 import { type ChainConfig, isOperationalSquadsChain } from "@/types/chain";
-import type { MultisigAccount, ProposalAccount } from "@/types/multisig";
+import {
+  type MultisigAccount,
+  type ProposalAccount,
+  isSquadsMultisig,
+} from "@/types/multisig";
 import { toProposalStatus } from "@/types/multisig";
 import type {
   WorkspaceExplorerView,
@@ -42,6 +46,10 @@ export async function loadSquadsWorkspaceProposals(
 ): Promise<WorkspaceProposal[]> {
   const groupedResults = await Promise.all(
     multisigs.map(async (multisig) => {
+      if (!isSquadsMultisig(multisig)) {
+        return [];
+      }
+
       const chain = getOperationalSquadsChain(chains, multisig.chainId);
       if (!chain) {
         return [];
@@ -102,6 +110,7 @@ export async function loadSquadsCreatorMultisigs(
     const existing = existingByKey.get(account.publicKey.toString());
 
     return {
+      provider: "squads",
       publicKey: account.publicKey,
       threshold: account.account.threshold,
       members: account.account.members.map((member) => ({
@@ -123,6 +132,10 @@ export async function loadSquadsWorkspaceProposalsForMultisig(
   multisig: MultisigAccount,
   chains: ChainConfig[]
 ): Promise<WorkspaceProposal[]> {
+  if (!isSquadsMultisig(multisig)) {
+    return [];
+  }
+
   const chain = getOperationalSquadsChain(chains, multisig.chainId);
   if (!chain) {
     return [];
