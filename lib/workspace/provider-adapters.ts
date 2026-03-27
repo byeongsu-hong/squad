@@ -25,3 +25,10 @@ export function getUnsupportedProviderMessage(
     `${adapter.label} ${capability} is not implemented yet.`
   );
 }
+
+export function supportsProviderCapability(
+  provider: WorkspaceProviderId,
+  capability: WorkspaceProviderCapability
+) {
+  return getWorkspaceProviderAdapter(provider).capabilities[capability];
+}
