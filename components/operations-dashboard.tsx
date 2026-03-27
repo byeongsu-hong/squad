@@ -655,19 +655,36 @@ export function OperationsDashboard({
                                               ? "Proposal activity available"
                                               : "Status unavailable"
                                       : `${item.active} active`;
+                                  const safeSelectionBlocked =
+                                    item.multisig.provider === "safe" &&
+                                    (summaryLoading ||
+                                      Boolean(
+                                        proposalSummary?.unavailableReason ||
+                                        summaryError
+                                      ) ||
+                                      !proposalSummary);
 
                                   return (
                                     <button
                                       key={`${item.multisig.chainId}:${multisigKey}`}
                                       type="button"
-                                      onClick={(event) =>
-                                        handleRegistrySelect(multisigKey, event)
+                                      onClick={
+                                        safeSelectionBlocked
+                                          ? undefined
+                                          : (event) =>
+                                              handleRegistrySelect(
+                                                multisigKey,
+                                                event
+                                              )
                                       }
+                                      disabled={safeSelectionBlocked}
                                       className={cn(
                                         "flex w-full items-center justify-between gap-2 rounded-sm px-2 py-1.5 text-left transition-colors",
                                         itemSelected
                                           ? "bg-lime-500/10 text-zinc-50"
-                                          : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100"
+                                          : safeSelectionBlocked
+                                            ? "cursor-not-allowed bg-zinc-950/45 text-zinc-600 opacity-65"
+                                            : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100"
                                       )}
                                     >
                                       <div className="min-w-0 flex-1">
