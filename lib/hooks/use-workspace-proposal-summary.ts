@@ -43,7 +43,8 @@ export function useWorkspaceProposalSummary({
     const missingSummaries = summaryMultisigs.filter(
       (multisig) =>
         summariesByMultisigKey[multisig.key] === undefined &&
-        !loadingByMultisigKey[multisig.key]
+        !loadingByMultisigKey[multisig.key] &&
+        !errorsByMultisigKey[multisig.key]
     );
 
     if (missingSummaries.length === 0) {
@@ -119,7 +120,13 @@ export function useWorkspaceProposalSummary({
     return () => {
       cancelled = true;
     };
-  }, [chains, loadingByMultisigKey, summariesByMultisigKey, summaryMultisigs]);
+  }, [
+    chains,
+    errorsByMultisigKey,
+    loadingByMultisigKey,
+    summariesByMultisigKey,
+    summaryMultisigs,
+  ]);
 
   return {
     summariesByMultisigKey,

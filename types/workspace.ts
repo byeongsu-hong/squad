@@ -49,6 +49,7 @@ export interface WorkspaceProposal {
 
 export interface WorkspaceProposalSummary {
   totalCount: number;
+  unavailableReason?: string;
 }
 
 export interface WorkspaceQueueItem {
