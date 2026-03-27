@@ -484,10 +484,10 @@ function ChainRegistry({
             }
           >
             <div className="min-w-0 space-y-1">
+              <p className="text-[0.95rem] font-medium text-zinc-100">
+                {chain.name}
+              </p>
               <div className="flex flex-wrap items-center gap-2">
-                <p className="text-[0.95rem] font-medium text-zinc-100">
-                  {chain.name}
-                </p>
                 {chain.id.startsWith("custom-") ? (
                   <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-[0.62rem] tracking-[0.16em] text-amber-300 uppercase">
                     Custom
