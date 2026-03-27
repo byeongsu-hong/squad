@@ -38,20 +38,31 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
       const { chains } = useChainStore.getState();
       const { multisigs, selectedMultisigKey } = useMultisigStore.getState();
-
-      if (multisigs.length > 0) {
-        return;
-      }
-
       const seededMultisigs = await resolveInitialMultisigs(chains);
       if (seededMultisigs.length === 0) {
         return;
       }
 
-      setMultisigs(seededMultisigs);
+      const existingKeys = new Set(
+        multisigs.map(
+          (multisig) => `${multisig.chainId}:${multisig.publicKey.toString()}`
+        )
+      );
+      const missingSeeds = seededMultisigs.filter(
+        (multisig) =>
+          !existingKeys.has(
+            `${multisig.chainId}:${multisig.publicKey.toString()}`
+          )
+      );
+
+      if (missingSeeds.length === 0) {
+        return;
+      }
+
+      setMultisigs([...multisigs, ...missingSeeds]);
 
       if (!selectedMultisigKey) {
-        selectMultisig(seededMultisigs[0].publicKey.toString());
+        selectMultisig((multisigs[0] ?? missingSeeds[0]).publicKey.toString());
       }
     };
 
