@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 
+import { mapWithConcurrency } from "@/lib/utils/async";
 import { getWorkspaceProviderAdapter } from "@/lib/workspace/provider-adapters";
 import type { ChainConfig } from "@/types/chain";
 import type { WorkspaceMultisig, WorkspaceProposal } from "@/types/workspace";
@@ -8,6 +9,13 @@ import type { WorkspaceMultisig, WorkspaceProposal } from "@/types/workspace";
 interface UseWorkspaceProposalLoaderOptions {
   chains: ChainConfig[];
   errorMessage: string;
+}
+
+const PROPOSAL_LOAD_CONCURRENCY = 4;
+
+interface LoadWorkspaceProposalOptions {
+  force?: boolean;
+  notifyOnError?: boolean;
 }
 
 export function useWorkspaceProposalLoader({
@@ -23,7 +31,11 @@ export function useWorkspaceProposalLoader({
   >({});
 
   const loadForAllMultisigs = useCallback(
-    async (multisigs: WorkspaceMultisig[]) => {
+    async (
+      multisigs: WorkspaceMultisig[],
+      options: LoadWorkspaceProposalOptions = {}
+    ) => {
+      const { force = false, notifyOnError = true } = options;
       const loadableMultisigs = multisigs.filter((multisig) => {
         if (multisig.provider === "squads") {
           return false;
@@ -32,35 +44,58 @@ export function useWorkspaceProposalLoader({
         const adapter = getWorkspaceProviderAdapter(multisig.provider);
         return adapter.capabilities.proposalLoading;
       });
+      const pendingMultisigs = force
+        ? loadableMultisigs
+        : loadableMultisigs.filter(
+            (multisig) =>
+              !loadingKeys.includes(multisig.key) &&
+              !loadedKeys.includes(multisig.key) &&
+              !errorsByMultisigKey[multisig.key]
+          );
 
       if (loadableMultisigs.length === 0) {
         setProposals([]);
-        setLoadingKeys([]);
-        setLoadedKeys([]);
-        setErrorsByMultisigKey({});
         return [];
       }
 
+      if (pendingMultisigs.length === 0) {
+        return proposals;
+      }
+
       setLoading(true);
-      setLoadingKeys(loadableMultisigs.map((multisig) => multisig.key));
+      setLoadingKeys(pendingMultisigs.map((multisig) => multisig.key));
       setErrorsByMultisigKey((current) => {
         const next = { ...current };
-        for (const multisig of loadableMultisigs) {
+        for (const multisig of pendingMultisigs) {
           next[multisig.key] = undefined;
         }
         return next;
       });
 
       try {
-        const loaded = await Promise.allSettled(
-          loadableMultisigs.map((multisig) => {
+        const loaded = await mapWithConcurrency(
+          pendingMultisigs,
+          PROPOSAL_LOAD_CONCURRENCY,
+          async (multisig) => {
             const adapter = getWorkspaceProviderAdapter(multisig.provider);
 
-            return adapter.loadProposalsForMultisig({
-              chains,
-              multisig,
-            });
-          })
+            try {
+              const proposals = await adapter.loadProposalsForMultisig({
+                chains,
+                multisig,
+              });
+
+              return {
+                status: "fulfilled" as const,
+                value: proposals,
+              };
+            } catch (error) {
+              return {
+                status: "rejected" as const,
+                reason: error,
+              };
+            }
+          }
         );
 
         const nextErrors: Record<string, string | undefined> = {};
@@ -70,7 +105,7 @@ export function useWorkspaceProposalLoader({
               return result.value;
             }
 
-            const multisigKey = loadableMultisigs[index]?.key;
+            const multisigKey = pendingMultisigs[index]?.key;
             if (multisigKey) {
               nextErrors[multisigKey] =
                 result.reason instanceof Error
@@ -89,28 +124,53 @@ export function useWorkspaceProposalLoader({
         }));
         setLoadedKeys((current) => {
           const next = new Set(current);
-          for (const multisig of loadableMultisigs) {
-            next.add(multisig.key);
+          loaded.forEach((result, index) => {
+            if (result.status === "fulfilled") {
+              const multisigKey = pendingMultisigs[index]?.key;
+              if (multisigKey) {
+                next.add(multisigKey);
+              }
+            }
+          });
+          if (force) {
+            for (const multisig of pendingMultisigs) {
+              if (!nextErrors[multisig.key]) {
+                next.add(multisig.key);
+              }
+            }
           }
           return Array.from(next);
         });
         setProposals(nextProposals);
 
-        if (Object.keys(nextErrors).length > 0) {
+        if (notifyOnError && Object.keys(nextErrors).length > 0) {
           toast.error(errorMessage);
         }
 
         return nextProposals;
       } catch (error) {
         console.error(errorMessage, error);
-        toast.error(errorMessage);
+        if (notifyOnError) {
+          toast.error(errorMessage);
+        }
         return [];
       } finally {
         setLoading(false);
-        setLoadingKeys([]);
+        setLoadingKeys((current) =>
+          current.filter(
+            (key) => !pendingMultisigs.some((multisig) => multisig.key === key)
+          )
+        );
       }
     },
-    [chains, errorMessage]
+    [
+      chains,
+      errorMessage,
+      errorsByMultisigKey,
+      loadedKeys,
+      loadingKeys,
+      proposals,
+    ]
   );
 
   return {

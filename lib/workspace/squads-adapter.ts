@@ -3,6 +3,7 @@ import * as multisigSdk from "@sqds/multisig";
 import bs58 from "bs58";
 
 import { SquadService } from "@/lib/squad";
+import { mapWithConcurrency } from "@/lib/utils/async";
 import {
   toWorkspaceMultisig,
   toWorkspaceMultisigs,
@@ -45,12 +46,17 @@ function getOperationalSquadsChain(chains: ChainConfig[], chainId: string) {
   return chain;
 }
 
+const SQUADS_MULTISIG_LOAD_CONCURRENCY = 3;
+const SQUADS_PROPOSAL_ENRICH_CONCURRENCY = 8;
+
 export async function loadSquadsWorkspaceProposals(
   multisigs: MultisigAccount[],
   chains: ChainConfig[]
 ): Promise<WorkspaceProposal[]> {
-  const groupedResults = await Promise.all(
-    multisigs.map(async (multisig) => {
+  const groupedResults = await mapWithConcurrency(
+    multisigs,
+    SQUADS_MULTISIG_LOAD_CONCURRENCY,
+    async (multisig) => {
       if (!isSquadsMultisig(multisig)) {
         return [];
       }
@@ -68,17 +74,18 @@ export async function loadSquadsWorkspaceProposals(
         multisig.publicKey
       );
 
-      return Promise.all(
-        proposalAccounts.map((account) =>
+      return mapWithConcurrency(
+        proposalAccounts,
+        SQUADS_PROPOSAL_ENRICH_CONCURRENCY,
+        (account) =>
           toWorkspaceProposal(
             account.account.multisig,
             account,
             chain,
             squadService
           )
-        )
       );
-    })
+    }
   );
 
   return groupedResults
@@ -155,15 +162,16 @@ export async function loadSquadsWorkspaceProposalsForMultisig(
     multisig.publicKey
   );
 
-  const proposals = await Promise.all(
-    proposalAccounts.map((account) =>
+  const proposals = await mapWithConcurrency(
+    proposalAccounts,
+    SQUADS_PROPOSAL_ENRICH_CONCURRENCY,
+    (account) =>
       toWorkspaceProposal(
         account.account.multisig,
         account,
         chain,
         squadService
       )
-    )
   );
 
   return proposals

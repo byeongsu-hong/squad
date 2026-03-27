@@ -14,7 +14,7 @@ import {
   X,
 } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { AddressWithLabel } from "@/components/address-with-label";
 import { RegistryManagementDialog } from "@/components/registry-management-dialog";
@@ -61,6 +61,27 @@ interface SafeRegistryPresentation {
   sideValue: string;
   selectionBlocked: boolean;
   showRetry: boolean;
+}
+
+interface RegistryRowContentProps {
+  item: {
+    multisig: {
+      label?: string;
+      chainName: string;
+      threshold: number;
+      members: { length: number };
+      address: string;
+      provider: "squads" | "safe";
+    };
+    waiting: number;
+    executable: number;
+  };
+  providerMetaLine: string | null;
+  hasQueueAttention: boolean;
+  hasLoadedWorkspaceQueue: boolean;
+  safeSummaryErrorMessage: string | null;
+  safePresentationSideValue: string;
+  onRetry: () => void;
 }
 
 function formatCompactAddress(value: string) {
@@ -134,6 +155,80 @@ function getSafeRegistryPresentation({
     selectionBlocked: summaryTotalCount === null,
     showRetry: false,
   };
+}
+
+function RegistryRowContent({
+  item,
+  providerMetaLine,
+  hasQueueAttention,
+  hasLoadedWorkspaceQueue,
+  safeSummaryErrorMessage,
+  safePresentationSideValue,
+  onRetry,
+}: RegistryRowContentProps) {
+  return (
+    <>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <p className="truncate text-[0.83rem] font-medium">
+            {item.multisig.label || "Unnamed multisig"}
+          </p>
+          <span className="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-1.5 py-0.5 font-mono text-[0.58rem] tracking-[0.16em] text-cyan-300 uppercase">
+            {item.multisig.chainName}
+          </span>
+          <span className="font-mono text-[0.62rem] text-zinc-600 tabular-nums">
+            {item.multisig.threshold}/{item.multisig.members.length}
+          </span>
+        </div>
+        <div className="mt-0.5 flex items-center gap-2 text-[0.62rem] text-zinc-500">
+          <span className="font-mono tabular-nums">
+            {formatCompactAddress(item.multisig.address)}
+          </span>
+          {providerMetaLine ? <span>{providerMetaLine}</span> : null}
+        </div>
+      </div>
+      <div className="shrink-0 text-right">
+        {hasQueueAttention ||
+        (item.multisig.provider === "safe" && hasLoadedWorkspaceQueue) ? (
+          <>
+            <p className="font-mono text-[0.62rem] text-zinc-600 tabular-nums">
+              {item.waiting} wait
+            </p>
+            <p className="font-mono text-[0.62rem] text-zinc-600 tabular-nums">
+              {item.executable} exec
+            </p>
+          </>
+        ) : item.multisig.provider === "safe" ? (
+          safeSummaryErrorMessage ? (
+            <button
+              type="button"
+              className="inline-flex items-center gap-1 font-mono text-[0.62rem] text-zinc-400 tabular-nums transition-colors hover:text-zinc-100"
+              onClick={(event) => {
+                event.stopPropagation();
+                onRetry();
+              }}
+            >
+              <RotateCcw className="h-3 w-3" />
+              {safePresentationSideValue}
+            </button>
+          ) : (
+            <p className="font-mono text-[0.62rem] text-zinc-600 tabular-nums">
+              {safePresentationSideValue}
+            </p>
+          )
+        ) : (
+          <>
+            <p className="font-mono text-[0.62rem] text-zinc-600 tabular-nums">
+              {item.waiting} wait
+            </p>
+            <p className="font-mono text-[0.62rem] text-zinc-600 tabular-nums">
+              {item.executable} exec
+            </p>
+          </>
+        )}
+      </div>
+    </>
+  );
 }
 
 export function OperationsDashboard({
@@ -237,6 +332,10 @@ export function OperationsDashboard({
     () => new Set(selectedScopeKeys),
     [selectedScopeKeys]
   );
+  const selectedScopeSignature = useMemo(
+    () => selectedScopeKeys.slice().sort().join("|"),
+    [selectedScopeKeys]
+  );
   const hasSelectedScope = selectedScopeKeys.length > 0;
   const scopedSquadsMultisigs = useMemo(
     () =>
@@ -263,14 +362,42 @@ export function OperationsDashboard({
     chains,
     multisigs: workspaceMultisigs,
   });
+  const autoLoadedSquadsScopeRef = useRef("");
+  const autoLoadedWorkspaceScopeRef = useRef("");
 
   useEffect(() => {
+    if (!selectedScopeSignature) {
+      autoLoadedSquadsScopeRef.current = "";
+      return;
+    }
+
+    if (autoLoadedSquadsScopeRef.current === selectedScopeSignature) {
+      return;
+    }
+
+    autoLoadedSquadsScopeRef.current = selectedScopeSignature;
     void loadForAllMultisigs(scopedSquadsMultisigs);
-  }, [loadForAllMultisigs, scopedSquadsMultisigs]);
+  }, [loadForAllMultisigs, scopedSquadsMultisigs, selectedScopeSignature]);
 
   useEffect(() => {
-    void loadWorkspaceProposals(scopedWorkspaceProposalMultisigs);
-  }, [loadWorkspaceProposals, scopedWorkspaceProposalMultisigs]);
+    if (!selectedScopeSignature) {
+      autoLoadedWorkspaceScopeRef.current = "";
+      return;
+    }
+
+    if (autoLoadedWorkspaceScopeRef.current === selectedScopeSignature) {
+      return;
+    }
+
+    autoLoadedWorkspaceScopeRef.current = selectedScopeSignature;
+    void loadWorkspaceProposals(scopedWorkspaceProposalMultisigs, {
+      notifyOnError: false,
+    });
+  }, [
+    loadWorkspaceProposals,
+    scopedWorkspaceProposalMultisigs,
+    selectedScopeSignature,
+  ]);
 
   const scopedWorkspaceProposalKeys = useMemo(
     () => scopedWorkspaceProposalMultisigs.map((multisig) => multisig.key),
@@ -383,7 +510,10 @@ export function OperationsDashboard({
     onSuccess: async () => {
       await Promise.all([
         loadForAllMultisigs(scopedSquadsMultisigs),
-        loadWorkspaceProposals(scopedWorkspaceProposalMultisigs),
+        loadWorkspaceProposals(scopedWorkspaceProposalMultisigs, {
+          force: true,
+          notifyOnError: false,
+        }),
       ]);
     },
   });
@@ -521,12 +651,18 @@ export function OperationsDashboard({
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() =>
+                  onClick={() => {
+                    autoLoadedSquadsScopeRef.current = "";
+                    autoLoadedWorkspaceScopeRef.current = "";
+
                     void Promise.all([
                       loadForAllMultisigs(scopedSquadsMultisigs),
-                      loadWorkspaceProposals(scopedWorkspaceProposalMultisigs),
-                    ])
-                  }
+                      loadWorkspaceProposals(scopedWorkspaceProposalMultisigs, {
+                        force: true,
+                        notifyOnError: true,
+                      }),
+                    ]);
+                  }}
                   disabled={loading || workspaceLoading || !hasSelectedScope}
                   className="rounded-md border border-zinc-800 bg-zinc-950 text-zinc-200 hover:bg-zinc-900"
                   aria-label="Refresh dashboard proposals"
@@ -694,106 +830,76 @@ export function OperationsDashboard({
                                       ? (safePresentation?.selectionBlocked ??
                                         false)
                                       : false;
-                                  const showRetryAction =
-                                    safePresentation?.showRetry ?? false;
+                                  const rowClassName = cn(
+                                    "flex w-full items-center justify-between gap-2 rounded-sm px-2 py-1.5 text-left transition-colors",
+                                    itemSelected
+                                      ? "bg-lime-500/10 text-zinc-50"
+                                      : isSelectionBlocked
+                                        ? "cursor-not-allowed bg-zinc-950/45 text-zinc-600"
+                                        : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100"
+                                  );
 
                                   return (
                                     <div
                                       key={`${item.multisig.chainId}:${multisigKey}`}
                                       className={cn("rounded-sm")}
                                     >
-                                      <button
-                                        type="button"
-                                        onClick={
-                                          isSelectionBlocked
-                                            ? undefined
-                                            : (event) =>
-                                                handleRegistrySelect(
-                                                  multisigKey,
-                                                  event
-                                                )
-                                        }
-                                        disabled={isSelectionBlocked}
-                                        className={cn(
-                                          "flex w-full items-center justify-between gap-2 rounded-sm px-2 py-1.5 text-left transition-colors",
-                                          itemSelected
-                                            ? "bg-lime-500/10 text-zinc-50"
-                                            : isSelectionBlocked
-                                              ? "cursor-not-allowed bg-zinc-950/45 text-zinc-600"
-                                              : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100"
-                                        )}
-                                      >
-                                        <div className="min-w-0 flex-1">
-                                          <div className="flex items-center gap-2">
-                                            <p className="truncate text-[0.83rem] font-medium">
-                                              {item.multisig.label ||
-                                                "Unnamed multisig"}
-                                            </p>
-                                            <span className="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-1.5 py-0.5 font-mono text-[0.58rem] tracking-[0.16em] text-cyan-300 uppercase">
-                                              {item.multisig.chainName}
-                                            </span>
-                                            <span className="font-mono text-[0.62rem] text-zinc-600 tabular-nums">
-                                              {item.multisig.threshold}/
-                                              {item.multisig.members.length}
-                                            </span>
-                                          </div>
-                                          <div className="mt-0.5 flex items-center gap-2 text-[0.62rem] text-zinc-500">
-                                            <span className="font-mono tabular-nums">
-                                              {formatCompactAddress(
-                                                item.multisig.address
-                                              )}
-                                            </span>
-                                            {providerMetaLine ? (
-                                              <span>{providerMetaLine}</span>
-                                            ) : null}
-                                          </div>
+                                      {isSelectionBlocked ? (
+                                        <div className={rowClassName}>
+                                          <RegistryRowContent
+                                            item={item}
+                                            providerMetaLine={providerMetaLine}
+                                            hasQueueAttention={
+                                              hasQueueAttention
+                                            }
+                                            hasLoadedWorkspaceQueue={
+                                              hasLoadedWorkspaceQueue
+                                            }
+                                            safeSummaryErrorMessage={
+                                              safeSummaryErrorMessage
+                                            }
+                                            safePresentationSideValue={
+                                              safePresentation?.sideValue ??
+                                              "--"
+                                            }
+                                            onRetry={() =>
+                                              retrySummary(multisigKey)
+                                            }
+                                          />
                                         </div>
-                                        <div className="shrink-0 text-right">
-                                          {hasQueueAttention ||
-                                          (item.multisig.provider === "safe" &&
-                                            hasLoadedWorkspaceQueue) ? (
-                                            <>
-                                              <p className="font-mono text-[0.62rem] text-zinc-600 tabular-nums">
-                                                {item.waiting} wait
-                                              </p>
-                                              <p className="font-mono text-[0.62rem] text-zinc-600 tabular-nums">
-                                                {item.executable} exec
-                                              </p>
-                                            </>
-                                          ) : item.multisig.provider ===
-                                            "safe" ? (
-                                            safeSummaryErrorMessage ? (
-                                              <button
-                                                type="button"
-                                                className="inline-flex items-center gap-1 font-mono text-[0.62rem] text-zinc-400 tabular-nums transition-colors hover:text-zinc-100"
-                                                onClick={(event) => {
-                                                  event.stopPropagation();
-                                                  retrySummary(multisigKey);
-                                                }}
-                                              >
-                                                <RotateCcw className="h-3 w-3" />
-                                                {safePresentation?.sideValue ??
-                                                  "Retry"}
-                                              </button>
-                                            ) : (
-                                              <p className="font-mono text-[0.62rem] text-zinc-600 tabular-nums">
-                                                {safePresentation?.sideValue ??
-                                                  "--"}
-                                              </p>
+                                      ) : (
+                                        <button
+                                          type="button"
+                                          onClick={(event) =>
+                                            handleRegistrySelect(
+                                              multisigKey,
+                                              event
                                             )
-                                          ) : (
-                                            <>
-                                              <p className="font-mono text-[0.62rem] text-zinc-600 tabular-nums">
-                                                {item.waiting} wait
-                                              </p>
-                                              <p className="font-mono text-[0.62rem] text-zinc-600 tabular-nums">
-                                                {item.executable} exec
-                                              </p>
-                                            </>
-                                          )}
-                                        </div>
-                                      </button>
-                                      {showRetryAction ? null : null}
+                                          }
+                                          className={rowClassName}
+                                        >
+                                          <RegistryRowContent
+                                            item={item}
+                                            providerMetaLine={providerMetaLine}
+                                            hasQueueAttention={
+                                              hasQueueAttention
+                                            }
+                                            hasLoadedWorkspaceQueue={
+                                              hasLoadedWorkspaceQueue
+                                            }
+                                            safeSummaryErrorMessage={
+                                              safeSummaryErrorMessage
+                                            }
+                                            safePresentationSideValue={
+                                              safePresentation?.sideValue ??
+                                              "--"
+                                            }
+                                            onRetry={() =>
+                                              retrySummary(multisigKey)
+                                            }
+                                          />
+                                        </button>
+                                      )}
                                     </div>
                                   );
                                 })}
