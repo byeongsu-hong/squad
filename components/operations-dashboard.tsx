@@ -992,11 +992,25 @@ export function OperationsDashboard({
                         Payload
                       </p>
                       <p className="mt-1 text-sm text-zinc-400">
-                        Transaction PDA, config actions, and decoded instruction
-                        data.
+                        Provider-specific transaction metadata and decoded
+                        payload data.
                       </p>
                     </div>
-                    {focusedPayload?.transactionPda ? (
+                    {focusedPayload?.type === "safe" &&
+                    focusedPayload.safeTxHash ? (
+                      <Button
+                        variant="outline"
+                        className="rounded-md border-zinc-800 bg-transparent text-zinc-200 hover:bg-zinc-900"
+                        onClick={() => {
+                          navigator.clipboard.writeText(
+                            focusedPayload.safeTxHash ?? ""
+                          );
+                        }}
+                      >
+                        <Copy className="h-4 w-4" />
+                        Copy Safe Tx Hash
+                      </Button>
+                    ) : focusedPayload && "transactionPda" in focusedPayload ? (
                       <Button
                         variant="outline"
                         className="rounded-md border-zinc-800 bg-transparent text-zinc-200 hover:bg-zinc-900"
@@ -1012,7 +1026,7 @@ export function OperationsDashboard({
                     ) : null}
                   </div>
 
-                  {focusedPayload?.transactionPda ? (
+                  {focusedPayload && "transactionPda" in focusedPayload ? (
                     <div className="rounded-xl border border-zinc-800 bg-zinc-950/55 p-3">
                       <p className="text-[0.68rem] tracking-[0.16em] text-zinc-500 uppercase">
                         Transaction PDA
@@ -1020,6 +1034,77 @@ export function OperationsDashboard({
                       <code className="mt-2 block font-mono text-xs break-all text-zinc-300">
                         {focusedPayload.transactionPda}
                       </code>
+                    </div>
+                  ) : null}
+
+                  {focusedPayload?.type === "safe" ? (
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <div className="rounded-xl border border-zinc-800 bg-zinc-950/55 p-3">
+                        <p className="text-[0.68rem] tracking-[0.16em] text-zinc-500 uppercase">
+                          Safe Tx Hash
+                        </p>
+                        <code className="mt-2 block font-mono text-xs break-all text-zinc-300">
+                          {focusedPayload.safeTxHash ?? "Unavailable"}
+                        </code>
+                      </div>
+                      <div className="rounded-xl border border-zinc-800 bg-zinc-950/55 p-3">
+                        <p className="text-[0.68rem] tracking-[0.16em] text-zinc-500 uppercase">
+                          Nonce
+                        </p>
+                        <p className="mt-2 font-mono text-sm text-zinc-200">
+                          {focusedPayload.nonce}
+                        </p>
+                      </div>
+                      <div className="rounded-xl border border-zinc-800 bg-zinc-950/55 p-3">
+                        <p className="text-[0.68rem] tracking-[0.16em] text-zinc-500 uppercase">
+                          Target
+                        </p>
+                        <div className="mt-2">
+                          {focusedPayload.toAddress ? (
+                            <AddressWithLabel
+                              address={focusedPayload.toAddress}
+                              showFull
+                            />
+                          ) : (
+                            <p className="text-sm text-zinc-400">Unavailable</p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="rounded-xl border border-zinc-800 bg-zinc-950/55 p-3">
+                        <p className="text-[0.68rem] tracking-[0.16em] text-zinc-500 uppercase">
+                          Value / Operation
+                        </p>
+                        <p className="mt-2 font-mono text-sm text-zinc-200">
+                          {focusedPayload.value ?? "0"} wei
+                        </p>
+                        <p className="mt-1 text-xs text-zinc-500">
+                          Operation {focusedPayload.operation ?? 0}
+                        </p>
+                      </div>
+                      {focusedPayload.data ? (
+                        <div className="rounded-xl border border-zinc-800 bg-zinc-950/55 p-3 md:col-span-2">
+                          <p className="text-[0.68rem] tracking-[0.16em] text-zinc-500 uppercase">
+                            Calldata
+                          </p>
+                          <code className="mt-2 block rounded-lg border border-zinc-800 bg-zinc-950 px-2 py-1 font-mono text-xs break-all text-zinc-300">
+                            {focusedPayload.data}
+                          </code>
+                        </div>
+                      ) : null}
+                      {focusedPayload.dataDecoded ? (
+                        <div className="rounded-xl border border-zinc-800 bg-zinc-950/55 p-3 md:col-span-2">
+                          <p className="text-[0.68rem] tracking-[0.16em] text-zinc-500 uppercase">
+                            Decoded Payload
+                          </p>
+                          <pre className="mt-2 overflow-x-auto rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 font-mono text-xs text-zinc-300">
+                            {JSON.stringify(
+                              focusedPayload.dataDecoded,
+                              null,
+                              2
+                            )}
+                          </pre>
+                        </div>
+                      ) : null}
                     </div>
                   ) : null}
 
@@ -1031,7 +1116,8 @@ export function OperationsDashboard({
                     <div className="rounded-xl border border-dashed border-zinc-800 px-4 py-5 text-sm text-zinc-400">
                       {payloadError}
                     </div>
-                  ) : focusedPayload?.type === "config" ? (
+                  ) : focusedPayload?.type ===
+                    "safe" ? null : focusedPayload?.type === "config" ? (
                     <div className="space-y-3">
                       {focusedPayload.actions.map((action, index: number) => {
                         const formatted = formatConfigAction(

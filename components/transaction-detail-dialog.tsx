@@ -73,8 +73,10 @@ export function TransactionDetailDialog({
     multisig: open ? (proposal?.multisig ?? null) : null,
     proposal: open ? (proposal?.proposal ?? null) : null,
   });
-  const transactionPda = payload?.transactionPda ?? null;
-  const vaultAddress = payload?.vaultAddress ?? null;
+  const transactionPda =
+    payload && "transactionPda" in payload ? payload.transactionPda : null;
+  const vaultAddress =
+    payload && "vaultAddress" in payload ? payload.vaultAddress : null;
   const chainName = proposal?.multisig.chainName ?? null;
   const multisigLabel = proposal?.multisig.label ?? null;
 
@@ -444,9 +446,11 @@ export function TransactionDetailDialog({
                     Payload
                   </p>
                   <h3 className="mt-1 text-sm font-semibold text-zinc-100">
-                    {payload?.type === "config"
-                      ? "Config transaction data"
-                      : "Transaction data"}
+                    {payload?.type === "safe"
+                      ? "Safe transaction payload"
+                      : payload?.type === "config"
+                        ? "Config transaction data"
+                        : "Transaction data"}
                   </h3>
                 </div>
                 {payload && (
@@ -470,6 +474,65 @@ export function TransactionDetailDialog({
               {!loading && error && (
                 <div className="rounded-2xl border border-dashed border-zinc-800 bg-zinc-950/55 px-4 py-5 text-sm text-zinc-400">
                   <p className="text-xs">{error}</p>
+                </div>
+              )}
+
+              {!loading && payload?.type === "safe" && (
+                <div className="space-y-3 rounded-2xl border border-zinc-800 bg-zinc-950/55 p-4">
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-3">
+                      <p className="text-xs text-zinc-500">Safe Tx Hash</p>
+                      <code className="mt-2 block font-mono text-xs break-all text-zinc-300">
+                        {payload.safeTxHash ?? "Unavailable"}
+                      </code>
+                    </div>
+                    <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-3">
+                      <p className="text-xs text-zinc-500">Nonce</p>
+                      <p className="mt-2 font-mono text-sm text-zinc-100">
+                        {payload.nonce}
+                      </p>
+                    </div>
+                    <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-3">
+                      <p className="text-xs text-zinc-500">Target</p>
+                      <div className="mt-2">
+                        {payload.toAddress ? (
+                          <AddressWithLabel
+                            address={payload.toAddress}
+                            showFull
+                          />
+                        ) : (
+                          <p className="text-sm text-zinc-400">Unavailable</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-3">
+                      <p className="text-xs text-zinc-500">Value / Operation</p>
+                      <p className="mt-2 font-mono text-sm text-zinc-100">
+                        {payload.value ?? "0"} wei
+                      </p>
+                      <p className="mt-1 text-xs text-zinc-500">
+                        Operation {payload.operation ?? 0}
+                      </p>
+                    </div>
+                  </div>
+
+                  {payload.data ? (
+                    <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-3">
+                      <p className="text-xs text-zinc-500">Calldata</p>
+                      <code className="mt-2 block rounded-lg border border-zinc-800 bg-zinc-950 px-2 py-1 font-mono text-xs break-all text-zinc-300">
+                        {payload.data}
+                      </code>
+                    </div>
+                  ) : null}
+
+                  {payload.dataDecoded ? (
+                    <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-3">
+                      <p className="text-xs text-zinc-500">Decoded Payload</p>
+                      <pre className="mt-2 overflow-x-auto rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 font-mono text-xs text-zinc-300">
+                        {JSON.stringify(payload.dataDecoded, null, 2)}
+                      </pre>
+                    </div>
+                  ) : null}
                 </div>
               )}
 

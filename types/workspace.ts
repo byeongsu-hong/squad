@@ -98,6 +98,18 @@ export interface WorkspacePayloadVaultAction {
   instructions: WorkspacePayloadInstruction[];
 }
 
+export interface WorkspacePayloadSafeAction {
+  type: "safe";
+  safeTxHash: string | null;
+  nonce: string;
+  toAddress: string | null;
+  value: string | null;
+  operation: number | null;
+  data: string | null;
+  dataDecoded: unknown;
+}
+
 export type WorkspacePayload =
   | WorkspacePayloadConfigAction
-  | WorkspacePayloadVaultAction;
+  | WorkspacePayloadVaultAction
+  | WorkspacePayloadSafeAction;
