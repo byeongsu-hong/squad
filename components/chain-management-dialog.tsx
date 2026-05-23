@@ -200,10 +200,10 @@ export function ChainManagementController({
 
   useEffect(() => {
     if (!embedded) {
-      resetForm();
+      setEditingChain(null);
+      form.reset({ name: "", vmFamily: "svm", multisigProvider: "squads", rpcUrl: "", squadsV4ProgramId: "", explorerUrl: "" });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [embedded]);
+  }, [embedded, form]);
 
   return (
     <div

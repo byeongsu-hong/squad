@@ -218,8 +218,7 @@ export function CreateMultisigDialog({
     if (!open) {
       form.reset();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }, [open, form]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

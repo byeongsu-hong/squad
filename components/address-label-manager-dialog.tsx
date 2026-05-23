@@ -191,8 +191,9 @@ export function AddressLabelManagerController({
   };
 
   useEffect(() => {
-    handleReset();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    setIsEditing(false);
+    setEditingLabel(null);
+    setFormData({ address: defaultAddress || "", label: "", description: "", color: DEFAULT_COLORS[0] });
   }, [defaultAddress, embedded]);
 
   return (
