@@ -37,9 +37,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
       initializeMultisigs();
       initializeProviderAdapterSettings();
 
-      const { chains } = useChainStore.getState();
       const { multisigs, selectedMultisigKey } = useMultisigStore.getState();
-      const seededMultisigs = await resolveInitialMultisigs(chains);
+      const seededMultisigs = await resolveInitialMultisigs();
       if (seededMultisigs.length === 0) {
         return;
       }
