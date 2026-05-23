@@ -30,7 +30,7 @@ async function getSafeSdk(
   });
 }
 
-export async function loadSafeTransactionForAction(
+async function loadSafeTransactionForAction(
   chain: Pick<ChainConfig, "id" | "name">,
   safeAddress: string,
   nonce: bigint

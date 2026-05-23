@@ -81,9 +81,6 @@ export const cache = new Cache();
 /** 5 minutes — appropriate for Safe API responses which are slow and rate-limited. */
 export const SAFE_PROPOSALS_TTL = 5 * 60 * 1_000;
 
-/** 60 seconds — appropriate for on-chain Squads state which changes less frequently than actions. */
-export const SQUADS_PROPOSALS_TTL = 60 * 1_000;
-
 export function safeProposalsCacheKey(chainId: string, safeAddress: string) {
   return `safe-proposals:${chainId}:${safeAddress}`;
 }
