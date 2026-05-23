@@ -5,7 +5,7 @@ import { loadSquadsWorkspaceProposalsForMultisig } from "@/lib/workspace/squads-
 import type { ChainConfig } from "@/types/chain";
 import { type MultisigAccount, getMultisigAccountKey } from "@/types/multisig";
 
-export interface AttentionSummary {
+interface AttentionSummary {
   waiting: number;
   executable: number;
   active: number;
