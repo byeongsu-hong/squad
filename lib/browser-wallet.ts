@@ -14,7 +14,7 @@ interface ConnectResult {
   walletName: string;
 }
 
-export class BrowserWalletService {
+class BrowserWalletService {
   async connect(wallet: Wallet): Promise<ConnectResult> {
     if (!wallet.adapter) {
       throw new Error("Wallet adapter not found");

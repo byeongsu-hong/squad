@@ -1,6 +1,6 @@
 import type { PublicKey } from "@solana/web3.js";
 
-export type MultisigProvider = "squads" | "safe";
+type MultisigProvider = "squads" | "safe";
 
 export interface MultisigAccount {
   provider: MultisigProvider;
@@ -16,14 +16,14 @@ export interface MultisigAccount {
   vaultPda?: PublicKey | string;
 }
 
-export interface MultisigMember {
+interface MultisigMember {
   key: PublicKey | string;
   permissions: {
     mask: number;
   };
 }
 
-export interface SquadsMultisigAccount extends MultisigAccount {
+interface SquadsMultisigAccount extends MultisigAccount {
   provider: "squads";
   publicKey: PublicKey;
   members: Array<{

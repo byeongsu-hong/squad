@@ -40,7 +40,7 @@ interface OkxConnectResult {
   publicKey: PublicKey;
 }
 
-export class OkxWalletService {
+class OkxWalletService {
   private getProvider(): OkxSolanaProvider {
     const provider = window.okxwallet?.solana;
     if (!provider) {

@@ -16,7 +16,7 @@ declare global {
   }
 }
 
-export class EvmWalletService {
+class EvmWalletService {
   private getProvider() {
     if (typeof window === "undefined" || !window.ethereum) {
       throw new Error("No injected EVM wallet was found in this browser.");
