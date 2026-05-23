@@ -1,5 +1,7 @@
 import { ReactNode } from "react";
 
+import { formatAddress, isValidAddress } from "@/lib/utils/format-address";
+
 export interface ConfigAction {
   __kind: string;
   [key: string]: unknown;
@@ -20,14 +22,9 @@ export function formatConfigAction(
     case "AddMember": {
       const newMember = action.newMember as { key: unknown; permissions?: { mask: number } } | undefined;
       const memberKey = String(newMember?.key || "Unknown");
-      const isValidAddress =
-        memberKey.length >= 32 &&
-        memberKey.length <= 44 &&
-        memberKey !== "Unknown";
-
       return {
         type: "Add Member",
-        summary: `Add member ${isValidAddress ? `${memberKey.slice(0, 8)}...` : memberKey}`,
+        summary: `Add member ${isValidAddress(memberKey) ? formatAddress(memberKey, 8, 4) : memberKey}`,
         fields: [
           {
             label: "Member Address",
@@ -43,14 +40,9 @@ export function formatConfigAction(
 
     case "RemoveMember": {
       const memberKey = String(action.oldMember || "Unknown");
-      const isValidAddress =
-        memberKey.length >= 32 &&
-        memberKey.length <= 44 &&
-        memberKey !== "Unknown";
-
       return {
         type: "Remove Member",
-        summary: `Remove member ${isValidAddress ? `${memberKey.slice(0, 8)}...` : memberKey}`,
+        summary: `Remove member ${isValidAddress(memberKey) ? formatAddress(memberKey, 8, 4) : memberKey}`,
         fields: [
           {
             label: "Member Address",
