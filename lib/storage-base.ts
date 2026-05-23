@@ -1,4 +1,4 @@
-export interface StorageAdapter<T, S = T> {
+interface StorageAdapter<T, S = T> {
   serialize: (data: T) => S;
   deserialize: (data: S) => T;
 }

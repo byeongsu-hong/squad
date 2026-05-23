@@ -25,10 +25,6 @@ export class EvmWalletService {
     return window.ethereum;
   }
 
-  isInstalled() {
-    return typeof window !== "undefined" && Boolean(window.ethereum);
-  }
-
   async connect() {
     const provider = this.getProvider();
     const accounts = (await provider.request({
@@ -44,16 +40,6 @@ export class EvmWalletService {
       address: getAddress(address),
       walletName: provider.isMetaMask ? "MetaMask" : "Injected EVM Wallet",
     };
-  }
-
-  async getConnectedAddress() {
-    const provider = this.getProvider();
-    const accounts = (await provider.request({
-      method: "eth_accounts",
-    })) as string[];
-
-    const address = accounts[0];
-    return address && isAddress(address) ? getAddress(address) : null;
   }
 
   async switchToChain(chainId: bigint) {
