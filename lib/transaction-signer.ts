@@ -6,7 +6,7 @@ import { WalletType } from "@/types/wallet";
 import { ledgerService } from "./ledger";
 import { okxWalletService } from "./okx-wallet";
 
-export interface SignTransactionOptions {
+interface SignTransactionOptions {
   walletType: WalletType | null;
   derivationPath?: string;
   walletAdapter?: {
@@ -16,7 +16,7 @@ export interface SignTransactionOptions {
   };
 }
 
-export class TransactionSignerService {
+class TransactionSignerService {
   async signTransaction(
     transaction: Transaction,
     options: SignTransactionOptions

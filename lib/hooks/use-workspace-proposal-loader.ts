@@ -30,8 +30,6 @@ export function useWorkspaceProposalLoader({
     Record<string, string | undefined>
   >({});
 
-  // Track keys currently being fetched to prevent duplicate concurrent requests.
-  // Using a ref (not state) avoids stale-closure issues and unnecessary re-renders.
   const inFlightKeys = useRef(new Set<string>());
 
   const loadForAllMultisigs = useCallback(
@@ -51,7 +49,6 @@ export function useWorkspaceProposalLoader({
         return [];
       }
 
-      // Skip multisigs already being fetched (unless forced).
       const pending = force
         ? loadable
         : loadable.filter((m) => !inFlightKeys.current.has(m.key));
@@ -109,7 +106,6 @@ export function useWorkspaceProposalLoader({
         setLoading(false);
       }
     },
-    // chains and errorMessage are the only real deps — in-flight tracking is via ref.
     [chains, errorMessage, proposals]
   );
 

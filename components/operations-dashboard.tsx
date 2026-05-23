@@ -41,7 +41,7 @@ function StatusBadge({ item }: { item: WorkspaceQueueItem }) {
   }
   if (item.needsYourSignature) {
     return (
-      <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-primary dark:border-primary/30 dark:bg-primary/10">
+      <span className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
         Waiting on you
       </span>
     );

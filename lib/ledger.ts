@@ -11,7 +11,7 @@ import { firstValueFrom, lastValueFrom, timeout } from "rxjs";
 
 import type { LedgerAccount } from "@/types/wallet";
 
-export class LedgerService {
+class LedgerService {
   private sdk: DeviceManagementKit | null = null;
   private sessionId: string | null = null;
   private signer: SignerSolana | null = null;
