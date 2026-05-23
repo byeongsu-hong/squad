@@ -287,7 +287,7 @@ function QueueItemCard({ item, onClick }: QueueItemCardProps) {
     ? "bg-amber-500"
     : item.readyToExecute
     ? "bg-green-500"
-    : "bg-muted dark:bg-[#2e2b28]";
+    : "bg-muted";
 
   const statusText = item.readyToExecute
     ? "Ready to execute"
@@ -306,7 +306,7 @@ function QueueItemCard({ item, onClick }: QueueItemCardProps) {
             {item.multisig.label || "Unnamed"}
           </p>
           {item.needsYourSignature && (
-            <span className="shrink-0 rounded-full bg-amber-50 dark:bg-[#2e2b28] px-2 py-0.5 text-[10px] font-semibold text-primary">
+            <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
               Urgent
             </span>
           )}
