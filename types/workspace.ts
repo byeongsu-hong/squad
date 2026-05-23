@@ -48,11 +48,6 @@ export interface WorkspaceProposal {
   cancelled: boolean;
 }
 
-export interface WorkspaceProposalSummary {
-  totalCount: number;
-  unavailableReason?: string;
-}
-
 export function getWorkspaceMultisigKey(chainId: string, address: string) {
   return `${chainId}:${address}`;
 }
