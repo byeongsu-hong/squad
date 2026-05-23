@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { evmWalletService } from "@/lib/evm-wallet";
+import { formatAddress } from "@/lib/utils/format-address";
 import { useWalletDisconnect } from "@/lib/hooks/use-wallet-disconnect";
 import { useWalletStore } from "@/stores/wallet-store";
 
@@ -39,9 +40,9 @@ export function WalletButton() {
   const hasEvmWallet = evmConnected && evmAddress;
   const hasAnyWallet = Boolean(hasSolanaWallet || hasEvmWallet);
   const primaryLabel = hasSolanaWallet
-    ? `${publicKey.toString().slice(0, 4)}...${publicKey.toString().slice(-4)}`
+    ? formatAddress(publicKey.toString(), 4, 4)
     : hasEvmWallet
-      ? `${evmAddress.slice(0, 6)}...${evmAddress.slice(-4)}`
+      ? formatAddress(evmAddress, 6, 4)
       : null;
 
   const handleCopyAddress = () => {

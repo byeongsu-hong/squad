@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { AddressLabelManagerDialog } from "@/components/address-label-manager-dialog";
 import { useAddressLabel } from "@/lib/hooks/use-address-label";
+import { formatAddress } from "@/lib/utils/format-address";
 import { cn } from "@/lib/utils";
 
 interface AddressWithLabelProps {
@@ -110,9 +111,7 @@ export function AddressWithLabel({
     toast.success("Address copied to clipboard");
   };
 
-  const displayAddress = showFull
-    ? address
-    : `${address.slice(0, 6)}...${address.slice(-6)}`;
+  const displayAddress = showFull ? address : formatAddress(address, 6, 6);
   const interactiveDisplayClass = copyOnClick
     ? "transition-colors hover:text-zinc-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-600"
     : "";

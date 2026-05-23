@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 
 import { browserWalletService } from "@/lib/browser-wallet";
+import { formatAddress } from "@/lib/utils/format-address";
 import { useWalletStore } from "@/stores/wallet-store";
 
 export function useBrowserWallet() {
@@ -78,7 +79,7 @@ export function useBrowserWallet() {
       ) {
         const pubkeyStr = (publicKey as { toString: () => string }).toString();
         toast.info(
-          `Account changed: ${pubkeyStr.slice(0, 4)}...${pubkeyStr.slice(-4)}`
+          `Account changed: ${formatAddress(pubkeyStr, 4, 4)}`
         );
       }
     };

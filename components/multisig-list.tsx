@@ -27,6 +27,7 @@ import {
   type RegistrySummaryRow,
   buildRegistrySummaryRowsFromMultisigs,
 } from "@/lib/registry/registry-summary";
+import { formatAddress } from "@/lib/utils/format-address";
 import { cn } from "@/lib/utils";
 import { useChainStore } from "@/stores/chain-store";
 import { useMultisigStore } from "@/stores/multisig-store";
@@ -48,9 +49,6 @@ function formatProviderLabel(provider: RegistrySummaryRow["multisigProvider"]) {
   return provider === "safe" ? "Safe" : "Squads";
 }
 
-function formatCompactMultisigAddress(address: string) {
-  return `${address.slice(0, 8)}...${address.slice(-8)}`;
-}
 
 export function MultisigList({
   actions,
@@ -698,9 +696,7 @@ export function MultisigList({
 
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.72rem] text-muted-foreground/70">
                           <span className="font-mono tabular-nums">
-                            {formatCompactMultisigAddress(
-                              multisig.publicKey.toString()
-                            )}
+                            {formatAddress(multisig.publicKey.toString(), 8, 8)}
                           </span>
                           <button
                             type="button"
@@ -920,8 +916,7 @@ export function MultisigList({
                             </div>
                             <div className="mt-1 flex items-center gap-1">
                               <span className="truncate font-mono text-xs text-muted-foreground/70">
-                                {multisig.publicKey.toString().slice(0, 8)}...
-                                {multisig.publicKey.toString().slice(-8)}
+                                {formatAddress(multisig.publicKey.toString(), 8, 8)}
                               </span>
                               <button
                                 type="button"
