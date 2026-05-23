@@ -36,29 +36,11 @@ export interface SquadsMultisigAccount extends MultisigAccount {
   vaultPda?: PublicKey;
 }
 
-export interface SafeMultisigAccount extends MultisigAccount {
-  provider: "safe";
-  publicKey: string;
-  members: Array<{
-    key: string;
-    permissions: {
-      mask: number;
-    };
-  }>;
-  programId?: string;
-  vaultPda?: string;
-}
 
 export function isSquadsMultisig(
   multisig: MultisigAccount | null | undefined
 ): multisig is SquadsMultisigAccount {
   return Boolean(multisig && multisig.provider === "squads");
-}
-
-export function isSafeMultisig(
-  multisig: MultisigAccount | null | undefined
-): multisig is SafeMultisigAccount {
-  return Boolean(multisig && multisig.provider === "safe");
 }
 
 export function getMultisigAccountKey(

@@ -145,39 +145,3 @@ export function exportMultisigsToCSV(multisigs: MultisigAccount[]): void {
 /**
  * Exports proposal details with member approval/rejection status
  */
-export function exportProposalDetailsToCSV(
-  proposal: ProposalAccount,
-  multisig: MultisigAccount
-): void {
-  type ProposalDetailRow = {
-    member: string;
-    status: string;
-  };
-
-  const headers: { key: keyof ProposalDetailRow; label: string }[] = [
-    { key: "member", label: "Member Address" },
-    { key: "status", label: "Vote Status" },
-  ];
-
-  const data = multisig.members.map((member) => {
-    const memberKey = member.key.toString();
-    const approved = proposal.approvals.some((a) => a.toString() === memberKey);
-    const rejected = proposal.rejections.some(
-      (r) => r.toString() === memberKey
-    );
-
-    let status = "Not Voted";
-    if (approved) status = "Approved";
-    if (rejected) status = "Rejected";
-
-    return {
-      member: memberKey,
-      status,
-    };
-  });
-
-  const csv = convertToCSV(data, headers);
-  const filename = `proposal-${proposal.transactionIndex}-details.csv`;
-
-  downloadCSV(csv, filename);
-}
