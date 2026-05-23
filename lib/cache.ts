@@ -37,12 +37,6 @@ class Cache {
     return { data: entry.data, stale };
   }
 
-  isStale(key: string): boolean {
-    const entry = this.cache.get(key);
-    if (!entry) return true;
-    return Date.now() - entry.timestamp > entry.ttl;
-  }
-
   invalidate(key: string): void {
     this.cache.delete(key);
   }
