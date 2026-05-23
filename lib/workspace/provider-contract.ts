@@ -16,6 +16,8 @@ export interface WorkspacePayloadLoaderOptions {
 export interface WorkspaceProposalLoaderOptions {
   chains: ChainConfig[];
   multisig: WorkspaceMultisig;
+  /** When true, bypass the local cache and fetch fresh data. */
+  force?: boolean;
 }
 
 export interface WorkspaceProposalSummaryLoaderOptions {

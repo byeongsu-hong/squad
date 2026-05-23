@@ -6,12 +6,9 @@ import { useEffect, useMemo, useState } from "react";
 
 import { ProposalDetailModal } from "@/components/proposal-detail-modal";
 import { Button } from "@/components/ui/button";
-import { useSquadsProposalLoader } from "@/lib/hooks/use-squads-proposal-loader";
-import { useWorkspaceMultisigs } from "@/lib/hooks/use-workspace-multisigs";
-import { useWorkspaceProposalLoader } from "@/lib/hooks/use-workspace-proposal-loader";
+import { useAllProposalsLoader } from "@/lib/hooks/use-all-proposals-loader";
 import { useWorkspaceQueue } from "@/lib/hooks/use-workspace-queue";
 import { cn } from "@/lib/utils";
-import { useMultisigStore } from "@/stores/multisig-store";
 import { useWalletStore } from "@/stores/wallet-store";
 import type { WorkspaceQueueItem } from "@/types/workspace";
 
@@ -31,44 +28,19 @@ function timeAgo(dateStr?: string): string {
 
 export function LandingPage() {
   const { publicKey, getWalletAddressForProvider } = useWalletStore();
-  const { multisigs, setProposals } = useMultisigStore();
-  const { chains, proposals, workspaceMultisigs } = useWorkspaceMultisigs();
-
-  const { loadForAllMultisigs } = useSquadsProposalLoader({
-    chains,
-    setProposals,
-    errorMessage: "Failed to load proposals",
-  });
-
-  const {
-    proposals: workspaceProposals,
-    loadForAllMultisigs: loadWorkspaceProposals,
-  } = useWorkspaceProposalLoader({
-    chains,
-    errorMessage: "Failed to load workspace proposals",
-  });
-
-  const squadsMultisigs = useMemo(
-    () => multisigs.filter((m) => m.provider === "squads"),
-    [multisigs]
-  );
-
-  const safeMultisigs = useMemo(
-    () => workspaceMultisigs.filter((m) => m.provider === "safe"),
-    [workspaceMultisigs]
-  );
+  const { proposals, safeProposals, workspaceMultisigs, loadAll } =
+    useAllProposalsLoader();
 
   useEffect(() => {
-    void loadForAllMultisigs(squadsMultisigs);
-    void loadWorkspaceProposals(safeMultisigs, { notifyOnError: false });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    void loadAll();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const queueItems = useWorkspaceQueue({
     proposals,
     multisigs: workspaceMultisigs,
     viewerAddress: publicKey?.toString() ?? null,
-    workspaceProposals,
+    workspaceProposals: safeProposals,
     getViewerAddressForMultisig: (multisig) =>
       getWalletAddressForProvider(multisig.provider),
   });
@@ -133,8 +105,7 @@ export function LandingPage() {
   }, [queueItems]);
 
   const handleActionSuccess = async () => {
-    void loadForAllMultisigs(squadsMultisigs);
-    void loadWorkspaceProposals(safeMultisigs, { notifyOnError: false });
+    void loadAll({ force: true });
   };
 
   if (workspaceMultisigs.length === 0) {

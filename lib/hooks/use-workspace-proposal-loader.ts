@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { mapWithConcurrency } from "@/lib/utils/async";
@@ -11,12 +11,14 @@ interface UseWorkspaceProposalLoaderOptions {
   errorMessage: string;
 }
 
-const PROPOSAL_LOAD_CONCURRENCY = 4;
-
-interface LoadWorkspaceProposalOptions {
+export interface LoadWorkspaceProposalOptions {
+  /** Bypass the adapter-level cache and force a fresh fetch. */
   force?: boolean;
+  /** Whether to show a toast on error. Default: true. */
   notifyOnError?: boolean;
 }
+
+const PROPOSAL_LOAD_CONCURRENCY = 4;
 
 export function useWorkspaceProposalLoader({
   chains,
@@ -24,161 +26,97 @@ export function useWorkspaceProposalLoader({
 }: UseWorkspaceProposalLoaderOptions) {
   const [loading, setLoading] = useState(false);
   const [proposals, setProposals] = useState<WorkspaceProposal[]>([]);
-  const [loadingKeys, setLoadingKeys] = useState<string[]>([]);
-  const [loadedKeys, setLoadedKeys] = useState<string[]>([]);
   const [errorsByMultisigKey, setErrorsByMultisigKey] = useState<
     Record<string, string | undefined>
   >({});
+
+  // Track keys currently being fetched to prevent duplicate concurrent requests.
+  // Using a ref (not state) avoids stale-closure issues and unnecessary re-renders.
+  const inFlightKeys = useRef(new Set<string>());
 
   const loadForAllMultisigs = useCallback(
     async (
       multisigs: WorkspaceMultisig[],
       options: LoadWorkspaceProposalOptions = {}
-    ) => {
+    ): Promise<WorkspaceProposal[]> => {
       const { force = false, notifyOnError = true } = options;
-      const loadableMultisigs = multisigs.filter((multisig) => {
-        if (multisig.provider === "squads") {
-          return false;
-        }
 
-        const adapter = getWorkspaceProviderAdapter(multisig.provider);
-        return adapter.capabilities.proposalLoading;
+      const loadable = multisigs.filter((m) => {
+        if (m.provider === "squads") return false;
+        return getWorkspaceProviderAdapter(m.provider).capabilities.proposalLoading;
       });
-      const pendingMultisigs = force
-        ? loadableMultisigs
-        : loadableMultisigs.filter(
-            (multisig) =>
-              !loadingKeys.includes(multisig.key) &&
-              !loadedKeys.includes(multisig.key) &&
-              !errorsByMultisigKey[multisig.key]
-          );
 
-      if (loadableMultisigs.length === 0) {
+      if (loadable.length === 0) {
         setProposals([]);
         return [];
       }
 
-      if (pendingMultisigs.length === 0) {
-        return proposals;
-      }
+      // Skip multisigs already being fetched (unless forced).
+      const pending = force
+        ? loadable
+        : loadable.filter((m) => !inFlightKeys.current.has(m.key));
 
+      if (pending.length === 0) return proposals;
+
+      for (const m of pending) inFlightKeys.current.add(m.key);
       setLoading(true);
-      setLoadingKeys(pendingMultisigs.map((multisig) => multisig.key));
-      setErrorsByMultisigKey((current) => {
-        const next = { ...current };
-        for (const multisig of pendingMultisigs) {
-          next[multisig.key] = undefined;
-        }
-        return next;
-      });
 
       try {
-        const loaded = await mapWithConcurrency(
-          pendingMultisigs,
+        const results = await mapWithConcurrency(
+          pending,
           PROPOSAL_LOAD_CONCURRENCY,
           async (multisig) => {
             const adapter = getWorkspaceProviderAdapter(multisig.provider);
-
             try {
-              const proposals = await adapter.loadProposalsForMultisig({
+              const data = await adapter.loadProposalsForMultisig({
                 chains,
                 multisig,
+                force,
               });
-
-              return {
-                status: "fulfilled" as const,
-                value: proposals,
-              };
-            } catch (error) {
-              return {
-                status: "rejected" as const,
-                reason: error,
-              };
+              return { status: "ok" as const, data };
+            } catch (err) {
+              return { status: "err" as const, err };
             }
           }
         );
 
         const nextErrors: Record<string, string | undefined> = {};
-        const nextProposals = loaded
-          .flatMap((result, index) => {
-            if (result.status === "fulfilled") {
-              return result.value;
-            }
-
-            const multisigKey = pendingMultisigs[index]?.key;
-            if (multisigKey) {
-              nextErrors[multisigKey] =
-                result.reason instanceof Error
-                  ? result.reason.message
-                  : errorMessage;
+        const nextProposals = results
+          .flatMap((result, i) => {
+            if (result.status === "ok") return result.data;
+            const key = pending[i]?.key;
+            if (key) {
+              nextErrors[key] =
+                result.err instanceof Error ? result.err.message : errorMessage;
             }
             return [];
           })
-          .sort((left, right) =>
-            Number(right.transactionIndex - left.transactionIndex)
-          );
+          .sort((a, b) => Number(b.transactionIndex - a.transactionIndex));
 
-        setErrorsByMultisigKey((current) => ({
-          ...current,
-          ...nextErrors,
-        }));
-        setLoadedKeys((current) => {
-          const next = new Set(current);
-          loaded.forEach((result, index) => {
-            if (result.status === "fulfilled") {
-              const multisigKey = pendingMultisigs[index]?.key;
-              if (multisigKey) {
-                next.add(multisigKey);
-              }
-            }
-          });
-          if (force) {
-            for (const multisig of pendingMultisigs) {
-              if (!nextErrors[multisig.key]) {
-                next.add(multisig.key);
-              }
-            }
-          }
-          return Array.from(next);
-        });
+        if (Object.keys(nextErrors).length > 0) {
+          setErrorsByMultisigKey((prev) => ({ ...prev, ...nextErrors }));
+          if (notifyOnError) toast.error(errorMessage);
+        }
+
         setProposals(nextProposals);
-
-        if (notifyOnError && Object.keys(nextErrors).length > 0) {
-          toast.error(errorMessage);
-        }
-
         return nextProposals;
-      } catch (error) {
-        console.error(errorMessage, error);
-        if (notifyOnError) {
-          toast.error(errorMessage);
-        }
+      } catch (err) {
+        console.error(errorMessage, err);
+        if (notifyOnError) toast.error(errorMessage);
         return [];
       } finally {
+        for (const m of pending) inFlightKeys.current.delete(m.key);
         setLoading(false);
-        setLoadingKeys((current) =>
-          current.filter(
-            (key) => !pendingMultisigs.some((multisig) => multisig.key === key)
-          )
-        );
       }
     },
-    [
-      chains,
-      errorMessage,
-      errorsByMultisigKey,
-      loadedKeys,
-      loadingKeys,
-      proposals,
-    ]
+    // chains and errorMessage are the only real deps — in-flight tracking is via ref.
+    [chains, errorMessage, proposals]
   );
 
   return {
     loading,
-    loadingKeys,
-    loadedKeys,
-    errorsByMultisigKey,
     proposals,
+    errorsByMultisigKey,
     loadForAllMultisigs,
   };
 }

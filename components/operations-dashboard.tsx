@@ -6,13 +6,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ProposalDetailModal } from "@/components/proposal-detail-modal";
 import { RegistryManagementDialog } from "@/components/registry-management-dialog";
 import { ProposalCardSkeletonList } from "@/components/skeletons";
+import { useAllProposalsLoader } from "@/lib/hooks/use-all-proposals-loader";
 import { useProposalActions } from "@/lib/hooks/use-proposal-actions";
-import { useSquadsProposalLoader } from "@/lib/hooks/use-squads-proposal-loader";
-import { useWorkspaceMultisigs } from "@/lib/hooks/use-workspace-multisigs";
-import { useWorkspaceProposalLoader } from "@/lib/hooks/use-workspace-proposal-loader";
 import { useWorkspaceQueue } from "@/lib/hooks/use-workspace-queue";
 import { cn } from "@/lib/utils";
-import { useMultisigStore } from "@/stores/multisig-store";
 import { useWalletStore } from "@/stores/wallet-store";
 import type { WorkspaceQueueItem } from "@/types/workspace";
 
@@ -98,47 +95,22 @@ type StatusFilter = (typeof STATUS_FILTERS)[number];
 
 export function OperationsDashboard({ actions }: OperationsDashboardProps = {}) {
   const { publicKey, connected, evmConnected, getWalletAddressForProvider } = useWalletStore();
-  const { multisigs, setProposals } = useMultisigStore();
-  const { chains, proposals, workspaceMultisigs } = useWorkspaceMultisigs();
-
-  const { loading, loadForAllMultisigs } = useSquadsProposalLoader({
-    chains,
-    setProposals,
-    errorMessage: "Failed to load dashboard",
-  });
-  const {
-    loading: workspaceLoading,
-    proposals: workspaceProposals,
-    loadForAllMultisigs: loadWorkspaceProposals,
-  } = useWorkspaceProposalLoader({
-    chains,
-    errorMessage: "Failed to load workspace proposals",
-  });
-
-  const squadsMultisigs = useMemo(
-    () => multisigs.filter(() => true),
-    [multisigs]
-  );
-  const safeMultisigs = useMemo(
-    () => workspaceMultisigs.filter((m) => m.provider !== "squads"),
-    [workspaceMultisigs]
-  );
+  const { loading, proposals, safeProposals, workspaceMultisigs, loadAll } =
+    useAllProposalsLoader({ errorMessage: "Failed to load dashboard" });
 
   const autoLoadedRef = useRef(false);
 
   useEffect(() => {
-    if (autoLoadedRef.current) return;
-    if (multisigs.length === 0) return;
+    if (autoLoadedRef.current || workspaceMultisigs.length === 0) return;
     autoLoadedRef.current = true;
-    void loadForAllMultisigs(squadsMultisigs);
-    void loadWorkspaceProposals(safeMultisigs, { notifyOnError: false });
-  }, [multisigs.length, squadsMultisigs, safeMultisigs, loadForAllMultisigs, loadWorkspaceProposals]);
+    void loadAll();
+  }, [workspaceMultisigs.length, loadAll]);
 
   const queueItems = useWorkspaceQueue({
     proposals,
     multisigs: workspaceMultisigs,
     viewerAddress: publicKey?.toString() ?? null,
-    workspaceProposals,
+    workspaceProposals: safeProposals,
     getViewerAddressForMultisig: (multisig) =>
       getWalletAddressForProvider(multisig.provider),
   });
@@ -196,10 +168,7 @@ export function OperationsDashboard({ actions }: OperationsDashboardProps = {}) 
   const { approveByAddress, executeByAddress, isActionInProgress } = useProposalActions({
     onSuccess: async () => {
       autoLoadedRef.current = false;
-      await Promise.all([
-        loadForAllMultisigs(squadsMultisigs),
-        loadWorkspaceProposals(safeMultisigs, { force: true, notifyOnError: false }),
-      ]);
+      await loadAll({ force: true });
     },
   });
 
@@ -251,9 +220,9 @@ export function OperationsDashboard({ actions }: OperationsDashboardProps = {}) 
   };
 
   const hasConnectedWallet = connected || evmConnected;
-  const isLoading = loading || workspaceLoading;
+  const isLoading = loading;
 
-  if (multisigs.length === 0) {
+  if (workspaceMultisigs.length === 0) {
     return (
       <section className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3 pb-4">
@@ -518,12 +487,7 @@ export function OperationsDashboard({ actions }: OperationsDashboardProps = {}) 
         item={modalItem}
         open={modalItem !== null}
         onClose={() => setModalItem(null)}
-        onActionSuccess={async () => {
-          await Promise.all([
-            loadForAllMultisigs(squadsMultisigs),
-            loadWorkspaceProposals(safeMultisigs, { force: true, notifyOnError: false }),
-          ]);
-        }}
+        onActionSuccess={() => loadAll({ force: true })}
       />
     </section>
   );

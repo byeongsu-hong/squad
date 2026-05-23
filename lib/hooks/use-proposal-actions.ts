@@ -13,6 +13,7 @@ import {
   confirmSafeTransaction,
   executeSafeTransaction,
 } from "@/lib/safe-client";
+import { invalidateSafeProposalCache } from "@/lib/workspace/safe-adapter";
 import { SquadService } from "@/lib/squad";
 import { transactionSignerService } from "@/lib/transaction-signer";
 import {
@@ -335,6 +336,7 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
             signer: evmAddress,
             nonce: transactionIndex,
           });
+          invalidateSafeProposalCache(chainId, multisigKey);
           toast.success("Safe transaction confirmed.");
           if (!options.skipSuccessCallback) {
             await options.onSuccess?.();
@@ -414,6 +416,7 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
             signer: evmAddress,
             nonce: transactionIndex,
           });
+          invalidateSafeProposalCache(chainId, multisigKey);
           toast.success("Safe transaction submitted.");
           if (!options.skipSuccessCallback) {
             await options.onSuccess?.();
