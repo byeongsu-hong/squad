@@ -5,7 +5,7 @@ import {
   TransactionMessage,
   VersionedTransaction,
 } from "@solana/web3.js";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from "@/lib/config";
@@ -28,7 +28,6 @@ import { WalletType, parseLedgerError } from "@/types/wallet";
 
 interface UseProposalActionsOptions {
   onSuccess?: () => void | Promise<void>;
-  skipSuccessCallback?: boolean;
 }
 
 type ProposalActionType = "approve" | "reject" | "execute";
@@ -42,6 +41,8 @@ function buildActionKey(
 }
 
 export function useProposalActions(options: UseProposalActionsOptions = {}) {
+  const optionsRef = useRef(options);
+  optionsRef.current = options;
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const { publicKey, derivationPath, walletType, evmAddress } =
     useWalletStore();
@@ -189,9 +190,7 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
 
         toast.success(SUCCESS_MESSAGES.PROPOSAL_APPROVED);
         squadService.invalidateProposalCache(multisigPda);
-        if (!options.skipSuccessCallback) {
-          await options.onSuccess?.();
-        }
+        await optionsRef.current.onSuccess?.();
       } catch (error) {
         console.error("Failed to approve proposal:", error);
         const errorMessage = parseLedgerError(error);
@@ -201,7 +200,7 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
         setActionLoading(null);
       }
     },
-    [publicKey, getSquadService, signAndSendTransaction, options]
+    [publicKey, getSquadService, signAndSendTransaction]
   );
 
   const reject = useCallback(
@@ -232,9 +231,7 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
 
         toast.success(SUCCESS_MESSAGES.PROPOSAL_REJECTED);
         squadService.invalidateProposalCache(multisigPda);
-        if (!options.skipSuccessCallback) {
-          await options.onSuccess?.();
-        }
+        await optionsRef.current.onSuccess?.();
       } catch (error) {
         console.error("Failed to reject proposal:", error);
         const errorMessage = parseLedgerError(error);
@@ -244,7 +241,7 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
         setActionLoading(null);
       }
     },
-    [publicKey, getSquadService, signAndSendTransaction, options]
+    [publicKey, getSquadService, signAndSendTransaction]
   );
 
   const execute = useCallback(
@@ -280,9 +277,7 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
 
         toast.success(SUCCESS_MESSAGES.PROPOSAL_EXECUTED);
         squadService.invalidateProposalCache(multisigPda);
-        if (!options.skipSuccessCallback) {
-          await options.onSuccess?.();
-        }
+        await optionsRef.current.onSuccess?.();
       } catch (error) {
         console.error("Failed to execute proposal:", error);
         const errorMessage = parseLedgerError(error);
@@ -292,7 +287,7 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
         setActionLoading(null);
       }
     },
-    [publicKey, getSquadService, signAndSendTransaction, options]
+    [publicKey, getSquadService, signAndSendTransaction]
   );
 
   const getChain = (chainId: string) => {
@@ -322,7 +317,7 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
         toast.success("Safe transaction submitted.");
       }
       invalidateSafeProposalCache(chainId, multisigKey);
-      if (!options.skipSuccessCallback) await options.onSuccess?.();
+      await optionsRef.current.onSuccess?.();
     } catch (error) {
       const verb = action === "approve" ? "confirm" : "execute";
       console.error(`Failed to ${verb} Safe transaction:`, error);

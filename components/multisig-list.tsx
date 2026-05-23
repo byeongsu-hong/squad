@@ -644,7 +644,7 @@ export function MultisigList({
                               </p>
                               <Badge
                                 variant="outline"
-                                className="rounded-md border-cyan-500/25 bg-cyan-500/8 text-cyan-200"
+                                className="rounded-md border-border bg-muted text-foreground/80"
                               >
                                 {row.chainName}
                               </Badge>
