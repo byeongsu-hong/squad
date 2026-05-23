@@ -11,7 +11,7 @@ interface UseWorkspaceProposalLoaderOptions {
   errorMessage: string;
 }
 
-export interface LoadWorkspaceProposalOptions {
+interface LoadWorkspaceProposalOptions {
   /** Bypass the adapter-level cache and force a fresh fetch. */
   force?: boolean;
   /** Whether to show a toast on error. Default: true. */

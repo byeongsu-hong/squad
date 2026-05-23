@@ -1,7 +1,7 @@
 import { type ChainConfig, normalizeChainConfig } from "@/types/chain";
 import { type MultisigAccount, getMultisigAccountKey } from "@/types/multisig";
 
-export interface RegistryAttentionSummary {
+interface RegistryAttentionSummary {
   waiting: number;
   executable: number;
   active: number;
