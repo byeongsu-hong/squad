@@ -32,11 +32,6 @@ interface MultisigStore {
     chainId?: string
   ) => void;
   setProposals: (proposals: ProposalAccount[]) => void;
-  addProposal: (proposal: ProposalAccount) => void;
-  updateProposal: (
-    transactionIndex: bigint,
-    updates: Partial<ProposalAccount>
-  ) => void;
   resetAll: () => void;
   selectMultisig: (publicKey: string | null) => void;
   getMultisigByKey: (publicKey: string | null) => MultisigAccount | undefined;
@@ -135,18 +130,6 @@ export const useMultisigStore = create<MultisigStore>((set, get) => ({
   },
 
   setProposals: (proposals) => set({ proposals }),
-
-  addProposal: (proposal) =>
-    set((state) => ({ proposals: [...state.proposals, proposal] })),
-
-  updateProposal: (transactionIndex, updates) =>
-    set((state) => ({
-      proposals: state.proposals.map((proposal) =>
-        proposal.transactionIndex === transactionIndex
-          ? { ...proposal, ...updates }
-          : proposal
-      ),
-    })),
 
   resetAll: () => {
     multisigStorage.saveMultisigs([]);
