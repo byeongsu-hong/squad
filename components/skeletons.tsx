@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UI_CONFIG } from "@/lib/config";
 
-export function ProposalCardSkeleton() {
+function ProposalCardSkeleton() {
   return (
     <div className="border-b border-border px-3 py-2.5 last:border-b-0">
       <div className="flex items-start justify-between gap-3">
@@ -39,7 +39,7 @@ export function ProposalCardSkeletonList() {
   );
 }
 
-export function MultisigCardSkeleton() {
+function MultisigCardSkeleton() {
   return (
     <Card>
       <CardHeader>
