@@ -36,7 +36,7 @@ declare global {
   }
 }
 
-export interface OkxConnectResult {
+interface OkxConnectResult {
   publicKey: PublicKey;
 }
 

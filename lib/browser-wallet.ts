@@ -2,14 +2,14 @@ import { WalletReadyState } from "@solana/wallet-adapter-base";
 import type { Wallet } from "@solana/wallet-adapter-react";
 import type { PublicKey } from "@solana/web3.js";
 
-export interface BrowserWalletInfo {
+interface BrowserWalletInfo {
   name: string;
   icon: string;
   readyState: WalletReadyState;
   url?: string;
 }
 
-export interface ConnectResult {
+interface ConnectResult {
   publicKey: PublicKey;
   walletName: string;
 }

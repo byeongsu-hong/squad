@@ -14,11 +14,11 @@ export interface SerializedWalletState {
   evmWalletName?: string;
 }
 
-export function serializePublicKey(publicKey: PublicKey | null): string | null {
+function serializePublicKey(publicKey: PublicKey | null): string | null {
   return publicKey ? publicKey.toString() : null;
 }
 
-export function deserializePublicKey(
+function deserializePublicKey(
   publicKey: string | null
 ): PublicKey | null {
   if (!publicKey) return null;
