@@ -140,9 +140,6 @@ class LedgerService {
     throw new Error("Failed to sign message");
   }
 
-  isConnected(): boolean {
-    return this.sdk !== null && this.sessionId !== null && this.signer !== null;
-  }
 }
 
 export const ledgerService = new LedgerService();

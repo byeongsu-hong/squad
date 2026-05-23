@@ -1,6 +1,5 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { TableCell, TableRow } from "@/components/ui/table";
 import { UI_CONFIG } from "@/lib/config";
 
 export function ProposalCardSkeleton() {
@@ -37,51 +36,6 @@ export function ProposalCardSkeletonList() {
         <ProposalCardSkeleton key={i} />
       ))}
     </div>
-  );
-}
-
-export function ProposalTableRowSkeleton() {
-  return (
-    <TableRow>
-      <TableCell>
-        <div className="flex flex-col gap-1">
-          <Skeleton className="h-4 w-32" />
-          <Skeleton className="h-3 w-24" />
-        </div>
-      </TableCell>
-      <TableCell>
-        <Skeleton className="h-5 w-16" />
-      </TableCell>
-      <TableCell>
-        <Skeleton className="h-4 w-12" />
-      </TableCell>
-      <TableCell>
-        <Skeleton className="h-5 w-20" />
-      </TableCell>
-      <TableCell>
-        <div className="flex items-center gap-2">
-          <Skeleton className="h-4 w-12" />
-          <Skeleton className="h-4 w-8" />
-        </div>
-      </TableCell>
-      <TableCell className="text-right">
-        <div className="flex items-center justify-end gap-1">
-          <Skeleton className="h-8 w-8" />
-          <Skeleton className="h-8 w-8" />
-          <Skeleton className="h-8 w-8" />
-        </div>
-      </TableCell>
-    </TableRow>
-  );
-}
-
-export function ProposalTableSkeletonList() {
-  return (
-    <>
-      {Array.from({ length: UI_CONFIG.SKELETON_COUNT }).map((_, i) => (
-        <ProposalTableRowSkeleton key={i} />
-      ))}
-    </>
   );
 }
 

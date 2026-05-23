@@ -17,7 +17,7 @@ export const labelSchema = z
   .transform((val) => val.trim().replace(/\s+/g, " ")); // Sanitize: trim and collapse spaces
 
 // Public key validation
-export const publicKeySchema = z
+const publicKeySchema = z
   .string()
   .min(1, "Public key is required")
   .refine(
