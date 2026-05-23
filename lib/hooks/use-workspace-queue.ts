@@ -1,7 +1,6 @@
 import { useMemo } from "react";
 
-import { useWorkspaceProposalRecords } from "@/lib/hooks/use-workspace-proposal-records";
-import { buildWorkspaceQueueItem } from "@/lib/workspace/squads-adapter";
+import { buildWorkspaceQueueItem, toWorkspaceProposalFromRaw } from "@/lib/workspace/squads-adapter";
 import type { ProposalAccount } from "@/types/multisig";
 import type {
   WorkspaceMultisig,
@@ -33,10 +32,23 @@ export function useWorkspaceQueue({
     return Number.isNaN(timestamp) ? null : timestamp;
   };
 
-  const { records } = useWorkspaceProposalRecords({
-    proposals,
-    multisigs,
-  });
+  const records = useMemo(() => {
+    const multisigMap = new Map(multisigs.map((m) => [m.key, m] as const));
+    const multisigByAddress = new Map(multisigs.map((m) => [m.address, m] as const));
+    return proposals
+      .map((rawProposal) => {
+        const addr = rawProposal.multisig.toString();
+        const multisig = multisigByAddress.get(addr) ?? multisigMap.get(addr);
+        if (!multisig) return null;
+        const proposal = toWorkspaceProposalFromRaw(rawProposal, multisig.chainId);
+        return {
+          key: `${proposal.multisigKey}-${proposal.transactionIndex.toString()}`,
+          multisig,
+          proposal,
+        };
+      })
+      .filter((r): r is NonNullable<typeof r> => r !== null);
+  }, [multisigs, proposals]);
   const workspaceProposalRecords = useMemo(() => {
     const multisigMap = new Map(
       multisigs.map((multisig) => [multisig.key, multisig] as const)

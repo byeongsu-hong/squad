@@ -1,6 +1,5 @@
 import { useMemo } from "react";
 
-import { buildWorkspaceProposalRecords } from "@/lib/hooks/use-workspace-proposal-records";
 import { toWorkspaceMultisigs } from "@/lib/workspace/multisig-conversion";
 import { useChainStore } from "@/stores/chain-store";
 import { useMultisigStore } from "@/stores/multisig-store";
@@ -33,17 +32,6 @@ export function useWorkspaceMultisigs() {
       ),
     [workspaceMultisigs]
   );
-  const workspaceProposalRecords = useMemo(
-    () => buildWorkspaceProposalRecords(proposals, workspaceMultisigs),
-    [proposals, workspaceMultisigs]
-  );
-  const workspaceProposalRecordMap = useMemo(
-    () =>
-      new Map(
-        workspaceProposalRecords.map((record) => [record.key, record] as const)
-      ),
-    [workspaceProposalRecords]
-  );
   const selectedMultisig = selectedMultisigKey
     ? (rawMultisigMap.get(selectedMultisigKey) ?? null)
     : null;
@@ -56,8 +44,6 @@ export function useWorkspaceMultisigs() {
     multisigs,
     proposals,
     workspaceMultisigs,
-    workspaceProposalRecords,
-    workspaceProposalRecordMap,
     availableMultisigKeys: workspaceMultisigs.map((multisig) => multisig.key),
     rawMultisigMap,
     workspaceMultisigMap,
