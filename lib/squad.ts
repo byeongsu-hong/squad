@@ -22,11 +22,6 @@ export class SquadService {
     this.programId = new PublicKey(programId);
   }
 
-  updateConnection(rpcUrl: string, programId: string) {
-    this.connection = new Connection(rpcUrl, RPC_CONFIG.COMMITMENT);
-    this.programId = new PublicKey(programId);
-  }
-
   private async retryWithBackoff<T>(
     operation: () => Promise<T>,
     operationName: string
@@ -503,38 +498,8 @@ export class SquadService {
     return result;
   }
 
-  async getVaultTransactionRaw(
-    multisigPda: PublicKey,
-    transactionIndex: bigint
-  ) {
-    const [transactionPda] = multisig.getTransactionPda({
-      multisigPda,
-      index: transactionIndex,
-      programId: this.programId,
-    });
-
-    return await this.retryWithBackoff(async () => {
-      const accountInfo = await this.connection.getAccountInfo(transactionPda);
-      if (!accountInfo) {
-        throw new Error("Transaction account not found");
-      }
-      return {
-        pda: transactionPda,
-        data: accountInfo.data,
-      };
-    }, "Get vault transaction raw");
-  }
-
   getConnection(): Connection {
     return this.connection;
-  }
-
-  getProgramId(): PublicKey {
-    return this.programId;
-  }
-
-  invalidateCache(multisigPda: PublicKey): void {
-    cache.invalidatePattern(multisigPda.toString());
   }
 
   invalidateProposalCache(multisigPda: PublicKey): void {
@@ -542,8 +507,4 @@ export class SquadService {
     cache.invalidate(cacheKey);
   }
 
-  invalidateMultisigCache(multisigPda: PublicKey): void {
-    const cacheKey = `multisig:${multisigPda.toString()}:${this.programId.toString()}`;
-    cache.invalidate(cacheKey);
-  }
 }
