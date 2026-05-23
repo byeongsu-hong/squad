@@ -1,6 +1,5 @@
 export type WorkspaceProviderId = "squads" | "safe";
 
-export type WorkspaceQueueFilter = "all" | "waiting" | "executable";
 export type WorkspaceSettingsSection =
   | "chains"
   | "adapters"
