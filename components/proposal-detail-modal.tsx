@@ -8,7 +8,7 @@ import {
   Loader2,
   X,
 } from "lucide-react";
-import React, { useState } from "react";
+import { type ReactNode, useState } from "react";
 
 import { AddressWithLabel } from "@/components/address-with-label";
 import {
@@ -381,7 +381,7 @@ export function ProposalDetailModal({
                               {typeof field.value === "string" ? (
                                 <p className="mt-0.5 break-all text-sm text-foreground/80">{field.value}</p>
                               ) : (
-                                field.value as React.ReactNode
+                                field.value as ReactNode
                               )}
                             </div>
                           ))}

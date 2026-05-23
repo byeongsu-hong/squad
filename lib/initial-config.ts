@@ -9,7 +9,7 @@ interface InitialMultisigSeed {
   tags?: string[];
 }
 
-export const INITIAL_MULTISIG_SEEDS: InitialMultisigSeed[] = [];
+const INITIAL_MULTISIG_SEEDS: InitialMultisigSeed[] = [];
 
 export async function resolveInitialMultisigs(
   chains: ChainConfig[]

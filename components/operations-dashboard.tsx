@@ -329,7 +329,7 @@ export function OperationsDashboard({ actions }: OperationsDashboardProps = {}) 
                 type="checkbox"
                 checked={allSelected}
                 onChange={toggleSelectAll}
-                className="h-3.5 w-3.5 rounded accent-amber-600"
+                className="h-3.5 w-3.5 rounded accent-primary"
                 aria-label="Select all"
               />
             </div>
@@ -370,7 +370,7 @@ export function OperationsDashboard({ actions }: OperationsDashboardProps = {}) 
                         checked={isSelected}
                         onChange={() => toggleSelect(item.focusKey)}
                         onClick={(e) => e.stopPropagation()}
-                        className="h-3.5 w-3.5 rounded accent-amber-600"
+                        className="h-3.5 w-3.5 rounded accent-primary"
                         aria-label={`Select ${item.multisig.label ?? "proposal"}`}
                       />
                     )}
@@ -429,7 +429,7 @@ export function OperationsDashboard({ actions }: OperationsDashboardProps = {}) 
                 type="checkbox"
                 checked={selected.size > 0}
                 onChange={() => setSelected(new Set())}
-                className="h-3.5 w-3.5 rounded accent-amber-500"
+                className="h-3.5 w-3.5 rounded accent-primary"
                 aria-label="Clear selection"
               />
               <span className="text-[13px] text-white">
