@@ -4,9 +4,7 @@
 
 // Cache configuration
 export const CACHE_CONFIG = {
-  TTL: 30000, // 30 seconds
-  PROPOSAL_CACHE_KEY: "proposals",
-  MULTISIG_CACHE_KEY: "multisigs",
+  TTL: 30000,
 } as const;
 
 // RPC configuration
@@ -18,8 +16,7 @@ export const RPC_CONFIG = {
 
 // UI configuration
 export const UI_CONFIG = {
-  DEBOUNCE_DELAY: 300, // milliseconds
-  TOAST_DURATION: 3000,
+  DEBOUNCE_DELAY: 300,
   SKELETON_COUNT: 5,
 } as const;
 
