@@ -330,7 +330,7 @@ export function toWorkspaceProposalFromRaw(
   };
 }
 
-export async function loadSquadsWorkspacePayload(
+async function loadSquadsWorkspacePayload(
   multisig: WorkspaceMultisig,
   proposal: WorkspaceProposal,
   chains: ChainConfig[]
