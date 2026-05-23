@@ -1,0 +1,43 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]:
+        - link "Squad2" [ref=e5] [cursor=pointer]:
+          - /url: /
+          - text: Squad
+          - superscript [ref=e6]: "2"
+        - navigation [ref=e7]:
+          - link "Overview" [ref=e8] [cursor=pointer]:
+            - /url: /
+          - link "Operations" [ref=e9] [cursor=pointer]:
+            - /url: /operations
+          - link "Settings" [ref=e10] [cursor=pointer]:
+            - /url: /settings
+      - generic [ref=e11]:
+        - button "Toggle theme" [ref=e12]:
+          - img
+          - generic [ref=e13]: Toggle theme
+        - button "Connect Wallet" [ref=e14]:
+          - img
+          - text: Connect Wallet
+  - main [ref=e15]:
+    - generic [ref=e17]:
+      - generic [ref=e18]: Multisig Aggregator
+      - heading "All your multisigs, in one place." [level=1] [ref=e20]:
+        - text: All your multisigs,
+        - text: in one place.
+      - paragraph [ref=e21]:
+        - text: Squad
+        - superscript [ref=e22]: "2"
+        - text: brings Safe and Squads activity into a single queue so your team can review, sign, and execute without bouncing between dashboards.
+      - generic [ref=e23]:
+        - link "Open Operations" [ref=e24] [cursor=pointer]:
+          - /url: /operations
+          - text: Open Operations
+          - img
+        - link "Configure Workspace" [ref=e25] [cursor=pointer]:
+          - /url: /settings
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e31] [cursor=pointer]:
+    - img [ref=e32]
+  - alert [ref=e35]

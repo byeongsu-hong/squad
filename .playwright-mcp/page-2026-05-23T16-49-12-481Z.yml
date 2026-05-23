@@ -1,0 +1,34 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]:
+        - link "Squad2" [ref=e5] [cursor=pointer]:
+          - /url: /
+          - text: Squad
+          - superscript [ref=e6]: "2"
+        - navigation [ref=e7]:
+          - link "Overview" [ref=e8] [cursor=pointer]:
+            - /url: /
+          - link "Operations" [ref=e9] [cursor=pointer]:
+            - /url: /operations
+          - link "Settings" [ref=e10] [cursor=pointer]:
+            - /url: /settings
+      - generic [ref=e11]:
+        - button "Toggle theme" [ref=e12]:
+          - img
+          - generic [ref=e13]: Toggle theme
+        - button "Connect Wallet" [ref=e14]:
+          - img
+          - text: Connect Wallet
+  - main [ref=e15]:
+    - generic [ref=e17]:
+      - generic [ref=e18]:
+        - heading "Operations" [level=1] [ref=e20]
+        - button "Open Registry Settings" [ref=e21]:
+          - img
+          - text: Open Registry Settings
+      - generic [ref=e22]: Connect a wallet and configure your workspace in Settings.
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e28] [cursor=pointer]:
+    - img [ref=e29]
+  - alert [ref=e32]

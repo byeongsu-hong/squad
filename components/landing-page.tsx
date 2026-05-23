@@ -2,7 +2,7 @@
 
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { ProposalDetailModal } from "@/components/proposal-detail-modal";
 import { Button } from "@/components/ui/button";
@@ -31,10 +31,12 @@ export function LandingPage() {
   const { proposals, safeProposals, workspaceMultisigs, loadAll } =
     useAllProposalsLoader();
 
+  const didLoadRef = useRef(false);
   useEffect(() => {
+    if (didLoadRef.current) return;
+    didLoadRef.current = true;
     void loadAll();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [loadAll]);
 
   const queueItems = useWorkspaceQueue({
     proposals,
