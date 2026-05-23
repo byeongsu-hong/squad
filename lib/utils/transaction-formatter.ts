@@ -18,10 +18,8 @@ export function formatConfigAction(
 
   switch (type) {
     case "AddMember": {
-      const member = action as unknown as {
-        newMember: { key: unknown; permissions?: { mask: number } };
-      };
-      const memberKey = String(member.newMember?.key || "Unknown");
+      const newMember = action.newMember as { key: unknown; permissions?: { mask: number } } | undefined;
+      const memberKey = String(newMember?.key || "Unknown");
       const isValidAddress =
         memberKey.length >= 32 &&
         memberKey.length <= 44 &&
@@ -37,15 +35,14 @@ export function formatConfigAction(
           },
           {
             label: "Permissions",
-            value: String(member.newMember?.permissions?.mask ?? "Default"),
+            value: String(newMember?.permissions?.mask ?? "Default"),
           },
         ],
       };
     }
 
     case "RemoveMember": {
-      const member = action as unknown as { oldMember: unknown };
-      const memberKey = String(member.oldMember || "Unknown");
+      const memberKey = String(action.oldMember || "Unknown");
       const isValidAddress =
         memberKey.length >= 32 &&
         memberKey.length <= 44 &&
@@ -64,30 +61,20 @@ export function formatConfigAction(
     }
 
     case "ChangeThreshold": {
-      const threshold = action as unknown as { newThreshold: number };
+      const newThreshold = action.newThreshold as number | undefined;
       return {
         type: "Change Threshold",
-        summary: `Set threshold to ${threshold.newThreshold ?? "Unknown"}`,
-        fields: [
-          {
-            label: "New Threshold",
-            value: String(threshold.newThreshold ?? "Unknown"),
-          },
-        ],
+        summary: `Set threshold to ${newThreshold ?? "Unknown"}`,
+        fields: [{ label: "New Threshold", value: String(newThreshold ?? "Unknown") }],
       };
     }
 
     case "SetTimeLock": {
-      const timeLock = action as unknown as { timeLock: number };
+      const timeLock = action.timeLock as number | undefined;
       return {
         type: "Set Time Lock",
-        summary: `Set time lock to ${timeLock.timeLock ?? "Unknown"}s`,
-        fields: [
-          {
-            label: "Time Lock (seconds)",
-            value: String(timeLock.timeLock ?? "Unknown"),
-          },
-        ],
+        summary: `Set time lock to ${timeLock ?? "Unknown"}s`,
+        fields: [{ label: "Time Lock (seconds)", value: String(timeLock ?? "Unknown") }],
       };
     }
 

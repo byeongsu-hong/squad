@@ -166,10 +166,7 @@ export function OperationsDashboard({ actions }: OperationsDashboardProps = {}) 
   const canExecuteItems = selectedItems.filter((i) => i.readyToExecute);
 
   const { approveByAddress, executeByAddress, isActionInProgress } = useProposalActions({
-    onSuccess: async () => {
-      autoLoadedRef.current = false;
-      await loadAll({ force: true });
-    },
+    onSuccess: () => loadAll({ force: true }),
   });
 
   const handleBatchApprove = async () => {
@@ -220,7 +217,6 @@ export function OperationsDashboard({ actions }: OperationsDashboardProps = {}) 
   };
 
   const hasConnectedWallet = connected || evmConnected;
-  const isLoading = loading;
 
   if (workspaceMultisigs.length === 0) {
     return (
@@ -317,7 +313,7 @@ export function OperationsDashboard({ actions }: OperationsDashboardProps = {}) 
         </div>
       </div>
 
-      {isLoading && queueItems.length === 0 ? (
+      {loading && queueItems.length === 0 ? (
         <ProposalCardSkeletonList />
       ) : filtered.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border px-6 py-8 text-center text-sm text-muted-foreground/70">
@@ -413,7 +409,7 @@ export function OperationsDashboard({ actions }: OperationsDashboardProps = {}) 
         </div>
       )}
 
-      {isLoading && queueItems.length > 0 && (
+      {loading && queueItems.length > 0 && (
         <div className="flex items-center gap-2 py-2 text-xs text-muted-foreground/70">
           <Loader2 className="h-3.5 w-3.5 animate-spin" />
           Refreshing...
