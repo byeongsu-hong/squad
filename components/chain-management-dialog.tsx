@@ -255,16 +255,16 @@ function ChainEditor({
     <div
       className={
         embedded
-          ? "space-y-4 border border-zinc-800 bg-zinc-950/55 p-4"
+          ? "space-y-4 rounded-xl border border-border bg-card p-4"
           : "space-y-6"
       }
     >
       {embedded ? (
-        <div className="space-y-1 border-b border-zinc-800 pb-4">
-          <p className="text-[0.68rem] tracking-[0.18em] text-zinc-500 uppercase">
+        <div className="space-y-1 border-b border-border pb-4">
+          <p className="text-[0.68rem] tracking-[0.18em] text-muted-foreground uppercase">
             Chain Editor
           </p>
-          <p className="text-sm leading-6 text-zinc-400">
+          <p className="text-sm leading-6 text-muted-foreground">
             Define the RPC, program, and explorer endpoints that this workspace
             trusts for proposal loading and execution.
           </p>
@@ -387,7 +387,7 @@ function ChainEditor({
               )}
             />
           ) : (
-            <div className="rounded-md border border-zinc-800 bg-zinc-950/55 px-3 py-3 text-sm text-zinc-400">
+            <div className="rounded-md border border-border bg-muted px-3 py-3 text-sm text-muted-foreground">
               Safe-specific runtime addresses live in the adapter settings
               panel. Chain creation here stores the network identity and RPC /
               explorer endpoints.
@@ -444,7 +444,7 @@ function ChainRegistry({
     <div
       className={
         embedded
-          ? "space-y-3 border border-zinc-800 bg-zinc-950/35 p-4"
+          ? "space-y-3 rounded-xl border border-border bg-card p-4"
           : "space-y-2"
       }
     >
@@ -452,7 +452,7 @@ function ChainRegistry({
         <div className="space-y-1">
           <h3 className="text-sm font-semibold">Configured Chains</h3>
           {embedded ? (
-            <p className="text-sm text-zinc-400">
+            <p className="text-sm text-muted-foreground">
               Review every configured endpoint before editing or deleting it.
             </p>
           ) : null}
@@ -463,7 +463,7 @@ function ChainRegistry({
         </Button>
       </div>
       <div
-        className={embedded ? "space-y-0 border border-zinc-800" : "space-y-2"}
+        className={embedded ? "space-y-0 rounded-lg border border-border overflow-hidden" : "space-y-2"}
       >
         {chains.map((chain) => (
           <div
@@ -479,28 +479,28 @@ function ChainRegistry({
             }}
             className={
               embedded
-                ? "grid cursor-pointer gap-3 border-b border-zinc-800 px-4 py-3 transition-colors last:border-b-0 hover:bg-zinc-900/60 focus-visible:ring-1 focus-visible:ring-zinc-600 focus-visible:outline-none xl:grid-cols-[minmax(12rem,0.58fr)_minmax(0,1.22fr)_auto] xl:items-center"
-                : "hover:bg-accent/40 flex cursor-pointer items-center justify-between rounded-lg border p-3 transition-colors focus-visible:ring-1 focus-visible:ring-zinc-600 focus-visible:outline-none"
+                ? "grid cursor-pointer gap-3 border-b border-border px-4 py-3 transition-colors last:border-b-0 hover:bg-muted focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none xl:grid-cols-[minmax(12rem,0.58fr)_minmax(0,1.22fr)_auto] xl:items-center"
+                : "hover:bg-muted flex cursor-pointer items-center justify-between rounded-lg border border-border p-3 transition-colors focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
             }
           >
             <div className="min-w-0 space-y-1">
-              <p className="text-[0.95rem] font-medium text-zinc-100">
+              <p className="text-[0.95rem] font-medium text-foreground">
                 {chain.name}
               </p>
               <div className="flex flex-wrap items-center gap-2">
                 {chain.id.startsWith("custom-") ? (
-                  <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-[0.62rem] tracking-[0.16em] text-amber-300 uppercase">
+                  <span className="rounded-full border border-primary/30 bg-primary/10 px-1.5 py-0.5 text-[0.62rem] tracking-[0.16em] text-primary uppercase">
                     Custom
                   </span>
                 ) : chain.isDefault ? (
-                  <span className="rounded-full border border-zinc-700 bg-zinc-900 px-1.5 py-0.5 text-[0.62rem] tracking-[0.16em] text-zinc-400 uppercase">
+                  <span className="rounded-full border border-border bg-muted px-1.5 py-0.5 text-[0.62rem] tracking-[0.16em] text-muted-foreground uppercase">
                     Default
                   </span>
                 ) : null}
-                <span className="rounded-full border border-zinc-700 bg-zinc-900 px-1.5 py-0.5 text-[0.62rem] tracking-[0.16em] text-zinc-400 uppercase">
+                <span className="rounded-full border border-border bg-muted px-1.5 py-0.5 text-[0.62rem] tracking-[0.16em] text-muted-foreground uppercase">
                   {(chain.vmFamily ?? "svm").toUpperCase()}
                 </span>
-                <span className="rounded-full border border-zinc-700 bg-zinc-900 px-1.5 py-0.5 text-[0.62rem] tracking-[0.16em] text-zinc-400 uppercase">
+                <span className="rounded-full border border-border bg-muted px-1.5 py-0.5 text-[0.62rem] tracking-[0.16em] text-muted-foreground uppercase">
                   {chain.multisigProvider ?? "squads"}
                 </span>
               </div>
@@ -509,12 +509,12 @@ function ChainRegistry({
                   RPC: {chain.rpcUrl}
                 </p>
               ) : (
-                <p className="text-[0.68rem] tracking-[0.14em] text-zinc-500 uppercase">
+                <p className="text-[0.68rem] tracking-[0.14em] text-muted-foreground/70 uppercase">
                   {chain.id}
                 </p>
               )}
             </div>
-            <div className="min-w-0 space-y-1 text-xs text-zinc-400">
+            <div className="min-w-0 space-y-1 text-xs text-muted-foreground">
               <p className="font-mono break-all">RPC: {chain.rpcUrl}</p>
               {chain.explorerUrl ? (
                 <p className="font-mono break-all">

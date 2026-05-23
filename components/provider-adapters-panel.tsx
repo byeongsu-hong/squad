@@ -39,15 +39,15 @@ export function ProviderAdaptersPanel() {
   );
 
   return (
-    <div className="space-y-4 border border-zinc-800 bg-zinc-950/55 p-4">
-      <div className="space-y-1 border-b border-zinc-800 pb-4">
+    <div className="space-y-4 rounded-xl border border-border bg-card p-4">
+      <div className="space-y-1 border-b border-border pb-4">
         <div className="flex items-center gap-2">
-          <Layers3 className="h-4 w-4 text-violet-300" />
-          <p className="text-[0.68rem] tracking-[0.18em] text-zinc-500 uppercase">
+          <Layers3 className="h-4 w-4 text-primary" />
+          <p className="text-[0.68rem] tracking-[0.18em] text-muted-foreground uppercase">
             Adapter Readiness
           </p>
         </div>
-        <p className="text-sm leading-6 text-zinc-400">
+        <p className="text-sm leading-6 text-muted-foreground">
           Keep future EVM Safe endpoints beside the current SVM chain
           configuration so extension work does not require another settings
           surface.
@@ -55,31 +55,31 @@ export function ProviderAdaptersPanel() {
       </div>
 
       <div className="grid gap-3 lg:grid-cols-2">
-        <div className="space-y-3 border border-zinc-800 bg-zinc-950/55 p-3">
+        <div className="space-y-3 rounded-lg border border-border bg-muted p-3">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-sm font-medium text-zinc-100">SVM / Squads</p>
-              <p className="mt-1 text-xs text-zinc-500">
+              <p className="text-sm font-medium text-foreground">SVM / Squads</p>
+              <p className="mt-1 text-xs text-muted-foreground">
                 Active runtime used by the current workspace.
               </p>
             </div>
-            <Badge className="rounded-md bg-zinc-100 text-zinc-950">
+            <Badge className="rounded-md bg-primary text-primary-foreground">
               {liveSquadsChains} live
             </Badge>
           </div>
         </div>
 
-        <div className="space-y-3 border border-zinc-800 bg-zinc-950/55 p-3">
+        <div className="space-y-3 rounded-lg border border-border bg-muted p-3">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-sm font-medium text-zinc-100">EVM / Safe</p>
-              <p className="mt-1 text-xs text-zinc-500">
+              <p className="text-sm font-medium text-foreground">EVM / Safe</p>
+              <p className="mt-1 text-xs text-muted-foreground">
                 Stored locally for upcoming adapter work.
               </p>
             </div>
             <Badge
               variant="outline"
-              className="rounded-md border-violet-500/30 bg-violet-500/10 text-violet-200"
+              className="rounded-md border-violet-500/30 bg-violet-500/10 text-violet-600 dark:text-violet-300"
             >
               {safePreparedChains} chains · {safeAdapterFieldsConfigured}/3
               ready
@@ -100,7 +100,6 @@ export function ProviderAdaptersPanel() {
               })
             }
             placeholder="https://safe-transaction-mainnet.safe.global"
-            className="border-zinc-800 bg-zinc-950 text-zinc-100"
           />
         </div>
 
@@ -115,7 +114,6 @@ export function ProviderAdaptersPanel() {
               })
             }
             placeholder="0xd9Db270c1B5E3Bd161E8c8503c55ceABe..."
-            className="border-zinc-800 bg-zinc-950 text-zinc-100"
           />
         </div>
 
@@ -130,13 +128,12 @@ export function ProviderAdaptersPanel() {
               })
             }
             placeholder="0xa6B71E26C5e0845f74c812102Ca7114b6a896Ab2"
-            className="border-zinc-800 bg-zinc-950 text-zinc-100"
           />
         </div>
       </div>
 
-      <div className="flex items-start gap-2 border border-zinc-800 bg-zinc-950/45 px-3 py-3 text-xs text-zinc-500">
-        <Network className="mt-0.5 h-3.5 w-3.5 shrink-0 text-zinc-400" />
+      <div className="flex items-start gap-2 rounded-lg border border-border bg-muted px-3 py-3 text-xs text-muted-foreground">
+        <Network className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground/70" />
         These values are saved locally as adapter configuration only. They do
         not change the current Squads runtime yet.
       </div>
