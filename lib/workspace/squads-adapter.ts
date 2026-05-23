@@ -24,12 +24,10 @@ import {
 } from "@/types/multisig";
 import { toProposalStatus } from "@/types/multisig";
 import type {
-  WorkspaceExplorerView,
   WorkspaceMultisig,
   WorkspacePayload,
   WorkspaceProposal,
   WorkspaceQueueItem,
-  WorkspaceRegistryItem,
 } from "@/types/workspace";
 import { getWorkspaceMultisigKey } from "@/types/workspace";
 
@@ -330,120 +328,6 @@ export function toWorkspaceProposalFromRaw(
     executed: proposal.executed,
     cancelled: proposal.cancelled,
   };
-}
-
-export function buildWorkspaceRegistryItems(
-  multisigs: WorkspaceMultisig[],
-  queueItems: WorkspaceQueueItem[],
-  searchNeedle: string
-): WorkspaceRegistryItem[] {
-  return multisigs
-    .map((multisig) => {
-      const scopedQueue = queueItems.filter(
-        (item) => item.multisig.key === multisig.key
-      );
-
-      return {
-        multisig,
-        waiting: scopedQueue.filter((item) => item.needsYourSignature).length,
-        executable: scopedQueue.filter((item) => item.readyToExecute).length,
-        active: scopedQueue.filter(
-          (item) =>
-            item.proposal.status !== "Executed" &&
-            item.proposal.status !== "Cancelled"
-        ).length,
-      };
-    })
-    .filter((item) => {
-      if (!searchNeedle) {
-        return true;
-      }
-
-      return (
-        item.multisig.label?.toLowerCase().includes(searchNeedle) ||
-        item.multisig.address.toLowerCase().includes(searchNeedle) ||
-        item.multisig.chainName.toLowerCase().includes(searchNeedle)
-      );
-    });
-}
-
-export function buildWorkspaceExplorerViews(
-  registryItems: WorkspaceRegistryItem[]
-): WorkspaceExplorerView[] {
-  const attentionKeys = registryItems
-    .filter((item) => item.waiting > 0 || item.executable > 0)
-    .map((item) => item.multisig.key);
-  const untaggedKeys = registryItems
-    .filter((item) => item.multisig.tags.length === 0)
-    .map((item) => item.multisig.key);
-
-  const chainViews = Array.from(
-    new Map(
-      registryItems.map((item) => [
-        `chain:${item.multisig.chainName}`,
-        {
-          id: `chain:${item.multisig.chainName}`,
-          label: item.multisig.chainName,
-          multisigKeys: registryItems
-            .filter(
-              (entry) => entry.multisig.chainName === item.multisig.chainName
-            )
-            .map((entry) => entry.multisig.key),
-          description: "Chain scope",
-          meta: `${registryItems.filter((entry) => entry.multisig.chainName === item.multisig.chainName).length} multisigs`,
-        } satisfies WorkspaceExplorerView,
-      ])
-    ).values()
-  );
-
-  const tagViews = Array.from(
-    new Map(
-      registryItems
-        .flatMap((item) =>
-          item.multisig.tags.map((tag) => [
-            `tag:${tag}`,
-            {
-              id: `tag:${tag}`,
-              label: tag,
-              multisigKeys: registryItems
-                .filter((entry) => entry.multisig.tags.includes(tag))
-                .map((entry) => entry.multisig.key),
-              description: "Saved grouping",
-              meta: `${registryItems.filter((entry) => entry.multisig.tags.includes(tag)).length} multisigs`,
-            } satisfies WorkspaceExplorerView,
-          ])
-        )
-        .filter((entry): entry is [string, WorkspaceExplorerView] =>
-          Boolean(entry)
-        )
-    ).values()
-  );
-
-  return [
-    {
-      id: "all",
-      label: "All multisigs",
-      multisigKeys: registryItems.map((item) => item.multisig.key),
-      description: "Everything in scope",
-      meta: `${registryItems.length} multisigs`,
-    },
-    {
-      id: "attention",
-      label: "Needs attention",
-      multisigKeys: attentionKeys,
-      description: "Waiting on you or ready to execute",
-      meta: `${attentionKeys.length} multisigs`,
-    },
-    ...chainViews,
-    {
-      id: "tag:none",
-      label: "No tags",
-      multisigKeys: untaggedKeys,
-      description: "Multisigs without saved tags",
-      meta: `${untaggedKeys.length} multisigs`,
-    },
-    ...tagViews,
-  ].filter((view) => view.multisigKeys.length > 0 || view.id === "all");
 }
 
 export async function loadSquadsWorkspacePayload(
