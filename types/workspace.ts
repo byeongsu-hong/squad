@@ -14,7 +14,7 @@ export type WorkspaceProposalStatus =
   | "Executed"
   | "Cancelled";
 
-export interface WorkspaceMember {
+interface WorkspaceMember {
   address: string;
   permissionsMask: number;
 }
@@ -67,28 +67,28 @@ export interface WorkspaceQueueItem {
   lineLabel: string;
 }
 
-export interface WorkspacePayloadInstruction {
+interface WorkspacePayloadInstruction {
   programAddress: string;
   accountAddresses: string[];
   accountIndexes: number[];
   data: string;
 }
 
-export interface WorkspacePayloadConfigAction {
+interface WorkspacePayloadConfigAction {
   type: "config";
   transactionPda: string;
   vaultAddress: string | null;
   actions: unknown[];
 }
 
-export interface WorkspacePayloadVaultAction {
+interface WorkspacePayloadVaultAction {
   type: "vault";
   transactionPda: string;
   vaultAddress: string | null;
   instructions: WorkspacePayloadInstruction[];
 }
 
-export interface WorkspacePayloadSafeAction {
+interface WorkspacePayloadSafeAction {
   type: "safe";
   safeTxHash: string | null;
   nonce: string;

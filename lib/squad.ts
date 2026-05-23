@@ -180,30 +180,6 @@ export class SquadService {
     }));
   }
 
-  async createProposal(params: {
-    multisigPda: PublicKey;
-    creator: PublicKey;
-    transactionIndex: bigint;
-  }) {
-    const [proposalPda] = multisig.getProposalPda({
-      multisigPda: params.multisigPda,
-      transactionIndex: params.transactionIndex,
-      programId: this.programId,
-    });
-
-    const instruction = multisig.instructions.proposalCreate({
-      multisigPda: params.multisigPda,
-      transactionIndex: params.transactionIndex,
-      creator: params.creator,
-      programId: this.programId,
-    });
-
-    return {
-      proposalPda,
-      instruction,
-    };
-  }
-
   async approveProposal(params: {
     multisigPda: PublicKey;
     transactionIndex: bigint;
@@ -317,23 +293,6 @@ export class SquadService {
         throw error;
       }
     }, "Execute proposal");
-  }
-
-  async getProposal(multisigPda: PublicKey, transactionIndex: bigint) {
-    const [proposalPda] = multisig.getProposalPda({
-      multisigPda,
-      transactionIndex,
-      programId: this.programId,
-    });
-
-    return await this.retryWithBackoff(
-      () =>
-        multisig.accounts.Proposal.fromAccountAddress(
-          this.connection,
-          proposalPda
-        ),
-      "Get proposal"
-    );
   }
 
   async getProposalsByMultisig(multisigPda: PublicKey, useCache = true) {

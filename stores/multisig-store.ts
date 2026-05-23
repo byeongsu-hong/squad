@@ -34,8 +34,6 @@ interface MultisigStore {
   setProposals: (proposals: ProposalAccount[]) => void;
   resetAll: () => void;
   selectMultisig: (publicKey: string | null) => void;
-  getMultisigByKey: (publicKey: string | null) => MultisigAccount | undefined;
-  getSelectedMultisig: () => MultisigAccount | undefined;
 }
 
 export const useMultisigStore = create<MultisigStore>((set, get) => ({
@@ -154,26 +152,4 @@ export const useMultisigStore = create<MultisigStore>((set, get) => ({
     set({ selectedMultisigKey: resolvedSelectionKey });
   },
 
-  getMultisigByKey: (selectionKey) => {
-    if (!selectionKey) {
-      return undefined;
-    }
-
-    const { multisigs } = get();
-    const resolvedSelectionKey = resolveMultisigSelectionKey(
-      multisigs,
-      selectionKey
-    );
-
-    return multisigs.find(
-      (multisig) =>
-        getMultisigAccountKey(multisig) === resolvedSelectionKey ||
-        multisig.publicKey.toString() === selectionKey
-    );
-  },
-
-  getSelectedMultisig: () => {
-    const { getMultisigByKey, selectedMultisigKey } = get();
-    return getMultisigByKey(selectedMultisigKey);
-  },
 }));

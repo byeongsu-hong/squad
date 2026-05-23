@@ -7,7 +7,7 @@ export interface ConfigAction {
   [key: string]: unknown;
 }
 
-export interface FormattedConfigAction {
+interface FormattedConfigAction {
   type: string;
   summary: string;
   fields: { label: string; value: string | ReactNode }[];

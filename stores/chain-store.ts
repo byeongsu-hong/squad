@@ -11,7 +11,6 @@ interface ChainStore {
   addChain: (chain: ChainConfig) => void;
   updateChain: (id: string, updates: Partial<ChainConfig>) => void;
   deleteChain: (id: string) => void;
-  selectChain: (id: string) => void;
   getSelectedChain: () => ChainConfig | undefined;
   resetToDefaults: () => void;
 }
@@ -84,11 +83,6 @@ export const useChainStore = create<ChainStore>((set, get) => ({
 
       return { chains, selectedChainId };
     });
-  },
-
-  selectChain: (id) => {
-    chainStorage.setSelectedChainId(id);
-    set({ selectedChainId: id });
   },
 
   getSelectedChain: () => {

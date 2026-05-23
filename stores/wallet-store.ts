@@ -23,7 +23,6 @@ interface WalletStore extends WalletState {
   connectOkx: (publicKey: WalletState["publicKey"]) => void;
   connectEvm: (address: string, walletName?: string) => void;
   disconnect: () => void;
-  disconnectEvm: () => void;
   getWalletAddressForProvider: (provider: WorkspaceProviderId) => string | null;
 }
 
@@ -87,14 +86,6 @@ export const useWalletStore = create<WalletStore>()(
 
       disconnect: () => {
         set(initialState);
-      },
-
-      disconnectEvm: () => {
-        set({
-          evmConnected: false,
-          evmAddress: null,
-          evmWalletName: undefined,
-        });
       },
 
       getWalletAddressForProvider: (provider): string | null => {
