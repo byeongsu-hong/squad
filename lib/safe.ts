@@ -42,7 +42,7 @@ const SAFE_CHAIN_ID_MAP: Record<string, bigint> = {
   arb1: BigInt(42161),
 } as const;
 
-export interface SafeServiceTransactionConfirmation {
+interface SafeServiceTransactionConfirmation {
   owner: string;
   signature?: string | null;
   signatureType?: string | null;
@@ -73,7 +73,7 @@ export interface SafeServiceMultisigTransaction {
   txType?: string | null;
 }
 
-export interface SafeTransactionsResponse {
+interface SafeTransactionsResponse {
   count: number;
   next: string | null;
   previous: string | null;
