@@ -27,20 +27,7 @@ export const UI_CONFIG = {
 // Error messages
 export const ERROR_MESSAGES = {
   CHAIN_NOT_FOUND: "Chain configuration not found",
-  MULTISIG_NOT_FOUND: "Multisig not found",
   WALLET_NOT_CONNECTED: "Please connect your wallet",
-  NOT_A_MEMBER: "You are not a member of this multisig",
-  ALREADY_APPROVED: "You have already approved this proposal",
-  ALREADY_REJECTED: "You have already rejected this proposal",
-  LOAD_PROPOSALS_FAILED: "Failed to load proposals",
-  APPROVE_FAILED: "Failed to approve proposal",
-  REJECT_FAILED: "Failed to reject proposal",
-  EXECUTE_FAILED: "Failed to execute proposal",
-  CREATE_PROPOSAL_FAILED: "Failed to create proposal",
-  INVALID_ADDRESS: "Invalid Solana address",
-  INVALID_AMOUNT: "Invalid amount",
-  INSUFFICIENT_BALANCE: "Insufficient balance",
-  NETWORK_ERROR: "Network error. Please try again.",
   RPC_RATE_LIMIT: "RPC rate limit reached. Please wait and try again.",
 } as const;
 
@@ -49,10 +36,6 @@ export const SUCCESS_MESSAGES = {
   PROPOSAL_APPROVED: "Proposal approved!",
   PROPOSAL_REJECTED: "Proposal rejected!",
   PROPOSAL_EXECUTED: "Proposal executed!",
-  PROPOSAL_CREATED: "Proposal created successfully!",
-  LABEL_UPDATED: "Label updated",
-  ADDRESS_COPIED: "Address copied",
-  DATA_EXPORTED: "Data exported successfully",
 } as const;
 
 // Transaction discriminators
