@@ -4,7 +4,6 @@ import {
   AlertTriangle,
   Check,
   Copy,
-  Download,
   Loader2,
   Upload,
 } from "lucide-react";
@@ -39,7 +38,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "./ui/dialog";
 import { Label } from "./ui/label";
 import { Progress } from "./ui/progress";
@@ -56,36 +54,6 @@ interface ImportProgressState {
   label: string;
 }
 
-export function ExportImportDialog() {
-  return <DialogShell />;
-}
-
-function DialogShell() {
-  const [isOpen, setIsOpen] = useState(false);
-  const handleDialogChange = (open: boolean) => {
-    setIsOpen(open);
-  };
-
-  return (
-    <Dialog open={isOpen} onOpenChange={handleDialogChange}>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="icon">
-          <Download className="h-4 w-4" />
-          <span className="sr-only">Export / Import</span>
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="flex max-h-[90vh] flex-col overflow-hidden sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle>Export / Import Settings</DialogTitle>
-          <DialogDescription>
-            Export your configuration to YAML or import from clipboard.
-          </DialogDescription>
-        </DialogHeader>
-        <ExportImportController onClose={() => setIsOpen(false)} />
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 export function ExportImportController({
   embedded = false,

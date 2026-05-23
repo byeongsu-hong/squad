@@ -41,11 +41,6 @@ import {
 import { useChainStore } from "@/stores/chain-store";
 import type { ChainConfig } from "@/types/chain";
 
-interface ChainManagementDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}
-
 interface ChainManagementControllerProps {
   embedded?: boolean;
 }
@@ -73,34 +68,6 @@ const chainFormSchema = z
   });
 
 type ChainFormValues = z.infer<typeof chainFormSchema>;
-
-export function ChainManagementDialog({
-  open,
-  onOpenChange,
-}: ChainManagementDialogProps) {
-  return (
-    <Dialog
-      open={open}
-      onOpenChange={(open) => {
-        onOpenChange(open);
-      }}
-    >
-      <DialogContent
-        key={`chain-dialog-${open}`}
-        className="max-h-[80vh] overflow-y-auto sm:max-w-[600px]"
-      >
-        <DialogHeader>
-          <DialogTitle>Chain Management</DialogTitle>
-          <DialogDescription>
-            Add or manage custom SVM chain configurations
-          </DialogDescription>
-        </DialogHeader>
-
-        <ChainManagementController />
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 export function ChainManagementController({
   embedded = false,
