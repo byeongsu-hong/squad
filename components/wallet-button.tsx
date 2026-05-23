@@ -129,7 +129,7 @@ export function WalletButton() {
               <Copy className="mr-2 h-4 w-4" />
               {walletName ? `Copy ${walletName}` : "Copy Solana Address"}
             </DropdownMenuItem>
-            <DropdownMenuLabel className="font-mono text-xs text-zinc-500">
+            <DropdownMenuLabel className="font-mono text-xs text-muted-foreground">
               {publicKey.toString()}
             </DropdownMenuLabel>
           </>
@@ -145,7 +145,7 @@ export function WalletButton() {
               <Copy className="mr-2 h-4 w-4" />
               {evmWalletName ? `Copy ${evmWalletName}` : "Copy EVM Address"}
             </DropdownMenuItem>
-            <DropdownMenuLabel className="font-mono text-xs text-zinc-500">
+            <DropdownMenuLabel className="font-mono text-xs text-muted-foreground">
               {evmAddress}
             </DropdownMenuLabel>
           </>

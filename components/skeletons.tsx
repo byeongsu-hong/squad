@@ -5,25 +5,25 @@ import { UI_CONFIG } from "@/lib/config";
 
 export function ProposalCardSkeleton() {
   return (
-    <div className="border-b border-zinc-800 px-3 py-2.5 last:border-b-0">
+    <div className="border-b border-border px-3 py-2.5 last:border-b-0">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1 space-y-2">
           <div className="flex flex-wrap items-center gap-2">
-            <Skeleton className="h-3 w-5 rounded-sm bg-zinc-800" />
-            <Skeleton className="h-4 w-24 rounded-sm bg-zinc-700" />
-            <Skeleton className="h-4 w-14 rounded-full bg-cyan-500/12" />
+            <Skeleton className="h-3 w-5 rounded-sm" />
+            <Skeleton className="h-4 w-24 rounded-sm" />
+            <Skeleton className="h-4 w-14 rounded-full bg-primary/10" />
           </div>
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <Skeleton className="h-3 w-20 rounded-sm bg-zinc-800" />
-            <Skeleton className="h-3 w-24 rounded-sm bg-zinc-700" />
+            <Skeleton className="h-3 w-20 rounded-sm" />
+            <Skeleton className="h-3 w-24 rounded-sm" />
           </div>
         </div>
         <div className="flex shrink-0 items-start gap-3">
           <div className="space-y-1.5 pt-1">
-            <Skeleton className="ml-auto h-3 w-16 rounded-sm bg-zinc-800" />
-            <Skeleton className="ml-auto h-3 w-14 rounded-sm bg-zinc-800" />
+            <Skeleton className="ml-auto h-3 w-16 rounded-sm" />
+            <Skeleton className="ml-auto h-3 w-14 rounded-sm" />
           </div>
-          <Skeleton className="mt-0.5 h-4 w-4 rounded-sm bg-zinc-800" />
+          <Skeleton className="mt-0.5 h-4 w-4 rounded-sm" />
         </div>
       </div>
     </div>
@@ -32,7 +32,7 @@ export function ProposalCardSkeleton() {
 
 export function ProposalCardSkeletonList() {
   return (
-    <div className="overflow-hidden border border-zinc-800 bg-zinc-950/45">
+    <div className="overflow-hidden rounded-xl border border-border bg-card">
       {Array.from({ length: UI_CONFIG.SKELETON_COUNT }).map((_, i) => (
         <ProposalCardSkeleton key={i} />
       ))}
