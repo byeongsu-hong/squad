@@ -24,16 +24,6 @@ export const UI_CONFIG = {
 } as const;
 
 // Pagination configuration
-export const PAGINATION_CONFIG = {
-  DEFAULT_PAGE_SIZE: 20,
-  PAGE_SIZE_OPTIONS: [10, 20, 50, 100],
-} as const;
-
-// Transaction configuration
-export const TX_CONFIG = {
-  CONFIRMATION_TIMEOUT: 60000, // 60 seconds
-} as const;
-
 // Error messages
 export const ERROR_MESSAGES = {
   CHAIN_NOT_FOUND: "Chain configuration not found",

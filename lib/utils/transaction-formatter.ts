@@ -139,32 +139,3 @@ export function formatConfigAction(
   }
 }
 
-export interface TransactionSummary {
-  type: "config" | "vault";
-  instructionCount?: number;
-  accountCount?: number;
-  programIds?: string[];
-  configActions?: {
-    type: string;
-    summary: string;
-  }[];
-}
-
-export function formatTransactionSummary(summary: TransactionSummary): string {
-  if (summary.type === "config") {
-    const actionCount = summary.configActions?.length || 0;
-    const actions = summary.configActions || [];
-
-    if (actions.length === 0) {
-      return "Config transaction";
-    }
-
-    if (actions.length === 1) {
-      return actions[0].summary;
-    }
-
-    return `${actionCount} config actions`;
-  }
-
-  return `${summary.instructionCount || 0} instruction${summary.instructionCount !== 1 ? "s" : ""}`;
-}

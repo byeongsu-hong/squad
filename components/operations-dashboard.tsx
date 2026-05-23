@@ -423,7 +423,7 @@ export function OperationsDashboard({ actions }: OperationsDashboardProps = {}) 
         )}
       >
         <div className="mx-auto max-w-3xl px-4 pb-6">
-          <div className="flex items-center justify-between rounded-2xl bg-stone-950 px-5 py-3 shadow-[0_8px_32px_rgba(0,0,0,0.24)]">
+          <div className="flex items-center justify-between rounded-2xl bg-card px-5 py-3 shadow-[0_8px_32px_rgba(0,0,0,0.24)]">
             <div className="flex items-center gap-3">
               <input
                 type="checkbox"
@@ -470,7 +470,7 @@ export function OperationsDashboard({ actions }: OperationsDashboardProps = {}) 
               <button
                 type="button"
                 onClick={() => setSelected(new Set())}
-                className="rounded-lg border border-stone-700 px-3.5 py-1.5 text-[12px] text-stone-300 transition-colors hover:border-stone-500 hover:text-white"
+                className="rounded-lg border border-border px-3.5 py-1.5 text-[12px] text-muted-foreground transition-colors hover:border-border/80 hover:text-foreground"
               >
                 Clear
               </button>

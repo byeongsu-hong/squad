@@ -80,10 +80,6 @@ export interface SafeTransactionsResponse {
   results: SafeServiceMultisigTransaction[];
 }
 
-export function validateEvmAddress(address: string) {
-  return isAddress(address);
-}
-
 export function parseSafeAddressInput(input: string) {
   const trimmed = input.trim();
 

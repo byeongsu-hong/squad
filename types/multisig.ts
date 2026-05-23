@@ -1,24 +1,23 @@
 import type { PublicKey } from "@solana/web3.js";
 
 export type MultisigProvider = "squads" | "safe";
-export type MultisigAddress = PublicKey | string;
 
 export interface MultisigAccount {
   provider: MultisigProvider;
-  publicKey: MultisigAddress;
+  publicKey: PublicKey | string;
   threshold: number;
   members: MultisigMember[];
   transactionIndex: bigint;
   msChangeIndex: number;
-  programId?: MultisigAddress;
+  programId?: PublicKey | string;
   chainId: string;
   label?: string;
   tags?: string[];
-  vaultPda?: MultisigAddress;
+  vaultPda?: PublicKey | string;
 }
 
 export interface MultisigMember {
-  key: MultisigAddress;
+  key: PublicKey | string;
   permissions: {
     mask: number;
   };

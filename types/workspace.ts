@@ -1,8 +1,6 @@
 export type WorkspaceProviderId = "squads" | "safe";
 
 export type WorkspaceQueueFilter = "all" | "waiting" | "executable";
-export type WorkspaceDetailTab = "overview" | "payload";
-export type WorkspaceExplorerMode = "views" | "chains" | "tags";
 export type WorkspaceSettingsSection =
   | "chains"
   | "adapters"
@@ -73,21 +71,6 @@ export interface WorkspaceQueueItem {
   missingApprovals: number;
   priority: number;
   lineLabel: string;
-}
-
-export interface WorkspaceExplorerView {
-  id: string;
-  label: string;
-  multisigKeys: string[];
-  description: string;
-  meta: string;
-}
-
-export interface WorkspaceRegistryItem {
-  multisig: WorkspaceMultisig;
-  waiting: number;
-  executable: number;
-  active: number;
 }
 
 export interface WorkspacePayloadInstruction {
