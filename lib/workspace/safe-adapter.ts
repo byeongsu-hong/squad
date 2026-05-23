@@ -50,7 +50,7 @@ async function fetchSafeProposals(
   }));
 }
 
-export async function loadSafeWorkspaceProposalsForMultisig({
+async function loadSafeWorkspaceProposalsForMultisig({
   chains,
   multisig,
   force = false,
@@ -87,7 +87,7 @@ export function invalidateSafeProposalCache(
   cache.invalidate(safeProposalsCacheKey(chainId, safeAddress));
 }
 
-export async function loadSafeWorkspacePayload({
+async function loadSafeWorkspacePayload({
   chains,
   multisig,
   proposal,
