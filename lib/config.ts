@@ -1,7 +1,3 @@
-/**
- * Application configuration constants
- */
-
 // Cache configuration
 export const CACHE_CONFIG = {
   TTL: 30000,
@@ -20,7 +16,6 @@ export const UI_CONFIG = {
   SKELETON_COUNT: 5,
 } as const;
 
-// Pagination configuration
 // Error messages
 export const ERROR_MESSAGES = {
   CHAIN_NOT_FOUND: "Chain configuration not found",
@@ -38,5 +33,4 @@ export const SUCCESS_MESSAGES = {
 // Transaction discriminators
 export const TRANSACTION_DISCRIMINATORS = {
   CONFIG_TRANSACTION: [94, 8, 4, 35, 113, 139, 139, 112],
-  VAULT_TRANSACTION: [168, 250, 162, 100, 81, 14, 162, 207],
 } as const;
