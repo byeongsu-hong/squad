@@ -4,6 +4,8 @@ import { Inbox } from "lucide-react";
 import Link from "next/link";
 import { useAccount } from "wagmi";
 
+import { Button } from "@/components/ui/button";
+
 import { OperationsQueue } from "@/components/operations-queue";
 import { useProposalsQuery } from "@/lib/hooks/use-proposals-query";
 import { useViewerAddressForMultisig } from "@/lib/hooks/use-viewer-address";
@@ -45,12 +47,9 @@ export function LandingPage() {
               : "Connect a wallet and add multisigs to get started."}
           </p>
         </div>
-        <Link
-          href="/vaults"
-          className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-9 items-center rounded-md px-4 text-sm font-medium transition-colors"
-        >
-          Go to Vaults
-        </Link>
+        <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20">
+          <Link href="/vaults">Go to Vaults</Link>
+        </Button>
       </div>
     );
   }

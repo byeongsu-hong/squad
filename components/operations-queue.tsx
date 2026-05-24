@@ -5,7 +5,15 @@ import { useMemo, useState } from "react";
 
 import { ProposalDetailView } from "@/components/proposal-detail-modal";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { Pagination } from "@/components/ui/pagination";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useProposalActions } from "@/lib/hooks/use-proposal-actions";
 import { cn } from "@/lib/utils";
@@ -454,40 +462,48 @@ export function OperationsQueue({
             ))}
           </div>
           {chainOptions.length > 1 && (
-            <select
+            <Select
               value={chainFilter}
-              onChange={(e) => {
-                setChainFilter(e.target.value);
+              onValueChange={(v) => {
+                setChainFilter(v);
                 resetPage();
               }}
-              className="border-border bg-card text-foreground/80 h-7 cursor-pointer rounded-md border px-2 text-[11px] focus:outline-none"
             >
-              <option value="All">All chains</option>
-              {chainOptions.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger size="sm" className="h-7 gap-1 text-[11px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">All chains</SelectItem>
+                {chainOptions.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           )}
           {multisigOptions.length > 1 && (
-            <select
+            <Select
               value={multisigFilter}
-              onChange={(e) => {
-                setMultisigFilter(e.target.value);
+              onValueChange={(v) => {
+                setMultisigFilter(v);
                 resetPage();
               }}
-              className="border-border bg-card text-foreground/80 h-7 cursor-pointer rounded-md border px-2 text-[11px] focus:outline-none"
             >
-              <option value="All">All multisigs</option>
-              {multisigOptions.map((m) => (
-                <option key={m} value={m}>
-                  {m}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger size="sm" className="h-7 gap-1 text-[11px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">All multisigs</SelectItem>
+                {multisigOptions.map((m) => (
+                  <SelectItem key={m} value={m}>
+                    {m}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           )}
-          <input
+          <Input
             type="search"
             placeholder="Search..."
             value={search}
@@ -495,14 +511,14 @@ export function OperationsQueue({
               setSearch(e.target.value);
               resetPage();
             }}
-            className="border-border bg-card text-foreground/80 placeholder:text-muted-foreground/70 focus:ring-border rounded-md border px-3 py-1.5 text-[12px] focus:ring-1 focus:outline-none sm:w-44"
+            className="h-7 text-[11px] sm:w-44"
           />
         </div>
       )}
 
       {!showFilters && items.length > 0 && (
         <div className="mb-3">
-          <input
+          <Input
             type="search"
             placeholder="Search..."
             value={search}
@@ -510,7 +526,7 @@ export function OperationsQueue({
               setSearch(e.target.value);
               resetPage();
             }}
-            className="border-border bg-card text-foreground/80 placeholder:text-muted-foreground/70 focus:ring-border w-full rounded-md border px-3 py-1.5 text-[12px] focus:ring-1 focus:outline-none sm:w-64"
+            className="h-8 text-[12px] sm:w-64"
           />
         </div>
       )}
