@@ -424,7 +424,9 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
                         ? "bg-primary/5 [box-shadow:inset_2px_0_0_rgba(217,119,6,0.5)]"
                         : row.waiting > 0
                           ? "hover:bg-primary/5 [box-shadow:inset_2px_0_0_rgba(217,119,6,0.25)]"
-                          : "hover:bg-muted"
+                          : row.executable > 0
+                            ? "hover:bg-emerald-50 dark:hover:bg-emerald-950/20 [box-shadow:inset_2px_0_0_rgba(5,150,105,0.25)]"
+                            : "hover:bg-muted"
                   )}
                   style={{ gridTemplateColumns: GRID_COLS }}
                   onClick={() => handleOpenDesk(multisig)}
@@ -535,6 +537,13 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
                             {row.attentionLine}
                           </span>
                         </div>
+                      ) : row.executable > 0 ? (
+                        <div className="flex items-center gap-1.5">
+                          <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-500" />
+                          <span className="truncate text-xs text-emerald-700 dark:text-emerald-400">
+                            {row.attentionLine}
+                          </span>
+                        </div>
                       ) : (
                         <div className="flex items-center gap-1.5">
                           <CheckCircle2 className="text-muted-foreground/30 h-3 w-3 shrink-0" />
@@ -592,9 +601,11 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
                         "h-7 px-2.5 text-xs",
                         row.waiting > 0
                           ? "bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20"
-                          : ""
+                          : row.executable > 0
+                            ? "bg-emerald-600 text-white hover:bg-emerald-500 border-emerald-700/30"
+                            : ""
                       )}
-                      variant={row.waiting > 0 ? undefined : "outline"}
+                      variant={row.waiting > 0 || row.executable > 0 ? undefined : "outline"}
                       onClick={() => handleOpenDesk(multisig)}
                     >
                       Open
