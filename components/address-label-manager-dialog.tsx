@@ -224,7 +224,6 @@ export function AddressLabelManagerController({
       >
         <AddressLabelRegistry
           embedded={embedded}
-          labels={labels}
           filteredLabels={filteredLabels}
           searchQuery={searchQuery}
           onSearchQueryChange={setSearchQuery}
@@ -273,17 +272,6 @@ function AddressLabelEditor({
           : "w-[320px] shrink-0 overflow-y-auto border-r p-4"
       }
     >
-      {embedded ? (
-        <div className="border-border space-y-1 border-b pb-4">
-          <p className="text-muted-foreground/70 text-[0.68rem] tracking-[0.18em] uppercase">
-            Label editor
-          </p>
-          <p className="text-muted-foreground text-sm leading-6">
-            Create or revise reusable aliases for addresses that appear across
-            explorer rows, signer maps, and proposal metadata.
-          </p>
-        </div>
-      ) : null}
       <div className="mb-4 flex items-center justify-between">
         <h3 className="text-sm font-semibold">
           {isEditing ? "Edit Label" : "Add New Label"}
@@ -373,7 +361,6 @@ function AddressLabelEditor({
 
 interface AddressLabelRegistryProps {
   embedded: boolean;
-  labels: AddressLabel[];
   filteredLabels: AddressLabel[];
   searchQuery: string;
   onSearchQueryChange: (value: string) => void;
@@ -383,7 +370,6 @@ interface AddressLabelRegistryProps {
 
 function AddressLabelRegistry({
   embedded,
-  labels,
   filteredLabels,
   searchQuery,
   onSearchQueryChange,
@@ -415,34 +401,6 @@ function AddressLabelRegistry({
             className="border-border bg-card text-foreground placeholder:text-muted-foreground/50 h-9 w-full rounded-md border px-3 pl-9 text-sm focus:outline-none"
           />
         </div>
-        {embedded ? (
-          <div className="mt-3 grid grid-cols-3 gap-2">
-            <div className="border-border bg-card border px-3 py-2">
-              <p className="text-muted-foreground/70 text-[0.62rem] tracking-[0.16em] uppercase">
-                Total labels
-              </p>
-              <p className="text-foreground mt-1 text-sm font-medium">
-                {labels.length}
-              </p>
-            </div>
-            <div className="border-border bg-card border px-3 py-2">
-              <p className="text-muted-foreground/70 text-[0.62rem] tracking-[0.16em] uppercase">
-                With notes
-              </p>
-              <p className="text-foreground mt-1 text-sm font-medium">
-                {labels.filter((label) => Boolean(label.description)).length}
-              </p>
-            </div>
-            <div className="border-border bg-card border px-3 py-2">
-              <p className="text-muted-foreground/70 text-[0.62rem] tracking-[0.16em] uppercase">
-                Search result
-              </p>
-              <p className="text-foreground mt-1 text-sm font-medium">
-                {filteredLabels.length}
-              </p>
-            </div>
-          </div>
-        ) : null}
       </div>
 
       <div
