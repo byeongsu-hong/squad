@@ -18,12 +18,12 @@ async function getSafeSdk(
     throw new Error(`Safe actions are not configured for ${chain.name}.`);
   }
 
-  await switchChain(wagmiConfig, { chainId: Number(chainId) as 1 | 10 | 56 | 8453 | 42161 });
-
   const { connector } = getAccount(wagmiConfig);
   if (!connector) {
     throw new Error("No EVM wallet connected.");
   }
+
+  await switchChain(wagmiConfig, { chainId: Number(chainId) as 1 | 10 | 56 | 8453 | 42161 });
 
   const provider = await connector.getProvider();
 
