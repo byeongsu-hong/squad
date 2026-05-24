@@ -1,6 +1,6 @@
 "use client";
 
-import { Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import { Pencil, Plus, Search, Tag, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -209,13 +209,7 @@ export function AddressLabelManagerController({
         onFormDataChange={setFormData}
       />
 
-      <div
-        className={
-          embedded
-            ? "border-border bg-card min-w-0 rounded-xl border"
-            : "flex min-h-0 flex-1 flex-col overflow-hidden"
-        }
-      >
+      <div className={embedded ? "min-w-0" : "flex min-h-0 flex-1 flex-col overflow-hidden"}>
         <AddressLabelRegistry
           embedded={embedded}
           filteredLabels={filteredLabels}
@@ -267,9 +261,9 @@ function AddressLabelEditor({
       }
     >
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-sm font-semibold">
+        <p className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">
           {isEditing ? "Edit Label" : "Add New Label"}
-        </h3>
+        </p>
         {isEditing && (
           <Button
             type="button"
@@ -389,7 +383,7 @@ function AddressLabelRegistry({
             : "shrink-0 border-b px-4 py-3"
         }
       >
-        <h3 className="mb-3 text-sm font-semibold">Saved Labels</h3>
+        <p className="mb-3 text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">Saved Labels</p>
         <div className="relative">
           <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
           <Input
@@ -409,12 +403,13 @@ function AddressLabelRegistry({
         }
       >
         {filteredLabels.length === 0 ? (
-          <div className="flex h-full min-h-[12rem] items-center justify-center">
-            <div className="text-muted-foreground text-center text-sm">
-              {searchQuery
-                ? "No labels found"
-                : "No labels yet."}
+          <div className="flex h-full min-h-[12rem] flex-col items-center justify-center gap-3 text-center">
+            <div className="bg-background border-border flex h-10 w-10 items-center justify-center rounded-2xl border shadow-sm">
+              <Tag className="text-muted-foreground/60 h-5 w-5" />
             </div>
+            <p className="text-muted-foreground/60 text-sm">
+              {searchQuery ? "No labels found" : "No labels yet."}
+            </p>
           </div>
         ) : (
           <div
