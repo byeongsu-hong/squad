@@ -479,7 +479,7 @@ export function ExportImportController({
           </div>
 
           <div className="space-y-4 px-6 py-5">
-            <div className="border-border bg-card rounded-xl border p-4 grid gap-2">
+            <div className="bg-muted rounded-xl p-4 grid gap-2">
               <p className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">
                 What gets cleared
               </p>
@@ -489,7 +489,7 @@ export function ExportImportController({
               </p>
             </div>
             <div className="grid gap-2 sm:grid-cols-3">
-              <div className="border-border bg-card rounded-xl border px-3 py-3">
+              <div className="bg-muted rounded-xl px-3 py-3">
                 <p className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">
                   Multisigs
                 </p>
@@ -497,7 +497,7 @@ export function ExportImportController({
                   {multisigCount}
                 </p>
               </div>
-              <div className="border-border bg-card rounded-xl border px-3 py-3">
+              <div className="bg-muted rounded-xl px-3 py-3">
                 <p className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">
                   Custom chains
                 </p>
@@ -505,7 +505,7 @@ export function ExportImportController({
                   {customChainCount}
                 </p>
               </div>
-              <div className="border-border bg-card rounded-xl border px-3 py-3">
+              <div className="bg-muted rounded-xl px-3 py-3">
                 <p className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">
                   Labels
                 </p>
@@ -716,7 +716,7 @@ function ExportImportExportPanel({
       <div
         className={
           embedded
-            ? "border-border bg-card rounded-xl min-h-[28rem] w-full overflow-auto border"
+            ? "bg-muted rounded-xl min-h-[28rem] w-full overflow-auto"
             : "h-[400px] w-full overflow-auto rounded-md border"
         }
       >
