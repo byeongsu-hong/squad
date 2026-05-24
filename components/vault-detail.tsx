@@ -132,18 +132,13 @@ export function VaultDetail({ vaultKey }: VaultDetailProps) {
         </div>
       </div>
 
-      {/* Operations section */}
-      <div>
-        <p className="text-muted-foreground mb-2 text-xs font-medium uppercase tracking-widest">
-          Operations
-        </p>
-        <OperationsQueue
-          items={vaultItems}
-          loading={loading}
-          showFilters={false}
-          compact
-        />
-      </div>
+      {/* Operations */}
+      <OperationsQueue
+        items={vaultItems}
+        loading={loading}
+        showFilters={false}
+        compact
+      />
     </div>
   );
 }
