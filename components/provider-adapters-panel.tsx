@@ -3,9 +3,6 @@
 import { Layers3, Network } from "lucide-react";
 import { useMemo } from "react";
 
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useChainStore } from "@/stores/chain-store";
 import { useProviderAdapterStore } from "@/stores/provider-adapter-store";
 
@@ -65,9 +62,9 @@ export function ProviderAdaptersPanel() {
                 Active runtime used by the current workspace.
               </p>
             </div>
-            <Badge className="bg-primary text-primary-foreground rounded-md">
+            <span className="bg-primary text-primary-foreground rounded-md px-2 py-0.5 text-xs font-medium">
               {liveSquadsChains} live
-            </Badge>
+            </span>
           </div>
         </div>
 
@@ -79,57 +76,50 @@ export function ProviderAdaptersPanel() {
                 Stored locally for upcoming adapter work.
               </p>
             </div>
-            <Badge
-              variant="outline"
-              className="rounded-md border-violet-500/30 bg-violet-500/10 text-violet-600 dark:text-violet-300"
-            >
-              {safePreparedChains} chains · {safeAdapterFieldsConfigured}/3
-              ready
-            </Badge>
+            <span className="rounded-md border border-violet-500/30 bg-violet-500/10 px-2 py-0.5 text-xs font-medium text-violet-600 dark:text-violet-300">
+              {safePreparedChains} chains · {safeAdapterFieldsConfigured}/3 ready
+            </span>
           </div>
         </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
-        <div className="space-y-2">
-          <Label htmlFor="safe-tx-service">Safe Transaction Service URL</Label>
-          <Input
+        <div className="space-y-1.5">
+          <label htmlFor="safe-tx-service" className="text-foreground/80 text-xs font-medium">Safe Transaction Service URL</label>
+          <input
             id="safe-tx-service"
             value={settings.safeTransactionServiceUrl}
             onChange={(event) =>
-              updateSettings({
-                safeTransactionServiceUrl: event.target.value,
-              })
+              updateSettings({ safeTransactionServiceUrl: event.target.value })
             }
             placeholder="https://safe-transaction-mainnet.safe.global"
+            className="border-border bg-card text-foreground placeholder:text-muted-foreground/50 w-full rounded-md border px-3 py-2 text-sm focus:outline-none"
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="safe-singleton">Safe Singleton Address</Label>
-          <Input
+        <div className="space-y-1.5">
+          <label htmlFor="safe-singleton" className="text-foreground/80 text-xs font-medium">Safe Singleton Address</label>
+          <input
             id="safe-singleton"
             value={settings.safeSingletonAddress}
             onChange={(event) =>
-              updateSettings({
-                safeSingletonAddress: event.target.value,
-              })
+              updateSettings({ safeSingletonAddress: event.target.value })
             }
             placeholder="0xd9Db270c1B5E3Bd161E8c8503c55ceABe..."
+            className="border-border bg-card text-foreground placeholder:text-muted-foreground/50 w-full rounded-md border px-3 py-2 text-sm focus:outline-none"
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="safe-proxy-factory">Safe Proxy Factory</Label>
-          <Input
+        <div className="space-y-1.5">
+          <label htmlFor="safe-proxy-factory" className="text-foreground/80 text-xs font-medium">Safe Proxy Factory</label>
+          <input
             id="safe-proxy-factory"
             value={settings.safeProxyFactoryAddress}
             onChange={(event) =>
-              updateSettings({
-                safeProxyFactoryAddress: event.target.value,
-              })
+              updateSettings({ safeProxyFactoryAddress: event.target.value })
             }
             placeholder="0xa6B71E26C5e0845f74c812102Ca7114b6a896Ab2"
+            className="border-border bg-card text-foreground placeholder:text-muted-foreground/50 w-full rounded-md border px-3 py-2 text-sm focus:outline-none"
           />
         </div>
       </div>
