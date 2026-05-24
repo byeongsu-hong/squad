@@ -84,9 +84,11 @@ function SettingsPageContent() {
               >
                 <Icon className="h-3.5 w-3.5 shrink-0" />
                 {tab.label}
-                <span className="font-mono text-xs tabular-nums">
-                  {sectionCounts[tab.id]}
-                </span>
+                {sectionCounts[tab.id] > 0 && (
+                  <span className="font-mono text-xs tabular-nums">
+                    {sectionCounts[tab.id]}
+                  </span>
+                )}
               </button>
             );
           })}

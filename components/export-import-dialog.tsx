@@ -740,11 +740,8 @@ function ExportImportImportPanel({
     : 0;
 
   return (
-    <div
-      className="space-y-3"
-    >
-      <div className="space-y-3">
-        <label className="text-foreground/80 text-xs font-medium">Paste YAML content:</label>
+    <div className="space-y-3">
+      <label className="text-foreground/80 text-xs font-medium">Paste YAML content:</label>
         <div className="border-border bg-muted flex items-start justify-between gap-3 border px-3 py-3">
           <div className="space-y-1">
             <p className="text-foreground text-sm font-medium">Reset state</p>
@@ -787,7 +784,6 @@ function ExportImportImportPanel({
               : "border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring min-h-[300px] w-full resize-none overflow-auto rounded-md border px-3 py-2 font-mono text-xs focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
           }
         />
-      </div>
     </div>
   );
 }
