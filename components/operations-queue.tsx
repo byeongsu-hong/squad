@@ -549,6 +549,20 @@ export function OperationsQueue({
               ? "No transactions found."
               : "No transactions match your filters."}
           </p>
+          {items.length > 0 && filtered.length === 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setStatusFilter("All");
+                setChainFilter("All");
+                setMultisigFilter("All");
+                setSearch("");
+              }}
+            >
+              Clear filters
+            </Button>
+          )}
           {emptyStateCta && items.length === 0 && emptyStateCta}
         </div>
       ) : (
