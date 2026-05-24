@@ -3,13 +3,14 @@
 import "@rainbow-me/rainbowkit/styles.css";
 
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
-import { ThemeProvider } from "next-themes";
+import { ThemeProvider, useTheme } from "next-themes";
 import { useEffect, useRef } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiProvider } from "wagmi";
 
 import { Toaster } from "@/components/ui/sonner";
 import { resolveInitialMultisigs } from "@/lib/initial-config";
+import { daylightDarkTheme, daylightLightTheme } from "@/lib/rainbowkit-theme";
 import { wagmiConfig } from "@/lib/wagmi-config";
 import { useChainStore } from "@/stores/chain-store";
 import { useMultisigStore } from "@/stores/multisig-store";
@@ -29,6 +30,15 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+function RainbowKitThemeBridge({ children }: { children: React.ReactNode }) {
+  const { resolvedTheme } = useTheme();
+  return (
+    <RainbowKitProvider theme={resolvedTheme === "dark" ? daylightDarkTheme : daylightLightTheme}>
+      {children}
+    </RainbowKitProvider>
+  );
+}
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const didInitRef = useRef(false);
@@ -95,15 +105,15 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <WagmiProvider config={wagmiConfig}>
-        <RainbowKitProvider>
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem={true}>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem={true}>
+          <RainbowKitThemeBridge>
             <WalletAdapterProvider>
               <WalletSync />
               {children}
               <Toaster />
             </WalletAdapterProvider>
-          </ThemeProvider>
-        </RainbowKitProvider>
+          </RainbowKitThemeBridge>
+        </ThemeProvider>
       </WagmiProvider>
     </QueryClientProvider>
   );
