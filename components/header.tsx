@@ -48,7 +48,7 @@ export function Header() {
 
           <nav className="flex">
             {([
-              { href: "/", label: "Overview", badge: attention },
+              { href: "/", label: "Operations", badge: attention },
               { href: "/vaults", label: "Vaults" },
               { href: "/settings", label: "Settings" },
             ] as const).map((item) => {

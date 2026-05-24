@@ -212,7 +212,7 @@ export function AddressLabelManagerController({
       <div
         className={
           embedded
-            ? "border-border bg-muted min-w-0 border"
+            ? "border-border bg-card min-w-0 rounded-xl border"
             : "flex min-h-0 flex-1 flex-col overflow-hidden"
         }
       >
@@ -262,7 +262,7 @@ function AddressLabelEditor({
     <div
       className={
         embedded
-          ? "border-border bg-muted space-y-4 border p-4"
+          ? "border-border bg-card space-y-4 rounded-xl border p-4"
           : "w-[320px] shrink-0 overflow-y-auto border-r p-4"
       }
     >
@@ -377,7 +377,7 @@ function AddressLabelRegistry({
     <div
       className={
         embedded
-          ? "border-border bg-muted min-w-0 border"
+          ? "border-border bg-card min-w-0 rounded-xl border"
           : "flex min-h-0 flex-1 flex-col overflow-hidden"
       }
     >

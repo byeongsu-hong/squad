@@ -479,8 +479,8 @@ export function ExportImportController({
           </div>
 
           <div className="space-y-4 px-6 py-5">
-            <div className="border-border bg-muted grid gap-2 border p-4">
-              <p className="text-muted-foreground/60 text-xs font-medium">
+            <div className="border-border bg-card rounded-xl border p-4 grid gap-2">
+              <p className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">
                 What gets cleared
               </p>
               <p className="text-foreground/80 text-sm">
@@ -489,24 +489,24 @@ export function ExportImportController({
               </p>
             </div>
             <div className="grid gap-2 sm:grid-cols-3">
-              <div className="border-border bg-muted border px-3 py-3">
-                <p className="text-muted-foreground/70 text-[0.62rem] tracking-[0.16em] uppercase">
+              <div className="border-border bg-card rounded-xl border px-3 py-3">
+                <p className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">
                   Multisigs
                 </p>
                 <p className="text-foreground mt-1 text-lg font-medium">
                   {multisigCount}
                 </p>
               </div>
-              <div className="border-border bg-muted border px-3 py-3">
-                <p className="text-muted-foreground/70 text-[0.62rem] tracking-[0.16em] uppercase">
+              <div className="border-border bg-card rounded-xl border px-3 py-3">
+                <p className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">
                   Custom chains
                 </p>
                 <p className="text-foreground mt-1 text-lg font-medium">
                   {customChainCount}
                 </p>
               </div>
-              <div className="border-border bg-muted border px-3 py-3">
-                <p className="text-muted-foreground/70 text-[0.62rem] tracking-[0.16em] uppercase">
+              <div className="border-border bg-card rounded-xl border px-3 py-3">
+                <p className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">
                   Labels
                 </p>
                 <p className="text-foreground mt-1 text-lg font-medium">
@@ -559,7 +559,7 @@ function ExportImportModePicker({
           className={cn(
             "cursor-pointer font-normal text-foreground/80",
             embedded
-              ? "border-border bg-muted flex items-start gap-3 border px-3 py-3 text-xs font-medium"
+              ? "border-border bg-card rounded-xl flex items-start gap-3 border px-3 py-3 text-xs font-medium"
               : "flex items-center space-x-2 text-xs font-medium"
           )}
         >
@@ -583,7 +583,7 @@ function ExportImportModePicker({
           className={cn(
             "cursor-pointer font-normal text-foreground/80",
             embedded
-              ? "border-border bg-muted flex items-start gap-3 border px-3 py-3 text-xs font-medium"
+              ? "border-border bg-card rounded-xl flex items-start gap-3 border px-3 py-3 text-xs font-medium"
               : "flex items-center space-x-2 text-xs font-medium"
           )}
         >
@@ -638,31 +638,31 @@ function ExportImportExportPanel({
       <div
         className={
           embedded
-            ? "border-border bg-muted space-y-3 border p-4"
+            ? "border-border bg-card rounded-xl space-y-3 border p-4"
             : "flex items-center justify-between"
         }
       >
         {embedded ? (
           <>
             <div className="grid gap-2">
-              <div className="border-border bg-card border px-3 py-2">
-                <p className="text-muted-foreground/70 text-[0.62rem] tracking-[0.16em] uppercase">
+              <div className="border-border bg-card rounded-xl border px-3 py-2">
+                <p className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">
                   Squads chains
                 </p>
                 <p className="text-foreground mt-1 text-sm font-medium">
                   {operationalSquadsChains.length}
                 </p>
               </div>
-              <div className="border-border bg-card border px-3 py-2">
-                <p className="text-muted-foreground/70 text-[0.62rem] tracking-[0.16em] uppercase">
+              <div className="border-border bg-card rounded-xl border px-3 py-2">
+                <p className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">
                   Multisigs
                 </p>
                 <p className="text-foreground mt-1 text-sm font-medium">
                   {multisigs.length}
                 </p>
               </div>
-              <div className="border-border bg-card border px-3 py-2">
-                <p className="text-muted-foreground/70 text-[0.62rem] tracking-[0.16em] uppercase">
+              <div className="border-border bg-card rounded-xl border px-3 py-2">
+                <p className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">
                   Safe-ready chains
                 </p>
                 <p className="text-foreground mt-1 text-sm font-medium">
@@ -716,7 +716,7 @@ function ExportImportExportPanel({
       <div
         className={
           embedded
-            ? "border-border bg-muted min-h-[28rem] w-full overflow-auto border"
+            ? "border-border bg-card rounded-xl min-h-[28rem] w-full overflow-auto border"
             : "h-[400px] w-full overflow-auto rounded-md border"
         }
       >
@@ -751,7 +751,7 @@ function ExportImportImportPanel({
 
   return (
     <div className="space-y-3">
-        <div className="border-border bg-muted flex items-start justify-between gap-3 border px-3 py-3">
+        <div className="border-border bg-card rounded-xl flex items-start justify-between gap-3 border px-3 py-3">
           <div className="space-y-1">
             <p className="text-foreground text-sm font-medium">Reset state</p>
             <p className="text-muted-foreground/70 text-xs leading-5">
@@ -770,7 +770,7 @@ function ExportImportImportPanel({
           </Button>
         </div>
         {isImporting && importProgress ? (
-          <div className="border-border bg-muted space-y-2 border px-3 py-3">
+          <div className="border-border bg-card rounded-xl space-y-2 border px-3 py-3">
             <div className="flex items-center justify-between gap-3">
               <p className="text-foreground/80 text-sm">
                 {importProgress.label}
@@ -790,7 +790,7 @@ function ExportImportImportPanel({
           placeholder="Paste your YAML configuration here..."
           className={cn(
             "font-mono text-xs",
-            embedded ? "min-h-[28rem] resize-y rounded-none" : "min-h-[300px] resize-none rounded-md"
+            embedded ? "min-h-[28rem] resize-y rounded-xl" : "min-h-[300px] resize-none rounded-md"
           )}
         />
     </div>

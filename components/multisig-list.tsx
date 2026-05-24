@@ -280,11 +280,11 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
           Vaults
         </h1>
         <Input
-          placeholder="Search multisigs..."
+          placeholder="Search vaults..."
           value={filterText}
           onChange={(e) => setFilterText(e.target.value)}
           className="h-9 flex-1 sm:flex-none sm:w-[220px]"
-          aria-label="Search multisigs"
+          aria-label="Search vaults"
         />
         {publicKey && canSyncSelectedChain ? (
           <Button
@@ -471,11 +471,6 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
                         <p className="text-foreground truncate text-[13px] font-medium">
                           {row.label}
                         </p>
-                        {isActiveDesk && (
-                          <span className="bg-primary/10 text-primary shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-medium">
-                            Active
-                          </span>
-                        )}
                         <Button
                           variant="ghost"
                           className="h-6 w-6 shrink-0 p-0 text-muted-foreground/30 hover:text-foreground hover:bg-transparent"

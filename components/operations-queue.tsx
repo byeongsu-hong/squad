@@ -546,7 +546,7 @@ export function OperationsQueue({
           </div>
           <p className="text-muted-foreground text-sm">
             {items.length === 0
-              ? "No transactions found."
+              ? "No proposals yet."
               : "No transactions match your filters."}
           </p>
           {items.length > 0 && filtered.length === 0 && (
@@ -626,7 +626,7 @@ export function OperationsQueue({
           {historyItems.length > 0 && (
             <div>
               {actionItems.length > 0 && (
-                <p className="text-muted-foreground/60 mb-2 text-xs font-medium uppercase tracking-widest">
+                <p className="text-muted-foreground/60 mb-2 text-[11px] font-semibold uppercase tracking-widest">
                   History
                 </p>
               )}
