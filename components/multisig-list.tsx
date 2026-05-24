@@ -363,7 +363,7 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
       {!hasMultisigs && !loading && (
         <div className="flex flex-col items-center justify-center gap-5 py-20 text-center">
           <div className="bg-card border-border flex h-14 w-14 items-center justify-center rounded-2xl border shadow-sm">
-            <Shield className="text-muted-foreground/50 h-7 w-7" />
+            <Shield className="text-muted-foreground/60 h-7 w-7" />
           </div>
           <div className="space-y-1.5">
             <p className="text-foreground text-base font-semibold">No vaults yet</p>

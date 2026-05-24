@@ -38,7 +38,7 @@ export function LandingPage() {
     return (
       <div className="flex min-h-[calc(100svh-4.5rem)] flex-col items-center justify-center gap-6 text-center">
         <div className="bg-card border-border flex h-16 w-16 items-center justify-center rounded-2xl border shadow-sm">
-          <Inbox className="text-muted-foreground/50 h-8 w-8" />
+          <Inbox className="text-muted-foreground/60 h-8 w-8" />
         </div>
         <div className="space-y-1.5">
           <p className="text-foreground text-base font-semibold">

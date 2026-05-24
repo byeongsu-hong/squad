@@ -65,7 +65,7 @@ export function ProviderAdaptersPanel() {
                 Stored locally for upcoming adapter work.
               </p>
             </div>
-            <span className="border-border bg-muted text-muted-foreground rounded-md border px-2 py-0.5 text-xs font-medium">
+            <span className="border-border bg-card text-muted-foreground rounded-md border px-2 py-0.5 text-xs font-medium">
               {safePreparedChains} chains
               {safeAdapterFieldsConfigured > 0 && ` · ${safeAdapterFieldsConfigured}/3 ready`}
             </span>
