@@ -210,6 +210,14 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
               <span className="text-muted-foreground/70 text-xs">
                 {multisig.threshold}/{multisig.members.length} required
               </span>
+              {multisig.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-[10px] font-medium"
+                >
+                  {tag}
+                </span>
+              ))}
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-2">
@@ -231,24 +239,12 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
             {onBack && BackLink}
           </div>
         </div>
-        <div className="mt-3 flex items-center gap-1">
-          <span className="font-mono text-muted-foreground/60 text-xs">
+        <div className="mt-2 flex items-center gap-1">
+          <span className="font-mono text-muted-foreground/50 text-[11px]">
             {truncateAddress(multisig.address)}
           </span>
           <CopyButton value={multisig.address} />
         </div>
-        {multisig.tags.length > 0 && (
-          <div className="mt-2.5 flex flex-wrap gap-1.5">
-            {multisig.tags.map((tag) => (
-              <span
-                key={tag}
-                className="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-[10px] font-medium"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
-        )}
       </div>
 
       {/* Members */}

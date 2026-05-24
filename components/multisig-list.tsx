@@ -504,6 +504,22 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
                       >
                         <Copy className="h-2.5 w-2.5" />
                       </Button>
+                      {row.tags.slice(0, 2).map((tag) => (
+                        <span
+                          key={tag}
+                          className={cn(
+                            "shrink-0 rounded-full px-1.5 py-0 text-[9px]",
+                            selectedFilterTags.includes(tag)
+                              ? "bg-primary/15 text-primary font-medium"
+                              : "bg-muted text-muted-foreground"
+                          )}
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                      {row.tags.length > 2 && (
+                        <span className="text-muted-foreground/40 shrink-0 text-[9px]">+{row.tags.length - 2}</span>
+                      )}
                     </div>
                   </div>
 
@@ -538,28 +554,6 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
                         </div>
                       )
                     ) : null}
-                    {row.tags.length > 0 && (
-                      <div className="mt-0.5 flex flex-wrap gap-1">
-                        {row.tags.slice(0, 2).map((tag) => (
-                          <span
-                            key={tag}
-                            className={cn(
-                              "rounded-full px-1.5 py-0 text-[9px]",
-                              selectedFilterTags.includes(tag)
-                                ? "bg-primary/15 text-primary font-medium"
-                                : "bg-muted text-muted-foreground"
-                            )}
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                        {row.tags.length > 2 && (
-                          <span className="text-muted-foreground/40 text-[9px]">
-                            +{row.tags.length - 2}
-                          </span>
-                        )}
-                      </div>
-                    )}
                   </div>
 
                   {/* Actions */}

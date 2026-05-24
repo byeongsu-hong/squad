@@ -366,7 +366,7 @@ export function ProposalDetailView({
                         : "text-muted-foreground/30"
                     )}
                   >
-                    {isApproved ? "Signed" : isRejected ? "Rejected" : "—"}
+                    {isApproved ? "Signed" : isRejected ? "Rejected" : null}
                   </span>
                 </div>
               );

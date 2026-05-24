@@ -645,7 +645,7 @@ function ExportImportExportPanel({
         {embedded ? (
           <>
             <div className="grid gap-2">
-              <div className="border-border bg-card rounded-xl border px-3 py-2">
+              <div className="bg-muted rounded-xl px-3 py-2">
                 <p className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">
                   Squads chains
                 </p>
@@ -653,7 +653,7 @@ function ExportImportExportPanel({
                   {operationalSquadsChains.length}
                 </p>
               </div>
-              <div className="border-border bg-card rounded-xl border px-3 py-2">
+              <div className="bg-muted rounded-xl px-3 py-2">
                 <p className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">
                   Multisigs
                 </p>
@@ -661,7 +661,7 @@ function ExportImportExportPanel({
                   {multisigs.length}
                 </p>
               </div>
-              <div className="border-border bg-card rounded-xl border px-3 py-2">
+              <div className="bg-muted rounded-xl px-3 py-2">
                 <p className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">
                   Safe-ready chains
                 </p>
