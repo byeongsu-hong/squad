@@ -523,7 +523,7 @@ export function OperationsQueue({
           {historyItems.length > 0 && (
             <div>
               {actionItems.length > 0 && (
-                <p className="text-muted-foreground/70 mb-2 text-[10px] font-semibold tracking-widest uppercase">
+                <p className="text-muted-foreground/50 mb-2 text-[10px] font-medium">
                   History
                 </p>
               )}

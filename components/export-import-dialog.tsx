@@ -499,13 +499,6 @@ export function ExportImportController({
                 </p>
               </div>
             </div>
-            <p className="text-muted-foreground/70 text-sm leading-6">
-              Default chain presets remain available after reset. Right now this
-              action will remove {multisigCount} multisig
-              {multisigCount === 1 ? "" : "s"}, {customChainCount} custom chain
-              {customChainCount === 1 ? "" : "s"}, and {labelCount} label
-              {labelCount === 1 ? "" : "s"}.
-            </p>
           </div>
 
           <DialogFooter className="border-border border-t px-6 py-5 sm:justify-between">
