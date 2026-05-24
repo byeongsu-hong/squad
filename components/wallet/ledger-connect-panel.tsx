@@ -1,6 +1,12 @@
 "use client";
 
-import { AlertCircle, ChevronLeft, ChevronRight, Loader2, Usb } from "lucide-react";
+import {
+  AlertCircle,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  Usb,
+} from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -27,13 +33,18 @@ interface LedgerConnectPanelProps {
   onClose: () => void;
 }
 
-export function LedgerConnectPanel({ onBack, onClose }: LedgerConnectPanelProps) {
+export function LedgerConnectPanel({
+  onBack,
+  onClose,
+}: LedgerConnectPanelProps) {
   const [step, setStep] = useState<"connect" | "select">("connect");
   const [loading, setLoading] = useState(false);
   const [accounts, setAccounts] = useState<LedgerAccount[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const [pathType, setPathType] = useState<DerivationPathType>(DerivationPathType.BIP44_CHANGE);
+  const [pathType, setPathType] = useState<DerivationPathType>(
+    DerivationPathType.BIP44_CHANGE
+  );
 
   const { connectLedger } = useWalletStore();
   const { getSelectedChain } = useChainStore();
@@ -88,8 +99,9 @@ export function LedgerConnectPanel({ onBack, onClose }: LedgerConnectPanelProps)
   return (
     <div className="flex flex-col">
       <button
+        type="button"
         onClick={onBack}
-        className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
+        className="text-muted-foreground hover:text-foreground mb-6 flex items-center gap-1.5 text-sm transition-colors"
       >
         <ChevronLeft className="h-4 w-4" />
         Back to wallets
@@ -104,67 +116,67 @@ export function LedgerConnectPanel({ onBack, onClose }: LedgerConnectPanelProps)
             )}
           >
             {error ? (
-              <AlertCircle className="h-10 w-10 text-destructive" />
+              <AlertCircle className="text-destructive h-10 w-10" />
             ) : (
-              <Usb className="h-10 w-10 text-primary" />
+              <Usb className="text-primary h-10 w-10" />
             )}
           </div>
 
-          <div className="text-center space-y-1.5">
+          <div className="space-y-1.5 text-center">
             <h3 className="text-base font-semibold">
               {error ? "Connection Failed" : "Connect Ledger Device"}
             </h3>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               {error
                 ? error
                 : "Connect your Ledger device and open the Solana app, then click connect."}
             </p>
           </div>
 
-          <div className="w-full rounded-xl border border-border bg-card p-4 space-y-3">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+          <div className="border-border bg-card w-full space-y-3 rounded-xl border p-4">
+            <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
               Derivation Path
             </p>
             <RadioGroup
               value={pathType}
-              onValueChange={(value) => setPathType(value as DerivationPathType)}
+              onValueChange={(value) =>
+                setPathType(value as DerivationPathType)
+              }
               disabled={loading}
               className="space-y-2"
             >
-              {Object.entries(DERIVATION_PATH_PATTERNS).map(([type, pattern]) => (
-                <div key={type} className="flex items-start gap-3">
-                  <RadioGroupItem
-                    value={type}
-                    id={`path-${type}`}
-                    className="mt-0.5"
-                  />
-                  <Label
-                    htmlFor={`path-${type}`}
-                    className={cn(
-                      "flex flex-col gap-0.5 cursor-pointer",
-                      loading && "cursor-not-allowed opacity-50"
-                    )}
-                  >
-                    <span className="text-sm font-medium leading-none">
-                      {pattern.name}
-                    </span>
-                    <span className="text-xs text-muted-foreground font-mono">
-                      {pattern.description}
-                    </span>
-                  </Label>
-                </div>
-              ))}
+              {Object.entries(DERIVATION_PATH_PATTERNS).map(
+                ([type, pattern]) => (
+                  <div key={type} className="flex items-start gap-3">
+                    <RadioGroupItem
+                      value={type}
+                      id={`path-${type}`}
+                      className="mt-0.5"
+                    />
+                    <Label
+                      htmlFor={`path-${type}`}
+                      className={cn(
+                        "flex cursor-pointer flex-col gap-0.5",
+                        loading && "cursor-not-allowed opacity-50"
+                      )}
+                    >
+                      <span className="text-sm leading-none font-medium">
+                        {pattern.name}
+                      </span>
+                      <span className="text-muted-foreground font-mono text-xs">
+                        {pattern.description}
+                      </span>
+                    </Label>
+                  </div>
+                )
+              )}
             </RadioGroup>
           </div>
 
-          <Button
-            onClick={handleConnect}
-            disabled={loading}
-            className="w-full"
-          >
+          <Button onClick={handleConnect} disabled={loading} className="w-full">
             {loading ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Connecting...
               </>
             ) : error ? (
@@ -181,7 +193,7 @@ export function LedgerConnectPanel({ onBack, onClose }: LedgerConnectPanelProps)
           <div className="flex items-center justify-between">
             <h3 className="text-base font-semibold">Select Account</h3>
             <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">
+              <span className="text-muted-foreground text-xs">
                 Page {currentPage + 1}
               </span>
               <div className="flex items-center gap-1">
@@ -208,7 +220,7 @@ export function LedgerConnectPanel({ onBack, onClose }: LedgerConnectPanelProps)
           </div>
 
           {error && (
-            <div className="flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            <div className="border-destructive/30 bg-destructive/10 text-destructive flex items-center gap-2 rounded-lg border px-3 py-2 text-sm">
               <AlertCircle className="h-4 w-4 shrink-0" />
               {error}
             </div>
@@ -216,19 +228,22 @@ export function LedgerConnectPanel({ onBack, onClose }: LedgerConnectPanelProps)
 
           {loading ? (
             <div className="flex flex-col items-center justify-center gap-3 py-10">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
-              <p className="text-sm text-muted-foreground">Loading accounts...</p>
+              <Loader2 className="text-primary h-6 w-6 animate-spin" />
+              <p className="text-muted-foreground text-sm">
+                Loading accounts...
+              </p>
             </div>
           ) : (
             <div className="flex flex-col gap-2">
               {accounts.map((account, index) => {
-                const accountNumber = currentPage * ACCOUNTS_PER_PAGE + index + 1;
+                const accountNumber =
+                  currentPage * ACCOUNTS_PER_PAGE + index + 1;
                 const address = account.publicKey.toBase58();
                 return (
                   <button
                     key={account.derivationPath}
                     onClick={() => handleSelectAccount(account)}
-                    className="group flex w-full items-center justify-between rounded-xl border border-border bg-card px-4 py-3.5 text-left transition-all hover:border-primary/30 hover:bg-accent/50 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="group border-border bg-card hover:border-primary/30 hover:bg-accent/50 flex w-full items-center justify-between rounded-xl border px-4 py-3.5 text-left transition-all disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <div className="flex flex-col gap-1">
                       <div className="flex items-center gap-2">
@@ -242,17 +257,17 @@ export function LedgerConnectPanel({ onBack, onClose }: LedgerConnectPanelProps)
                           {formatAddress(address, 6, 6)}
                         </span>
                       </div>
-                      <span className="pl-0.5 font-mono text-xs text-muted-foreground">
+                      <span className="text-muted-foreground pl-0.5 font-mono text-xs">
                         {account.derivationPath}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2 shrink-0 ml-4">
+                    <div className="ml-4 flex shrink-0 items-center gap-2">
                       {account.balance !== undefined && (
                         <span className="text-sm font-semibold tabular-nums">
                           {account.balance.toFixed(4)} SOL
                         </span>
                       )}
-                      <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+                      <ChevronRight className="text-muted-foreground h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                     </div>
                   </button>
                 );
