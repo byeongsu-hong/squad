@@ -17,8 +17,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { ManageTagsDialog } from "@/components/manage-tags-dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCreatorMultisigs } from "@/lib/hooks/use-creator-multisigs";
 import { useDebounce } from "@/lib/hooks/use-debounce";
@@ -261,20 +259,19 @@ export function MultisigList() {
     <div className="space-y-3">
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-2">
-        <Input
+        <input
           placeholder="Search multisigs..."
           value={filterText}
           onChange={(e) => setFilterText(e.target.value)}
-          className="border-border bg-card text-foreground placeholder:text-muted-foreground/70 w-full sm:w-[280px]"
+          className="border-border bg-card text-foreground placeholder:text-muted-foreground/70 h-9 w-full rounded-md border px-3 text-sm focus:outline-none sm:w-[280px]"
           aria-label="Search multisigs"
         />
         {publicKey && canSyncSelectedChain ? (
-          <Button
-            variant="outline"
-            size="sm"
+          <button
+            type="button"
             onClick={loadMultisigs}
             disabled={loading}
-            className="border-border text-foreground/80 hover:bg-muted bg-transparent"
+            className="border-border text-foreground/80 hover:bg-muted inline-flex h-9 items-center rounded-md border bg-transparent px-3 transition-colors disabled:opacity-50"
             aria-label="Refresh multisigs"
             title={`Creator sync on ${normalizedSelectedChain?.name ?? "selected chain"}`}
           >
@@ -283,29 +280,28 @@ export function MultisigList() {
             ) : (
               <RefreshCw className="h-4 w-4" />
             )}
-          </Button>
+          </button>
         ) : null}
         {hasMultisigs && (
-          <Button
-            variant="outline"
-            size="sm"
+          <button
+            type="button"
             onClick={toggleSelectAll}
-            className="border-border text-foreground/80 hover:bg-muted bg-transparent"
+            className="border-border text-foreground/80 hover:bg-muted inline-flex h-9 items-center rounded-md border bg-transparent px-3 text-sm transition-colors"
           >
             {selectedForDeletion.size === multisigs.length
               ? "Deselect all"
               : "Select all"}
-          </Button>
+          </button>
         )}
         {selectedForDeletion.size > 0 && (
-          <Button
-            variant="destructive"
-            size="sm"
+          <button
+            type="button"
             onClick={handleDeleteSelected}
+            className="inline-flex h-9 items-center gap-1.5 rounded-md bg-red-500 px-3 text-sm text-white transition-colors hover:bg-red-400"
           >
-            <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+            <Trash2 className="h-3.5 w-3.5" />
             Remove ({selectedForDeletion.size})
-          </Button>
+          </button>
         )}
         {allTags.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
@@ -416,7 +412,7 @@ export function MultisigList() {
                     onClick={(e) => e.stopPropagation()}
                   >
                     {isEditing ? (
-                      <Input
+                      <input
                         value={labelInput}
                         onChange={(e) => setLabelInput(e.target.value)}
                         onKeyDown={(e) => {
@@ -425,7 +421,7 @@ export function MultisigList() {
                         }}
                         onBlur={() => handleSaveLabel(multisig)}
                         placeholder="Enter label"
-                        className="border-border bg-muted text-foreground h-6 w-40 text-sm"
+                        className="border-border bg-muted text-foreground h-6 w-40 rounded border px-2 text-sm focus:outline-none"
                         autoFocus
                       />
                     ) : (
@@ -541,19 +537,18 @@ export function MultisigList() {
                     className="flex items-center justify-end gap-1"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-muted-foreground/50 hover:text-foreground h-7 w-7 p-0"
+                    <button
+                      type="button"
+                      className="text-muted-foreground/50 hover:text-foreground inline-flex h-7 w-7 items-center justify-center rounded-md transition-colors"
                       onClick={() => handleOpenTagDialog(multisig)}
                       title="Manage tags"
                     >
                       <Tag className="h-3 w-3" />
-                    </Button>
-                    <Button
-                      size="sm"
+                    </button>
+                    <button
+                      type="button"
                       className={cn(
-                        "h-7 px-2.5 text-xs",
+                        "inline-flex h-7 items-center rounded-md px-2.5 text-xs transition-colors",
                         row.waiting > 0
                           ? "bg-primary text-primary-foreground hover:bg-primary/90"
                           : "border-border bg-transparent text-foreground/80 hover:bg-muted border"
@@ -562,7 +557,7 @@ export function MultisigList() {
                     >
                       Open
                       <ArrowUpRight className="ml-1 h-3 w-3" />
-                    </Button>
+                    </button>
                   </div>
                 </div>
               );
