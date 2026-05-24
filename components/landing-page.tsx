@@ -66,7 +66,7 @@ export function LandingPage() {
           </h1>
         </div>
 
-        <div className="bg-card border-border mb-5 flex items-center gap-6 rounded-xl border px-5 py-3">
+        <div className="bg-card border-border mb-5 flex items-center gap-6 overflow-x-auto rounded-xl border px-5 py-3">
           <div className="flex items-center gap-2">
             <Shield className="text-muted-foreground/40 h-4 w-4 shrink-0" />
             <div className="flex flex-col">
