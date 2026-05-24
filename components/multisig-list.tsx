@@ -510,8 +510,8 @@ export function MultisigList() {
                     {row.attentionLine ? (
                       row.waiting > 0 ? (
                         <div className="flex items-center gap-1.5">
-                          <AlertTriangle className="h-3 w-3 shrink-0 text-amber-500" />
-                          <span className="truncate text-xs text-amber-600 dark:text-amber-400">
+                          <AlertTriangle className="text-primary/80 h-3 w-3 shrink-0" />
+                          <span className="text-primary truncate text-xs">
                             {row.attentionLine}
                           </span>
                         </div>
