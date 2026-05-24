@@ -337,11 +337,11 @@ export function MultisigList() {
               })}
             </div>
           )}
-          <span className="text-muted-foreground/70 ml-auto text-sm">
-            {hasMultisigs
-              ? `${filteredRegistryRows.length} / ${multisigs.length}`
-              : ""}
-          </span>
+          {hasMultisigs && filteredRegistryRows.length < multisigs.length && (
+            <span className="text-muted-foreground/70 ml-auto text-sm">
+              {filteredRegistryRows.length} / {multisigs.length}
+            </span>
+          )}
         </div>
       )}
 

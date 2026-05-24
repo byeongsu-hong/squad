@@ -230,6 +230,11 @@ function ChainEditor({
           : "space-y-6"
       }
     >
+      {embedded && (
+        <h3 className="text-sm font-semibold">
+          {editingChain ? "Edit Chain" : "New Chain"}
+        </h3>
+      )}
       <Form {...form}>
         <form onSubmit={onSubmit} className="space-y-4">
           <FormField
@@ -456,11 +461,7 @@ function ChainRegistry({
                 <p className="text-muted-foreground text-xs">
                   RPC: {chain.rpcUrl}
                 </p>
-              ) : (
-                <p className="text-muted-foreground/70 text-[0.68rem] tracking-[0.14em] uppercase">
-                  {chain.id}
-                </p>
-              )}
+              ) : null}
             </div>
             <div className="text-muted-foreground min-w-0 space-y-1 text-xs">
               <p className="font-mono break-all">RPC: {chain.rpcUrl}</p>
