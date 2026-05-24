@@ -1,6 +1,6 @@
 "use client";
 
-import { Inbox, PenLine, Shield, Zap } from "lucide-react";
+import { Clock, Inbox, PenLine, Shield, Zap } from "lucide-react";
 import Link from "next/link";
 import { useAccount } from "wagmi";
 
@@ -26,12 +26,12 @@ export function LandingPage() {
       getViewerAddress(multisig.provider),
   });
 
-  const pendingCount = queueItems.filter(
-    (item) => item.proposal.status === "Active" && !item.readyToExecute
-  ).length;
   const executableCount = queueItems.filter((item) => item.readyToExecute).length;
   const needsSigningCount = queueItems.filter(
     (i) => i.needsYourSignature && !i.currentUserApproved
+  ).length;
+  const watchingCount = queueItems.filter(
+    (i) => i.proposal.status === "Active" && !i.readyToExecute && !i.needsYourSignature
   ).length;
 
   if (workspaceMultisigs.length === 0) {
@@ -99,6 +99,18 @@ export function LandingPage() {
               </span>
               <span className="text-muted-foreground text-[11px] uppercase tracking-wide">
                 Ready to execute
+              </span>
+            </div>
+          </div>
+          <div className="bg-border h-8 w-px" />
+          <div className="flex items-center gap-2">
+            <Clock className={watchingCount > 0 ? "text-muted-foreground/60 h-4 w-4 shrink-0" : "text-muted-foreground/30 h-4 w-4 shrink-0"} />
+            <div className="flex flex-col">
+              <span className={watchingCount > 0 ? "text-foreground text-2xl font-bold tabular-nums leading-tight" : "text-muted-foreground text-2xl font-bold tabular-nums leading-tight"}>
+                {watchingCount}
+              </span>
+              <span className="text-muted-foreground text-[11px] uppercase tracking-wide">
+                Watching
               </span>
             </div>
           </div>

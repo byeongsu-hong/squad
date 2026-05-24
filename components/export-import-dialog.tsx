@@ -430,9 +430,9 @@ export function ExportImportController({
               disabled={isImporting}
             >
               {isImporting ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <Upload className="mr-2 h-4 w-4" />
+                <Upload className="h-4 w-4" />
               )}
               {isImporting ? "Importing..." : "Import"}
             </Button>
@@ -447,9 +447,9 @@ export function ExportImportController({
             disabled={isImporting}
           >
             {isImporting ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <Upload className="mr-2 h-4 w-4" />
+              <Upload className="h-4 w-4" />
             )}
             {isImporting ? "Importing..." : "Import"}
           </Button>
@@ -678,12 +678,12 @@ function ExportImportExportPanel({
               >
                 {copied ? (
                   <>
-                    <Check className="mr-2 h-4 w-4" />
+                    <Check className="h-4 w-4" />
                     Copied
                   </>
                 ) : (
                   <>
-                    <Copy className="mr-2 h-4 w-4" />
+                    <Copy className="h-4 w-4" />
                     Copy YAML
                   </>
                 )}
@@ -700,12 +700,12 @@ function ExportImportExportPanel({
             >
               {copied ? (
                 <>
-                  <Check className="mr-2 h-4 w-4" />
+                  <Check className="h-4 w-4" />
                   Copied
                 </>
               ) : (
                 <>
-                  <Copy className="mr-2 h-4 w-4" />
+                  <Copy className="h-4 w-4" />
                   Copy
                 </>
               )}

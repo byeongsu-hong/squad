@@ -65,7 +65,7 @@ function DialogShell({
       <DialogTrigger asChild>
         {children || (
           <Button variant="outline">
-            <Plus className="mr-2 h-4 w-4" />
+            <Plus className="h-4 w-4" />
             Manage Labels
           </Button>
         )}

@@ -426,7 +426,7 @@ function ChainEditor({
               type="submit"
               className="bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20 flex-1"
             >
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus className="h-4 w-4" />
               {editingChain ? "Update Chain" : "Add Chain"}
             </Button>
             {editingChain && (
@@ -467,7 +467,7 @@ function ChainRegistry({
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold">Configured Chains</h3>
         <Button type="button" variant="outline" onClick={onResetToDefaults}>
-          <RotateCcw className="mr-2 h-3 w-3" />
+          <RotateCcw className="h-3 w-3" />
           Reset to Defaults
         </Button>
       </div>
