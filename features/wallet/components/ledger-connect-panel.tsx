@@ -96,14 +96,14 @@ export function LedgerConnectPanel({
 
   return (
     <div className="flex flex-col">
-      <button
-        type="button"
+      <Button
+        variant="ghost"
         onClick={onBack}
-        className="text-muted-foreground hover:text-foreground mb-6 flex items-center gap-1.5 text-sm transition-colors"
+        className="text-muted-foreground hover:text-foreground mb-6 -ml-1.5 h-auto justify-start gap-1.5 px-1.5 py-1 text-sm"
       >
         <ChevronLeft className="h-4 w-4" />
         Back to wallets
-      </button>
+      </Button>
 
       {step === "connect" && (
         <div className="flex flex-col items-center gap-6">
@@ -238,10 +238,11 @@ export function LedgerConnectPanel({
                   currentPage * ACCOUNTS_PER_PAGE + index + 1;
                 const address = account.publicKey.toBase58();
                 return (
-                  <button
+                  <Button
                     key={account.derivationPath}
+                    variant="outline"
                     onClick={() => handleSelectAccount(account)}
-                    className="group border-border bg-card hover:border-primary/30 hover:bg-accent/50 flex w-full items-center justify-between rounded-xl border px-4 py-3.5 text-left transition-all disabled:cursor-not-allowed disabled:opacity-50"
+                    className="group hover:border-primary/30 hover:bg-accent/50 h-auto w-full items-center justify-between rounded-xl px-4 py-3.5 text-left"
                   >
                     <div className="flex flex-col gap-1">
                       <div className="flex items-center gap-2">
@@ -267,7 +268,7 @@ export function LedgerConnectPanel({
                       )}
                       <ChevronRight className="text-muted-foreground h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                     </div>
-                  </button>
+                  </Button>
                 );
               })}
             </div>

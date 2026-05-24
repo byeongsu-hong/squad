@@ -325,19 +325,18 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
               {allTags.map((tag) => {
                 const isActive = selectedFilterTags.includes(tag);
                 return (
-                  <button
+                  <Button
                     key={tag}
-                    type="button"
+                    size="sm"
+                    variant={isActive ? undefined : "outline"}
                     onClick={() => toggleFilterTag(tag)}
                     className={cn(
-                      "cursor-pointer rounded-full px-2.5 py-0.5 text-xs transition-colors",
-                      isActive
-                        ? "bg-primary/15 text-primary font-medium"
-                        : "bg-muted text-muted-foreground hover:bg-muted/80"
+                      "h-6 rounded-full px-2.5 text-xs",
+                      isActive && "bg-primary/15 text-primary hover:bg-primary/20 border-primary/20 font-medium"
                     )}
                   >
                     {tag}
-                  </button>
+                  </Button>
                 );
               })}
             </div>
@@ -458,9 +457,9 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
                             Active
                           </span>
                         )}
-                        <button
-                          type="button"
-                          className="text-muted-foreground/30 hover:text-foreground shrink-0 transition-colors"
+                        <Button
+                          variant="ghost"
+                          className="h-6 w-6 shrink-0 p-0 text-muted-foreground/30 hover:text-foreground hover:bg-transparent"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleStartEditLabel(
@@ -471,7 +470,7 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
                           aria-label={`Edit label for ${row.label}`}
                         >
                           <Pencil className="h-3 w-3" />
-                        </button>
+                        </Button>
                       </div>
                     )}
                     <p className="text-muted-foreground/60 truncate text-[10px]">
@@ -488,9 +487,9 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
                     <span className="text-muted-foreground/70 truncate font-mono text-[11px]">
                       {formatAddress(multisig.publicKey.toString(), 6, 6)}
                     </span>
-                    <button
-                      type="button"
-                      className="text-muted-foreground/30 hover:text-foreground shrink-0 transition-colors"
+                    <Button
+                      variant="ghost"
+                      className="h-6 w-6 shrink-0 p-0 text-muted-foreground/30 hover:text-foreground hover:bg-transparent"
                       onClick={(e) => {
                         e.stopPropagation();
                         navigator.clipboard.writeText(
@@ -501,7 +500,7 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
                       aria-label={`Copy address for ${row.label}`}
                     >
                       <Copy className="h-3 w-3" />
-                    </button>
+                    </Button>
                   </div>
 
                   {/* Chain */}
