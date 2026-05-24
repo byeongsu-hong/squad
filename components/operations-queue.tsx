@@ -30,6 +30,7 @@ interface OperationsQueueProps {
   showFilters?: boolean;
   compact?: boolean;
   emptyStateCta?: ReactNode;
+  defaultStatusFilter?: StatusFilter;
 }
 
 function formatAge(createdAt?: string): string {
@@ -304,8 +305,9 @@ export function OperationsQueue({
   showFilters = false,
   compact = false,
   emptyStateCta,
+  defaultStatusFilter = "All",
 }: OperationsQueueProps) {
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("All");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>(defaultStatusFilter);
   const [chainFilter, setChainFilter] = useState("All");
   const [multisigFilter, setMultisigFilter] = useState("All");
   const [search, setSearch] = useState("");

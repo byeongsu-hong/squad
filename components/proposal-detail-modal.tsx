@@ -133,7 +133,7 @@ export function ProposalDetailView({
   return (
     <div className="flex h-full flex-col">
       {/* ── Sticky header ──────────────────────────────────────────────── */}
-      <div className="border-border/60 bg-background sticky top-0 z-10 border-b px-5 py-4">
+      <div className="border-border/60 bg-card sticky top-0 z-10 border-b px-5 py-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             {/* Vault label + tx index + status pill */}

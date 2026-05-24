@@ -133,7 +133,7 @@ export function AddressWithLabel({
               interactiveDisplayClass
             )}
           >
-            <div className="border-border bg-card text-foreground hover:bg-muted inline-flex max-w-full items-center gap-2 rounded-full border px-2.5 py-1 text-xs transition-colors">
+            <div className="border-border bg-muted text-foreground hover:bg-muted/70 inline-flex max-w-full items-center gap-2 rounded-full border px-2.5 py-1 text-xs transition-colors">
               <span
                 className="h-1.5 w-1.5 shrink-0 rounded-full"
                 style={{ backgroundColor: label.color }}
@@ -154,7 +154,7 @@ export function AddressWithLabel({
             )}
             title={`${label.label}${label.description ? `\n${label.description}` : ""}\n${address}`}
           >
-            <div className="border-border bg-card text-foreground hover:bg-muted inline-flex max-w-full items-center gap-2 rounded-full border px-2.5 py-1 text-xs transition-colors">
+            <div className="border-border bg-muted text-foreground hover:bg-muted/70 inline-flex max-w-full items-center gap-2 rounded-full border px-2.5 py-1 text-xs transition-colors">
               <span
                 className="h-1.5 w-1.5 shrink-0 rounded-full"
                 style={{ backgroundColor: label.color }}
@@ -176,7 +176,7 @@ export function AddressWithLabel({
           aria-label="Copy address"
           title={address}
           className={cn(
-            "bg-card h-auto rounded-md px-2 py-1 font-mono text-xs text-foreground/80 hover:text-foreground",
+            "bg-muted h-auto rounded-md px-2 py-1 font-mono text-xs text-foreground/80 hover:text-foreground",
             interactiveDisplayClass
           )}
         >
@@ -184,7 +184,7 @@ export function AddressWithLabel({
         </Button>
       ) : (
         <code
-          className="border-border bg-card text-foreground/80 hover:bg-muted hover:text-foreground rounded-md border px-2 py-1 font-mono text-xs transition-colors"
+          className="border-border bg-muted text-foreground/80 hover:bg-muted/70 hover:text-foreground rounded-md border px-2 py-1 font-mono text-xs transition-colors"
           title={address}
         >
           {displayAddress}
