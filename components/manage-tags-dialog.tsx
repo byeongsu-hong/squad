@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useMultisigStore } from "@/stores/multisig-store";
 import type { MultisigAccount } from "@/types/multisig";
 
@@ -95,9 +96,9 @@ export function ManageTagsDialog({
 
         <div className="space-y-4 py-4">
           <div className="space-y-1.5">
-            <label htmlFor="new-tag" className="text-foreground/80 text-xs font-medium">
-              Add New Tag
-            </label>
+            <Label htmlFor="new-tag" className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">
+              Add Tag
+            </Label>
             <div className="flex gap-2">
               <Input
                 id="new-tag"
@@ -121,7 +122,7 @@ export function ManageTagsDialog({
           {allGlobalTags.length > 0 &&
             allGlobalTags.some((tag) => !tags.includes(tag)) && (
               <div className="space-y-1.5">
-                <p className="text-foreground/80 text-xs font-medium">Available Tags (click to add)</p>
+                <p className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">Available</p>
                 <div className="flex flex-wrap gap-1.5">
                   {allGlobalTags
                     .filter((tag) => !tags.includes(tag))
@@ -142,19 +143,19 @@ export function ManageTagsDialog({
 
           {tags.length > 0 && (
             <div className="space-y-1.5">
-              <p className="text-foreground/80 text-xs font-medium">Current Tags</p>
+              <p className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">Current</p>
               <div className="flex flex-wrap gap-2">
                 {tags.map((tag) => (
                   <span
                     key={tag}
-                    className="bg-muted text-foreground/80 inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs"
+                    className="bg-primary/10 text-primary inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium"
                   >
                     {tag}
                     <Button
                       type="button"
                       variant="ghost"
                       onClick={() => handleRemoveTag(tag)}
-                      className="hover:text-destructive ml-0.5 h-auto w-auto border-none p-0"
+                      className="text-primary/60 hover:text-destructive hover:bg-destructive/10 ml-0.5 h-5 w-5 rounded-full p-0"
                     >
                       <X className="h-3 w-3" />
                     </Button>

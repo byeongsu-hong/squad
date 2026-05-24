@@ -73,7 +73,11 @@ export function ProviderAdaptersPanel() {
         </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="space-y-3">
+        <p className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">
+          Safe Adapter Configuration
+        </p>
+        <div className="grid gap-4 lg:grid-cols-3">
         <div className="space-y-1.5">
           <Label htmlFor="safe-tx-service">Safe Transaction Service URL</Label>
           <Input
@@ -109,9 +113,10 @@ export function ProviderAdaptersPanel() {
             placeholder="0xa6B71E26C5e0845f74c812102Ca7114b6a896Ab2"
           />
         </div>
+        </div>
       </div>
 
-      <div className="border-border bg-muted text-muted-foreground flex items-start gap-2 rounded-lg border px-3 py-3 text-xs">
+      <div className="border-border bg-muted text-muted-foreground flex items-start gap-2 rounded-lg border px-4 py-3 text-xs">
         <Network className="text-muted-foreground/70 mt-0.5 h-3.5 w-3.5 shrink-0" />
         These values are saved locally as adapter configuration only. They do
         not change the current Squads runtime yet.

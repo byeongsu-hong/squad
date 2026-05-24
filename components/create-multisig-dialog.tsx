@@ -299,91 +299,96 @@ export function CreateMultisigDialog({
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="threshold"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Threshold <span className="text-destructive">*</span>
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      min={1}
-                      max={fields.length}
-                      {...field}
-                      onChange={(e) => field.onChange(parseInt(e.target.value))}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="bg-muted/40 border-border rounded-xl border space-y-3 px-4 py-4">
+              <p className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">Signers</p>
 
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <FormLabel>Members</FormLabel>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => append({ key: "", permissions: { mask: 7 } })}
-                >
-                  <Plus className="h-4 w-4" />
-                  Add Member
-                </Button>
-              </div>
+              <FormField
+                control={form.control}
+                name="threshold"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Threshold <span className="text-destructive">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min={1}
+                        max={fields.length}
+                        {...field}
+                        onChange={(e) => field.onChange(parseInt(e.target.value))}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <div className="space-y-2">
-                {fields.map((field, index) => (
-                  <div key={field.id} className="flex gap-2">
-                    <FormField
-                      control={form.control}
-                      name={`members.${index}.key`}
-                      render={({ field }) => (
-                        <FormItem className="flex-1">
-                          <FormControl>
-                            <Input
-                              placeholder="Member address"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
+                <div className="flex items-center justify-between">
+                  <FormLabel>Members</FormLabel>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => append({ key: "", permissions: { mask: 7 } })}
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add Member
+                  </Button>
+                </div>
+
+                <div className="space-y-2">
+                  {fields.map((field, index) => (
+                    <div key={field.id} className="flex gap-2">
+                      <FormField
+                        control={form.control}
+                        name={`members.${index}.key`}
+                        render={({ field }) => (
+                          <FormItem className="flex-1">
+                            <FormControl>
+                              <Input
+                                placeholder="Member address"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name={`members.${index}.permissions.mask`}
+                        render={({ field }) => (
+                          <FormItem className="w-20">
+                            <FormControl>
+                              <Input
+                                type="number"
+                                placeholder="Perms"
+                                {...field}
+                                onChange={(e) =>
+                                  field.onChange(parseInt(e.target.value))
+                                }
+                              />
+                            </FormControl>
+                            <FormDescription>7 = full</FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      {fields.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={() => remove(index)}
+                        >
+                          <Trash2 className="text-destructive h-4 w-4" />
+                        </Button>
                       )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name={`members.${index}.permissions.mask`}
-                      render={({ field }) => (
-                        <FormItem className="w-20">
-                          <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="Perms"
-                              {...field}
-                              onChange={(e) =>
-                                field.onChange(parseInt(e.target.value))
-                              }
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    {fields.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-sm"
-                        onClick={() => remove(index)}
-                      >
-                        <Trash2 className="text-destructive h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                ))}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 
