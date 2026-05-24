@@ -9,7 +9,6 @@ import { useEffect, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -26,7 +25,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -242,7 +240,11 @@ export function CreateMultisigDialog({
                 <FormItem>
                   <FormLabel>Label (Optional)</FormLabel>
                   <FormControl>
-                    <Input placeholder="My Multisig Wallet" {...field} />
+                    <input
+                      placeholder="My Multisig Wallet"
+                      className="border-border bg-card text-foreground placeholder:text-muted-foreground/50 h-9 w-full rounded-md border px-3 text-sm focus:outline-none"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                   <FormDescription>
@@ -259,7 +261,11 @@ export function CreateMultisigDialog({
                 <FormItem>
                   <FormLabel>Tags (Optional)</FormLabel>
                   <FormControl>
-                    <Input placeholder="treasury, dao, mainnet" {...field} />
+                    <input
+                      placeholder="treasury, dao, mainnet"
+                      className="border-border bg-card text-foreground placeholder:text-muted-foreground/50 h-9 w-full rounded-md border px-3 text-sm focus:outline-none"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                   <FormDescription>
@@ -312,10 +318,11 @@ export function CreateMultisigDialog({
                     Threshold <span className="text-destructive">*</span>
                   </FormLabel>
                   <FormControl>
-                    <Input
+                    <input
                       type="number"
                       min={1}
                       max={fields.length}
+                      className="border-border bg-card text-foreground placeholder:text-muted-foreground/50 h-9 w-full rounded-md border px-3 text-sm focus:outline-none"
                       {...field}
                       onChange={(e) => field.onChange(parseInt(e.target.value))}
                     />
@@ -331,15 +338,14 @@ export function CreateMultisigDialog({
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <FormLabel>Members</FormLabel>
-                <Button
+                <button
                   type="button"
-                  variant="outline"
-                  size="sm"
                   onClick={() => append({ key: "", permissions: { mask: 7 } })}
+                  className="border-border text-foreground hover:bg-muted inline-flex h-8 items-center gap-1.5 rounded-md border bg-transparent px-3 text-xs font-medium transition-colors"
                 >
-                  <Plus className="mr-2 h-4 w-4" />
+                  <Plus className="h-4 w-4" />
                   Add Member
-                </Button>
+                </button>
               </div>
 
               <div className="space-y-2">
@@ -351,7 +357,11 @@ export function CreateMultisigDialog({
                       render={({ field }) => (
                         <FormItem className="flex-1">
                           <FormControl>
-                            <Input placeholder="Member address" {...field} />
+                            <input
+                              placeholder="Member address"
+                              className="border-border bg-card text-foreground placeholder:text-muted-foreground/50 h-9 w-full rounded-md border px-3 text-sm focus:outline-none"
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -363,9 +373,10 @@ export function CreateMultisigDialog({
                       render={({ field }) => (
                         <FormItem className="w-20">
                           <FormControl>
-                            <Input
+                            <input
                               type="number"
                               placeholder="Perms"
+                              className="border-border bg-card text-foreground placeholder:text-muted-foreground/50 h-9 w-full rounded-md border px-3 text-sm focus:outline-none"
                               {...field}
                               onChange={(e) =>
                                 field.onChange(parseInt(e.target.value))
@@ -377,21 +388,24 @@ export function CreateMultisigDialog({
                       )}
                     />
                     {fields.length > 1 && (
-                      <Button
+                      <button
                         type="button"
-                        variant="ghost"
-                        size="icon"
                         onClick={() => remove(index)}
+                        className="hover:bg-muted inline-flex h-9 w-9 items-center justify-center rounded-md bg-transparent transition-colors"
                       >
                         <Trash2 className="text-destructive h-4 w-4" />
-                      </Button>
+                      </button>
                     )}
                   </div>
                 ))}
               </div>
             </div>
 
-            <Button type="submit" disabled={loading} className="w-full">
+            <button
+              type="submit"
+              disabled={loading}
+              className="bg-amber-500 hover:bg-amber-400 disabled:bg-amber-500/50 inline-flex h-9 w-full items-center justify-center rounded-md px-4 text-sm font-medium text-white transition-colors disabled:cursor-not-allowed"
+            >
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -400,7 +414,7 @@ export function CreateMultisigDialog({
               ) : (
                 "Create Multisig"
               )}
-            </Button>
+            </button>
           </form>
         </Form>
       </DialogContent>

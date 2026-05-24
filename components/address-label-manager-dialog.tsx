@@ -4,7 +4,6 @@ import { Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -13,8 +12,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Tooltip,
   TooltipProvider,
@@ -70,10 +67,10 @@ function DialogShell({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {children || (
-          <Button variant="outline" size="sm">
+          <button className="border-border text-foreground/80 hover:bg-muted inline-flex h-9 items-center rounded-md border bg-transparent px-4 text-sm transition-colors">
             <Plus className="mr-2 h-4 w-4" />
             Manage Labels
-          </Button>
+          </button>
         )}
       </DialogTrigger>
       <DialogContent className="flex h-[600px] w-[900px] !max-w-[900px] flex-col gap-0 p-0">
@@ -292,21 +289,20 @@ function AddressLabelEditor({
           {isEditing ? "Edit Label" : "Add New Label"}
         </h3>
         {isEditing && (
-          <Button
-            variant="ghost"
-            size="sm"
+          <button
+            type="button"
             onClick={onReset}
-            className="h-7 px-2"
+            className="text-muted-foreground/40 hover:text-foreground inline-flex h-7 w-7 items-center justify-center rounded-md transition-colors"
           >
             <X className="h-3 w-3" />
-          </Button>
+          </button>
         )}
       </div>
 
       <form onSubmit={onSubmit} className="space-y-3.5">
         <div className="space-y-2">
-          <Label htmlFor="address">Address</Label>
-          <Input
+          <label htmlFor="address" className="text-foreground/80 text-xs font-medium">Address</label>
+          <input
             id="address"
             placeholder="Enter Solana address"
             value={formData.address}
@@ -315,12 +311,13 @@ function AddressLabelEditor({
             }
             disabled={isEditing}
             required
+            className="border-border bg-card text-foreground placeholder:text-muted-foreground/50 h-9 w-full rounded-md border px-3 text-sm focus:outline-none"
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="label">Label (max 12 chars)</Label>
-          <Input
+          <label htmlFor="label" className="text-foreground/80 text-xs font-medium">Label (max 12 chars)</label>
+          <input
             id="label"
             placeholder="Enter label name"
             value={formData.label}
@@ -329,23 +326,25 @@ function AddressLabelEditor({
             }
             maxLength={12}
             required
+            className="border-border bg-card text-foreground placeholder:text-muted-foreground/50 h-9 w-full rounded-md border px-3 text-sm focus:outline-none"
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="description">Description (Optional)</Label>
-          <Input
+          <label htmlFor="description" className="text-foreground/80 text-xs font-medium">Description (Optional)</label>
+          <input
             id="description"
             placeholder="Add description"
             value={formData.description}
             onChange={(e) =>
               onFormDataChange({ ...formData, description: e.target.value })
             }
+            className="border-border bg-card text-foreground placeholder:text-muted-foreground/50 h-9 w-full rounded-md border px-3 text-sm focus:outline-none"
           />
         </div>
 
         <div className="space-y-2">
-          <Label>Color</Label>
+          <label className="text-foreground/80 text-xs font-medium">Color</label>
           <div className="flex flex-wrap gap-2">
             {DEFAULT_COLORS.map((color) => (
               <button
@@ -364,9 +363,9 @@ function AddressLabelEditor({
           </div>
         </div>
 
-        <Button type="submit" className="w-full" size="sm">
+        <button type="submit" className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-9 w-full items-center justify-center rounded-md px-4 text-sm font-medium transition-colors disabled:opacity-50">
           {isEditing ? "Update Label" : "Add Label"}
-        </Button>
+        </button>
       </form>
     </div>
   );
@@ -409,11 +408,11 @@ function AddressLabelRegistry({
         <h3 className="mb-3 text-sm font-semibold">Saved Labels</h3>
         <div className="relative">
           <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-          <Input
+          <input
             placeholder="Search labels or addresses..."
             value={searchQuery}
             onChange={(e) => onSearchQueryChange(e.target.value)}
-            className="pl-9"
+            className="border-border bg-card text-foreground placeholder:text-muted-foreground/50 h-9 w-full rounded-md border px-3 pl-9 text-sm focus:outline-none"
           />
         </div>
         {embedded ? (
@@ -539,28 +538,26 @@ function AddressLabelRegistry({
                             : "opacity-0 transition-opacity group-hover:opacity-100"
                         )}
                       >
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6"
+                        <button
+                          type="button"
+                          className="text-muted-foreground/40 hover:text-foreground inline-flex h-7 w-7 items-center justify-center rounded-md transition-colors"
                           onClick={(event) => {
                             event.stopPropagation();
                             onEdit(label);
                           }}
                         >
                           <Pencil className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6"
+                        </button>
+                        <button
+                          type="button"
+                          className="text-muted-foreground/40 hover:text-foreground inline-flex h-7 w-7 items-center justify-center rounded-md transition-colors"
                           onClick={(event) => {
                             event.stopPropagation();
                             onDelete(label.address);
                           }}
                         >
                           <Trash2 className="h-3 w-3" />
-                        </Button>
+                        </button>
                       </div>
                     </div>
                   </TooltipTrigger>

@@ -24,7 +24,6 @@ import {
 } from "@/types/chain";
 import type { MultisigAccount } from "@/types/multisig";
 
-import { Button } from "./ui/button";
 import {
   Dialog,
   DialogContent,
@@ -33,7 +32,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "./ui/dialog";
-import { Label } from "./ui/label";
 import { Progress } from "./ui/progress";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 
@@ -416,30 +414,30 @@ export function ExportImportController({
 
       {!embedded ? (
         <DialogFooter>
-          <Button variant="outline" onClick={() => onClose?.()}>
+          <button type="button" className="border-border text-foreground/80 hover:bg-muted inline-flex h-9 items-center rounded-md border bg-transparent px-4 text-sm transition-colors" onClick={() => onClose?.()}>
             Close
-          </Button>
+          </button>
           {mode === "import" && (
-            <Button onClick={handleImport} disabled={isImporting}>
+            <button type="button" className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-9 items-center rounded-md px-4 text-sm font-medium transition-colors disabled:opacity-50" onClick={handleImport} disabled={isImporting}>
               {isImporting ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 <Upload className="mr-2 h-4 w-4" />
               )}
               {isImporting ? "Importing..." : "Import"}
-            </Button>
+            </button>
           )}
         </DialogFooter>
       ) : mode === "import" ? (
         <div className="flex justify-end pt-4">
-          <Button onClick={handleImport} disabled={isImporting}>
+          <button type="button" className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-9 items-center rounded-md px-4 text-sm font-medium transition-colors disabled:opacity-50" onClick={handleImport} disabled={isImporting}>
             {isImporting ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
               <Upload className="mr-2 h-4 w-4" />
             )}
             {isImporting ? "Importing..." : "Import"}
-          </Button>
+          </button>
         </div>
       ) : null}
 
@@ -511,20 +509,20 @@ export function ExportImportController({
           </div>
 
           <DialogFooter className="border-border border-t px-6 py-5 sm:justify-between">
-            <Button
+            <button
               type="button"
-              variant="outline"
+              className="border-border text-foreground/80 hover:bg-muted inline-flex h-9 items-center rounded-md border bg-transparent px-4 text-sm transition-colors"
               onClick={() => setResetDialogOpen(false)}
             >
               Cancel
-            </Button>
-            <Button
+            </button>
+            <button
               type="button"
-              variant="destructive"
+              className="bg-red-500 text-white hover:bg-red-400 inline-flex h-9 items-center gap-1.5 rounded-md px-3 text-sm transition-colors disabled:opacity-50"
               onClick={handleResetImportedState}
             >
               Reset Workspace State
-            </Button>
+            </button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -548,12 +546,12 @@ function ExportImportModePicker({
   return (
     <RadioGroup value={mode} onValueChange={onModeChange} disabled={disabled}>
       <div className={embedded ? "grid gap-2 sm:grid-cols-2" : "space-y-2"}>
-        <Label
+        <label
           htmlFor={embedded ? "settings-export" : "export"}
           className={
             embedded
-              ? "border-border bg-muted flex cursor-pointer items-start gap-3 border px-3 py-3 font-normal"
-              : "flex cursor-pointer items-center space-x-2 font-normal"
+              ? "border-border bg-muted flex cursor-pointer items-start gap-3 border px-3 py-3 font-normal text-foreground/80 text-xs font-medium"
+              : "flex cursor-pointer items-center space-x-2 font-normal text-foreground/80 text-xs font-medium"
           }
         >
           <RadioGroupItem
@@ -570,13 +568,13 @@ function ExportImportModePicker({
               </span>
             ) : null}
           </span>
-        </Label>
-        <Label
+        </label>
+        <label
           htmlFor={embedded ? "settings-import" : "import"}
           className={
             embedded
-              ? "border-border bg-muted flex cursor-pointer items-start gap-3 border px-3 py-3 font-normal"
-              : "flex cursor-pointer items-center space-x-2 font-normal"
+              ? "border-border bg-muted flex cursor-pointer items-start gap-3 border px-3 py-3 font-normal text-foreground/80 text-xs font-medium"
+              : "flex cursor-pointer items-center space-x-2 font-normal text-foreground/80 text-xs font-medium"
           }
         >
           <RadioGroupItem
@@ -593,7 +591,7 @@ function ExportImportModePicker({
               </span>
             ) : null}
           </span>
-        </Label>
+        </label>
       </div>
     </RadioGroup>
   );
@@ -670,11 +668,11 @@ function ExportImportExportPanel({
                   {preparedSafeChains.length}
                 </p>
               </div>
-              <Button
-                variant="outline"
+              <button
+                type="button"
                 onClick={onCopy}
                 disabled={copied}
-                className="border-border text-foreground/80 hover:bg-muted justify-start bg-transparent"
+                className="border-border text-foreground/80 hover:bg-muted inline-flex h-9 items-center justify-start rounded-md border bg-transparent px-4 text-sm transition-colors disabled:opacity-50"
               >
                 {copied ? (
                   <>
@@ -687,17 +685,17 @@ function ExportImportExportPanel({
                     Copy YAML
                   </>
                 )}
-              </Button>
+              </button>
             </div>
           </>
         ) : (
           <>
-            <Label>YAML Configuration:</Label>
-            <Button
-              variant="ghost"
-              size="sm"
+            <label className="text-foreground/80 text-xs font-medium">YAML Configuration:</label>
+            <button
+              type="button"
               onClick={onCopy}
               disabled={copied}
+              className="border-border text-foreground/80 hover:bg-muted inline-flex h-9 items-center rounded-md border bg-transparent px-4 text-sm transition-colors disabled:opacity-50"
             >
               {copied ? (
                 <>
@@ -710,7 +708,7 @@ function ExportImportExportPanel({
                   Copy
                 </>
               )}
-            </Button>
+            </button>
           </>
         )}
       </div>
@@ -774,7 +772,7 @@ function ExportImportImportPanel({
         </div>
       ) : null}
       <div className="space-y-3">
-        <Label>Paste YAML content:</Label>
+        <label className="text-foreground/80 text-xs font-medium">Paste YAML content:</label>
         <p className="text-muted-foreground text-sm">
           Existing items will be preserved. Only new items will be imported.
         </p>
@@ -786,15 +784,14 @@ function ExportImportImportPanel({
               custom chains, labels, and provider settings.
             </p>
           </div>
-          <Button
+          <button
             type="button"
-            variant="outline"
             disabled={isImporting}
-            className="shrink-0"
+            className="border-border text-foreground/80 hover:bg-muted inline-flex h-9 shrink-0 items-center rounded-md border bg-transparent px-4 text-sm transition-colors disabled:opacity-50"
             onClick={onResetImportedState}
           >
             Reset
-          </Button>
+          </button>
         </div>
         {isImporting && importProgress ? (
           <div className="border-border bg-muted space-y-2 border px-3 py-3">

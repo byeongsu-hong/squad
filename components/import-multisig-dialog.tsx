@@ -9,7 +9,6 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
-import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -26,7 +25,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -279,9 +277,10 @@ export function ImportMultisigDialog({
                     Multisig Address <span className="text-destructive">*</span>
                   </FormLabel>
                   <FormControl>
-                    <Input
+                    <input
                       placeholder="Enter multisig address or Safe URL"
                       disabled={loading}
+                      className="border-border bg-card text-foreground placeholder:text-muted-foreground/50 h-9 w-full rounded-md border px-3 text-sm focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                       {...field}
                       onChange={(event) =>
                         handleAddressInputChange(event.target.value)
@@ -306,7 +305,11 @@ export function ImportMultisigDialog({
                     Label <span className="text-destructive">*</span>
                   </FormLabel>
                   <FormControl>
-                    <Input placeholder="My Imported Multisig" {...field} />
+                    <input
+                      placeholder="My Imported Multisig"
+                      className="border-border bg-card text-foreground placeholder:text-muted-foreground/50 h-9 w-full rounded-md border px-3 text-sm focus:outline-none"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                   <FormDescription>
@@ -323,7 +326,11 @@ export function ImportMultisigDialog({
                 <FormItem>
                   <FormLabel>Tags (Optional)</FormLabel>
                   <FormControl>
-                    <Input placeholder="treasury, dao, mainnet" {...field} />
+                    <input
+                      placeholder="treasury, dao, mainnet"
+                      className="border-border bg-card text-foreground placeholder:text-muted-foreground/50 h-9 w-full rounded-md border px-3 text-sm focus:outline-none"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                   <FormDescription>
@@ -334,15 +341,19 @@ export function ImportMultisigDialog({
             />
 
             <div className="flex justify-end gap-3">
-              <Button
+              <button
                 type="button"
-                variant="outline"
                 onClick={() => onOpenChange(false)}
                 disabled={loading}
+                className="border-border text-foreground hover:bg-muted inline-flex h-9 items-center rounded-md border bg-transparent px-4 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Cancel
-              </Button>
-              <Button type="submit" disabled={loading}>
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="bg-amber-500 hover:bg-amber-400 disabled:bg-amber-500/50 inline-flex h-9 items-center rounded-md px-4 text-sm font-medium text-white transition-colors disabled:cursor-not-allowed"
+              >
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -351,7 +362,7 @@ export function ImportMultisigDialog({
                 ) : (
                   "Import"
                 )}
-              </Button>
+              </button>
             </div>
           </form>
         </Form>

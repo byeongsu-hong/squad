@@ -7,7 +7,6 @@ import { type UseFormReturn, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
-import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -24,7 +23,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -255,7 +253,7 @@ function ChainEditor({
                   Chain Name <span className="text-destructive">*</span>
                 </FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., Eclipse Mainnet" {...field} />
+                  <input className="border-border bg-card text-foreground placeholder:text-muted-foreground/50 h-9 w-full rounded-md border px-3 text-sm focus:outline-none" placeholder="e.g., Eclipse Mainnet" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -330,7 +328,7 @@ function ChainEditor({
                   RPC URL <span className="text-destructive">*</span>
                 </FormLabel>
                 <FormControl>
-                  <Input placeholder="https://..." {...field} />
+                  <input className="border-border bg-card text-foreground placeholder:text-muted-foreground/50 h-9 w-full rounded-md border px-3 text-sm focus:outline-none" placeholder="https://..." {...field} />
                 </FormControl>
                 <FormMessage />
                 <FormDescription>
@@ -351,7 +349,8 @@ function ChainEditor({
                     <span className="text-destructive">*</span>
                   </FormLabel>
                   <FormControl>
-                    <Input
+                    <input
+                      className="border-border bg-card text-foreground placeholder:text-muted-foreground/50 h-9 w-full rounded-md border px-3 text-sm focus:outline-none"
                       placeholder="SQDS4ep65T869zMMBKyuUq6aD6EgTu8psMjkvj52pCf"
                       {...field}
                     />
@@ -375,7 +374,7 @@ function ChainEditor({
               <FormItem>
                 <FormLabel>Explorer URL (Optional)</FormLabel>
                 <FormControl>
-                  <Input placeholder="https://explorer.solana.com" {...field} />
+                  <input className="border-border bg-card text-foreground placeholder:text-muted-foreground/50 h-9 w-full rounded-md border px-3 text-sm focus:outline-none" placeholder="https://explorer.solana.com" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -383,14 +382,14 @@ function ChainEditor({
           />
 
           <div className="flex gap-2">
-            <Button type="submit" className="flex-1">
+            <button type="submit" className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-9 flex-1 items-center justify-center rounded-md px-4 text-sm font-medium transition-colors disabled:opacity-50">
               <Plus className="mr-2 h-4 w-4" />
               {editingChain ? "Update Chain" : "Add Chain"}
-            </Button>
+            </button>
             {editingChain && (
-              <Button type="button" variant="outline" onClick={onCancel}>
+              <button type="button" className="border-border text-foreground/80 hover:bg-muted inline-flex h-9 items-center rounded-md border bg-transparent px-4 text-sm transition-colors" onClick={onCancel}>
                 Cancel
-              </Button>
+              </button>
             )}
           </div>
         </form>
@@ -431,10 +430,10 @@ function ChainRegistry({
             </p>
           ) : null}
         </div>
-        <Button variant="outline" size="sm" onClick={onResetToDefaults}>
+        <button type="button" className="border-border text-foreground/80 hover:bg-muted inline-flex h-9 items-center rounded-md border bg-transparent px-4 text-sm transition-colors" onClick={onResetToDefaults}>
           <RotateCcw className="mr-2 h-3 w-3" />
           Reset to Defaults
-        </Button>
+        </button>
       </div>
       <div
         className={
@@ -501,27 +500,27 @@ function ChainRegistry({
               ) : null}
             </div>
             <div className="flex w-[4.25rem] gap-1 justify-self-start xl:justify-self-end">
-              <Button
-                variant="ghost"
-                size="icon"
+              <button
+                type="button"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-md border transition-colors"
                 onClick={(event) => {
                   event.stopPropagation();
                   onEdit(chain);
                 }}
               >
                 <Pencil className="h-4 w-4" />
-              </Button>
+              </button>
               {chain.id !== "solana-mainnet" ? (
-                <Button
-                  variant="ghost"
-                  size="icon"
+                <button
+                  type="button"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-md border transition-colors"
                   onClick={(event) => {
                     event.stopPropagation();
                     onDelete(chain.id);
                   }}
                 >
                   <Trash2 className="text-destructive h-4 w-4" />
-                </Button>
+                </button>
               ) : (
                 <span className="h-9 w-9" aria-hidden="true" />
               )}

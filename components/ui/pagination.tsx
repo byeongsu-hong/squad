@@ -1,6 +1,5 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 interface PaginationProps {
@@ -13,6 +12,9 @@ interface PaginationProps {
   endIndex: number;
   totalItems: number;
 }
+
+const pageBtn =
+  "border-border bg-card text-foreground/80 hover:bg-muted inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border text-sm transition-colors disabled:opacity-40 disabled:pointer-events-none";
 
 export function Pagination({
   currentPage,
@@ -32,31 +34,14 @@ export function Pagination({
     const showEllipsisEnd = currentPage < totalPages - 2;
 
     if (totalPages <= 7) {
-      // Show all pages if 7 or fewer
-      for (let i = 1; i <= totalPages; i++) {
-        pages.push(i);
-      }
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
     } else {
-      // Always show first page
       pages.push(1);
-
-      if (showEllipsisStart) {
-        pages.push("...");
-      }
-
-      // Show pages around current page
+      if (showEllipsisStart) pages.push("...");
       const start = Math.max(2, currentPage - 1);
       const end = Math.min(totalPages - 1, currentPage + 1);
-
-      for (let i = start; i <= end; i++) {
-        pages.push(i);
-      }
-
-      if (showEllipsisEnd) {
-        pages.push("...");
-      }
-
-      // Always show last page
+      for (let i = start; i <= end; i++) pages.push(i);
+      if (showEllipsisEnd) pages.push("...");
       pages.push(totalPages);
     }
 
@@ -66,21 +51,19 @@ export function Pagination({
   return (
     <div className="flex flex-col gap-3 px-2 sm:flex-row sm:items-center sm:justify-between">
       <div className="text-muted-foreground text-sm">
-        Showing {startIndex + 1}-{endIndex} of {totalItems}
+        Showing {startIndex + 1}–{endIndex} of {totalItems}
       </div>
 
       <div className="flex min-w-0 items-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
+        <button
+          type="button"
           onClick={() => onPageChange(currentPage - 1)}
           disabled={!canGoPrevious}
-          className="h-9 w-9 shrink-0 p-0"
+          className={pageBtn}
           aria-label="Previous page"
-          title="Previous page"
         >
           <ChevronLeft className="h-4 w-4" />
-        </Button>
+        </button>
 
         <div className="min-w-0 flex-1 overflow-x-auto">
           <div className="flex min-w-max items-center gap-1 whitespace-nowrap">
@@ -91,40 +74,37 @@ export function Pagination({
                     key={`ellipsis-${index}`}
                     className="text-muted-foreground px-2 text-sm"
                   >
-                    ...
+                    …
                   </span>
                 );
               }
-
+              const isActive = currentPage === page;
               return (
-                <Button
+                <button
                   key={page}
-                  variant={currentPage === page ? "default" : "outline"}
-                  size="sm"
+                  type="button"
                   onClick={() => onPageChange(page as number)}
                   className={cn(
-                    "h-9 w-9 shrink-0 p-0",
-                    currentPage === page && "pointer-events-none"
+                    pageBtn,
+                    isActive && "bg-foreground text-background pointer-events-none border-foreground"
                   )}
                 >
                   {page}
-                </Button>
+                </button>
               );
             })}
           </div>
         </div>
 
-        <Button
-          variant="outline"
-          size="sm"
+        <button
+          type="button"
           onClick={() => onPageChange(currentPage + 1)}
           disabled={!canGoNext}
-          className="h-9 w-9 shrink-0 p-0"
+          className={pageBtn}
           aria-label="Next page"
-          title="Next page"
         >
           <ChevronRight className="h-4 w-4" />
-        </Button>
+        </button>
       </div>
     </div>
   );
