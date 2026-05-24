@@ -17,10 +17,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { ManageTagsDialog } from "@/components/manage-tags-dialog";
-import { VaultListSkeletonList } from "@/components/skeletons";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useCreatorMultisigs } from "@/lib/hooks/use-creator-multisigs";
 import { useDebounce } from "@/lib/hooks/use-debounce";
 import { useMultisigAttention } from "@/lib/hooks/use-multisig-attention";
@@ -40,8 +39,53 @@ import {
   matchesMultisigSelectionKey,
 } from "@/types/multisig";
 
+const GRID_COLS = "36px 1.5fr 1.1fr 80px 1fr 90px";
+
 function formatProviderLabel(provider: RegistrySummaryRow["multisigProvider"]) {
   return provider === "safe" ? "Safe" : "Squads";
+}
+
+function VaultColumnHeaders() {
+  return (
+    <div
+      className="border-border bg-background grid items-center border-b px-3 py-2"
+      style={{ gridTemplateColumns: GRID_COLS }}
+    >
+      <div />
+      {["Vault", "Address", "Chain", "Status", ""].map((h, i) => (
+        <span
+          key={i}
+          className="text-muted-foreground/70 text-[10px] font-semibold uppercase tracking-widest"
+        >
+          {h}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function VaultRowSkeleton() {
+  return (
+    <div
+      className="grid items-center px-3 py-2.5"
+      style={{ gridTemplateColumns: GRID_COLS }}
+    >
+      <div />
+      <div className="space-y-1 pr-2">
+        <Skeleton className="h-3 w-28 rounded-sm" />
+        <Skeleton className="h-2.5 w-14 rounded-sm" />
+      </div>
+      <div className="pr-2">
+        <Skeleton className="h-3 w-24 rounded-sm" />
+      </div>
+      <Skeleton className="h-3 w-14 rounded-sm" />
+      <Skeleton className="h-3 w-20 rounded-sm" />
+      <div className="flex justify-end gap-1">
+        <Skeleton className="h-7 w-7 rounded-md" />
+        <Skeleton className="h-7 w-14 rounded-md" />
+      </div>
+    </div>
+  );
 }
 
 export function MultisigList() {
@@ -56,6 +100,7 @@ export function MultisigList() {
     useState<MultisigAccount | null>(null);
   const [filterText, setFilterText] = useState("");
   const [selectedFilterTags, setSelectedFilterTags] = useState<string[]>([]);
+
   const { publicKey } = useWalletStore();
   const { getSelectedChain, chains } = useChainStore();
   const {
@@ -66,16 +111,19 @@ export function MultisigList() {
     selectMultisig,
     selectedMultisigKey,
   } = useMultisigStore();
+
   const { loading, loadForCreator, canLoadFromChain } = useCreatorMultisigs({
     chains,
     existingMultisigs: multisigs,
     onLoaded: setMultisigs,
   });
+
   const attentionByMultisig = useMultisigAttention({
     chains,
     multisigs,
     viewerAddress: publicKey?.toString() ?? null,
   });
+
   const multisigByKey = useMemo(
     () =>
       new Map(
@@ -86,29 +134,21 @@ export function MultisigList() {
 
   const loadMultisigs = useCallback(async () => {
     const chain = getSelectedChain();
-    if (!canLoadFromChain(chain?.id)) {
-      return;
-    }
+    if (!canLoadFromChain(chain?.id)) return;
     await loadForCreator(chain?.id, publicKey?.toString() ?? null);
   }, [canLoadFromChain, getSelectedChain, loadForCreator, publicKey]);
 
   useEffect(() => {
     const chain = getSelectedChain();
-    if (!publicKey || !canLoadFromChain(chain?.id)) {
-      return;
-    }
-
+    if (!publicKey || !canLoadFromChain(chain?.id)) return;
     void loadMultisigs();
   }, [canLoadFromChain, getSelectedChain, loadMultisigs, publicKey]);
 
   const toggleSelect = (key: string) => {
     setSelectedForDeletion((prev) => {
       const next = new Set(prev);
-      if (next.has(key)) {
-        next.delete(key);
-      } else {
-        next.add(key);
-      }
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
       return next;
     });
   };
@@ -118,14 +158,13 @@ export function MultisigList() {
       setSelectedForDeletion(new Set());
     } else {
       setSelectedForDeletion(
-        new Set(multisigs.map((multisig) => getMultisigAccountKey(multisig)))
+        new Set(multisigs.map((m) => getMultisigAccountKey(m)))
       );
     }
   };
 
   const handleDeleteSelected = () => {
     if (selectedForDeletion.size === 0) return;
-
     if (
       confirm(
         `Are you sure you want to remove ${selectedForDeletion.size} multisig(s) from your list?`
@@ -154,9 +193,7 @@ export function MultisigList() {
     );
     setEditingLabel(null);
     setLabelInput("");
-    if (labelInput.trim()) {
-      toast.success("Label updated");
-    }
+    if (labelInput.trim()) toast.success("Label updated");
   };
 
   const handleCancelEdit = () => {
@@ -171,9 +208,7 @@ export function MultisigList() {
 
   const allTags = useMemo(() => {
     const tagSet = new Set<string>();
-    multisigs.forEach((m) => {
-      m.tags?.forEach((tag) => tagSet.add(tag));
-    });
+    multisigs.forEach((m) => m.tags?.forEach((tag) => tagSet.add(tag)));
     return Array.from(tagSet).sort();
   }, [multisigs]);
 
@@ -190,14 +225,15 @@ export function MultisigList() {
     [attentionByMultisig, chains, debouncedFilterText, multisigs]
   );
 
-  const filteredRegistryRows = useMemo(() => {
-    return registryRows.filter((row) => {
-      return (
-        selectedFilterTags.length === 0 ||
-        selectedFilterTags.some((tag) => row.tags.includes(tag))
-      );
-    });
-  }, [registryRows, selectedFilterTags]);
+  const filteredRegistryRows = useMemo(
+    () =>
+      registryRows.filter(
+        (row) =>
+          selectedFilterTags.length === 0 ||
+          selectedFilterTags.some((tag) => row.tags.includes(tag))
+      ),
+    [registryRows, selectedFilterTags]
+  );
 
   const toggleFilterTag = (tag: string) => {
     setSelectedFilterTags((prev) =>
@@ -274,7 +310,7 @@ export function MultisigList() {
         {allTags.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
             {allTags.map((tag) => {
-              const selected = selectedFilterTags.includes(tag);
+              const isActive = selectedFilterTags.includes(tag);
               return (
                 <button
                   key={tag}
@@ -282,7 +318,7 @@ export function MultisigList() {
                   onClick={() => toggleFilterTag(tag)}
                   className={cn(
                     "cursor-pointer rounded-full px-2.5 py-0.5 text-xs transition-colors",
-                    selected
+                    isActive
                       ? "bg-primary/15 text-primary font-medium"
                       : "bg-muted text-muted-foreground hover:bg-muted/80"
                   )}
@@ -318,222 +354,220 @@ export function MultisigList() {
           </div>
         )}
 
-      {/* Loading skeleton */}
-      {loading && <VaultListSkeletonList />}
+      {/* Loading skeleton — table-shaped */}
+      {loading && (
+        <div className="border-border bg-card overflow-hidden rounded-xl border">
+          <VaultColumnHeaders />
+          <div className="divide-border/50 divide-y">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <VaultRowSkeleton key={i} />
+            ))}
+          </div>
+        </div>
+      )}
 
-      {/* Vault card list */}
+      {/* Vault table */}
       {!loading && hasMultisigs && filteredRegistryRows.length > 0 && (
-        <div className="space-y-2">
-          {filteredRegistryRows.map((row) => {
-            const multisig = getMultisigForRow(row);
-            if (!multisig) return null;
+        <div className="border-border bg-card overflow-hidden rounded-xl border">
+          <VaultColumnHeaders />
+          <div className="divide-border/50 divide-y">
+            {filteredRegistryRows.map((row) => {
+              const multisig = getMultisigForRow(row);
+              if (!multisig) return null;
 
-            const isSelected = selectedForDeletion.has(row.key);
-            const isActiveDesk = matchesMultisigSelectionKey(
-              multisig,
-              selectedMultisigKey
-            );
-            const isEditing = editingLabel === row.key;
+              const isSelected = selectedForDeletion.has(row.key);
+              const isActiveDesk = matchesMultisigSelectionKey(
+                multisig,
+                selectedMultisigKey
+              );
+              const isEditing = editingLabel === row.key;
 
-            return (
-              <div
-                key={row.key}
-                className={cn(
-                  "border-border rounded-xl border transition-colors",
-                  isSelected
-                    ? "bg-muted/60"
-                    : isActiveDesk
-                      ? "bg-card"
-                      : "bg-card hover:bg-muted/30"
-                )}
-              >
-                <div className="flex items-start gap-3 p-4">
+              return (
+                <div
+                  key={row.key}
+                  className={cn(
+                    "grid cursor-pointer items-center px-3 py-2.5 transition-colors",
+                    isSelected ? "bg-primary/8" : "hover:bg-muted"
+                  )}
+                  style={{ gridTemplateColumns: GRID_COLS }}
+                  onClick={() => handleOpenDesk(multisig)}
+                >
                   {/* Checkbox */}
-                  <div className="mt-0.5 shrink-0">
+                  <div
+                    className="flex items-center justify-center"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleSelect(row.key);
+                    }}
+                  >
                     <input
                       type="checkbox"
                       checked={isSelected}
-                      onChange={(e) => {
-                        e.stopPropagation();
-                        toggleSelect(row.key);
-                      }}
-                      className="h-4 w-4 cursor-pointer accent-amber-600"
+                      onChange={() => toggleSelect(row.key)}
+                      onClick={(e) => e.stopPropagation()}
+                      className="h-3.5 w-3.5 cursor-pointer accent-amber-600"
                       aria-label={`Select ${row.label || "unnamed multisig"}`}
                     />
                   </div>
 
-                  {/* Main content */}
-                  <div className="min-w-0 flex-1">
-                    {/* Row 1: Name + badges */}
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div className="flex min-w-0 items-center gap-2">
-                        {isEditing ? (
-                          <Input
-                            value={labelInput}
-                            onChange={(e) => setLabelInput(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") handleSaveLabel(multisig);
-                              else if (e.key === "Escape") handleCancelEdit();
-                            }}
-                            onBlur={() => handleSaveLabel(multisig)}
-                            placeholder="Enter label"
-                            className="border-border bg-muted text-foreground h-7 w-48 text-sm"
-                            autoFocus
-                          />
-                        ) : (
-                          <>
-                            <span className="text-foreground truncate text-sm font-semibold">
-                              {row.label}
-                            </span>
-                            {isActiveDesk && (
-                              <span className="shrink-0 rounded-full bg-lime-500/10 px-2 py-0.5 text-[0.65rem] font-medium text-lime-600 dark:text-lime-300">
-                                Selected
-                              </span>
-                            )}
-                            <button
-                              type="button"
-                              className="text-muted-foreground/50 hover:text-foreground shrink-0 transition-colors"
-                              onClick={() =>
-                                handleStartEditLabel(
-                                  getMultisigAccountKey(multisig),
-                                  multisig.label
-                                )
-                              }
-                              aria-label={`Edit label for ${row.label}`}
-                            >
-                              <Pencil className="h-3 w-3" />
-                            </button>
-                          </>
-                        )}
-                      </div>
-
-                      {/* Chain + provider badges */}
-                      <div className="flex shrink-0 items-center gap-1.5">
-                        <span className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-xs">
-                          {row.chainName}
-                        </span>
-                        <span
-                          className={cn(
-                            "rounded-full px-2 py-0.5 text-xs",
-                            row.multisigProvider === "safe"
-                              ? "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
-                              : "bg-muted text-muted-foreground"
-                          )}
-                        >
-                          {formatProviderLabel(row.multisigProvider)}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Row 2: Address + copy */}
-                    <div className="mt-1 flex items-center gap-1.5">
-                      <span className="text-muted-foreground/70 font-mono text-xs">
-                        {formatAddress(multisig.publicKey.toString(), 8, 8)}
-                      </span>
-                      <button
-                        type="button"
-                        className="text-muted-foreground/50 hover:text-foreground shrink-0 transition-colors"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigator.clipboard.writeText(
-                            multisig.publicKey.toString()
-                          );
-                          toast.success("Address copied");
+                  {/* Name + provider */}
+                  <div
+                    className="min-w-0 pr-3"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {isEditing ? (
+                      <Input
+                        value={labelInput}
+                        onChange={(e) => setLabelInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") handleSaveLabel(multisig);
+                          else if (e.key === "Escape") handleCancelEdit();
                         }}
-                        aria-label={`Copy address for ${row.label}`}
-                      >
-                        <Copy className="h-3 w-3" />
-                      </button>
-                      <span className="text-muted-foreground/40 text-xs">
-                        ·
-                      </span>
-                      <span className="text-muted-foreground/70 text-xs">
-                        {row.threshold}/{row.memberCount} threshold &middot;{" "}
-                        {row.memberCount} signers
-                      </span>
-                    </div>
-
-                    {/* Row 3: Attention line */}
-                    {row.attentionLine && (
-                      <div className="mt-1.5 flex items-center gap-1">
-                        {row.waiting > 0 ? (
-                          <>
-                            <AlertTriangle className="h-3 w-3 shrink-0 text-amber-500 dark:text-amber-400" />
-                            <span className="text-xs text-amber-600 dark:text-amber-400">
-                              {row.attentionLine}
-                            </span>
-                          </>
-                        ) : (
-                          <>
-                            <CheckCircle2 className="text-muted-foreground/40 h-3 w-3 shrink-0" />
-                            <span className="text-muted-foreground/60 text-xs">
-                              {row.attentionLine}
-                            </span>
-                          </>
+                        onBlur={() => handleSaveLabel(multisig)}
+                        placeholder="Enter label"
+                        className="border-border bg-muted text-foreground h-6 w-40 text-sm"
+                        autoFocus
+                      />
+                    ) : (
+                      <div className="flex min-w-0 items-center gap-1.5">
+                        <p className="text-foreground truncate text-[13px] font-medium">
+                          {row.label}
+                        </p>
+                        {isActiveDesk && (
+                          <span className="shrink-0 rounded-full bg-lime-500/10 px-1.5 py-0.5 text-[9px] font-medium text-lime-600 dark:text-lime-300">
+                            Active
+                          </span>
                         )}
+                        <button
+                          type="button"
+                          className="text-muted-foreground/30 hover:text-foreground shrink-0 transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleStartEditLabel(
+                              getMultisigAccountKey(multisig),
+                              multisig.label
+                            );
+                          }}
+                          aria-label={`Edit label for ${row.label}`}
+                        >
+                          <Pencil className="h-3 w-3" />
+                        </button>
                       </div>
                     )}
+                    <p className="text-muted-foreground/60 truncate text-[10px]">
+                      {formatProviderLabel(row.multisigProvider)} ·{" "}
+                      {row.threshold}/{row.memberCount}
+                    </p>
+                  </div>
 
-                    {/* Row 4: Tags + action buttons */}
-                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-                      {/* Tag pills */}
-                      <div className="flex flex-wrap items-center gap-1">
-                        {row.tags.length > 0 ? (
-                          row.tags.map((tag) => {
-                            const isFilterActive =
-                              selectedFilterTags.includes(tag);
-                            return (
-                              <span
-                                key={tag}
-                                className={cn(
-                                  "rounded-full px-2 py-0.5 text-xs",
-                                  isFilterActive
-                                    ? "bg-primary/15 text-primary font-medium"
-                                    : "bg-muted text-muted-foreground"
-                                )}
-                              >
-                                {tag}
-                              </span>
-                            );
-                          })
-                        ) : (
-                          <span className="text-muted-foreground/40 text-xs italic">
-                            no tags
+                  {/* Address */}
+                  <div
+                    className="flex min-w-0 items-center gap-1 pr-2"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <span className="text-muted-foreground/70 truncate font-mono text-[11px]">
+                      {formatAddress(multisig.publicKey.toString(), 6, 6)}
+                    </span>
+                    <button
+                      type="button"
+                      className="text-muted-foreground/30 hover:text-foreground shrink-0 transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigator.clipboard.writeText(
+                          multisig.publicKey.toString()
+                        );
+                        toast.success("Address copied");
+                      }}
+                      aria-label={`Copy address for ${row.label}`}
+                    >
+                      <Copy className="h-3 w-3" />
+                    </button>
+                  </div>
+
+                  {/* Chain */}
+                  <span className="text-muted-foreground font-mono text-[11px]">
+                    {row.chainName}
+                  </span>
+
+                  {/* Status / attention */}
+                  <div className="min-w-0 pr-2">
+                    {row.attentionLine ? (
+                      row.waiting > 0 ? (
+                        <div className="flex items-center gap-1.5">
+                          <AlertTriangle className="h-3 w-3 shrink-0 text-amber-500" />
+                          <span className="truncate text-xs text-amber-600 dark:text-amber-400">
+                            {row.attentionLine}
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1.5">
+                          <CheckCircle2 className="text-muted-foreground/30 h-3 w-3 shrink-0" />
+                          <span className="text-muted-foreground/50 truncate text-xs">
+                            {row.attentionLine}
+                          </span>
+                        </div>
+                      )
+                    ) : (
+                      <span className="text-muted-foreground/30 text-xs">
+                        —
+                      </span>
+                    )}
+                    {row.tags.length > 0 && (
+                      <div className="mt-0.5 flex flex-wrap gap-1">
+                        {row.tags.slice(0, 2).map((tag) => (
+                          <span
+                            key={tag}
+                            className={cn(
+                              "rounded-full px-1.5 py-0 text-[9px]",
+                              selectedFilterTags.includes(tag)
+                                ? "bg-primary/15 text-primary font-medium"
+                                : "bg-muted text-muted-foreground"
+                            )}
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                        {row.tags.length > 2 && (
+                          <span className="text-muted-foreground/40 text-[9px]">
+                            +{row.tags.length - 2}
                           </span>
                         )}
                       </div>
+                    )}
+                  </div>
 
-                      {/* Action buttons */}
-                      <div className="flex shrink-0 items-center gap-1.5">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-muted-foreground/70 hover:text-foreground h-7 px-2 text-xs"
-                          onClick={() => handleOpenTagDialog(multisig)}
-                        >
-                          <Tag className="mr-1 h-3 w-3" />
-                          Tags
-                        </Button>
-                        <Button
-                          size="sm"
-                          className={cn(
-                            "h-7 px-3 text-xs",
-                            row.waiting > 0
-                              ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                              : "border-border bg-transparent text-foreground/80 hover:bg-muted border"
-                          )}
-                          onClick={() => handleOpenDesk(multisig)}
-                        >
-                          Open
-                          <ArrowUpRight className="ml-1 h-3 w-3" />
-                        </Button>
-                      </div>
-                    </div>
+                  {/* Actions */}
+                  <div
+                    className="flex items-center justify-end gap-1"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-muted-foreground/50 hover:text-foreground h-7 w-7 p-0"
+                      onClick={() => handleOpenTagDialog(multisig)}
+                      title="Manage tags"
+                    >
+                      <Tag className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      className={cn(
+                        "h-7 px-2.5 text-xs",
+                        row.waiting > 0
+                          ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                          : "border-border bg-transparent text-foreground/80 hover:bg-muted border"
+                      )}
+                      onClick={() => handleOpenDesk(multisig)}
+                    >
+                      Open
+                      <ArrowUpRight className="ml-1 h-3 w-3" />
+                    </Button>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       )}
 
