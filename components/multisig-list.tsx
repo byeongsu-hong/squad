@@ -90,7 +90,7 @@ function VaultRowSkeleton() {
   );
 }
 
-export function MultisigList() {
+export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
   const router = useRouter();
   const [selectedForDeletion, setSelectedForDeletion] = useState<Set<string>>(
     new Set()
@@ -253,7 +253,9 @@ export function MultisigList() {
   const handleOpenDesk = (multisig: MultisigAccount) => {
     const multisigKey = getMultisigAccountKey(multisig);
     selectMultisig(multisigKey);
-    router.push(`/vaults/${encodeURIComponent(multisigKey)}`);
+    if (!splitPane) {
+      router.push(`/vaults/${encodeURIComponent(multisigKey)}`);
+    }
   };
 
   const getMultisigForRow = (row: RegistrySummaryRow) =>

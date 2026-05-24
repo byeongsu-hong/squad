@@ -14,6 +14,7 @@ import { useWalletStore } from "@/stores/wallet-store";
 
 interface VaultDetailProps {
   vaultKey: string;
+  onBack?: () => void;
 }
 
 function CopyButton({ value }: { value: string }) {
@@ -45,7 +46,7 @@ function truncateAddress(address: string) {
   return `${address.slice(0, 6)}…${address.slice(-4)}`;
 }
 
-export function VaultDetail({ vaultKey }: VaultDetailProps) {
+export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
   const { publicKey } = useWalletStore();
   const getViewerAddress = useViewerAddressForMultisig();
   const { workspaceMultisigMap } = useWorkspaceMultisigs();
@@ -68,18 +69,29 @@ export function VaultDetail({ vaultKey }: VaultDetailProps) {
         (i) => !i.proposal.executed && !i.proposal.cancelled
       ).length;
 
+  const BackLink = onBack ? (
+    <button
+      type="button"
+      onClick={onBack}
+      className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm transition-colors"
+    >
+      <ChevronLeft className="h-4 w-4" />
+      Back to Vaults
+    </button>
+  ) : (
+    <Link
+      href="/vaults"
+      className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm transition-colors"
+    >
+      <ChevronLeft className="h-4 w-4" />
+      Back to Vaults
+    </Link>
+  );
+
   if (!multisig) {
     return (
       <div className="mx-auto max-w-[1200px]">
-        <div className="mb-6">
-          <Link
-            href="/vaults"
-            className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm transition-colors"
-          >
-            <ChevronLeft className="h-4 w-4" />
-            Back to Vaults
-          </Link>
-        </div>
+        <div className="mb-6">{BackLink}</div>
         <div className="flex flex-col items-center gap-3 py-20 text-center">
           <p className="text-foreground text-sm font-semibold">Vault not found</p>
           <p className="text-muted-foreground text-xs">
@@ -94,14 +106,7 @@ export function VaultDetail({ vaultKey }: VaultDetailProps) {
 
   return (
     <div className="mx-auto max-w-[1200px] space-y-5">
-      {/* Back link */}
-      <Link
-        href="/vaults"
-        className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm transition-colors"
-      >
-        <ChevronLeft className="h-4 w-4" />
-        Back to Vaults
-      </Link>
+      {BackLink}
 
       {/* Vault header card */}
       <div className="bg-card border-border rounded-2xl border p-5">

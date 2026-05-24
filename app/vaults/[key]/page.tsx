@@ -1,8 +1,9 @@
 "use client";
 
-import { use } from "react";
+import { use, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
-import { VaultDetail } from "@/components/vault-detail";
+import { useMultisigStore } from "@/stores/multisig-store";
 
 export default function VaultDetailPage({
   params,
@@ -11,10 +12,13 @@ export default function VaultDetailPage({
 }) {
   const { key } = use(params);
   const vaultKey = decodeURIComponent(key);
+  const router = useRouter();
+  const selectMultisig = useMultisigStore((s) => s.selectMultisig);
 
-  return (
-    <div className="min-h-full py-6">
-      <VaultDetail vaultKey={vaultKey} />
-    </div>
-  );
+  useEffect(() => {
+    selectMultisig(vaultKey);
+    router.replace("/vaults");
+  }, [vaultKey, selectMultisig, router]);
+
+  return null;
 }
