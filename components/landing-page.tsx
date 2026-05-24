@@ -68,13 +68,7 @@ export function LandingPage() {
 
   return (
     <div className="bg-background min-h-[calc(100svh-4.5rem)]">
-      <div className="mx-auto max-w-[1200px]">
-        <div className="mb-4">
-          <h1 className="text-foreground mb-3 text-2xl font-bold tracking-[-0.02em]">
-            Operations
-          </h1>
-        </div>
-
+      <div className="mx-auto max-w-[1200px] pt-1">
         <div className="bg-card border-border mb-5 flex items-center gap-6 overflow-x-auto rounded-xl border px-5 py-3">
           <Link
             href="/vaults"
