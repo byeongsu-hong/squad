@@ -383,7 +383,7 @@ export function ProposalDetailView({
                 </div>
               )}
               {payloadError && !payloadLoading && (
-                <p className="border-border rounded-lg border border-dashed px-4 py-3 text-sm text-muted-foreground">
+                <p className="bg-destructive/5 border-destructive/20 rounded-lg border px-4 py-3 text-sm text-destructive/80">
                   {payloadError}
                 </p>
               )}
@@ -491,7 +491,7 @@ export function ProposalDetailView({
                 ))}
 
               {!payloadLoading && !payloadError && !payload && (
-                <p className="border-border rounded-lg border border-dashed px-4 py-3 text-sm text-muted-foreground">
+                <p className="text-muted-foreground px-1 py-2 text-sm">
                   No payload details available.
                 </p>
               )}
