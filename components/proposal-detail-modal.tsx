@@ -4,7 +4,6 @@ import { Check, ChevronDown, ChevronUp, Copy, Loader2, X, Zap } from "lucide-rea
 import { type ReactNode, useState } from "react";
 
 import { AddressWithLabel } from "@/components/address-with-label";
-import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { useProposalActions } from "@/lib/hooks/use-proposal-actions";
 import { useViewerAddressForMultisig } from "@/lib/hooks/use-viewer-address";
