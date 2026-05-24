@@ -4,17 +4,8 @@ import { Loader2 } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { ProposalDetailView } from "@/components/proposal-detail-modal";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Pagination } from "@/components/ui/pagination";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useProposalActions } from "@/lib/hooks/use-proposal-actions";
 import { cn } from "@/lib/utils";
@@ -45,45 +36,36 @@ function formatAge(createdAt?: string): string {
 function StatusBadge({ item }: { item: WorkspaceQueueItem }) {
   if (item.readyToExecute) {
     return (
-      <Badge
-        variant="outline"
-        className="border-green-200 bg-green-50 text-[10px] text-green-600 dark:border-green-800/50 dark:bg-green-950/30 dark:text-green-400"
-      >
+      <span className="border-green-200 bg-green-50 text-[10px] text-green-600 dark:border-green-800/50 dark:bg-green-950/30 dark:text-green-400 rounded border px-1.5 py-0.5">
         Ready to execute
-      </Badge>
+      </span>
     );
   }
   if (item.needsYourSignature) {
     return (
-      <Badge
-        variant="outline"
-        className="border-primary/30 bg-primary/10 text-primary text-[10px]"
-      >
+      <span className="border-primary/30 bg-primary/10 text-primary text-[10px] rounded border px-1.5 py-0.5">
         Waiting on you
-      </Badge>
+      </span>
     );
   }
   if (item.proposal.status === "Rejected") {
     return (
-      <Badge
-        variant="outline"
-        className="border-red-200 bg-red-50 text-[10px] text-red-600 dark:border-red-800/50 dark:bg-red-950/30 dark:text-red-400"
-      >
+      <span className="border-red-200 bg-red-50 text-[10px] text-red-600 dark:border-red-800/50 dark:bg-red-950/30 dark:text-red-400 rounded border px-1.5 py-0.5">
         Rejected
-      </Badge>
+      </span>
     );
   }
   if (item.proposal.status === "Executed") {
     return (
-      <Badge variant="outline" className="text-muted-foreground/70 text-[10px]">
+      <span className="text-muted-foreground/70 text-[10px] rounded border border-border px-1.5 py-0.5">
         Executed
-      </Badge>
+      </span>
     );
   }
   return (
-    <Badge variant="outline" className="text-muted-foreground text-[10px]">
+    <span className="text-muted-foreground text-[10px] rounded border border-border px-1.5 py-0.5">
       {item.approvalCount}/{item.multisig.threshold} signed
-    </Badge>
+    </span>
   );
 }
 
@@ -372,18 +354,6 @@ export function OperationsQueue({
 
   const resetPage = () => setHistoryPage(1);
 
-  if (selectedItem) {
-    return (
-      <ProposalDetailView
-        item={selectedItem}
-        onBack={() => setSelectedItem(null)}
-        onActionSuccess={async () => {
-          setSelectedItem(null);
-        }}
-      />
-    );
-  }
-
   if (loading && items.length === 0) {
     return (
       <div className="border-border bg-card overflow-hidden rounded-xl border">
@@ -401,7 +371,7 @@ export function OperationsQueue({
     );
   }
 
-  return (
+  const queueContent = (
     <div>
       {showFilters && (
         <div className="mb-3 flex flex-wrap items-center gap-2">
@@ -427,46 +397,38 @@ export function OperationsQueue({
           </div>
           <div className="bg-border mx-1 h-5 w-px" />
           {chainOptions.length > 1 && (
-            <Select
+            <select
               value={chainFilter}
-              onValueChange={(v) => {
-                setChainFilter(v);
+              onChange={(e) => {
+                setChainFilter(e.target.value);
                 resetPage();
               }}
+              className="border-border bg-card text-foreground/80 h-7 cursor-pointer rounded-md border px-2 text-[11px] focus:outline-none"
             >
-              <SelectTrigger className="h-7 w-auto text-[11px]">
-                <SelectValue placeholder="Chain" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="All">All chains</SelectItem>
-                {chainOptions.map((c) => (
-                  <SelectItem key={c} value={c}>
-                    {c}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              <option value="All">All chains</option>
+              {chainOptions.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
           )}
           {multisigOptions.length > 1 && (
-            <Select
+            <select
               value={multisigFilter}
-              onValueChange={(v) => {
-                setMultisigFilter(v);
+              onChange={(e) => {
+                setMultisigFilter(e.target.value);
                 resetPage();
               }}
+              className="border-border bg-card text-foreground/80 h-7 cursor-pointer rounded-md border px-2 text-[11px] focus:outline-none"
             >
-              <SelectTrigger className="h-7 w-auto text-[11px]">
-                <SelectValue placeholder="Multisig" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="All">All multisigs</SelectItem>
-                {multisigOptions.map((m) => (
-                  <SelectItem key={m} value={m}>
-                    {m}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              <option value="All">All multisigs</option>
+              {multisigOptions.map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
+            </select>
           )}
           <input
             type="search"
@@ -585,7 +547,37 @@ export function OperationsQueue({
           Refreshing...
         </div>
       )}
+    </div>
+  );
 
+  return (
+    <>
+      <div className="flex items-start gap-0">
+        {/* Queue pane - hidden on mobile when detail open, flex-1 on desktop */}
+        <div
+          className={cn(
+            "min-w-0 flex-1",
+            selectedItem && "max-lg:hidden"
+          )}
+        >
+          {queueContent}
+        </div>
+
+        {/* Detail panel - full-screen on mobile, sticky 42% panel on desktop */}
+        {selectedItem && (
+          <div className="flex-1 bg-card lg:flex-none lg:w-[42%] lg:min-w-[360px] lg:border-l lg:border-border lg:sticky lg:top-[54px] lg:max-h-[calc(100svh-54px)] lg:overflow-y-auto">
+            <ProposalDetailView
+              item={selectedItem}
+              onBack={() => setSelectedItem(null)}
+              onActionSuccess={async () => {
+                setSelectedItem(null);
+              }}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Batch action bar - fixed, always renders outside flex container */}
       <div
         className={cn(
           "fixed right-0 bottom-0 left-0 z-50 transition-transform duration-200",
@@ -608,11 +600,11 @@ export function OperationsQueue({
             </div>
             <div className="flex items-center gap-2">
               {canApproveItems.length > 0 && (
-                <Button
-                  size="sm"
+                <button
+                  type="button"
                   disabled={isActionInProgress}
                   onClick={handleBatchApprove}
-                  className="bg-primary text-primary-foreground hover:bg-primary/80"
+                  className="bg-primary text-primary-foreground hover:bg-primary/80 inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-[13px] font-medium transition-colors disabled:pointer-events-none disabled:opacity-50"
                 >
                   {isActionInProgress ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -620,14 +612,14 @@ export function OperationsQueue({
                     "✓"
                   )}{" "}
                   Approve ({canApproveItems.length})
-                </Button>
+                </button>
               )}
               {canExecuteItems.length > 0 && (
-                <Button
-                  size="sm"
+                <button
+                  type="button"
                   disabled={isActionInProgress}
                   onClick={handleBatchExecute}
-                  className="bg-green-600 text-white hover:bg-green-700"
+                  className="bg-green-600 text-white hover:bg-green-700 inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-[13px] font-medium transition-colors disabled:pointer-events-none disabled:opacity-50"
                 >
                   {isActionInProgress ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -635,21 +627,19 @@ export function OperationsQueue({
                     "→"
                   )}{" "}
                   Execute ({canExecuteItems.length})
-                </Button>
+                </button>
               )}
-              <Button
-                variant="outline"
-                size="sm"
+              <button
+                type="button"
                 onClick={() => setSelected(new Set())}
-                className="border-background/20 text-background/70 hover:border-background/30 hover:text-background"
+                className="border-background/20 text-background/70 hover:border-background/30 hover:text-background inline-flex h-8 items-center rounded-md border px-3 text-[13px] font-medium transition-colors"
               >
                 Clear
-              </Button>
+              </button>
             </div>
           </div>
         </div>
       </div>
-
-    </div>
+    </>
   );
 }
