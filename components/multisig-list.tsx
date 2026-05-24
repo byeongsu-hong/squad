@@ -51,7 +51,7 @@ import {
   matchesMultisigSelectionKey,
 } from "@/types/multisig";
 
-const GRID_COLS = "36px minmax(0,1.5fr) 148px 96px minmax(0,1fr) 90px";
+const GRID_COLS = "36px minmax(0,2fr) 96px minmax(0,1fr) 90px";
 
 function formatProviderLabel(provider: RegistrySummaryRow["multisigProvider"]) {
   return provider === "safe" ? "Safe" : "Squads";
@@ -64,7 +64,7 @@ function VaultColumnHeaders() {
       style={{ gridTemplateColumns: GRID_COLS }}
     >
       <div />
-      {["Vault", "Address", "Chain", "Status", ""].map((h, i) => (
+      {["Vault", "Chain", "", ""].map((h, i) => (
         <span
           key={i}
           className="text-muted-foreground/70 text-[11px] font-semibold uppercase tracking-widest"
@@ -85,10 +85,7 @@ function VaultRowSkeleton() {
       <div />
       <div className="space-y-1 pr-2">
         <Skeleton className="h-3 w-28 rounded-sm" />
-        <Skeleton className="h-2.5 w-14 rounded-sm" />
-      </div>
-      <div className="pr-2">
-        <Skeleton className="h-3 w-24 rounded-sm" />
+        <Skeleton className="h-2.5 w-36 rounded-sm" />
       </div>
       <Skeleton className="h-3 w-14 rounded-sm" />
       <Skeleton className="h-3 w-20 rounded-sm" />
@@ -448,7 +445,7 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
                     />
                   </div>
 
-                  {/* Name + provider */}
+                  {/* Name + provider + address */}
                   <div
                     className="min-w-0 pr-3"
                     onClick={(e) => e.stopPropagation()}
@@ -487,34 +484,27 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
                         </Button>
                       </div>
                     )}
-                    <p className="text-muted-foreground/60 truncate text-[10px]">
-                      {formatProviderLabel(row.multisigProvider)} ·{" "}
-                      {row.threshold}/{row.memberCount}
-                    </p>
-                  </div>
-
-                  {/* Address */}
-                  <div
-                    className="flex min-w-0 items-center gap-1 pr-2"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <span className="text-muted-foreground/70 truncate font-mono text-[11px]">
-                      {formatAddress(multisig.publicKey.toString(), 6, 6)}
-                    </span>
-                    <Button
-                      variant="ghost"
-                      className="h-6 w-6 shrink-0 p-0 text-muted-foreground/30 hover:text-foreground hover:bg-transparent"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigator.clipboard.writeText(
-                          multisig.publicKey.toString()
-                        );
-                        toast.success("Address copied");
-                      }}
-                      aria-label={`Copy address for ${row.label}`}
-                    >
-                      <Copy className="h-3 w-3" />
-                    </Button>
+                    <div className="flex items-center gap-1 min-w-0">
+                      <p className="text-muted-foreground/60 shrink-0 text-[10px]">
+                        {formatProviderLabel(row.multisigProvider)} · {row.threshold}/{row.memberCount}
+                      </p>
+                      <span className="text-muted-foreground/25 text-[10px]">·</span>
+                      <span className="text-muted-foreground/45 truncate font-mono text-[10px]">
+                        {formatAddress(multisig.publicKey.toString(), 5, 4)}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        className="h-4 w-4 shrink-0 p-0 text-muted-foreground/20 hover:text-muted-foreground hover:bg-transparent"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigator.clipboard.writeText(multisig.publicKey.toString());
+                          toast.success("Address copied");
+                        }}
+                        aria-label={`Copy address for ${row.label}`}
+                      >
+                        <Copy className="h-2.5 w-2.5" />
+                      </Button>
+                    </div>
                   </div>
 
                   {/* Chain */}
@@ -547,11 +537,7 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
                           </span>
                         </div>
                       )
-                    ) : (
-                      <span className="text-muted-foreground/30 text-xs">
-                        —
-                      </span>
-                    )}
+                    ) : null}
                     {row.tags.length > 0 && (
                       <div className="mt-0.5 flex flex-wrap gap-1">
                         {row.tags.slice(0, 2).map((tag) => (

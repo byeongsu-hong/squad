@@ -68,7 +68,7 @@ export function LandingPage() {
 
         <div className="bg-card border-border mb-5 flex items-center gap-6 overflow-x-auto rounded-xl border px-5 py-3">
           <div className="flex items-center gap-2">
-            <Shield className="text-muted-foreground/40 h-4 w-4 shrink-0" />
+            <Shield className={workspaceMultisigs.length > 0 ? "text-muted-foreground/60 h-4 w-4 shrink-0" : "text-muted-foreground/30 h-4 w-4 shrink-0"} />
             <div className="flex flex-col">
               <span className="text-foreground text-2xl font-bold tabular-nums leading-tight">
                 {workspaceMultisigs.length}
@@ -122,7 +122,7 @@ export function LandingPage() {
           showFilters
           emptyStateCta={
             <Button variant="outline" asChild size="sm">
-              <Link href="/vaults">Browse Vaults</Link>
+              <Link href="/vaults">View Vaults</Link>
             </Button>
           }
         />
