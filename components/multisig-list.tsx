@@ -2,8 +2,8 @@
 
 import {
   AlertTriangle,
-  ArrowUpRight,
   CheckCircle2,
+  ChevronRight,
   Copy,
   Loader2,
   Pencil,
@@ -561,27 +561,29 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
                     className="flex items-center justify-end gap-1"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <button
-                      type="button"
-                      className="text-muted-foreground/50 hover:text-foreground inline-flex h-7 w-7 items-center justify-center rounded-md transition-colors"
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      className="h-7 w-7 text-muted-foreground/50"
                       onClick={() => handleOpenTagDialog(multisig)}
                       title="Manage tags"
                     >
                       <Tag className="h-3 w-3" />
-                    </button>
-                    <button
-                      type="button"
+                    </Button>
+                    <Button
+                      size="sm"
                       className={cn(
-                        "inline-flex h-7 items-center rounded-md px-2.5 text-xs transition-colors",
+                        "h-7 px-2.5 text-xs",
                         row.waiting > 0
-                          ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                          : "border-border bg-transparent text-foreground/80 hover:bg-muted border"
+                          ? "bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20"
+                          : ""
                       )}
+                      variant={row.waiting > 0 ? undefined : "outline"}
                       onClick={() => handleOpenDesk(multisig)}
                     >
                       Open
-                      <ArrowUpRight className="ml-1 h-3 w-3" />
-                    </button>
+                      <ChevronRight className="h-3 w-3" />
+                    </Button>
                   </div>
                 </div>
               );
