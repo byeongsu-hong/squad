@@ -1,21 +1,14 @@
 "use client";
 
-import { Suspense } from "react";
-
-import { OperationsDashboard } from "@/components/operations-dashboard";
-
-function OperationsContent() {
-  return (
-    <div className="flex min-h-full flex-col">
-      <OperationsDashboard />
-    </div>
-  );
-}
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function OperationsPage() {
-  return (
-    <Suspense fallback={<div className="flex min-h-full flex-col" />}>
-      <OperationsContent />
-    </Suspense>
-  );
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace("/");
+  }, [router]);
+
+  return null;
 }

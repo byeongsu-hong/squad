@@ -1,0 +1,648 @@
+"use client";
+
+import { Loader2 } from "lucide-react";
+import { useMemo, useState } from "react";
+
+import { ProposalDetailModal } from "@/components/proposal-detail-modal";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Pagination } from "@/components/ui/pagination";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useProposalActions } from "@/lib/hooks/use-proposal-actions";
+import { cn } from "@/lib/utils";
+import type { WorkspaceQueueItem } from "@/types/workspace";
+
+const PAGE_SIZE = 15;
+const GRID_COLS = "36px 1.4fr 54px 80px 1fr 80px 48px";
+
+interface OperationsQueueProps {
+  items: WorkspaceQueueItem[];
+  loading?: boolean;
+  showFilters?: boolean;
+}
+
+function formatAge(createdAt?: string): string {
+  if (!createdAt) return "--";
+  const ms = Date.now() - Date.parse(createdAt);
+  if (Number.isNaN(ms) || ms < 0) return "--";
+  const s = Math.floor(ms / 1000);
+  if (s < 60) return `${s}s`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h`;
+  return `${Math.floor(h / 24)}d`;
+}
+
+function StatusBadge({ item }: { item: WorkspaceQueueItem }) {
+  if (item.readyToExecute) {
+    return (
+      <Badge
+        variant="outline"
+        className="border-green-200 bg-green-50 text-[10px] text-green-600 dark:border-green-800/50 dark:bg-green-950/30 dark:text-green-400"
+      >
+        Ready to execute
+      </Badge>
+    );
+  }
+  if (item.needsYourSignature) {
+    return (
+      <Badge
+        variant="outline"
+        className="border-primary/30 bg-primary/10 text-primary text-[10px]"
+      >
+        Waiting on you
+      </Badge>
+    );
+  }
+  if (item.proposal.status === "Rejected") {
+    return (
+      <Badge
+        variant="outline"
+        className="border-red-200 bg-red-50 text-[10px] text-red-600 dark:border-red-800/50 dark:bg-red-950/30 dark:text-red-400"
+      >
+        Rejected
+      </Badge>
+    );
+  }
+  if (item.proposal.status === "Executed") {
+    return (
+      <Badge variant="outline" className="text-muted-foreground/70 text-[10px]">
+        Executed
+      </Badge>
+    );
+  }
+  return (
+    <Badge variant="outline" className="text-muted-foreground text-[10px]">
+      {item.approvalCount}/{item.multisig.threshold} signed
+    </Badge>
+  );
+}
+
+function ProgressBar({ item }: { item: WorkspaceQueueItem }) {
+  const pct = Math.min(
+    100,
+    Math.round((item.approvalCount / item.multisig.threshold) * 100)
+  );
+  const barColor = item.readyToExecute
+    ? "bg-green-600 dark:bg-green-500"
+    : item.needsYourSignature
+      ? "bg-primary"
+      : "bg-muted-foreground/30";
+  return (
+    <div className="flex items-center gap-1.5">
+      <div className="bg-muted h-1.5 w-10 overflow-hidden rounded-full">
+        <div
+          className={cn("h-full rounded-full", barColor)}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <span className="text-muted-foreground/70 font-mono text-[10px]">
+        {item.approvalCount}/{item.multisig.threshold}
+      </span>
+    </div>
+  );
+}
+
+function ColumnHeaders({
+  selectable,
+  allSelected,
+  onToggleAll,
+}: {
+  selectable: boolean;
+  allSelected: boolean;
+  onToggleAll: () => void;
+}) {
+  return (
+    <div
+      className="border-border bg-background grid items-center border-b px-3 py-2"
+      style={{ gridTemplateColumns: GRID_COLS }}
+    >
+      <div className="flex items-center justify-center">
+        {selectable && (
+          <Checkbox
+            checked={allSelected}
+            onCheckedChange={onToggleAll}
+            className="size-3.5"
+            aria-label="Select all"
+          />
+        )}
+      </div>
+      {["Multisig", "TX", "Chain", "Status", "Progress", "Age"].map((h) => (
+        <span
+          key={h}
+          className="text-muted-foreground/70 text-[10px] font-semibold tracking-widest uppercase"
+        >
+          {h}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function QueueRow({
+  item,
+  isSelected,
+  isSelectable,
+  onToggle,
+  onClick,
+}: {
+  item: WorkspaceQueueItem;
+  isSelected: boolean;
+  isSelectable: boolean;
+  onToggle: () => void;
+  onClick: () => void;
+}) {
+  return (
+    <div
+      className={cn(
+        "grid cursor-pointer items-center px-3 py-2.5 transition-colors",
+        isSelected ? "bg-primary/8" : "hover:bg-muted"
+      )}
+      style={{ gridTemplateColumns: GRID_COLS }}
+      onClick={onClick}
+    >
+      <div
+        className="flex items-center justify-center"
+        onClick={(e) => {
+          if (!isSelectable) return;
+          e.stopPropagation();
+          onToggle();
+        }}
+      >
+        {isSelectable && (
+          <Checkbox
+            checked={isSelected}
+            onCheckedChange={onToggle}
+            onClick={(e) => e.stopPropagation()}
+            className="size-3.5"
+            aria-label={`Select ${item.multisig.label ?? "proposal"}`}
+          />
+        )}
+      </div>
+      <div className="min-w-0 pr-2">
+        <p className="text-foreground truncate text-[13px] font-medium">
+          {item.multisig.label ?? "Unnamed"}
+        </p>
+        <p className="text-muted-foreground truncate text-[10px]">
+          {item.multisig.provider === "safe" ? "Safe" : "Squads"}
+        </p>
+      </div>
+      <span className="text-muted-foreground font-mono text-xs">
+        #{item.proposal.transactionIndex.toString()}
+      </span>
+      <span className="text-muted-foreground font-mono text-[11px]">
+        {item.multisig.chainName}
+      </span>
+      <div>
+        <StatusBadge item={item} />
+      </div>
+      <ProgressBar item={item} />
+      <span className="text-muted-foreground/70 font-mono text-[11px]">
+        {formatAge(item.proposal.createdAt)}
+      </span>
+    </div>
+  );
+}
+
+function RowSkeleton() {
+  return (
+    <div
+      className="grid items-center px-3 py-2.5"
+      style={{ gridTemplateColumns: GRID_COLS }}
+    >
+      <div />
+      <div className="space-y-1 pr-2">
+        <Skeleton className="h-3 w-24 rounded-sm" />
+        <Skeleton className="h-2.5 w-10 rounded-sm" />
+      </div>
+      <Skeleton className="h-3 w-8 rounded-sm" />
+      <Skeleton className="h-3 w-16 rounded-sm" />
+      <Skeleton className="h-4 w-20 rounded-full" />
+      <Skeleton className="h-1.5 w-10 rounded-full" />
+      <Skeleton className="h-3 w-6 rounded-sm" />
+    </div>
+  );
+}
+
+const STATUS_FILTERS = [
+  "All",
+  "Action needed",
+  "Pending",
+  "Executable",
+  "Executed",
+  "Rejected",
+] as const;
+type StatusFilter = (typeof STATUS_FILTERS)[number];
+
+export function OperationsQueue({
+  items,
+  loading = false,
+  showFilters = false,
+}: OperationsQueueProps) {
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("All");
+  const [chainFilter, setChainFilter] = useState("All");
+  const [multisigFilter, setMultisigFilter] = useState("All");
+  const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [historyPage, setHistoryPage] = useState(1);
+  const [modalItem, setModalItem] = useState<WorkspaceQueueItem | null>(null);
+
+  const { approveByAddress, executeByAddress, isActionInProgress } =
+    useProposalActions();
+
+  const chainOptions = useMemo(
+    () => Array.from(new Set(items.map((i) => i.multisig.chainName))).sort(),
+    [items]
+  );
+  const multisigOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(items.map((i) => i.multisig.label ?? "Unnamed"))
+      ).sort(),
+    [items]
+  );
+
+  const filtered = useMemo(() => {
+    return items.filter((item) => {
+      if (
+        statusFilter === "Action needed" &&
+        !item.needsYourSignature &&
+        !item.readyToExecute
+      )
+        return false;
+      if (statusFilter === "Pending" && item.proposal.status !== "Active")
+        return false;
+      if (statusFilter === "Executable" && !item.readyToExecute) return false;
+      if (statusFilter === "Executed" && item.proposal.status !== "Executed")
+        return false;
+      if (statusFilter === "Rejected" && item.proposal.status !== "Rejected")
+        return false;
+      if (chainFilter !== "All" && item.multisig.chainName !== chainFilter)
+        return false;
+      if (
+        multisigFilter !== "All" &&
+        (item.multisig.label ?? "Unnamed") !== multisigFilter
+      )
+        return false;
+      if (
+        search &&
+        !item.multisig.label?.toLowerCase().includes(search.toLowerCase()) &&
+        !`#${item.proposal.transactionIndex}`.includes(search)
+      )
+        return false;
+      return true;
+    });
+  }, [items, statusFilter, chainFilter, multisigFilter, search]);
+
+  const actionItems = useMemo(
+    () => filtered.filter((i) => i.needsYourSignature || i.readyToExecute),
+    [filtered]
+  );
+  const historyItems = useMemo(
+    () => filtered.filter((i) => !i.needsYourSignature && !i.readyToExecute),
+    [filtered]
+  );
+
+  const totalHistoryPages = Math.ceil(historyItems.length / PAGE_SIZE);
+  const historyStart = (historyPage - 1) * PAGE_SIZE;
+  const paginatedHistory = historyItems.slice(
+    historyStart,
+    historyStart + PAGE_SIZE
+  );
+
+  const selectableKeys = useMemo(
+    () => actionItems.map((i) => i.focusKey),
+    [actionItems]
+  );
+  const allSelected =
+    selectableKeys.length > 0 && selectableKeys.every((k) => selected.has(k));
+
+  const toggleSelectAll = () => {
+    setSelected(allSelected ? new Set() : new Set(selectableKeys));
+  };
+
+  const toggleSelect = (focusKey: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(focusKey)) next.delete(focusKey);
+      else next.add(focusKey);
+      return next;
+    });
+  };
+
+  const selectedActionItems = useMemo(
+    () => actionItems.filter((i) => selected.has(i.focusKey)),
+    [actionItems, selected]
+  );
+  const canApproveItems = selectedActionItems.filter(
+    (i) => i.needsYourSignature && !i.currentUserApproved
+  );
+  const canExecuteItems = selectedActionItems.filter((i) => i.readyToExecute);
+
+  const handleBatchApprove = async () => {
+    for (const item of canApproveItems) {
+      await approveByAddress(
+        item.multisig.address,
+        item.proposal.transactionIndex,
+        item.multisig.chainId
+      );
+    }
+    setSelected(new Set());
+  };
+
+  const handleBatchExecute = async () => {
+    for (const item of canExecuteItems) {
+      await executeByAddress(
+        item.multisig.address,
+        item.proposal.transactionIndex,
+        item.multisig.chainId
+      );
+    }
+    setSelected(new Set());
+  };
+
+  const resetPage = () => setHistoryPage(1);
+
+  if (loading && items.length === 0) {
+    return (
+      <div className="border-border bg-card overflow-hidden rounded-xl border">
+        <ColumnHeaders
+          selectable={false}
+          allSelected={false}
+          onToggleAll={() => {}}
+        />
+        <div className="divide-border/50 divide-y">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <RowSkeleton key={i} />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      {showFilters && (
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-1">
+            {STATUS_FILTERS.map((f) => (
+              <button
+                key={f}
+                type="button"
+                onClick={() => {
+                  setStatusFilter(f);
+                  resetPage();
+                }}
+                className={cn(
+                  "rounded-full px-3 py-1 text-[11px] font-medium transition-colors",
+                  statusFilter === f
+                    ? "bg-foreground text-background"
+                    : "border-border text-muted-foreground hover:text-foreground border"
+                )}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+          <div className="bg-border mx-1 h-5 w-px" />
+          {chainOptions.length > 1 && (
+            <Select
+              value={chainFilter}
+              onValueChange={(v) => {
+                setChainFilter(v);
+                resetPage();
+              }}
+            >
+              <SelectTrigger className="h-7 w-auto text-[11px]">
+                <SelectValue placeholder="Chain" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">All chains</SelectItem>
+                {chainOptions.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          {multisigOptions.length > 1 && (
+            <Select
+              value={multisigFilter}
+              onValueChange={(v) => {
+                setMultisigFilter(v);
+                resetPage();
+              }}
+            >
+              <SelectTrigger className="h-7 w-auto text-[11px]">
+                <SelectValue placeholder="Multisig" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">All multisigs</SelectItem>
+                {multisigOptions.map((m) => (
+                  <SelectItem key={m} value={m}>
+                    {m}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          <input
+            type="search"
+            placeholder="Search..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              resetPage();
+            }}
+            className="border-border bg-card text-foreground/80 placeholder:text-muted-foreground/70 focus:ring-border ml-auto rounded-md border px-3 py-1.5 text-[12px] focus:ring-1 focus:outline-none"
+          />
+        </div>
+      )}
+
+      {!showFilters && (
+        <div className="mb-3">
+          <input
+            type="search"
+            placeholder="Search..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              resetPage();
+            }}
+            className="border-border bg-card text-foreground/80 placeholder:text-muted-foreground/70 focus:ring-border w-full rounded-md border px-3 py-1.5 text-[12px] focus:ring-1 focus:outline-none sm:w-64"
+          />
+        </div>
+      )}
+
+      {filtered.length === 0 ? (
+        <div className="border-border text-muted-foreground/70 rounded-xl border border-dashed px-6 py-8 text-center text-sm">
+          {items.length === 0
+            ? "No transactions found."
+            : "No transactions match your filters."}
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {actionItems.length > 0 && (
+            <div>
+              <p className="text-muted-foreground/70 mb-2 text-[10px] font-semibold tracking-widest uppercase">
+                Needs attention
+              </p>
+              <div className="border-border bg-card overflow-hidden rounded-xl border">
+                <ColumnHeaders
+                  selectable
+                  allSelected={allSelected}
+                  onToggleAll={toggleSelectAll}
+                />
+                <div className="divide-border/50 divide-y">
+                  {actionItems.map((item) => (
+                    <QueueRow
+                      key={item.focusKey}
+                      item={item}
+                      isSelected={selected.has(item.focusKey)}
+                      isSelectable
+                      onToggle={() => toggleSelect(item.focusKey)}
+                      onClick={() => setModalItem(item)}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {historyItems.length > 0 && (
+            <div>
+              {actionItems.length > 0 && (
+                <p className="text-muted-foreground/70 mb-2 text-[10px] font-semibold tracking-widest uppercase">
+                  History
+                </p>
+              )}
+              <div className="border-border bg-card overflow-hidden rounded-xl border">
+                <ColumnHeaders
+                  selectable={false}
+                  allSelected={false}
+                  onToggleAll={() => {}}
+                />
+                <div className="divide-border/50 divide-y">
+                  {paginatedHistory.map((item) => (
+                    <QueueRow
+                      key={item.focusKey}
+                      item={item}
+                      isSelected={false}
+                      isSelectable={false}
+                      onToggle={() => {}}
+                      onClick={() => setModalItem(item)}
+                    />
+                  ))}
+                </div>
+              </div>
+              {totalHistoryPages > 1 && (
+                <div className="mt-3">
+                  <Pagination
+                    currentPage={historyPage}
+                    totalPages={totalHistoryPages}
+                    onPageChange={setHistoryPage}
+                    canGoNext={historyPage < totalHistoryPages}
+                    canGoPrevious={historyPage > 1}
+                    startIndex={historyStart}
+                    endIndex={Math.min(
+                      historyStart + PAGE_SIZE,
+                      historyItems.length
+                    )}
+                    totalItems={historyItems.length}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {loading && items.length > 0 && (
+        <div className="text-muted-foreground/70 mt-2 flex items-center gap-2 py-1 text-xs">
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          Refreshing...
+        </div>
+      )}
+
+      <div
+        className={cn(
+          "fixed right-0 bottom-0 left-0 z-50 transition-transform duration-200",
+          selected.size > 0 ? "translate-y-0" : "translate-y-full"
+        )}
+      >
+        <div className="mx-auto max-w-3xl px-4 pb-6">
+          <div className="bg-foreground flex items-center justify-between rounded-2xl px-5 py-3 shadow-[0_8px_32px_rgba(0,0,0,0.24)]">
+            <div className="flex items-center gap-3">
+              <Checkbox
+                checked={selected.size > 0}
+                onCheckedChange={() => setSelected(new Set())}
+                className="size-3.5"
+                aria-label="Clear selection"
+              />
+              <span className="text-background text-[13px]">
+                {selected.size} transaction{selected.size !== 1 ? "s" : ""}{" "}
+                selected
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              {canApproveItems.length > 0 && (
+                <Button
+                  size="sm"
+                  disabled={isActionInProgress}
+                  onClick={handleBatchApprove}
+                  className="bg-primary text-primary-foreground hover:bg-primary/80"
+                >
+                  {isActionInProgress ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    "✓"
+                  )}{" "}
+                  Approve ({canApproveItems.length})
+                </Button>
+              )}
+              {canExecuteItems.length > 0 && (
+                <Button
+                  size="sm"
+                  disabled={isActionInProgress}
+                  onClick={handleBatchExecute}
+                  className="bg-green-600 text-white hover:bg-green-700"
+                >
+                  {isActionInProgress ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    "→"
+                  )}{" "}
+                  Execute ({canExecuteItems.length})
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSelected(new Set())}
+                className="border-background/20 text-background/70 hover:border-background/30 hover:text-background"
+              >
+                Clear
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <ProposalDetailModal
+        item={modalItem}
+        open={modalItem !== null}
+        onClose={() => setModalItem(null)}
+      />
+    </div>
+  );
+}
