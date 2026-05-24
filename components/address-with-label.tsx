@@ -121,13 +121,14 @@ export function AddressWithLabel({
     <div className={cn("flex min-w-0 items-center gap-1.5", className)}>
       {label ? (
         copyOnClick ? (
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={handleCopy}
             aria-label="Copy address"
             title={address}
             className={cn(
-              "flex min-w-0 text-left",
+              "h-auto min-w-0 p-0 hover:bg-transparent text-left",
               showFull ? "flex-col items-start gap-1" : "items-center gap-2",
               interactiveDisplayClass
             )}
@@ -144,7 +145,7 @@ export function AddressWithLabel({
                 {address}
               </code>
             ) : null}
-          </button>
+          </Button>
         ) : (
           <div
             className={cn(
@@ -168,18 +169,19 @@ export function AddressWithLabel({
           </div>
         )
       ) : copyOnClick ? (
-        <button
+        <Button
           type="button"
+          variant="outline"
           onClick={handleCopy}
           aria-label="Copy address"
           title={address}
           className={cn(
-            "border-border bg-card text-foreground/80 hover:bg-muted hover:text-foreground focus-visible:ring-border rounded-md border px-2 py-1 font-mono text-xs transition-colors focus-visible:ring-1 focus-visible:outline-none",
+            "bg-card h-auto rounded-md px-2 py-1 font-mono text-xs text-foreground/80 hover:text-foreground",
             interactiveDisplayClass
           )}
         >
           {displayAddress}
-        </button>
+        </Button>
       ) : (
         <code
           className="border-border bg-card text-foreground/80 hover:bg-muted hover:text-foreground rounded-md border px-2 py-1 font-mono text-xs transition-colors"

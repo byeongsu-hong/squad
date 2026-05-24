@@ -136,14 +136,16 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
       ).length;
 
   const BackLink = onBack ? (
-    <button
+    <Button
       type="button"
+      variant="ghost"
+      size="icon-sm"
       onClick={onBack}
-      className="text-muted-foreground/50 hover:text-foreground hover:bg-muted rounded-md p-1.5 transition-colors"
+      className="text-muted-foreground/50 hover:text-foreground"
       aria-label="Close"
     >
       <X className="h-4 w-4" />
-    </button>
+    </Button>
   ) : (
     <Link
       href="/vaults"

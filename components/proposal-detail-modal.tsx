@@ -538,19 +538,21 @@ function PayloadBlock({
 function CopyBtn({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
   return (
-    <button
+    <Button
+      type="button"
+      variant="ghost"
       onClick={() => {
         navigator.clipboard.writeText(text);
         setCopied(true);
         setTimeout(() => setCopied(false), 1500);
       }}
-      className="text-muted-foreground/40 hover:text-foreground shrink-0 transition-colors"
+      className="text-muted-foreground/40 hover:text-foreground h-5 w-5 shrink-0 p-0"
     >
       {copied ? (
         <Check className="h-3 w-3 text-primary" />
       ) : (
         <Copy className="h-3 w-3" />
       )}
-    </button>
+    </Button>
   );
 }
