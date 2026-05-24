@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import type { WorkspaceQueueItem } from "@/types/workspace";
 
 const PAGE_SIZE = 15;
-const GRID_COLS_FULL = "36px 1.4fr 54px 80px 1fr 80px 48px";
+const GRID_COLS_FULL = "36px 1.4fr 54px 80px 1fr 80px 48px 80px";
 const GRID_COLS_COMPACT = "36px 54px 80px 1fr 80px 48px";
 
 interface OperationsQueueProps {
@@ -109,7 +109,7 @@ function ColumnHeaders({
 }) {
   const cols = compact
     ? ["TX", "Chain", "Status", "Progress", "Age"]
-    : ["Multisig", "TX", "Chain", "Status", "Progress", "Age"];
+    : ["Multisig", "TX", "Chain", "Status", "Progress", "Age", ""];
   return (
     <div
       className="border-border bg-background grid items-center border-b px-3 py-2"
@@ -144,6 +144,9 @@ function QueueRow({
   onToggle,
   onClick,
   compact = false,
+  onApprove,
+  onExecute,
+  isActioning = false,
 }: {
   item: WorkspaceQueueItem;
   isSelected: boolean;
@@ -151,6 +154,9 @@ function QueueRow({
   onToggle: () => void;
   onClick: () => void;
   compact?: boolean;
+  onApprove?: () => void;
+  onExecute?: () => void;
+  isActioning?: boolean;
 }) {
   return (
     <div
@@ -202,6 +208,42 @@ function QueueRow({
       <span className="text-muted-foreground/70 font-mono text-[11px]">
         {formatAge(item.proposal.createdAt)}
       </span>
+      {!compact && (
+        <div
+          className="flex items-center justify-end"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {onExecute && item.readyToExecute ? (
+            <button
+              type="button"
+              disabled={isActioning}
+              onClick={onExecute}
+              className="bg-emerald-600 text-white hover:bg-emerald-500 inline-flex h-6 items-center gap-1 rounded px-2 text-[10px] font-semibold transition-colors disabled:opacity-50"
+            >
+              {isActioning ? (
+                <Loader2 className="h-2.5 w-2.5 animate-spin" />
+              ) : (
+                <Zap className="h-2.5 w-2.5" />
+              )}
+              Execute
+            </button>
+          ) : onApprove && item.needsYourSignature && !item.currentUserApproved ? (
+            <button
+              type="button"
+              disabled={isActioning}
+              onClick={onApprove}
+              className="bg-primary text-primary-foreground hover:bg-primary/80 inline-flex h-6 items-center gap-1 rounded px-2 text-[10px] font-semibold transition-colors disabled:opacity-50"
+            >
+              {isActioning ? (
+                <Loader2 className="h-2.5 w-2.5 animate-spin" />
+              ) : (
+                <Check className="h-2.5 w-2.5" />
+              )}
+              Approve
+            </button>
+          ) : null}
+        </div>
+      )}
     </div>
   );
 }
@@ -224,6 +266,7 @@ function RowSkeleton({ compact = false }: { compact?: boolean }) {
       <Skeleton className="h-4 w-20 rounded-full" />
       <Skeleton className="h-1.5 w-10 rounded-full" />
       <Skeleton className="h-3 w-6 rounded-sm" />
+      {!compact && <div />}
     </div>
   );
 }
@@ -513,6 +556,27 @@ export function OperationsQueue({
                       onToggle={() => toggleSelect(item.focusKey)}
                       onClick={() => setSelectedItem(item)}
                       compact={compact}
+                      onApprove={
+                        item.needsYourSignature && !item.currentUserApproved
+                          ? () =>
+                              approveByAddress(
+                                item.multisig.address,
+                                item.proposal.transactionIndex,
+                                item.multisig.chainId
+                              )
+                          : undefined
+                      }
+                      onExecute={
+                        item.readyToExecute
+                          ? () =>
+                              executeByAddress(
+                                item.multisig.address,
+                                item.proposal.transactionIndex,
+                                item.multisig.chainId
+                              )
+                          : undefined
+                      }
+                      isActioning={isActionInProgress}
                     />
                   ))}
                 </div>
