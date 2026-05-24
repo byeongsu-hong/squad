@@ -82,7 +82,7 @@ export function LandingPage() {
           <div className="flex items-center gap-2">
             <PenLine className={needsSigningCount > 0 ? "text-primary/60 h-4 w-4 shrink-0" : "text-muted-foreground/30 h-4 w-4 shrink-0"} />
             <div className="flex flex-col">
-              <span className={needsSigningCount > 0 ? "text-primary text-2xl font-bold tabular-nums leading-tight" : "text-foreground text-2xl font-bold tabular-nums leading-tight"}>
+              <span className={needsSigningCount > 0 ? "text-primary text-2xl font-bold tabular-nums leading-tight" : "text-muted-foreground text-2xl font-bold tabular-nums leading-tight"}>
                 {needsSigningCount}
               </span>
               <span className="text-muted-foreground text-[11px] uppercase tracking-widest">
@@ -94,7 +94,7 @@ export function LandingPage() {
           <div className="flex items-center gap-2">
             <Zap className={executableCount > 0 ? "text-emerald-600/60 dark:text-emerald-400/60 h-4 w-4 shrink-0" : "text-muted-foreground/30 h-4 w-4 shrink-0"} />
             <div className="flex flex-col">
-              <span className={executableCount > 0 ? "text-emerald-600 dark:text-emerald-400 text-2xl font-bold tabular-nums leading-tight" : "text-foreground text-2xl font-bold tabular-nums leading-tight"}>
+              <span className={executableCount > 0 ? "text-emerald-600 dark:text-emerald-400 text-2xl font-bold tabular-nums leading-tight" : "text-muted-foreground text-2xl font-bold tabular-nums leading-tight"}>
                 {executableCount}
               </span>
               <span className="text-muted-foreground text-[11px] uppercase tracking-widest">

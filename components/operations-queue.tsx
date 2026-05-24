@@ -138,7 +138,7 @@ function ColumnHeaders({
       {cols.map((h) => (
         <span
           key={h}
-          className="text-muted-foreground/70 text-[11px] font-semibold tracking-widest uppercase"
+          className="text-muted-foreground/60 text-[11px] font-semibold tracking-widest uppercase"
         >
           {h}
         </span>

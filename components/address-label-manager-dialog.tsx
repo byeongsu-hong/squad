@@ -416,7 +416,7 @@ function AddressLabelRegistry({
             className={embedded ? "divide-border divide-y" : "space-y-1.5"}
           >
             {embedded ? (
-              <div className="text-muted-foreground/70 grid grid-cols-[minmax(0,0.95fr)_minmax(0,1.15fr)_minmax(0,1.3fr)_8rem_4.5rem] gap-3 px-3 py-2 text-[0.62rem] tracking-[0.16em] uppercase">
+              <div className="text-muted-foreground/60 grid grid-cols-[minmax(0,0.95fr)_minmax(0,1.15fr)_minmax(0,1.3fr)_8rem_4.5rem] gap-3 px-3 py-2 text-[0.62rem] tracking-[0.16em] uppercase">
                 <span>Label</span>
                 <span>Description</span>
                 <span>Address</span>
