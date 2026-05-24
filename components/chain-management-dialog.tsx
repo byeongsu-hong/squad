@@ -10,6 +10,16 @@ import { z } from "zod";
 import { cn } from "@/lib/utils";
 
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -75,6 +85,8 @@ export function ChainManagementController({
   const { chains, addChain, updateChain, deleteChain, resetToDefaults } =
     useChainStore();
   const [editingChain, setEditingChain] = useState<ChainConfig | null>(null);
+  const [deletingChainId, setDeletingChainId] = useState<string | null>(null);
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
 
   const form = useForm<ChainFormValues>({
     resolver: zodResolver(chainFormSchema),
@@ -135,22 +147,25 @@ export function ChainManagementController({
   };
 
   const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this chain configuration?")) {
-      deleteChain(id);
-      toast.success("Chain deleted");
-    }
+    setDeletingChainId(id);
+  };
+
+  const handleConfirmDelete = () => {
+    if (!deletingChainId) return;
+    deleteChain(deletingChainId);
+    setDeletingChainId(null);
+    toast.success("Chain deleted");
   };
 
   const handleResetToDefaults = () => {
-    if (
-      confirm(
-        "Are you sure you want to reset all chains to default? This will remove all custom chains."
-      )
-    ) {
-      resetToDefaults();
-      resetForm();
-      toast.success("Chains reset to defaults");
-    }
+    setResetDialogOpen(true);
+  };
+
+  const handleConfirmReset = () => {
+    resetToDefaults();
+    resetForm();
+    setResetDialogOpen(false);
+    toast.success("Chains reset to defaults");
   };
 
   const resetForm = () => {
@@ -204,6 +219,46 @@ export function ChainManagementController({
         onDelete={handleDelete}
         onResetToDefaults={handleResetToDefaults}
       />
+
+      <AlertDialog open={!!deletingChainId} onOpenChange={(open) => !open && setDeletingChainId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete chain?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This removes the chain configuration from your workspace. No on-chain data is affected.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              className="border-destructive/30 bg-destructive text-destructive-foreground hover:bg-destructive/80"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reset to defaults?</AlertDialogTitle>
+            <AlertDialogDescription>
+              All custom chains will be removed and default chains will be restored. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmReset}
+              className="border-destructive/30 bg-destructive text-destructive-foreground hover:bg-destructive/80"
+            >
+              Reset
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

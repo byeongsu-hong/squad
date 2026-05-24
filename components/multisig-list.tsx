@@ -422,7 +422,9 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
                       ? "bg-primary/8"
                       : isActiveDesk
                         ? "bg-primary/5 [box-shadow:inset_2px_0_0_rgba(217,119,6,0.5)]"
-                        : "hover:bg-muted"
+                        : row.waiting > 0
+                          ? "hover:bg-primary/5 [box-shadow:inset_2px_0_0_rgba(217,119,6,0.25)]"
+                          : "hover:bg-muted"
                   )}
                   style={{ gridTemplateColumns: GRID_COLS }}
                   onClick={() => handleOpenDesk(multisig)}
