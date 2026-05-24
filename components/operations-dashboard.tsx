@@ -1,1709 +1,490 @@
 "use client";
 
-import {
-  ArrowRight,
-  Check,
-  ChevronDown,
-  ChevronRight,
-  CircleAlert,
-  Copy,
-  Loader2,
-  RefreshCw,
-  RotateCcw,
-  ShieldCheck,
-  X,
-} from "lucide-react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Loader2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { AddressWithLabel } from "@/components/address-with-label";
+import { ProposalDetailModal } from "@/components/proposal-detail-modal";
 import { RegistryManagementDialog } from "@/components/registry-management-dialog";
 import { ProposalCardSkeletonList } from "@/components/skeletons";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Pagination } from "@/components/ui/pagination";
-import { useFocusedQueue } from "@/lib/hooks/use-focused-queue";
-import { useOperationsRegistry } from "@/lib/hooks/use-operations-registry";
-import { useOperationsSelection } from "@/lib/hooks/use-operations-selection";
+import { useAllProposalsLoader } from "@/lib/hooks/use-all-proposals-loader";
 import { useProposalActions } from "@/lib/hooks/use-proposal-actions";
-import { useSquadsProposalLoader } from "@/lib/hooks/use-squads-proposal-loader";
-import { useWorkspaceMultisigs } from "@/lib/hooks/use-workspace-multisigs";
-import { useWorkspacePayload } from "@/lib/hooks/use-workspace-payload";
-import { useWorkspaceProposalLoader } from "@/lib/hooks/use-workspace-proposal-loader";
-import { useWorkspaceProposalSummary } from "@/lib/hooks/use-workspace-proposal-summary";
-import { useOperationsWorkspaceQuerySync } from "@/lib/hooks/use-workspace-query-sync";
 import { useWorkspaceQueue } from "@/lib/hooks/use-workspace-queue";
 import { cn } from "@/lib/utils";
-import {
-  type ConfigAction,
-  formatConfigAction,
-} from "@/lib/utils/transaction-formatter";
-import {
-  supportsProviderAction,
-  supportsProviderCapability,
-} from "@/lib/workspace/provider-adapters";
-import { useMultisigStore } from "@/stores/multisig-store";
 import { useWalletStore } from "@/stores/wallet-store";
-import { useWorkspaceStore } from "@/stores/workspace-store";
-import { getMultisigAccountKey } from "@/types/multisig";
-import type {
-  WorkspaceExplorerMode,
-  WorkspaceQueueItem,
-} from "@/types/workspace";
+import type { WorkspaceQueueItem } from "@/types/workspace";
 
 interface OperationsDashboardProps {
   actions?: React.ReactNode;
 }
 
-interface SafeRegistryPresentation {
-  metaLine: string | null;
-  sideValue: string;
-  selectionBlocked: boolean;
-  showRetry: boolean;
+function formatAge(createdAt?: string): string {
+  if (!createdAt) return "--";
+  const ms = Date.now() - Date.parse(createdAt);
+  if (Number.isNaN(ms) || ms < 0) return "--";
+  const seconds = Math.floor(ms / 1000);
+  if (seconds < 60) return `${seconds}s`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h`;
+  const days = Math.floor(hours / 24);
+  return `${days}d`;
 }
 
-interface RegistryRowContentProps {
-  item: {
-    multisig: {
-      label?: string;
-      chainName: string;
-      threshold: number;
-      members: { length: number };
-      address: string;
-      provider: "squads" | "safe";
-    };
-    waiting: number;
-    executable: number;
-  };
-  providerMetaLine: string | null;
-  hasQueueAttention: boolean;
-  hasLoadedWorkspaceQueue: boolean;
-  safeSummaryErrorMessage: string | null;
-  safePresentationSideValue: string;
-  onRetry: () => void;
-}
-
-function formatCompactAddress(value: string) {
-  return `${value.slice(0, 6)}...${value.slice(-4)}`;
-}
-
-function formatProviderLabel(provider: "squads" | "safe") {
-  return provider === "safe" ? "Safe" : "Squads";
-}
-
-function getStatusTone(item: WorkspaceQueueItem) {
-  if (item.needsYourSignature) {
-    return "text-lime-300";
-  }
+function StatusBadge({ item }: { item: WorkspaceQueueItem }) {
   if (item.readyToExecute) {
-    return "text-lime-200";
+    return (
+      <span className="inline-flex items-center rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-[10px] font-medium text-green-600 dark:border-green-800/50 dark:bg-green-950/30 dark:text-green-400">
+        Ready to execute
+      </span>
+    );
   }
-  if (item.proposal.status === "Rejected") {
-    return "text-red-300";
+  if (item.needsYourSignature) {
+    return (
+      <span className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+        Waiting on you
+      </span>
+    );
   }
   if (item.proposal.status === "Executed") {
-    return "text-zinc-300";
+    return (
+      <span className="inline-flex items-center rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] text-muted-foreground/70">
+        Executed
+      </span>
+    );
   }
-  return "text-zinc-400";
-}
-
-function getSafeRegistryPresentation({
-  activeCount,
-  hasLoadedWorkspaceQueue,
-  summaryLoading,
-  summaryErrorMessage,
-  summaryTotalCount,
-}: {
-  activeCount: number;
-  hasLoadedWorkspaceQueue: boolean;
-  summaryLoading: boolean;
-  summaryErrorMessage: string | null;
-  summaryTotalCount: number | null;
-}): SafeRegistryPresentation {
-  if (hasLoadedWorkspaceQueue) {
-    return {
-      metaLine: `${activeCount} active`,
-      sideValue: `${activeCount}`,
-      selectionBlocked: false,
-      showRetry: false,
-    };
+  if (item.proposal.status === "Rejected") {
+    return (
+      <span className="inline-flex items-center rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-[10px] font-medium text-red-600 dark:border-red-800/50 dark:bg-red-950/30 dark:text-red-400">
+        Rejected
+      </span>
+    );
   }
-
-  if (summaryLoading) {
-    return {
-      metaLine: "loading",
-      sideValue: "...",
-      selectionBlocked: true,
-      showRetry: false,
-    };
-  }
-
-  if (summaryErrorMessage) {
-    return {
-      metaLine: null,
-      sideValue: "Retry",
-      selectionBlocked: true,
-      showRetry: true,
-    };
-  }
-
-  return {
-    metaLine:
-      summaryTotalCount === null ? "--" : `${summaryTotalCount} proposals`,
-    sideValue: summaryTotalCount === null ? "--" : `${summaryTotalCount}`,
-    selectionBlocked: summaryTotalCount === null,
-    showRetry: false,
-  };
-}
-
-function RegistryRowContent({
-  item,
-  providerMetaLine,
-  hasQueueAttention,
-  hasLoadedWorkspaceQueue,
-  safeSummaryErrorMessage,
-  safePresentationSideValue,
-  onRetry,
-}: RegistryRowContentProps) {
   return (
-    <>
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <p className="truncate text-[0.83rem] font-medium">
-            {item.multisig.label || "Unnamed multisig"}
-          </p>
-          <span className="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-1.5 py-0.5 font-mono text-[0.58rem] tracking-[0.16em] text-cyan-300 uppercase">
-            {item.multisig.chainName}
-          </span>
-          <span className="font-mono text-[0.62rem] text-zinc-600 tabular-nums">
-            {item.multisig.threshold}/{item.multisig.members.length}
-          </span>
-        </div>
-        <div className="mt-0.5 flex items-center gap-2 text-[0.62rem] text-zinc-500">
-          <span className="font-mono tabular-nums">
-            {formatCompactAddress(item.multisig.address)}
-          </span>
-          {providerMetaLine ? <span>{providerMetaLine}</span> : null}
-        </div>
-      </div>
-      <div className="shrink-0 text-right">
-        {hasQueueAttention ||
-        (item.multisig.provider === "safe" && hasLoadedWorkspaceQueue) ? (
-          <>
-            <p className="font-mono text-[0.62rem] text-zinc-600 tabular-nums">
-              {item.waiting} wait
-            </p>
-            <p className="font-mono text-[0.62rem] text-zinc-600 tabular-nums">
-              {item.executable} exec
-            </p>
-          </>
-        ) : item.multisig.provider === "safe" ? (
-          safeSummaryErrorMessage ? (
-            <button
-              type="button"
-              className="inline-flex items-center gap-1 font-mono text-[0.62rem] text-zinc-400 tabular-nums transition-colors hover:text-zinc-100"
-              onClick={(event) => {
-                event.stopPropagation();
-                onRetry();
-              }}
-            >
-              <RotateCcw className="h-3 w-3" />
-              {safePresentationSideValue}
-            </button>
-          ) : (
-            <p className="font-mono text-[0.62rem] text-zinc-600 tabular-nums">
-              {safePresentationSideValue}
-            </p>
-          )
-        ) : (
-          <>
-            <p className="font-mono text-[0.62rem] text-zinc-600 tabular-nums">
-              {item.waiting} wait
-            </p>
-            <p className="font-mono text-[0.62rem] text-zinc-600 tabular-nums">
-              {item.executable} exec
-            </p>
-          </>
-        )}
-      </div>
-    </>
+    <span className="inline-flex items-center rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
+      {item.approvalCount}/{item.multisig.threshold} signed
+    </span>
   );
 }
 
-export function OperationsDashboard({
-  actions,
-}: OperationsDashboardProps = {}) {
-  const pathname = usePathname();
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [searchText, setSearchText] = useState("");
+function ProgressBar({ item }: { item: WorkspaceQueueItem }) {
+  const pct = Math.min(
+    100,
+    Math.round((item.approvalCount / item.multisig.threshold) * 100)
+  );
+  const barColor = item.readyToExecute
+    ? "bg-green-600 dark:bg-green-500"
+    : item.needsYourSignature
+      ? "bg-primary"
+      : "bg-muted-foreground/30";
 
-  const { publicKey, connected, evmConnected, getWalletAddressForProvider } =
-    useWalletStore();
-  const { multisigs, setProposals } = useMultisigStore();
-  const { chains, proposals, workspaceMultisigs, availableMultisigKeys } =
-    useWorkspaceMultisigs();
-  const {
-    operationsFocusedProposalKey: focusedProposalKey,
-    operationsQueueFilter: queueFilter,
-    operationsDetailTab: detailTab,
-    operationsExplorerMode: explorerMode,
-    operationsSelectedRegistryKeys: selectedRegistryKeys,
-    operationsActiveViewKey: activeViewKey,
-    operationsExpandedViewKeys: expandedViewKeys,
-    setOperationsFocusedProposalKey: setFocusedProposalKey,
-    setOperationsQueueFilter: setQueueFilter,
-    setOperationsDetailTab: setDetailTab,
-    setOperationsExplorerMode: setExplorerMode,
-    setOperationsSelectedRegistryKeys: setSelectedRegistryKeys,
-    setOperationsActiveViewKey: setActiveViewKey,
-    setOperationsExpandedViewKeys: setExpandedViewKeys,
-  } = useWorkspaceStore();
-  const { loading, loadForAllMultisigs } = useSquadsProposalLoader({
-    chains,
-    setProposals,
-    errorMessage: "Failed to load dashboard",
-  });
-  const {
-    loading: workspaceLoading,
-    loadingKeys: workspaceLoadingKeys,
-    loadedKeys: workspaceLoadedKeys,
-    errorsByMultisigKey: workspaceLoadErrorsByMultisigKey,
-    proposals: workspaceProposals,
-    loadForAllMultisigs: loadWorkspaceProposals,
-  } = useWorkspaceProposalLoader({
-    chains,
-    errorMessage: "Failed to load workspace proposals",
-  });
-  useOperationsWorkspaceQuerySync({
-    searchParams,
-    pathname,
-    replace: (href) => router.replace(href, { scroll: false }),
-    availableMultisigKeys,
-    queueFilter,
-    focusedProposalKey,
-    selectedRegistryKeys,
-    activeViewKey,
-    setQueueFilter,
-    setFocusedProposalKey,
-    setSelectedRegistryKeys,
-    setActiveViewKey,
-  });
+  return (
+    <div className="flex items-center gap-1.5">
+      <div className="h-1.5 w-10 overflow-hidden rounded-full bg-muted">
+        <div className={cn("h-full rounded-full", barColor)} style={{ width: `${pct}%` }} />
+      </div>
+      <span className="font-mono text-[10px] text-muted-foreground/70">
+        {item.approvalCount}/{item.multisig.threshold}
+      </span>
+    </div>
+  );
+}
+
+const STATUS_FILTERS = ["All", "Action needed", "Pending", "Executable", "Executed", "Rejected"] as const;
+type StatusFilter = (typeof STATUS_FILTERS)[number];
+
+export function OperationsDashboard({ actions }: OperationsDashboardProps = {}) {
+  const { publicKey, connected, evmConnected, getWalletAddressForProvider } = useWalletStore();
+  const { loading, proposals, safeProposals, workspaceMultisigs, loadAll } =
+    useAllProposalsLoader({ errorMessage: "Failed to load dashboard" });
+
+  const autoLoadedRef = useRef(false);
+
+  useEffect(() => {
+    if (autoLoadedRef.current || workspaceMultisigs.length === 0) return;
+    autoLoadedRef.current = true;
+    void loadAll();
+  }, [workspaceMultisigs.length, loadAll]);
 
   const queueItems = useWorkspaceQueue({
     proposals,
     multisigs: workspaceMultisigs,
     viewerAddress: publicKey?.toString() ?? null,
-    workspaceProposals,
+    workspaceProposals: safeProposals,
     getViewerAddressForMultisig: (multisig) =>
       getWalletAddressForProvider(multisig.provider),
   });
-  const {
-    primarySelectedRegistryKey,
-    selectedRegistryKeySet,
-    registryItems,
-    activeView,
-    explorerSections,
-    visibleExplorerSection,
-  } = useOperationsRegistry({
-    multisigs: workspaceMultisigs,
-    queueItems,
-    searchText,
-    activeViewKey,
-    explorerMode,
-    selectedRegistryKeys,
-    setExplorerMode,
-    setExpandedViewKeys,
-  });
 
-  const selectedScopeKeys = useMemo(() => {
-    if (selectedRegistryKeys.length > 0) {
-      return selectedRegistryKeys;
-    }
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("All");
+  const [chainFilter, setChainFilter] = useState("All");
+  const [multisigFilter, setMultisigFilter] = useState("All");
+  const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [modalItem, setModalItem] = useState<WorkspaceQueueItem | null>(null);
 
-    if (activeView) {
-      return activeView.multisigKeys;
-    }
+  const chainOptions = useMemo(() => {
+    const names = Array.from(new Set(queueItems.map((i) => i.multisig.chainName)));
+    return names.sort();
+  }, [queueItems]);
 
-    return [];
-  }, [activeView, selectedRegistryKeys]);
-  const selectedScopeKeySet = useMemo(
-    () => new Set(selectedScopeKeys),
-    [selectedScopeKeys]
-  );
-  const selectedScopeSignature = useMemo(
-    () => selectedScopeKeys.slice().sort().join("|"),
-    [selectedScopeKeys]
-  );
-  const hasSelectedScope = selectedScopeKeys.length > 0;
-  const scopedSquadsMultisigs = useMemo(
-    () =>
-      multisigs.filter((multisig) =>
-        selectedScopeKeySet.has(getMultisigAccountKey(multisig))
-      ),
-    [multisigs, selectedScopeKeySet]
-  );
-  const scopedWorkspaceProposalMultisigs = useMemo(
-    () =>
-      workspaceMultisigs.filter(
-        (multisig) =>
-          multisig.provider !== "squads" &&
-          selectedScopeKeySet.has(multisig.key)
-      ),
-    [selectedScopeKeySet, workspaceMultisigs]
-  );
-  const {
-    summariesByMultisigKey,
-    loadingByMultisigKey: workspaceSummaryLoadingByMultisigKey,
-    errorsByMultisigKey: workspaceSummaryErrorsByMultisigKey,
-    retrySummary,
-  } = useWorkspaceProposalSummary({
-    chains,
-    multisigs: workspaceMultisigs,
-  });
-  const autoLoadedSquadsScopeRef = useRef("");
-  const autoLoadedWorkspaceScopeRef = useRef("");
+  const multisigOptions = useMemo(() => {
+    const labels = Array.from(
+      new Set(queueItems.map((i) => i.multisig.label ?? "Unnamed"))
+    );
+    return labels.sort();
+  }, [queueItems]);
 
-  useEffect(() => {
-    if (!selectedScopeSignature) {
-      autoLoadedSquadsScopeRef.current = "";
-      return;
-    }
-
-    if (autoLoadedSquadsScopeRef.current === selectedScopeSignature) {
-      return;
-    }
-
-    autoLoadedSquadsScopeRef.current = selectedScopeSignature;
-    void loadForAllMultisigs(scopedSquadsMultisigs);
-  }, [loadForAllMultisigs, scopedSquadsMultisigs, selectedScopeSignature]);
-
-  useEffect(() => {
-    if (!selectedScopeSignature) {
-      autoLoadedWorkspaceScopeRef.current = "";
-      return;
-    }
-
-    if (autoLoadedWorkspaceScopeRef.current === selectedScopeSignature) {
-      return;
-    }
-
-    autoLoadedWorkspaceScopeRef.current = selectedScopeSignature;
-    void loadWorkspaceProposals(scopedWorkspaceProposalMultisigs, {
-      notifyOnError: false,
+  const filtered = useMemo(() => {
+    return queueItems.filter((item) => {
+      if (statusFilter === "Action needed" && !item.needsYourSignature && !item.readyToExecute) return false;
+      if (statusFilter === "Pending" && item.proposal.status !== "Active") return false;
+      if (statusFilter === "Executable" && !item.readyToExecute) return false;
+      if (statusFilter === "Executed" && item.proposal.status !== "Executed") return false;
+      if (statusFilter === "Rejected" && item.proposal.status !== "Rejected") return false;
+      if (chainFilter !== "All" && item.multisig.chainName !== chainFilter) return false;
+      if (multisigFilter !== "All" && (item.multisig.label ?? "Unnamed") !== multisigFilter) return false;
+      if (
+        search &&
+        !item.multisig.label?.toLowerCase().includes(search.toLowerCase()) &&
+        !`#${item.proposal.transactionIndex}`.includes(search)
+      )
+        return false;
+      return true;
     });
-  }, [
-    loadWorkspaceProposals,
-    scopedWorkspaceProposalMultisigs,
-    selectedScopeSignature,
-  ]);
+  }, [queueItems, statusFilter, chainFilter, multisigFilter, search]);
 
-  const scopedWorkspaceProposalKeys = useMemo(
-    () => scopedWorkspaceProposalMultisigs.map((multisig) => multisig.key),
-    [scopedWorkspaceProposalMultisigs]
-  );
-  const scopedWorkspaceLoadErrorKey =
-    scopedWorkspaceProposalKeys.find(
-      (key) => workspaceLoadErrorsByMultisigKey[key]
-    ) ?? null;
-  const scopedWorkspaceLoadError = scopedWorkspaceLoadErrorKey
-    ? (workspaceLoadErrorsByMultisigKey[scopedWorkspaceLoadErrorKey] ?? null)
-    : null;
-  const isScopedWorkspaceLoading = scopedWorkspaceProposalKeys.some((key) =>
-    workspaceLoadingKeys.includes(key)
-  );
+  const pendingCount = queueItems.filter((i) => i.proposal.status === "Active").length;
+  const executableCount = queueItems.filter((i) => i.readyToExecute).length;
 
-  const scopedQueueItems = useMemo(() => {
-    if (hasSelectedScope) {
-      return queueItems.filter((item) =>
-        selectedScopeKeySet.has(item.multisig.key)
+  const selectedItems = useMemo(
+    () => filtered.filter((i) => selected.has(i.focusKey)),
+    [filtered, selected]
+  );
+  const canApproveItems = selectedItems.filter(
+    (i) => i.proposal.status === "Active" && !i.currentUserApproved && i.needsYourSignature
+  );
+  const canExecuteItems = selectedItems.filter((i) => i.readyToExecute);
+
+  const { approveByAddress, executeByAddress, isActionInProgress } = useProposalActions({
+    onSuccess: () => loadAll({ force: true }),
+  });
+
+  const handleBatchApprove = async () => {
+    for (const item of canApproveItems) {
+      await approveByAddress(
+        item.multisig.address,
+        item.proposal.transactionIndex,
+        item.multisig.chainId
       );
     }
+    setSelected(new Set());
+  };
 
-    return [];
-  }, [hasSelectedScope, queueItems, selectedScopeKeySet]);
+  const handleBatchExecute = async () => {
+    for (const item of canExecuteItems) {
+      await executeByAddress(
+        item.multisig.address,
+        item.proposal.transactionIndex,
+        item.multisig.chainId
+      );
+    }
+    setSelected(new Set());
+  };
 
-  const {
-    filteredItems: filteredQueueItems,
-    focusedItem,
-    pagination,
-  } = useFocusedQueue({
-    items: scopedQueueItems,
-    filter: queueFilter,
-    itemsPerPage: 10,
-    focusedKey: focusedProposalKey,
-    setFocusedKey: setFocusedProposalKey,
-    getItemKey: (item) => item.focusKey,
-    isWaiting: (item) => item.needsYourSignature,
-    isExecutable: (item) => item.readyToExecute,
-  });
-  const {
-    loading: payloadLoading,
-    payload: focusedPayload,
-    error: payloadError,
-  } = useWorkspacePayload({
-    chains,
-    multisig: focusedItem?.multisig ?? null,
-    proposal: focusedItem?.proposal ?? null,
-  });
+  const toggleSelect = (focusKey: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(focusKey)) next.delete(focusKey);
+      else next.add(focusKey);
+      return next;
+    });
+  };
 
-  useEffect(() => {
-    setDetailTab("overview");
-  }, [focusedProposalKey, setDetailTab]);
+  const allSelectableKeys = filtered
+    .filter((i) => i.proposal.status === "Active" || i.readyToExecute)
+    .map((i) => i.focusKey);
+
+  const allSelected =
+    allSelectableKeys.length > 0 &&
+    allSelectableKeys.every((k) => selected.has(k));
+
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(allSelectableKeys));
+    }
+  };
 
   const hasConnectedWallet = connected || evmConnected;
-  const primarySelectedRegistryItem =
-    primarySelectedRegistryKey !== null
-      ? (registryItems.find(
-          (item) => item.multisig.key === primarySelectedRegistryKey
-        ) ?? null)
-      : null;
-  const primarySelectedSummary =
-    primarySelectedRegistryItem !== null
-      ? summariesByMultisigKey[primarySelectedRegistryItem.multisig.key]
-      : undefined;
-  const primarySelectedSummaryLoading =
-    primarySelectedRegistryItem !== null
-      ? Boolean(
-          workspaceSummaryLoadingByMultisigKey[
-            primarySelectedRegistryItem.multisig.key
-          ]
-        )
-      : false;
-  const primarySelectedSummaryError =
-    primarySelectedRegistryItem !== null
-      ? (workspaceSummaryErrorsByMultisigKey[
-          primarySelectedRegistryItem.multisig.key
-        ] ?? null)
-      : null;
-  const waitingOnYouCount = scopedQueueItems.filter(
-    (item) => item.needsYourSignature
-  ).length;
-  const executableCount = scopedQueueItems.filter(
-    (item) => item.readyToExecute
-  ).length;
-  const actionsSupported = focusedItem
-    ? supportsProviderCapability(
-        focusedItem.multisig.provider,
-        "proposalActions"
-      )
-    : false;
-  const approveSupported = focusedItem
-    ? supportsProviderAction(focusedItem.multisig.provider, "approve")
-    : false;
-  const rejectSupported = focusedItem
-    ? supportsProviderAction(focusedItem.multisig.provider, "reject")
-    : false;
-  const executeSupported = focusedItem
-    ? supportsProviderAction(focusedItem.multisig.provider, "execute")
-    : false;
-  const approveLabel =
-    focusedItem?.multisig.provider === "safe" ? "Confirm" : "Approve";
-  const {
-    approveByAddress,
-    rejectByAddress,
-    executeByAddress,
-    isActionLoading,
-    isActionInProgress,
-  } = useProposalActions({
-    onSuccess: async () => {
-      await Promise.all([
-        loadForAllMultisigs(scopedSquadsMultisigs),
-        loadWorkspaceProposals(scopedWorkspaceProposalMultisigs, {
-          force: true,
-          notifyOnError: false,
-        }),
-      ]);
-    },
-  });
 
-  const isApproveLoading = Boolean(
-    focusedItem &&
-    isActionLoading(
-      "approve",
-      focusedItem.multisig.key,
-      focusedItem.proposal.transactionIndex
-    )
-  );
-  const isRejectLoading = Boolean(
-    focusedItem &&
-    isActionLoading(
-      "reject",
-      focusedItem.multisig.key,
-      focusedItem.proposal.transactionIndex
-    )
-  );
-  const isExecuteLoading = Boolean(
-    focusedItem &&
-    isActionLoading(
-      "execute",
-      focusedItem.multisig.key,
-      focusedItem.proposal.transactionIndex
-    )
-  );
-  const { handleViewSelect, handleRegistrySelect, toggleViewExpansion } =
-    useOperationsSelection({
-      setActiveViewKey,
-      setFocusedProposalKey,
-      setSelectedRegistryKeys,
-      setExpandedViewKeys,
-    });
-
-  const handleApprove = async () => {
-    if (!focusedItem) return;
-    await approveByAddress(
-      focusedItem.multisig.address,
-      focusedItem.proposal.transactionIndex,
-      focusedItem.multisig.chainId
-    );
-  };
-
-  const handleReject = async () => {
-    if (!focusedItem) return;
-    await rejectByAddress(
-      focusedItem.multisig.address,
-      focusedItem.proposal.transactionIndex,
-      focusedItem.multisig.chainId
-    );
-  };
-
-  const handleExecute = async () => {
-    if (!focusedItem) return;
-    await executeByAddress(
-      focusedItem.multisig.address,
-      focusedItem.proposal.transactionIndex,
-      focusedItem.multisig.chainId
-    );
-  };
-
-  if (multisigs.length === 0) {
+  if (workspaceMultisigs.length === 0) {
     return (
       <section className="space-y-4">
-        <div className="flex flex-wrap items-center gap-3 border-b border-zinc-800 pb-4">
-          <p className="text-[0.7rem] font-medium tracking-[0.24em] text-zinc-500 uppercase">
-            Operations Dashboard
-          </p>
-          <span className="text-sm text-zinc-100">No multisigs loaded.</span>
-          <span className="hidden h-4 w-px bg-zinc-800 sm:block" />
-          <span className="text-sm text-zinc-500">
-            {hasConnectedWallet ? "Wallet connected" : "Wallet disconnected"}
-          </span>
-          <div className="ml-auto">
-            <RegistryManagementDialog />
+        <div className="flex flex-wrap items-center justify-between gap-3 pb-4">
+          <div>
+            <h1 className="text-xl font-bold text-foreground">Operations</h1>
           </div>
+          <RegistryManagementDialog />
         </div>
-        <div className="flex flex-wrap items-center gap-3 border border-dashed border-zinc-800 px-4 py-5 text-sm text-zinc-400">
-          <CircleAlert className="h-4 w-4 shrink-0 text-zinc-500" />
-          Connect a wallet, then create or import a multisig to start the
-          dashboard.
+        <div className="rounded-xl border border-dashed border-border px-6 py-8 text-center text-sm text-muted-foreground/70">
+          Connect a wallet and configure your workspace in Settings.
         </div>
       </section>
     );
   }
 
   return (
-    <section className="flex h-[calc(100svh-6.5rem)] min-h-[calc(100svh-6.5rem)] flex-col gap-4">
-      <div className="border-b border-zinc-800 pb-4">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div className="min-w-0 space-y-2">
-            <p className="text-[0.72rem] font-medium tracking-[0.22em] text-zinc-500 uppercase">
-              Operations
-            </p>
-            <div className="flex flex-wrap items-center gap-3">
-              <h1 className="text-[clamp(1.5rem,2.4vw,2.35rem)] font-semibold tracking-[-0.05em] text-zinc-50">
-                Signature queue
-              </h1>
-              <span
-                className={cn(
-                  "inline-flex items-center rounded-full border px-3 py-1 text-[0.72rem] font-medium tracking-[0.16em] uppercase",
-                  hasConnectedWallet
-                    ? "border-lime-500/30 bg-lime-500/10 text-lime-200"
-                    : "border-zinc-700 bg-zinc-900 text-zinc-300"
-                )}
-              >
-                {hasConnectedWallet ? "Signer ready" : "Wallet offline"}
+    <section className="relative flex flex-col" style={{ minHeight: "calc(100svh - 6.5rem)" }}>
+      <div className="flex flex-wrap items-start justify-between gap-3 pb-4">
+        <div>
+          <h1 className="text-xl font-bold text-foreground">Operations</h1>
+          <p className="mt-0.5 text-xs text-muted-foreground/70">
+            {pendingCount} pending · {executableCount} executable · {queueItems.length} total
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          {actions}
+          <RegistryManagementDialog compact />
+          <button
+            type="button"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-1.5 text-[12px] font-semibold text-primary-foreground transition-colors hover:bg-primary/80"
+          >
+            + New proposal
+          </button>
+        </div>
+      </div>
+
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1">
+          {STATUS_FILTERS.map((f) => (
+            <button
+              key={f}
+              type="button"
+              onClick={() => setStatusFilter(f)}
+              className={cn(
+                "rounded-full px-3 py-1 text-[11px] font-medium transition-colors",
+                statusFilter === f
+                  ? "bg-foreground text-background"
+                  : "border border-border text-muted-foreground hover:border-border hover:text-foreground"
+              )}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
+
+        <div className="mx-1 h-5 w-px bg-border" />
+
+        <select
+          value={chainFilter}
+          onChange={(e) => setChainFilter(e.target.value)}
+          className="rounded-md border border-border bg-muted px-2 py-1 text-[11px] text-muted-foreground focus:outline-none"
+        >
+          <option value="All">Chain</option>
+          {chainOptions.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={multisigFilter}
+          onChange={(e) => setMultisigFilter(e.target.value)}
+          className="rounded-md border border-border bg-muted px-2 py-1 text-[11px] text-muted-foreground focus:outline-none"
+        >
+          <option value="All">Multisig</option>
+          {multisigOptions.map((m) => (
+            <option key={m} value={m}>
+              {m}
+            </option>
+          ))}
+        </select>
+
+        <div className="ml-auto">
+          <input
+            type="search"
+            placeholder="Search..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="rounded-md border border-border bg-card px-3 py-1.5 text-[12px] text-foreground/80 placeholder:text-muted-foreground/70 focus:outline-none focus:ring-1 focus:ring-border"
+          />
+        </div>
+      </div>
+
+      {loading && queueItems.length === 0 ? (
+        <ProposalCardSkeletonList />
+      ) : filtered.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-border px-6 py-8 text-center text-sm text-muted-foreground/70">
+          {queueItems.length === 0
+            ? "No transactions found. Connect a wallet and configure your workspace in Settings."
+            : "No transactions match your filters."}
+        </div>
+      ) : (
+        <div className="overflow-hidden rounded-xl border border-border bg-card">
+          <div className="grid items-center border-b border-border bg-background px-3 py-2" style={{ gridTemplateColumns: "36px 1.4fr 54px 80px 1fr 80px 48px" }}>
+            <div className="flex items-center justify-center">
+              <input
+                type="checkbox"
+                checked={allSelected}
+                onChange={toggleSelectAll}
+                className="h-3.5 w-3.5 rounded accent-primary"
+                aria-label="Select all"
+              />
+            </div>
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Multisig</span>
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">TX</span>
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Chain</span>
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Status</span>
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Progress</span>
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">Age</span>
+          </div>
+
+          <div className="divide-y divide-border/50">
+            {filtered.map((item) => {
+              const isSelectable = item.proposal.status === "Active" || item.readyToExecute;
+              const isSelected = selected.has(item.focusKey);
+
+              return (
+                <div
+                  key={item.focusKey}
+                  className={cn(
+                    "grid cursor-pointer items-center px-3 py-2.5 transition-colors",
+                    isSelected ? "bg-primary/8" : "hover:bg-muted"
+                  )}
+                  style={{ gridTemplateColumns: "36px 1.4fr 54px 80px 1fr 80px 48px" }}
+                  onClick={() => setModalItem(item)}
+                >
+                  <div
+                    className="flex items-center justify-center"
+                    onClick={(e) => {
+                      if (!isSelectable) return;
+                      e.stopPropagation();
+                      toggleSelect(item.focusKey);
+                    }}
+                  >
+                    {isSelectable && (
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => toggleSelect(item.focusKey)}
+                        onClick={(e) => e.stopPropagation()}
+                        className="h-3.5 w-3.5 rounded accent-primary"
+                        aria-label={`Select ${item.multisig.label ?? "proposal"}`}
+                      />
+                    )}
+                  </div>
+
+                  <div className="min-w-0 pr-2">
+                    <p className="truncate text-[13px] font-medium text-foreground">
+                      {item.multisig.label ?? "Unnamed"}
+                    </p>
+                    <p className="truncate text-[10px] text-muted-foreground">
+                      {item.multisig.provider === "safe" ? "Safe" : "Squads"}
+                    </p>
+                  </div>
+
+                  <span className="font-mono text-xs text-muted-foreground">
+                    #{item.proposal.transactionIndex.toString()}
+                  </span>
+
+                  <span className="font-mono text-[11px] text-muted-foreground">
+                    {item.multisig.chainName}
+                  </span>
+
+                  <div>
+                    <StatusBadge item={item} />
+                  </div>
+
+                  <ProgressBar item={item} />
+
+                  <span className="font-mono text-[11px] text-muted-foreground/70">
+                    {formatAge(item.proposal.createdAt)}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {loading && queueItems.length > 0 && (
+        <div className="flex items-center gap-2 py-2 text-xs text-muted-foreground/70">
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          Refreshing...
+        </div>
+      )}
+
+      <div
+        className={cn(
+          "fixed bottom-0 left-0 right-0 z-50 transition-transform duration-200",
+          selected.size > 0 ? "translate-y-0" : "translate-y-full"
+        )}
+      >
+        <div className="mx-auto max-w-3xl px-4 pb-6">
+          <div className="flex items-center justify-between rounded-2xl bg-card px-5 py-3 shadow-[0_8px_32px_rgba(0,0,0,0.24)]">
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                checked={selected.size > 0}
+                onChange={() => setSelected(new Set())}
+                className="h-3.5 w-3.5 rounded accent-primary"
+                aria-label="Clear selection"
+              />
+              <span className="text-[13px] text-white">
+                {selected.size} transaction{selected.size !== 1 ? "s" : ""} selected
               </span>
             </div>
-            <p className="max-w-[54rem] text-sm leading-6 text-zinc-400">
-              Review signer readiness, execution eligibility, and proposal state
-              across the active multisig scope in one work surface.
-            </p>
+            <div className="flex items-center gap-2">
+              {canApproveItems.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleBatchApprove}
+                  disabled={isActionInProgress}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-1.5 text-[12px] font-semibold text-primary-foreground transition-colors hover:bg-primary/80 disabled:opacity-50"
+                >
+                  {isActionInProgress ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    "✓"
+                  )}
+                  Approve ({canApproveItems.length})
+                </button>
+              )}
+              {canExecuteItems.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleBatchExecute}
+                  disabled={isActionInProgress}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-green-600 px-3.5 py-1.5 text-[12px] font-semibold text-white transition-colors hover:bg-green-700 disabled:opacity-50"
+                >
+                  {isActionInProgress ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    "→"
+                  )}
+                  Execute ({canExecuteItems.length})
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setSelected(new Set())}
+                className="rounded-lg border border-border px-3.5 py-1.5 text-[12px] text-muted-foreground transition-colors hover:border-border/80 hover:text-foreground"
+              >
+                Clear
+              </button>
+            </div>
           </div>
-          {actions ? <div className="shrink-0">{actions}</div> : null}
         </div>
       </div>
 
-      <div className="flex-1">
-        <div className="grid h-full gap-4 xl:grid-cols-[minmax(13.5rem,0.68fr)_minmax(16rem,0.9fr)_minmax(0,1.5fr)]">
-          <aside className="h-full space-y-4 border-r border-zinc-800 pr-4">
-            <div className="flex items-center justify-between gap-3 border-b border-zinc-800 pb-3">
-              <div>
-                <p className="text-[0.68rem] tracking-[0.2em] text-zinc-500 uppercase">
-                  Registry
-                </p>
-                <p className="mt-1 text-sm text-zinc-400">
-                  Explorer-style scope control for queue work.
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <RegistryManagementDialog compact />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => {
-                    autoLoadedSquadsScopeRef.current = "";
-                    autoLoadedWorkspaceScopeRef.current = "";
-
-                    void Promise.all([
-                      loadForAllMultisigs(scopedSquadsMultisigs),
-                      loadWorkspaceProposals(scopedWorkspaceProposalMultisigs, {
-                        force: true,
-                        notifyOnError: true,
-                      }),
-                    ]);
-                  }}
-                  disabled={loading || workspaceLoading || !hasSelectedScope}
-                  className="rounded-md border border-zinc-800 bg-zinc-950 text-zinc-200 hover:bg-zinc-900"
-                  aria-label="Refresh dashboard proposals"
-                  title="Refresh dashboard proposals"
-                >
-                  {loading || workspaceLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <RefreshCw className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-            </div>
-
-            <Input
-              placeholder="Search multisigs"
-              value={searchText}
-              onChange={(event) => setSearchText(event.target.value)}
-              className="h-9 border-zinc-800 bg-zinc-950 text-sm text-zinc-100 placeholder:text-zinc-600"
-              aria-label="Search multisigs"
-            />
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-[0.68rem] tracking-[0.18em] text-zinc-500 uppercase">
-                  Explorer
-                </p>
-                <div className="flex items-center gap-1 rounded-md border border-zinc-800 bg-zinc-950/70 p-1">
-                  {explorerSections.map((section) => (
-                    <button
-                      key={section.id}
-                      type="button"
-                      onClick={() =>
-                        setExplorerMode(section.id as WorkspaceExplorerMode)
-                      }
-                      className={cn(
-                        "rounded-sm px-2 py-1 text-[0.62rem] tracking-[0.16em] uppercase transition-colors",
-                        explorerMode === section.id
-                          ? "bg-zinc-100 text-zinc-950"
-                          : "text-zinc-500 hover:text-zinc-200"
-                      )}
-                    >
-                      {section.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="space-y-3">
-                {visibleExplorerSection ? (
-                  <div className="space-y-1.5">
-                    <div className="space-y-0.5">
-                      {visibleExplorerSection.views.map((view) => {
-                        const selected =
-                          view.id === activeViewKey &&
-                          selectedRegistryKeys.length === 0;
-                        const expanded = expandedViewKeys.includes(view.id);
-                        const viewItems = registryItems.filter((item) =>
-                          view.multisigKeys.includes(item.multisig.key)
-                        );
-
-                        return (
-                          <div key={view.id} className="space-y-0.5">
-                            <div
-                              className={cn(
-                                "group flex items-center gap-1 rounded-md border border-transparent pr-2 pl-0.5 transition-colors",
-                                selected && "border-lime-500/20 bg-lime-500/8"
-                              )}
-                            >
-                              <button
-                                type="button"
-                                onClick={() => toggleViewExpansion(view.id)}
-                                className="flex h-6 w-6 items-center justify-center rounded-sm text-zinc-500 transition-colors hover:bg-zinc-900 hover:text-zinc-200"
-                                aria-label={
-                                  expanded
-                                    ? `Collapse ${view.label}`
-                                    : `Expand ${view.label}`
-                                }
-                                title={
-                                  expanded
-                                    ? `Collapse ${view.label}`
-                                    : `Expand ${view.label}`
-                                }
-                              >
-                                {expanded ? (
-                                  <ChevronDown className="h-3.5 w-3.5" />
-                                ) : (
-                                  <ChevronRight className="h-3.5 w-3.5" />
-                                )}
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleViewSelect(view.id)}
-                                className={cn(
-                                  "min-w-0 flex-1 rounded-sm py-1 text-left transition-colors hover:text-zinc-50",
-                                  selected ? "text-zinc-50" : "text-zinc-300"
-                                )}
-                                aria-label={`Select ${view.label} scope`}
-                                title={`Select ${view.label} scope`}
-                              >
-                                <span className="truncate text-sm">
-                                  {view.label}
-                                </span>
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleViewSelect(view.id)}
-                                className={cn(
-                                  "shrink-0 rounded-sm px-1.5 py-1 font-mono text-[0.66rem] tabular-nums transition-colors",
-                                  selected
-                                    ? "bg-lime-500/12 text-lime-200"
-                                    : "text-zinc-500 hover:bg-zinc-900 hover:text-zinc-200"
-                                )}
-                                aria-label={`Select ${view.label} scope`}
-                                title={`Select ${view.label} scope`}
-                              >
-                                {view.multisigKeys.length}
-                              </button>
-                            </div>
-
-                            {expanded ? (
-                              <div className="ml-3 space-y-0.5 border-l border-zinc-800 pl-2.5">
-                                {viewItems.map((item) => {
-                                  const multisigKey = item.multisig.key;
-                                  const itemSelected =
-                                    selectedRegistryKeySet.has(multisigKey);
-                                  const proposalSummary =
-                                    summariesByMultisigKey[multisigKey];
-                                  const summaryLoading = Boolean(
-                                    workspaceSummaryLoadingByMultisigKey[
-                                      multisigKey
-                                    ]
-                                  );
-                                  const summaryError =
-                                    workspaceSummaryErrorsByMultisigKey[
-                                      multisigKey
-                                    ];
-                                  const safeSummaryErrorMessage =
-                                    proposalSummary?.unavailableReason ??
-                                    summaryError ??
-                                    null;
-                                  const hasLoadedWorkspaceQueue =
-                                    workspaceLoadedKeys.includes(multisigKey);
-                                  const hasQueueAttention =
-                                    item.active > 0 ||
-                                    item.waiting > 0 ||
-                                    item.executable > 0;
-                                  const safePresentation =
-                                    item.multisig.provider === "safe"
-                                      ? getSafeRegistryPresentation({
-                                          activeCount: item.active,
-                                          hasLoadedWorkspaceQueue,
-                                          summaryLoading,
-                                          summaryErrorMessage:
-                                            safeSummaryErrorMessage,
-                                          summaryTotalCount:
-                                            proposalSummary?.totalCount ?? null,
-                                        })
-                                      : null;
-                                  const providerMetaLine =
-                                    item.multisig.provider === "safe"
-                                      ? (safePresentation?.metaLine ?? null)
-                                      : `${item.active} active`;
-                                  const isSelectionBlocked =
-                                    item.multisig.provider === "safe"
-                                      ? (safePresentation?.selectionBlocked ??
-                                        false)
-                                      : false;
-                                  const rowClassName = cn(
-                                    "flex w-full items-center justify-between gap-2 rounded-sm px-2 py-1.5 text-left transition-colors",
-                                    itemSelected
-                                      ? "bg-lime-500/10 text-zinc-50"
-                                      : isSelectionBlocked
-                                        ? "cursor-not-allowed bg-zinc-950/45 text-zinc-600"
-                                        : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100"
-                                  );
-
-                                  return (
-                                    <div
-                                      key={`${item.multisig.chainId}:${multisigKey}`}
-                                      className={cn("rounded-sm")}
-                                    >
-                                      {isSelectionBlocked ? (
-                                        <div className={rowClassName}>
-                                          <RegistryRowContent
-                                            item={item}
-                                            providerMetaLine={providerMetaLine}
-                                            hasQueueAttention={
-                                              hasQueueAttention
-                                            }
-                                            hasLoadedWorkspaceQueue={
-                                              hasLoadedWorkspaceQueue
-                                            }
-                                            safeSummaryErrorMessage={
-                                              safeSummaryErrorMessage
-                                            }
-                                            safePresentationSideValue={
-                                              safePresentation?.sideValue ??
-                                              "--"
-                                            }
-                                            onRetry={() =>
-                                              retrySummary(multisigKey)
-                                            }
-                                          />
-                                        </div>
-                                      ) : (
-                                        <button
-                                          type="button"
-                                          onClick={(event) =>
-                                            handleRegistrySelect(
-                                              multisigKey,
-                                              event
-                                            )
-                                          }
-                                          className={rowClassName}
-                                        >
-                                          <RegistryRowContent
-                                            item={item}
-                                            providerMetaLine={providerMetaLine}
-                                            hasQueueAttention={
-                                              hasQueueAttention
-                                            }
-                                            hasLoadedWorkspaceQueue={
-                                              hasLoadedWorkspaceQueue
-                                            }
-                                            safeSummaryErrorMessage={
-                                              safeSummaryErrorMessage
-                                            }
-                                            safePresentationSideValue={
-                                              safePresentation?.sideValue ??
-                                              "--"
-                                            }
-                                            onRetry={() =>
-                                              retrySummary(multisigKey)
-                                            }
-                                          />
-                                        </button>
-                                      )}
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            ) : null}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ) : null}
-              </div>
-            </div>
-          </aside>
-
-          <div className="h-full space-y-3">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800 pb-3">
-              <div>
-                <p className="text-[0.68rem] tracking-[0.2em] text-zinc-500 uppercase">
-                  Priority Queue
-                </p>
-                <p className="mt-1 text-sm text-zinc-400">
-                  {!hasSelectedScope
-                    ? "Select a multisig or scope from the registry to load the queue."
-                    : `${waitingOnYouCount} waiting on you · ${executableCount} executable · `}
-                  {selectedRegistryKeys.length > 1
-                    ? `${selectedRegistryKeys.length} selected multisigs`
-                    : primarySelectedRegistryKey
-                      ? primarySelectedRegistryItem?.multisig.label ||
-                        "Selected multisig"
-                      : activeView?.label || "Selected scope"}
-                </p>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                {(["all", "waiting", "executable"] as const).map((filter) => (
-                  <Button
-                    key={filter}
-                    variant={queueFilter === filter ? "default" : "outline"}
-                    className={cn(
-                      "h-9 rounded-md px-3 text-[0.68rem] tracking-[0.12em] uppercase",
-                      queueFilter === filter
-                        ? "bg-zinc-100 text-zinc-950 hover:bg-zinc-200"
-                        : "border-zinc-800 bg-transparent text-zinc-300 hover:bg-zinc-900"
-                    )}
-                    onClick={() => setQueueFilter(filter)}
-                  >
-                    {filter === "all"
-                      ? "All"
-                      : filter === "waiting"
-                        ? "Waiting"
-                        : "Executable"}
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            {!hasSelectedScope ? (
-              <div className="border border-dashed border-zinc-800 px-4 py-5 text-sm text-zinc-400">
-                Select a multisig, chain, or saved scope from the registry to
-                load proposals.
-              </div>
-            ) : loading || workspaceLoading ? (
-              <ProposalCardSkeletonList />
-            ) : filteredQueueItems.length === 0 ? (
-              <div className="border border-dashed border-zinc-800 px-4 py-5 text-sm text-zinc-400">
-                {queueFilter !== "all" && scopedQueueItems.length > 0 ? (
-                  "No proposals match the current filter."
-                ) : isScopedWorkspaceLoading ? (
-                  <div className="flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Loading proposals for the selected Safe scope...
-                  </div>
-                ) : scopedWorkspaceLoadError ? (
-                  <div className="space-y-1">
-                    <p className="text-zinc-200">
-                      Failed to load proposals for the selected Safe scope.
-                    </p>
-                    <p className="text-zinc-500">{scopedWorkspaceLoadError}</p>
-                  </div>
-                ) : primarySelectedRegistryItem?.multisig.provider === "safe" &&
-                  primarySelectedSummaryLoading ? (
-                  <div className="flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Loading Safe proposal summary...
-                  </div>
-                ) : primarySelectedRegistryItem?.multisig.provider === "safe" &&
-                  primarySelectedSummary?.unavailableReason ? (
-                  <div className="space-y-1">
-                    <p className="text-zinc-200">
-                      Safe metadata is temporarily unavailable for this
-                      multisig.
-                    </p>
-                    <p className="text-zinc-500">
-                      {primarySelectedSummary.unavailableReason}
-                    </p>
-                  </div>
-                ) : primarySelectedRegistryItem?.multisig.provider === "safe" &&
-                  primarySelectedSummaryError ? (
-                  <div className="space-y-1">
-                    <p className="text-zinc-200">
-                      Safe metadata is unavailable for this multisig.
-                    </p>
-                    <p className="text-zinc-500">
-                      {primarySelectedSummaryError}
-                    </p>
-                  </div>
-                ) : primarySelectedRegistryItem?.multisig.provider === "safe" &&
-                  primarySelectedSummary ? (
-                  "No proposals were found for this Safe."
-                ) : (
-                  "No proposals match the current scope."
-                )}
-              </div>
-            ) : (
-              <div className="overflow-hidden border border-zinc-800 bg-zinc-950/55">
-                {pagination.pageItems.map((item, index) => {
-                  const isFocused = item.focusKey === focusedProposalKey;
-
-                  return (
-                    <button
-                      key={item.focusKey}
-                      type="button"
-                      onClick={() => setFocusedProposalKey(item.focusKey)}
-                      className={cn(
-                        "flex w-full flex-col gap-1.5 border-b border-zinc-800 px-3 py-2.5 text-left transition-colors last:border-b-0",
-                        isFocused ? "bg-lime-400/8" : "hover:bg-zinc-900/80"
-                      )}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0 space-y-1">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="text-[0.66rem] tracking-[0.16em] text-zinc-500 uppercase">
-                              {String(
-                                pagination.startIndex + index + 1
-                              ).padStart(2, "0")}
-                            </span>
-                            <span className="text-sm font-medium text-zinc-100">
-                              {item.multisig.label || "Unnamed multisig"}
-                            </span>
-                            <span className="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-1.5 py-0.5 font-mono text-[0.58rem] tracking-[0.16em] text-cyan-300 uppercase">
-                              {item.multisig.chainName}
-                            </span>
-                            <span
-                              className={cn(
-                                "rounded-full px-1.5 py-0.5 font-mono text-[0.58rem] tracking-[0.16em] uppercase",
-                                item.multisig.provider === "safe"
-                                  ? "border border-amber-500/30 bg-amber-500/10 text-amber-200"
-                                  : "border border-zinc-700 bg-zinc-900 text-zinc-400"
-                              )}
-                            >
-                              {formatProviderLabel(item.multisig.provider)}
-                            </span>
-                          </div>
-                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.78rem]">
-                            <span className="text-zinc-400">
-                              Proposal #
-                              {item.proposal.transactionIndex.toString()}
-                            </span>
-                            <span
-                              className={cn("font-medium", getStatusTone(item))}
-                            >
-                              {item.lineLabel}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex shrink-0 items-start gap-3">
-                          <div className="space-y-0.5 pt-1.5 text-right text-[0.62rem] tracking-[0.16em] text-zinc-500 uppercase">
-                            <p>
-                              {item.approvalCount}/{item.multisig.threshold}{" "}
-                              signed
-                            </p>
-                            <p>{item.proposal.rejections.length} rejected</p>
-                          </div>
-                          <ArrowRight
-                            className={cn(
-                              "mt-0.5 h-4 w-4 shrink-0",
-                              isFocused ? "text-lime-300" : "text-zinc-600"
-                            )}
-                          />
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-
-            <Pagination
-              currentPage={pagination.currentPage}
-              totalPages={pagination.totalPages}
-              onPageChange={pagination.goToPage}
-              canGoNext={pagination.canGoNext}
-              canGoPrevious={pagination.canGoPrevious}
-              startIndex={pagination.startIndex}
-              endIndex={pagination.endIndex}
-              totalItems={filteredQueueItems.length}
-            />
-          </div>
-
-          <div className="h-full overflow-hidden border border-zinc-800 bg-zinc-950/82 xl:ml-1">
-            {!focusedItem ? (
-              <div className="flex h-full min-h-full items-start px-4 py-10 text-sm text-zinc-400">
-                {hasSelectedScope
-                  ? "No proposal available for the current scope."
-                  : "Select a multisig from the left to inspect proposal details."}
-              </div>
-            ) : (
-              <div className="space-y-5 px-4 py-4">
-                <div className="flex flex-wrap items-start justify-between gap-3 border-b border-zinc-800 pb-4">
-                  <div className="space-y-2">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Badge className="rounded-md bg-zinc-100 px-2.5 py-1 text-zinc-950">
-                        {focusedItem.proposal.status}
-                      </Badge>
-                      <Badge
-                        variant="outline"
-                        className="rounded-md border-zinc-700 bg-transparent px-2.5 py-1 text-zinc-300"
-                      >
-                        {focusedItem.multisig.chainName}
-                      </Badge>
-                      <Badge
-                        variant="outline"
-                        className={cn(
-                          "rounded-md px-2.5 py-1",
-                          focusedItem.multisig.provider === "safe"
-                            ? "border-amber-500/30 bg-amber-500/10 text-amber-200"
-                            : "border-zinc-700 bg-transparent text-zinc-300"
-                        )}
-                      >
-                        {formatProviderLabel(focusedItem.multisig.provider)}
-                      </Badge>
-                      {focusedItem.currentUserApproved ? (
-                        <Badge
-                          variant="outline"
-                          className="rounded-md border-lime-500/30 bg-lime-500/10 px-2.5 py-1 text-lime-200"
-                        >
-                          You signed
-                        </Badge>
-                      ) : null}
-                      {focusedItem.currentUserRejected ? (
-                        <Badge
-                          variant="outline"
-                          className="rounded-md border-red-500/30 bg-red-500/10 px-2.5 py-1 text-red-200"
-                        >
-                          You rejected
-                        </Badge>
-                      ) : null}
-                    </div>
-                    <div>
-                      <h2 className="mt-1 text-xl font-semibold tracking-[-0.03em] text-zinc-50">
-                        {focusedItem.multisig.label || "Unnamed multisig"} · #
-                        {focusedItem.proposal.transactionIndex.toString()}
-                      </h2>
-                      <div className="mt-2 space-y-2 text-[0.68rem] tracking-[0.14em] text-zinc-500 uppercase">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span>Multisig address</span>
-                          <AddressWithLabel
-                            address={focusedItem.multisig.address}
-                            showCopy={false}
-                            showLabelButton={false}
-                            copyOnClick
-                            className="tracking-normal normal-case"
-                          />
-                        </div>
-                        {focusedItem.proposal.creator ? (
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span>Created by</span>
-                            <AddressWithLabel
-                              address={focusedItem.proposal.creator}
-                              showCopy={false}
-                              showLabelButton={false}
-                              copyOnClick
-                              className="tracking-normal normal-case"
-                            />
-                          </div>
-                        ) : null}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-2">
-                    {(["overview", "payload"] as const).map((tab) => (
-                      <Button
-                        key={tab}
-                        variant="outline"
-                        className={cn(
-                          "rounded-md border-zinc-800",
-                          detailTab === tab
-                            ? "bg-zinc-100 text-zinc-950 hover:bg-zinc-200"
-                            : "bg-transparent text-zinc-300 hover:bg-zinc-900"
-                        )}
-                        onClick={() => setDetailTab(tab)}
-                      >
-                        {tab === "overview" ? "Overview" : "Payload"}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-
-                <div
-                  className={cn(
-                    "grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(14rem,0.78fr)]",
-                    detailTab === "payload" && "hidden"
-                  )}
-                >
-                  <div
-                    className={cn(
-                      "space-y-3",
-                      detailTab !== "overview" && "hidden"
-                    )}
-                  >
-                    <div className="flex items-center justify-between gap-3 border-b border-zinc-800 pb-3">
-                      <div>
-                        <p className="text-[0.68rem] tracking-[0.18em] text-zinc-500 uppercase">
-                          Signer map
-                        </p>
-                        <p className="mt-1 text-sm text-zinc-400">
-                          Member state at a glance.
-                        </p>
-                      </div>
-                      <ShieldCheck className="h-5 w-5 text-zinc-500" />
-                    </div>
-
-                    <div className="divide-y divide-zinc-800 border border-zinc-800">
-                      {focusedItem.multisig.members.map((member) => {
-                        const memberKey = member.address;
-                        const approved =
-                          focusedItem.proposal.approvals.includes(memberKey);
-                        const rejected =
-                          focusedItem.proposal.rejections.includes(memberKey);
-                        const isCurrentUser =
-                          publicKey?.toString() === memberKey;
-                        const memberState = approved
-                          ? "Signed"
-                          : rejected
-                            ? "Rejected"
-                            : focusedItem.proposal.status === "Active"
-                              ? "Awaiting"
-                              : "No action";
-
-                        return (
-                          <div
-                            key={memberKey}
-                            className="flex items-start justify-between gap-3 px-3 py-3"
-                          >
-                            <div className="min-w-0 space-y-1.5">
-                              <div className="flex items-center gap-2">
-                                {isCurrentUser ? (
-                                  <Badge
-                                    variant="secondary"
-                                    className="h-5 rounded-full px-2 text-[0.62rem] tracking-[0.12em] uppercase"
-                                  >
-                                    You
-                                  </Badge>
-                                ) : null}
-                                <AddressWithLabel
-                                  address={memberKey}
-                                  className="tracking-normal normal-case"
-                                />
-                              </div>
-                            </div>
-                            <Badge
-                              variant="outline"
-                              className={cn(
-                                "rounded-md px-2.5 py-1",
-                                approved &&
-                                  "border-lime-500/30 bg-lime-500/10 text-lime-200",
-                                rejected &&
-                                  "border-red-500/30 bg-red-500/10 text-red-200",
-                                !approved &&
-                                  !rejected &&
-                                  "border-zinc-700 bg-zinc-900 text-zinc-400"
-                              )}
-                            >
-                              {memberState}
-                            </Badge>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  <div
-                    className={cn(
-                      "space-y-4 border-t border-zinc-800 pt-4 lg:border-t-0 lg:border-l lg:pl-4",
-                      detailTab !== "overview" && "hidden"
-                    )}
-                  >
-                    <div className="space-y-3">
-                      <p className="text-[0.68rem] tracking-[0.18em] text-zinc-500 uppercase">
-                        Decision context
-                      </p>
-                      <div className="space-y-4 text-sm text-zinc-400">
-                        <div className="border border-zinc-800 bg-zinc-950/45 p-4">
-                          <div className="flex flex-wrap items-end justify-between gap-4">
-                            <div className="space-y-3">
-                              <div className="flex items-end gap-3">
-                                <p className="text-5xl font-semibold tracking-[-0.06em] text-zinc-50">
-                                  {focusedItem.approvalCount}
-                                  <span className="text-zinc-600">
-                                    /{focusedItem.multisig.threshold}
-                                  </span>
-                                </p>
-                                <p className="pb-1 text-[0.72rem] tracking-[0.16em] text-zinc-500 uppercase">
-                                  Required to execute
-                                </p>
-                              </div>
-                              <div className="flex flex-wrap items-center gap-2">
-                                <Badge
-                                  variant="outline"
-                                  className={cn(
-                                    "rounded-md px-2.5 py-1",
-                                    focusedItem.readyToExecute &&
-                                      "border-lime-500/30 bg-lime-500/10 text-lime-200",
-                                    !focusedItem.readyToExecute &&
-                                      focusedItem.needsYourSignature &&
-                                      "border-amber-500/30 bg-amber-500/10 text-amber-200",
-                                    !focusedItem.readyToExecute &&
-                                      !focusedItem.needsYourSignature &&
-                                      focusedItem.proposal.status ===
-                                        "Active" &&
-                                      "border-zinc-700 bg-zinc-900 text-zinc-300",
-                                    focusedItem.proposal.status !== "Active" &&
-                                      "border-zinc-700 bg-zinc-900 text-zinc-400"
-                                  )}
-                                >
-                                  {focusedItem.readyToExecute
-                                    ? "Ready now"
-                                    : focusedItem.needsYourSignature
-                                      ? "Waiting on you"
-                                      : focusedItem.proposal.status === "Active"
-                                        ? "Collecting signatures"
-                                        : "Closed"}
-                                </Badge>
-                              </div>
-                            </div>
-                            <div className="grid min-w-[11rem] gap-2 text-sm text-zinc-300 sm:grid-cols-2">
-                              <div className="border border-zinc-800 bg-zinc-950 px-3 py-2">
-                                <p className="text-[0.64rem] tracking-[0.16em] text-zinc-500 uppercase">
-                                  Rejections
-                                </p>
-                                <p className="mt-1 text-lg font-medium text-zinc-100">
-                                  {focusedItem.proposal.rejections.length}
-                                </p>
-                              </div>
-                              <div className="border border-zinc-800 bg-zinc-950 px-3 py-2">
-                                <p className="text-[0.64rem] tracking-[0.16em] text-zinc-500 uppercase">
-                                  Members
-                                </p>
-                                <p className="mt-1 text-lg font-medium text-zinc-100">
-                                  {focusedItem.multisig.members.length}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex items-start gap-3">
-                          <CircleAlert className="mt-0.5 h-4 w-4 shrink-0 text-zinc-500" />
-                          <p>
-                            {focusedItem.readyToExecute
-                              ? "Threshold is complete. Execution can happen immediately from this workspace."
-                              : focusedItem.needsYourSignature
-                                ? "This item is blocked on your decision and will change state as soon as you act."
-                                : focusedItem.proposal.status === "Active"
-                                  ? `${focusedItem.missingApprovals} more signature${focusedItem.missingApprovals === 1 ? "" : "s"} are still required before execution.`
-                                  : "This proposal is complete. No further signatures are needed."}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="border-t border-zinc-800 pt-4">
-                      <p className="text-[0.68rem] tracking-[0.18em] text-zinc-500 uppercase">
-                        Actions
-                      </p>
-                      {actionsSupported ? (
-                        <div className="mt-3 flex flex-wrap gap-2">
-                          {approveSupported ? (
-                            <Button
-                              className="rounded-md bg-lime-300 text-zinc-950 hover:bg-lime-200"
-                              onClick={handleApprove}
-                              disabled={
-                                !focusedItem.needsYourSignature ||
-                                isActionInProgress
-                              }
-                            >
-                              {isApproveLoading ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : (
-                                <Check className="h-4 w-4" />
-                              )}
-                              {approveLabel}
-                            </Button>
-                          ) : null}
-                          {rejectSupported ? (
-                            <Button
-                              variant="outline"
-                              className="rounded-md border-zinc-800 bg-transparent text-zinc-200 hover:bg-zinc-900"
-                              onClick={handleReject}
-                              disabled={
-                                !focusedItem.needsYourSignature ||
-                                isActionInProgress
-                              }
-                            >
-                              {isRejectLoading ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : (
-                                <X className="h-4 w-4" />
-                              )}
-                              Reject
-                            </Button>
-                          ) : null}
-                          {executeSupported ? (
-                            <Button
-                              variant="outline"
-                              className="rounded-md border-zinc-800 bg-zinc-100 text-zinc-950 hover:bg-zinc-200"
-                              onClick={handleExecute}
-                              disabled={
-                                !focusedItem.readyToExecute ||
-                                isActionInProgress
-                              }
-                            >
-                              {isExecuteLoading ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : (
-                                <ArrowRight className="h-4 w-4" />
-                              )}
-                              Execute
-                            </Button>
-                          ) : null}
-                        </div>
-                      ) : (
-                        <div className="mt-3">
-                          <Badge
-                            variant="outline"
-                            className="border-zinc-800 bg-zinc-950 text-zinc-400"
-                          >
-                            Read-only via Safe transaction service
-                          </Badge>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div
-                  className={cn(
-                    "space-y-4",
-                    detailTab !== "payload" && "hidden"
-                  )}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-[0.68rem] tracking-[0.18em] text-zinc-500 uppercase">
-                        Payload
-                      </p>
-                      <p className="mt-1 text-sm text-zinc-400">
-                        Provider-specific transaction metadata and decoded
-                        payload data.
-                      </p>
-                    </div>
-                    {focusedPayload?.type === "safe" &&
-                    focusedPayload.safeTxHash ? (
-                      <Button
-                        variant="outline"
-                        className="rounded-md border-zinc-800 bg-transparent text-zinc-200 hover:bg-zinc-900"
-                        onClick={() => {
-                          navigator.clipboard.writeText(
-                            focusedPayload.safeTxHash ?? ""
-                          );
-                        }}
-                      >
-                        <Copy className="h-4 w-4" />
-                        Copy Safe Tx Hash
-                      </Button>
-                    ) : focusedPayload && "transactionPda" in focusedPayload ? (
-                      <Button
-                        variant="outline"
-                        className="rounded-md border-zinc-800 bg-transparent text-zinc-200 hover:bg-zinc-900"
-                        onClick={() => {
-                          navigator.clipboard.writeText(
-                            focusedPayload.transactionPda
-                          );
-                        }}
-                      >
-                        <Copy className="h-4 w-4" />
-                        Copy PDA
-                      </Button>
-                    ) : null}
-                  </div>
-
-                  {focusedPayload && "transactionPda" in focusedPayload ? (
-                    <div className="rounded-xl border border-zinc-800 bg-zinc-950/55 p-3">
-                      <p className="text-[0.68rem] tracking-[0.16em] text-zinc-500 uppercase">
-                        Transaction PDA
-                      </p>
-                      <code className="mt-2 block font-mono text-xs break-all text-zinc-300">
-                        {focusedPayload.transactionPda}
-                      </code>
-                    </div>
-                  ) : null}
-
-                  {focusedPayload?.type === "safe" ? (
-                    <div className="grid gap-3 md:grid-cols-2">
-                      <div className="rounded-xl border border-zinc-800 bg-zinc-950/55 p-3">
-                        <p className="text-[0.68rem] tracking-[0.16em] text-zinc-500 uppercase">
-                          Safe Tx Hash
-                        </p>
-                        <code className="mt-2 block font-mono text-xs break-all text-zinc-300">
-                          {focusedPayload.safeTxHash ?? "Unavailable"}
-                        </code>
-                      </div>
-                      <div className="rounded-xl border border-zinc-800 bg-zinc-950/55 p-3">
-                        <p className="text-[0.68rem] tracking-[0.16em] text-zinc-500 uppercase">
-                          Nonce
-                        </p>
-                        <p className="mt-2 font-mono text-sm text-zinc-200">
-                          {focusedPayload.nonce}
-                        </p>
-                      </div>
-                      <div className="rounded-xl border border-zinc-800 bg-zinc-950/55 p-3">
-                        <p className="text-[0.68rem] tracking-[0.16em] text-zinc-500 uppercase">
-                          Target
-                        </p>
-                        <div className="mt-2">
-                          {focusedPayload.toAddress ? (
-                            <AddressWithLabel
-                              address={focusedPayload.toAddress}
-                              showFull
-                            />
-                          ) : (
-                            <p className="text-sm text-zinc-400">Unavailable</p>
-                          )}
-                        </div>
-                      </div>
-                      <div className="rounded-xl border border-zinc-800 bg-zinc-950/55 p-3">
-                        <p className="text-[0.68rem] tracking-[0.16em] text-zinc-500 uppercase">
-                          Value / Operation
-                        </p>
-                        <p className="mt-2 font-mono text-sm text-zinc-200">
-                          {focusedPayload.value ?? "0"} wei
-                        </p>
-                        <p className="mt-1 text-xs text-zinc-500">
-                          Operation {focusedPayload.operation ?? 0}
-                        </p>
-                      </div>
-                      {focusedPayload.data ? (
-                        <div className="rounded-xl border border-zinc-800 bg-zinc-950/55 p-3 md:col-span-2">
-                          <p className="text-[0.68rem] tracking-[0.16em] text-zinc-500 uppercase">
-                            Calldata
-                          </p>
-                          <code className="mt-2 block rounded-lg border border-zinc-800 bg-zinc-950 px-2 py-1 font-mono text-xs break-all text-zinc-300">
-                            {focusedPayload.data}
-                          </code>
-                        </div>
-                      ) : null}
-                      {focusedPayload.dataDecoded ? (
-                        <div className="rounded-xl border border-zinc-800 bg-zinc-950/55 p-3 md:col-span-2">
-                          <p className="text-[0.68rem] tracking-[0.16em] text-zinc-500 uppercase">
-                            Decoded Payload
-                          </p>
-                          <pre className="mt-2 overflow-x-auto rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 font-mono text-xs text-zinc-300">
-                            {JSON.stringify(
-                              focusedPayload.dataDecoded,
-                              null,
-                              2
-                            )}
-                          </pre>
-                        </div>
-                      ) : null}
-                    </div>
-                  ) : null}
-
-                  {payloadLoading ? (
-                    <div className="flex min-h-[14rem] items-center justify-center rounded-xl border border-zinc-800 bg-zinc-950/55">
-                      <Loader2 className="h-6 w-6 animate-spin text-zinc-500" />
-                    </div>
-                  ) : payloadError ? (
-                    <div className="rounded-xl border border-dashed border-zinc-800 px-4 py-5 text-sm text-zinc-400">
-                      {payloadError}
-                    </div>
-                  ) : focusedPayload?.type ===
-                    "safe" ? null : focusedPayload?.type === "config" ? (
-                    <div className="space-y-3">
-                      {focusedPayload.actions.map((action, index: number) => {
-                        const formatted = formatConfigAction(
-                          action as ConfigAction
-                        );
-                        return (
-                          <div
-                            key={index}
-                            className="rounded-xl border border-zinc-800 bg-zinc-950/55 p-4"
-                          >
-                            <div className="mb-3 flex items-center gap-2">
-                              <Badge
-                                variant="outline"
-                                className="border-zinc-700 bg-zinc-900 text-zinc-300"
-                              >
-                                Action {index + 1}
-                              </Badge>
-                              <span className="text-sm font-semibold text-zinc-100">
-                                {formatted.type}
-                              </span>
-                            </div>
-                            <div className="space-y-3">
-                              {formatted.fields.map((field, fieldIndex) => (
-                                <div key={fieldIndex} className="space-y-1">
-                                  <p className="text-xs font-medium text-zinc-500">
-                                    {field.label}
-                                  </p>
-                                  {typeof field.value === "string" ? (
-                                    <p className="text-sm break-all text-zinc-200">
-                                      {field.value}
-                                    </p>
-                                  ) : (
-                                    field.value
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : focusedPayload?.type === "vault" ? (
-                    <div className="space-y-3">
-                      {focusedPayload.instructions.map(
-                        (instruction, index: number) => {
-                          return (
-                            <div
-                              key={index}
-                              className="rounded-xl border border-zinc-800 bg-zinc-950/55 p-4"
-                            >
-                              <div className="mb-3 space-y-2">
-                                <p className="text-sm font-semibold text-zinc-100">
-                                  Instruction {index + 1}
-                                </p>
-                                <AddressWithLabel
-                                  address={instruction.programAddress}
-                                  showFull
-                                  vaultAddress={
-                                    focusedPayload.vaultAddress ?? undefined
-                                  }
-                                />
-                              </div>
-                              <div className="space-y-3 text-xs text-zinc-400">
-                                <div>
-                                  <p className="mb-2 text-zinc-500">
-                                    Accounts (
-                                    {instruction.accountIndexes.length})
-                                  </p>
-                                  <div className="space-y-1.5">
-                                    {instruction.accountIndexes.map(
-                                      (accountIndex: number) => (
-                                        <div
-                                          key={`${index}-${accountIndex}`}
-                                          className="flex items-center gap-2"
-                                        >
-                                          <span className="w-6 shrink-0 font-mono text-zinc-500">
-                                            {accountIndex}
-                                          </span>
-                                          <AddressWithLabel
-                                            address={
-                                              instruction.accountAddresses[
-                                                instruction.accountIndexes.indexOf(
-                                                  accountIndex
-                                                )
-                                              ]
-                                            }
-                                            vaultAddress={
-                                              focusedPayload.vaultAddress ??
-                                              undefined
-                                            }
-                                          />
-                                        </div>
-                                      )
-                                    )}
-                                  </div>
-                                </div>
-                                <div>
-                                  <p className="mb-2 text-zinc-500">
-                                    Data (base58)
-                                  </p>
-                                  <code className="block rounded-lg border border-zinc-800 bg-zinc-950 px-2 py-1 font-mono break-all text-zinc-300">
-                                    {instruction.data}
-                                  </code>
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        }
-                      )}
-                    </div>
-                  ) : (
-                    <div className="rounded-xl border border-dashed border-zinc-800 px-4 py-5 text-sm text-zinc-400">
-                      No payload details available for this proposal.
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+      <ProposalDetailModal
+        item={modalItem}
+        open={modalItem !== null}
+        onClose={() => setModalItem(null)}
+        onActionSuccess={() => loadAll({ force: true })}
+      />
     </section>
   );
 }

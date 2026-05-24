@@ -1,11 +1,13 @@
 import { ReactNode } from "react";
 
+import { formatAddress, isValidAddress } from "@/lib/utils/format-address";
+
 export interface ConfigAction {
   __kind: string;
   [key: string]: unknown;
 }
 
-export interface FormattedConfigAction {
+interface FormattedConfigAction {
   type: string;
   summary: string;
   fields: { label: string; value: string | ReactNode }[];
@@ -18,18 +20,11 @@ export function formatConfigAction(
 
   switch (type) {
     case "AddMember": {
-      const member = action as unknown as {
-        newMember: { key: unknown; permissions?: { mask: number } };
-      };
-      const memberKey = String(member.newMember?.key || "Unknown");
-      const isValidAddress =
-        memberKey.length >= 32 &&
-        memberKey.length <= 44 &&
-        memberKey !== "Unknown";
-
+      const newMember = action.newMember as { key: unknown; permissions?: { mask: number } } | undefined;
+      const memberKey = String(newMember?.key || "Unknown");
       return {
         type: "Add Member",
-        summary: `Add member ${isValidAddress ? `${memberKey.slice(0, 8)}...` : memberKey}`,
+        summary: `Add member ${isValidAddress(memberKey) ? formatAddress(memberKey, 8, 4) : memberKey}`,
         fields: [
           {
             label: "Member Address",
@@ -37,23 +32,17 @@ export function formatConfigAction(
           },
           {
             label: "Permissions",
-            value: String(member.newMember?.permissions?.mask ?? "Default"),
+            value: String(newMember?.permissions?.mask ?? "Default"),
           },
         ],
       };
     }
 
     case "RemoveMember": {
-      const member = action as unknown as { oldMember: unknown };
-      const memberKey = String(member.oldMember || "Unknown");
-      const isValidAddress =
-        memberKey.length >= 32 &&
-        memberKey.length <= 44 &&
-        memberKey !== "Unknown";
-
+      const memberKey = String(action.oldMember || "Unknown");
       return {
         type: "Remove Member",
-        summary: `Remove member ${isValidAddress ? `${memberKey.slice(0, 8)}...` : memberKey}`,
+        summary: `Remove member ${isValidAddress(memberKey) ? formatAddress(memberKey, 8, 4) : memberKey}`,
         fields: [
           {
             label: "Member Address",
@@ -64,30 +53,20 @@ export function formatConfigAction(
     }
 
     case "ChangeThreshold": {
-      const threshold = action as unknown as { newThreshold: number };
+      const newThreshold = action.newThreshold as number | undefined;
       return {
         type: "Change Threshold",
-        summary: `Set threshold to ${threshold.newThreshold ?? "Unknown"}`,
-        fields: [
-          {
-            label: "New Threshold",
-            value: String(threshold.newThreshold ?? "Unknown"),
-          },
-        ],
+        summary: `Set threshold to ${newThreshold ?? "Unknown"}`,
+        fields: [{ label: "New Threshold", value: String(newThreshold ?? "Unknown") }],
       };
     }
 
     case "SetTimeLock": {
-      const timeLock = action as unknown as { timeLock: number };
+      const timeLock = action.timeLock as number | undefined;
       return {
         type: "Set Time Lock",
-        summary: `Set time lock to ${timeLock.timeLock ?? "Unknown"}s`,
-        fields: [
-          {
-            label: "Time Lock (seconds)",
-            value: String(timeLock.timeLock ?? "Unknown"),
-          },
-        ],
+        summary: `Set time lock to ${timeLock ?? "Unknown"}s`,
+        fields: [{ label: "Time Lock (seconds)", value: String(timeLock ?? "Unknown") }],
       };
     }
 
@@ -160,32 +139,3 @@ export function formatConfigAction(
   }
 }
 
-export interface TransactionSummary {
-  type: "config" | "vault";
-  instructionCount?: number;
-  accountCount?: number;
-  programIds?: string[];
-  configActions?: {
-    type: string;
-    summary: string;
-  }[];
-}
-
-export function formatTransactionSummary(summary: TransactionSummary): string {
-  if (summary.type === "config") {
-    const actionCount = summary.configActions?.length || 0;
-    const actions = summary.configActions || [];
-
-    if (actions.length === 0) {
-      return "Config transaction";
-    }
-
-    if (actions.length === 1) {
-      return actions[0].summary;
-    }
-
-    return `${actionCount} config actions`;
-  }
-
-  return `${summary.instructionCount || 0} instruction${summary.instructionCount !== 1 ? "s" : ""}`;
-}

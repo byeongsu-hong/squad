@@ -7,10 +7,3 @@ export interface SquadMember {
   };
 }
 
-export interface SquadMultisigAccount {
-  threshold: number;
-  members: SquadMember[];
-  transactionIndex: bigint;
-  msChangeIndex: number;
-  programId: PublicKey;
-}

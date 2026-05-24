@@ -5,7 +5,7 @@ import {
   TransactionMessage,
   VersionedTransaction,
 } from "@solana/web3.js";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from "@/lib/config";
@@ -13,6 +13,7 @@ import {
   confirmSafeTransaction,
   executeSafeTransaction,
 } from "@/lib/safe-client";
+import { invalidateSafeProposalCache } from "@/lib/workspace/safe-adapter";
 import { SquadService } from "@/lib/squad";
 import { transactionSignerService } from "@/lib/transaction-signer";
 import {
@@ -27,7 +28,6 @@ import { WalletType, parseLedgerError } from "@/types/wallet";
 
 interface UseProposalActionsOptions {
   onSuccess?: () => void | Promise<void>;
-  skipSuccessCallback?: boolean;
 }
 
 type ProposalActionType = "approve" | "reject" | "execute";
@@ -41,6 +41,8 @@ function buildActionKey(
 }
 
 export function useProposalActions(options: UseProposalActionsOptions = {}) {
+  const optionsRef = useRef(options);
+  optionsRef.current = options;
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const { publicKey, derivationPath, walletType, evmAddress } =
     useWalletStore();
@@ -188,9 +190,7 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
 
         toast.success(SUCCESS_MESSAGES.PROPOSAL_APPROVED);
         squadService.invalidateProposalCache(multisigPda);
-        if (!options.skipSuccessCallback) {
-          await options.onSuccess?.();
-        }
+        await optionsRef.current.onSuccess?.();
       } catch (error) {
         console.error("Failed to approve proposal:", error);
         const errorMessage = parseLedgerError(error);
@@ -200,7 +200,7 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
         setActionLoading(null);
       }
     },
-    [publicKey, getSquadService, signAndSendTransaction, options]
+    [publicKey, getSquadService, signAndSendTransaction]
   );
 
   const reject = useCallback(
@@ -231,9 +231,7 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
 
         toast.success(SUCCESS_MESSAGES.PROPOSAL_REJECTED);
         squadService.invalidateProposalCache(multisigPda);
-        if (!options.skipSuccessCallback) {
-          await options.onSuccess?.();
-        }
+        await optionsRef.current.onSuccess?.();
       } catch (error) {
         console.error("Failed to reject proposal:", error);
         const errorMessage = parseLedgerError(error);
@@ -243,7 +241,7 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
         setActionLoading(null);
       }
     },
-    [publicKey, getSquadService, signAndSendTransaction, options]
+    [publicKey, getSquadService, signAndSendTransaction]
   );
 
   const execute = useCallback(
@@ -279,9 +277,7 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
 
         toast.success(SUCCESS_MESSAGES.PROPOSAL_EXECUTED);
         squadService.invalidateProposalCache(multisigPda);
-        if (!options.skipSuccessCallback) {
-          await options.onSuccess?.();
-        }
+        await optionsRef.current.onSuccess?.();
       } catch (error) {
         console.error("Failed to execute proposal:", error);
         const errorMessage = parseLedgerError(error);
@@ -291,147 +287,79 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
         setActionLoading(null);
       }
     },
-    [publicKey, getSquadService, signAndSendTransaction, options]
+    [publicKey, getSquadService, signAndSendTransaction]
   );
+
+  const getChain = (chainId: string) => {
+    const chain = chains.find((c) => c.id === chainId);
+    if (!chain) throw new Error(ERROR_MESSAGES.CHAIN_NOT_FOUND);
+    return chain;
+  };
+
+  const runSafeAction = async (
+    action: "approve" | "execute",
+    multisigKey: string,
+    transactionIndex: bigint,
+    chainId: string
+  ) => {
+    if (!evmAddress) {
+      toast.error("Connect an EVM wallet first.");
+      return;
+    }
+    const chain = getChain(chainId);
+    setActionLoading(buildActionKey(action, multisigKey, transactionIndex));
+    try {
+      if (action === "approve") {
+        await confirmSafeTransaction({ chain, safeAddress: multisigKey, signer: evmAddress, nonce: transactionIndex });
+        toast.success("Safe transaction confirmed.");
+      } else {
+        await executeSafeTransaction({ chain, safeAddress: multisigKey, signer: evmAddress, nonce: transactionIndex });
+        toast.success("Safe transaction submitted.");
+      }
+      invalidateSafeProposalCache(chainId, multisigKey);
+      await optionsRef.current.onSuccess?.();
+    } catch (error) {
+      const verb = action === "approve" ? "confirm" : "execute";
+      console.error(`Failed to ${verb} Safe transaction:`, error);
+      toast.error(error instanceof Error ? error.message : `Failed to ${verb} Safe transaction.`);
+      throw error;
+    } finally {
+      setActionLoading(null);
+    }
+  };
 
   return {
     approve,
     reject,
     execute,
-    approveByAddress: async (
-      multisigKey: string,
-      transactionIndex: bigint,
-      chainId: string
-    ) => {
-      const chain = chains.find((item) => item.id === chainId);
-      if (!chain) {
-        throw new Error(ERROR_MESSAGES.CHAIN_NOT_FOUND);
-      }
-
+    approveByAddress: async (multisigKey: string, transactionIndex: bigint, chainId: string) => {
+      const chain = getChain(chainId);
       const provider = chain.multisigProvider ?? "squads";
       if (!supportsProviderAction(provider, "approve")) {
-        throw new Error(
-          getUnsupportedProviderMessage(provider, "proposalActions")
-        );
+        throw new Error(getUnsupportedProviderMessage(provider, "proposalActions"));
       }
-
-      if (provider === "safe") {
-        if (!evmAddress) {
-          toast.error("Connect an EVM wallet first.");
-          return;
-        }
-
-        const actionKey = buildActionKey(
-          "approve",
-          multisigKey,
-          transactionIndex
-        );
-        setActionLoading(actionKey);
-
-        try {
-          await confirmSafeTransaction({
-            chain,
-            safeAddress: multisigKey,
-            signer: evmAddress,
-            nonce: transactionIndex,
-          });
-          toast.success("Safe transaction confirmed.");
-          if (!options.skipSuccessCallback) {
-            await options.onSuccess?.();
-          }
-        } catch (error) {
-          console.error("Failed to confirm Safe transaction:", error);
-          toast.error(
-            error instanceof Error
-              ? error.message
-              : "Failed to confirm Safe transaction."
-          );
-          throw error;
-        } finally {
-          setActionLoading(null);
-        }
-        return;
-      }
-
+      if (provider === "safe") return runSafeAction("approve", multisigKey, transactionIndex, chainId);
       return approve(new PublicKey(multisigKey), transactionIndex, chainId);
     },
-    rejectByAddress: async (
-      multisigKey: string,
-      transactionIndex: bigint,
-      chainId: string
-    ) => {
-      const chain = chains.find((item) => item.id === chainId);
-      if (!chain) {
-        throw new Error(ERROR_MESSAGES.CHAIN_NOT_FOUND);
-      }
-
+    rejectByAddress: async (multisigKey: string, transactionIndex: bigint, chainId: string) => {
+      const chain = getChain(chainId);
       const provider = chain.multisigProvider ?? "squads";
       if (!supportsProviderAction(provider, "reject")) {
-        const message =
-          provider === "safe"
-            ? "Safe does not expose a direct reject action here."
-            : getUnsupportedProviderMessage(provider, "proposalActions");
+        const message = provider === "safe"
+          ? "Safe does not expose a direct reject action here."
+          : getUnsupportedProviderMessage(provider, "proposalActions");
         toast.error(message);
         throw new Error(message);
       }
-
       return reject(new PublicKey(multisigKey), transactionIndex, chainId);
     },
-    executeByAddress: async (
-      multisigKey: string,
-      transactionIndex: bigint,
-      chainId: string
-    ) => {
-      const chain = chains.find((item) => item.id === chainId);
-      if (!chain) {
-        throw new Error(ERROR_MESSAGES.CHAIN_NOT_FOUND);
-      }
-
+    executeByAddress: async (multisigKey: string, transactionIndex: bigint, chainId: string) => {
+      const chain = getChain(chainId);
       const provider = chain.multisigProvider ?? "squads";
       if (!supportsProviderAction(provider, "execute")) {
-        throw new Error(
-          getUnsupportedProviderMessage(provider, "proposalActions")
-        );
+        throw new Error(getUnsupportedProviderMessage(provider, "proposalActions"));
       }
-
-      if (provider === "safe") {
-        if (!evmAddress) {
-          toast.error("Connect an EVM wallet first.");
-          return;
-        }
-
-        const actionKey = buildActionKey(
-          "execute",
-          multisigKey,
-          transactionIndex
-        );
-        setActionLoading(actionKey);
-
-        try {
-          await executeSafeTransaction({
-            chain,
-            safeAddress: multisigKey,
-            signer: evmAddress,
-            nonce: transactionIndex,
-          });
-          toast.success("Safe transaction submitted.");
-          if (!options.skipSuccessCallback) {
-            await options.onSuccess?.();
-          }
-        } catch (error) {
-          console.error("Failed to execute Safe transaction:", error);
-          toast.error(
-            error instanceof Error
-              ? error.message
-              : "Failed to execute Safe transaction."
-          );
-          throw error;
-        } finally {
-          setActionLoading(null);
-        }
-        return;
-      }
-
+      if (provider === "safe") return runSafeAction("execute", multisigKey, transactionIndex, chainId);
       return execute(new PublicKey(multisigKey), transactionIndex, chainId);
     },
     buildActionKey,

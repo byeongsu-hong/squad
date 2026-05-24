@@ -11,7 +11,7 @@ import { firstValueFrom, lastValueFrom, timeout } from "rxjs";
 
 import type { LedgerAccount } from "@/types/wallet";
 
-export class LedgerService {
+class LedgerService {
   private sdk: DeviceManagementKit | null = null;
   private sessionId: string | null = null;
   private signer: SignerSolana | null = null;
@@ -140,9 +140,6 @@ export class LedgerService {
     throw new Error("Failed to sign message");
   }
 
-  isConnected(): boolean {
-    return this.sdk !== null && this.sessionId !== null && this.signer !== null;
-  }
 }
 
 export const ledgerService = new LedgerService();

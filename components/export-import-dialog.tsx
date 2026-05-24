@@ -4,7 +4,6 @@ import {
   AlertTriangle,
   Check,
   Copy,
-  Download,
   Loader2,
   Upload,
 } from "lucide-react";
@@ -39,7 +38,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "./ui/dialog";
 import { Label } from "./ui/label";
 import { Progress } from "./ui/progress";
@@ -56,36 +54,6 @@ interface ImportProgressState {
   label: string;
 }
 
-export function ExportImportDialog() {
-  return <DialogShell />;
-}
-
-function DialogShell() {
-  const [isOpen, setIsOpen] = useState(false);
-  const handleDialogChange = (open: boolean) => {
-    setIsOpen(open);
-  };
-
-  return (
-    <Dialog open={isOpen} onOpenChange={handleDialogChange}>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="icon">
-          <Download className="h-4 w-4" />
-          <span className="sr-only">Export / Import</span>
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="flex max-h-[90vh] flex-col overflow-hidden sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle>Export / Import Settings</DialogTitle>
-          <DialogDescription>
-            Export your configuration to YAML or import from clipboard.
-          </DialogDescription>
-        </DialogHeader>
-        <ExportImportController onClose={() => setIsOpen(false)} />
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 export function ExportImportController({
   embedded = false,
@@ -505,42 +473,42 @@ export function ExportImportController({
           </div>
 
           <div className="space-y-4 px-6 py-5">
-            <div className="grid gap-2 border border-zinc-800 bg-zinc-950/50 p-4">
-              <p className="text-[0.68rem] tracking-[0.18em] text-zinc-500 uppercase">
+            <div className="grid gap-2 border border-border bg-muted p-4">
+              <p className="text-[0.68rem] tracking-[0.18em] text-muted-foreground/70 uppercase">
                 What gets cleared
               </p>
-              <p className="text-sm text-zinc-300">
+              <p className="text-sm text-foreground/80">
                 Saved multisigs, custom chains, address labels, provider
                 settings, and current workspace selections.
               </p>
             </div>
             <div className="grid gap-2 sm:grid-cols-3">
-              <div className="border border-zinc-800 bg-zinc-950/50 px-3 py-3">
-                <p className="text-[0.62rem] tracking-[0.16em] text-zinc-500 uppercase">
+              <div className="border border-border bg-muted px-3 py-3">
+                <p className="text-[0.62rem] tracking-[0.16em] text-muted-foreground/70 uppercase">
                   Multisigs
                 </p>
-                <p className="mt-1 text-lg font-medium text-zinc-100">
+                <p className="mt-1 text-lg font-medium text-foreground">
                   {multisigCount}
                 </p>
               </div>
-              <div className="border border-zinc-800 bg-zinc-950/50 px-3 py-3">
-                <p className="text-[0.62rem] tracking-[0.16em] text-zinc-500 uppercase">
+              <div className="border border-border bg-muted px-3 py-3">
+                <p className="text-[0.62rem] tracking-[0.16em] text-muted-foreground/70 uppercase">
                   Custom chains
                 </p>
-                <p className="mt-1 text-lg font-medium text-zinc-100">
+                <p className="mt-1 text-lg font-medium text-foreground">
                   {customChainCount}
                 </p>
               </div>
-              <div className="border border-zinc-800 bg-zinc-950/50 px-3 py-3">
-                <p className="text-[0.62rem] tracking-[0.16em] text-zinc-500 uppercase">
+              <div className="border border-border bg-muted px-3 py-3">
+                <p className="text-[0.62rem] tracking-[0.16em] text-muted-foreground/70 uppercase">
                   Labels
                 </p>
-                <p className="mt-1 text-lg font-medium text-zinc-100">
+                <p className="mt-1 text-lg font-medium text-foreground">
                   {labelCount}
                 </p>
               </div>
             </div>
-            <p className="text-sm leading-6 text-zinc-500">
+            <p className="text-sm leading-6 text-muted-foreground/70">
               Default chain presets remain available after reset. Right now this
               action will remove {multisigCount} multisig
               {multisigCount === 1 ? "" : "s"}, {customChainCount} custom chain
@@ -549,7 +517,7 @@ export function ExportImportController({
             </p>
           </div>
 
-          <DialogFooter className="border-t border-zinc-800 px-6 py-5 sm:justify-between">
+          <DialogFooter className="border-t border-border px-6 py-5 sm:justify-between">
             <Button
               type="button"
               variant="outline"
@@ -591,7 +559,7 @@ function ExportImportModePicker({
           htmlFor={embedded ? "settings-export" : "export"}
           className={
             embedded
-              ? "flex cursor-pointer items-start gap-3 border border-zinc-800 bg-zinc-950/55 px-3 py-3 font-normal"
+              ? "flex cursor-pointer items-start gap-3 border border-border bg-muted px-3 py-3 font-normal"
               : "flex cursor-pointer items-center space-x-2 font-normal"
           }
         >
@@ -600,9 +568,9 @@ function ExportImportModePicker({
             id={embedded ? "settings-export" : "export"}
           />
           <span className="space-y-1">
-            <span className="block text-sm text-zinc-100">Export to YAML</span>
+            <span className="block text-sm text-foreground">Export to YAML</span>
             {embedded ? (
-              <span className="block text-xs text-zinc-400">
+              <span className="block text-xs text-muted-foreground">
                 Generate the complete portable workspace snapshot.
               </span>
             ) : null}
@@ -612,7 +580,7 @@ function ExportImportModePicker({
           htmlFor={embedded ? "settings-import" : "import"}
           className={
             embedded
-              ? "flex cursor-pointer items-start gap-3 border border-zinc-800 bg-zinc-950/55 px-3 py-3 font-normal"
+              ? "flex cursor-pointer items-start gap-3 border border-border bg-muted px-3 py-3 font-normal"
               : "flex cursor-pointer items-center space-x-2 font-normal"
           }
         >
@@ -621,11 +589,11 @@ function ExportImportModePicker({
             id={embedded ? "settings-import" : "import"}
           />
           <span className="space-y-1">
-            <span className="block text-sm text-zinc-100">
+            <span className="block text-sm text-foreground">
               Import from YAML
             </span>
             {embedded ? (
-              <span className="block text-xs text-zinc-400">
+              <span className="block text-xs text-muted-foreground">
                 Merge chains and multisigs from another environment.
               </span>
             ) : null}
@@ -667,43 +635,43 @@ function ExportImportExportPanel({
       <div
         className={
           embedded
-            ? "space-y-3 border border-zinc-800 bg-zinc-950/55 p-4"
+            ? "space-y-3 border border-border bg-muted p-4"
             : "flex items-center justify-between"
         }
       >
         {embedded ? (
           <>
             <div className="space-y-1">
-              <p className="text-[0.68rem] tracking-[0.18em] text-zinc-500 uppercase">
+              <p className="text-[0.68rem] tracking-[0.18em] text-muted-foreground/70 uppercase">
                 Export package
               </p>
-              <p className="text-sm leading-6 text-zinc-400">
+              <p className="text-sm leading-6 text-muted-foreground">
                 Current output contains all saved chains and multisigs in a
                 single portable YAML document.
               </p>
             </div>
             <div className="grid gap-2">
-              <div className="border border-zinc-800 bg-zinc-950 px-3 py-2">
-                <p className="text-[0.62rem] tracking-[0.16em] text-zinc-500 uppercase">
+              <div className="border border-border bg-card px-3 py-2">
+                <p className="text-[0.62rem] tracking-[0.16em] text-muted-foreground/70 uppercase">
                   Squads chains
                 </p>
-                <p className="mt-1 text-sm font-medium text-zinc-100">
+                <p className="mt-1 text-sm font-medium text-foreground">
                   {operationalSquadsChains.length}
                 </p>
               </div>
-              <div className="border border-zinc-800 bg-zinc-950 px-3 py-2">
-                <p className="text-[0.62rem] tracking-[0.16em] text-zinc-500 uppercase">
+              <div className="border border-border bg-card px-3 py-2">
+                <p className="text-[0.62rem] tracking-[0.16em] text-muted-foreground/70 uppercase">
                   Multisigs
                 </p>
-                <p className="mt-1 text-sm font-medium text-zinc-100">
+                <p className="mt-1 text-sm font-medium text-foreground">
                   {multisigs.length}
                 </p>
               </div>
-              <div className="border border-zinc-800 bg-zinc-950 px-3 py-2">
-                <p className="text-[0.62rem] tracking-[0.16em] text-zinc-500 uppercase">
+              <div className="border border-border bg-card px-3 py-2">
+                <p className="text-[0.62rem] tracking-[0.16em] text-muted-foreground/70 uppercase">
                   Safe-ready chains
                 </p>
-                <p className="mt-1 text-sm font-medium text-zinc-100">
+                <p className="mt-1 text-sm font-medium text-foreground">
                   {preparedSafeChains.length}
                 </p>
               </div>
@@ -711,7 +679,7 @@ function ExportImportExportPanel({
                 variant="outline"
                 onClick={onCopy}
                 disabled={copied}
-                className="justify-start border-zinc-800 bg-transparent text-zinc-200 hover:bg-zinc-900"
+                className="justify-start border-border bg-transparent text-foreground/80 hover:bg-muted"
               >
                 {copied ? (
                   <>
@@ -754,7 +722,7 @@ function ExportImportExportPanel({
       <div
         className={
           embedded
-            ? "min-h-[28rem] w-full overflow-auto border border-zinc-800 bg-zinc-950/35"
+            ? "min-h-[28rem] w-full overflow-auto border border-border bg-muted"
             : "h-[400px] w-full overflow-auto rounded-md border"
         }
       >
@@ -794,17 +762,17 @@ function ExportImportImportPanel({
       }
     >
       {embedded ? (
-        <div className="space-y-3 border border-zinc-800 bg-zinc-950/55 p-4">
-          <p className="text-[0.68rem] tracking-[0.18em] text-zinc-500 uppercase">
+        <div className="space-y-3 border border-border bg-muted p-4">
+          <p className="text-[0.68rem] tracking-[0.18em] text-muted-foreground/70 uppercase">
             Import rules
           </p>
-          <div className="space-y-2 text-sm leading-6 text-zinc-400">
+          <div className="space-y-2 text-sm leading-6 text-muted-foreground">
             <p>Existing items are preserved.</p>
             <p>New chains import before multisigs.</p>
             <p>Duplicate multisigs are skipped.</p>
             <p>Missing-chain entries are reported as failures.</p>
             <p>Non-Squads chains import as settings only.</p>
-            <p>Multisigs targeting Safe-prepared chains are skipped for now.</p>
+            <p>Safe multisigs on prepared chains are fetched live via Safe API.</p>
           </div>
         </div>
       ) : null}
@@ -813,10 +781,10 @@ function ExportImportImportPanel({
         <p className="text-muted-foreground text-sm">
           Existing items will be preserved. Only new items will be imported.
         </p>
-        <div className="flex items-start justify-between gap-3 border border-zinc-800 bg-zinc-950/50 px-3 py-3">
+        <div className="flex items-start justify-between gap-3 border border-border bg-muted px-3 py-3">
           <div className="space-y-1">
-            <p className="text-sm font-medium text-zinc-100">Reset state</p>
-            <p className="text-xs leading-5 text-zinc-500">
+            <p className="text-sm font-medium text-foreground">Reset state</p>
+            <p className="text-xs leading-5 text-muted-foreground/70">
               If a YAML import left local state broken, clear saved multisigs,
               custom chains, labels, and provider settings.
             </p>
@@ -832,10 +800,10 @@ function ExportImportImportPanel({
           </Button>
         </div>
         {isImporting && importProgress ? (
-          <div className="space-y-2 border border-zinc-800 bg-zinc-950/50 px-3 py-3">
+          <div className="space-y-2 border border-border bg-muted px-3 py-3">
             <div className="flex items-center justify-between gap-3">
-              <p className="text-sm text-zinc-200">{importProgress.label}</p>
-              <p className="text-xs text-zinc-500 tabular-nums">
+              <p className="text-sm text-foreground/80">{importProgress.label}</p>
+              <p className="text-xs text-muted-foreground/70 tabular-nums">
                 {Math.min(importProgress.current, importProgress.total)} /{" "}
                 {importProgress.total}
               </p>
@@ -850,7 +818,7 @@ function ExportImportImportPanel({
           placeholder="Paste your YAML configuration here..."
           className={
             embedded
-              ? "border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring min-h-[28rem] w-full resize-y overflow-auto border border-zinc-800 px-3 py-2 font-mono text-xs focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+              ? "border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring min-h-[28rem] w-full resize-y overflow-auto border border-border px-3 py-2 font-mono text-xs focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
               : "border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring min-h-[300px] w-full resize-none overflow-auto rounded-md border px-3 py-2 font-mono text-xs focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
           }
         />

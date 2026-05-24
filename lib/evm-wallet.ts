@@ -16,17 +16,13 @@ declare global {
   }
 }
 
-export class EvmWalletService {
+class EvmWalletService {
   private getProvider() {
     if (typeof window === "undefined" || !window.ethereum) {
       throw new Error("No injected EVM wallet was found in this browser.");
     }
 
     return window.ethereum;
-  }
-
-  isInstalled() {
-    return typeof window !== "undefined" && Boolean(window.ethereum);
   }
 
   async connect() {
@@ -44,16 +40,6 @@ export class EvmWalletService {
       address: getAddress(address),
       walletName: provider.isMetaMask ? "MetaMask" : "Injected EVM Wallet",
     };
-  }
-
-  async getConnectedAddress() {
-    const provider = this.getProvider();
-    const accounts = (await provider.request({
-      method: "eth_accounts",
-    })) as string[];
-
-    const address = accounts[0];
-    return address && isAddress(address) ? getAddress(address) : null;
   }
 
   async switchToChain(chainId: bigint) {

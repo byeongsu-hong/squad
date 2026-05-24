@@ -27,6 +27,7 @@ import {
   type RegistrySummaryRow,
   buildRegistrySummaryRowsFromMultisigs,
 } from "@/lib/registry/registry-summary";
+import { formatAddress } from "@/lib/utils/format-address";
 import { cn } from "@/lib/utils";
 import { useChainStore } from "@/stores/chain-store";
 import { useMultisigStore } from "@/stores/multisig-store";
@@ -48,9 +49,6 @@ function formatProviderLabel(provider: RegistrySummaryRow["multisigProvider"]) {
   return provider === "safe" ? "Safe" : "Squads";
 }
 
-function formatCompactMultisigAddress(address: string) {
-  return `${address.slice(0, 8)}...${address.slice(-8)}`;
-}
 
 export function MultisigList({
   actions,
@@ -271,35 +269,35 @@ export function MultisigList({
     <div className={cn("space-y-4", embedded && "space-y-3")}>
       <div
         className={cn(
-          "flex flex-col gap-3 border-b border-zinc-800 pb-4",
+          "flex flex-col gap-3 border-b border-border pb-4",
           embedded && "pb-3"
         )}
       >
         <div className="flex flex-wrap items-center gap-3">
           {!embedded ? (
             <>
-              <p className="text-[0.68rem] font-medium tracking-[0.22em] text-zinc-500 uppercase">
+              <p className="text-[0.68rem] font-medium tracking-[0.22em] text-muted-foreground/70 uppercase">
                 Multisig Registry
               </p>
-              <h1 className="text-xl font-semibold tracking-[-0.03em] text-zinc-50">
+              <h1 className="text-xl font-semibold tracking-[-0.03em] text-foreground">
                 All multisigs
               </h1>
             </>
           ) : (
-            <p className="text-[0.68rem] font-medium tracking-[0.22em] text-zinc-500 uppercase">
+            <p className="text-[0.68rem] font-medium tracking-[0.22em] text-muted-foreground/70 uppercase">
               Registry controls
             </p>
           )}
           {statusText ? (
             <>
-              <span className="hidden h-4 w-px bg-zinc-800 sm:block" />
-              <span className="text-sm text-zinc-400">{statusText}</span>
+              <span className="hidden h-4 w-px bg-border sm:block" />
+              <span className="text-sm text-muted-foreground">{statusText}</span>
             </>
           ) : null}
           {embedded ? (
             <>
-              <span className="hidden h-4 w-px bg-zinc-800 sm:block" />
-              <span className="text-sm text-zinc-500">{syncStatusText}</span>
+              <span className="hidden h-4 w-px bg-border sm:block" />
+              <span className="text-sm text-muted-foreground/70">{syncStatusText}</span>
             </>
           ) : null}
           {actions ? <div className="ml-auto">{actions}</div> : null}
@@ -307,12 +305,12 @@ export function MultisigList({
 
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative">
-            <Filter className="absolute top-2.5 left-2.5 h-4 w-4 text-zinc-500" />
+            <Filter className="absolute top-2.5 left-2.5 h-4 w-4 text-muted-foreground/70" />
             <Input
               placeholder="Search multisigs..."
               value={filterText}
               onChange={(e) => setFilterText(e.target.value)}
-              className="w-full min-w-[220px] border-zinc-800 bg-zinc-950 pl-8 text-zinc-100 placeholder:text-zinc-600 sm:w-[320px]"
+              className="w-full min-w-[220px] border-border bg-muted pl-8 text-foreground placeholder:text-muted-foreground/70 sm:w-[320px]"
               aria-label="Search multisigs"
             />
           </div>
@@ -322,7 +320,7 @@ export function MultisigList({
               size="sm"
               onClick={loadMultisigs}
               disabled={loading}
-              className="rounded-md border-zinc-800 bg-transparent text-zinc-200 hover:bg-zinc-900"
+              className="rounded-md border-border bg-transparent text-foreground/80 hover:bg-muted"
               aria-label="Refresh multisigs"
               title="Refresh multisigs"
             >
@@ -338,7 +336,7 @@ export function MultisigList({
               variant="outline"
               size="sm"
               onClick={toggleSelectAll}
-              className="rounded-md border-zinc-800 bg-transparent text-zinc-200 hover:bg-zinc-900"
+              className="rounded-md border-border bg-transparent text-foreground/80 hover:bg-muted"
             >
               {selectedForDeletion.size === multisigs.length
                 ? "Deselect All"
@@ -368,8 +366,8 @@ export function MultisigList({
                     className={cn(
                       "cursor-pointer rounded-md text-xs",
                       selected
-                        ? "bg-zinc-100 text-zinc-950"
-                        : "border-zinc-800 bg-transparent text-zinc-400"
+                        ? "bg-primary text-primary-foreground"
+                        : "border-border bg-transparent text-muted-foreground"
                     )}
                     onClick={() => toggleFilterTag(tag)}
                   >
@@ -379,7 +377,7 @@ export function MultisigList({
               })}
             </div>
           ) : null}
-          <div className="ml-auto text-sm text-zinc-500">
+          <div className="ml-auto text-sm text-muted-foreground/70">
             {hasMultisigs
               ? `${filteredRegistryRows.length} visible / ${multisigs.length} total`
               : "No multisigs loaded"}
@@ -388,8 +386,8 @@ export function MultisigList({
       </div>
 
       {!hasMultisigs && !loading && (
-        <div className="flex items-center gap-3 border border-dashed border-zinc-800 px-4 py-4 text-sm text-zinc-400">
-          <Users className="h-4 w-4 shrink-0 text-zinc-500" />
+        <div className="flex items-center gap-3 border border-dashed border-border px-4 py-4 text-sm text-muted-foreground">
+          <Users className="h-4 w-4 shrink-0 text-muted-foreground/70" />
           {publicKey
             ? "No multisigs found. Create or import one from the registry controls."
             : "Connect a wallet or import an existing multisig to start the registry."}
@@ -397,7 +395,7 @@ export function MultisigList({
       )}
 
       {filteredRegistryRows.length === 0 && multisigs.length > 0 && (
-        <div className="border border-dashed border-zinc-800 px-4 py-4 text-sm text-zinc-400">
+        <div className="border border-dashed border-border px-4 py-4 text-sm text-muted-foreground">
           No multisigs match the current filters.
         </div>
       )}
@@ -409,12 +407,12 @@ export function MultisigList({
         filteredRegistryRows.length > 0 &&
         embedded && (
           <div className="grid gap-4 xl:grid-cols-[17.5rem_minmax(0,1fr)]">
-            <aside className="space-y-4 border border-zinc-800 bg-zinc-950/40 p-4">
-              <div className="space-y-2 border-b border-zinc-800 pb-4">
-                <p className="text-[0.66rem] tracking-[0.18em] text-zinc-500 uppercase">
+            <aside className="space-y-4 border border-border bg-muted p-4">
+              <div className="space-y-2 border-b border-border pb-4">
+                <p className="text-[0.66rem] tracking-[0.18em] text-muted-foreground/70 uppercase">
                   Registry Tools
                 </p>
-                <p className="text-sm leading-6 text-zinc-400">
+                <p className="text-sm leading-6 text-muted-foreground">
                   Curate the saved registry before it reaches the operations
                   workspace. Search, sync, batch-select, and clean up from one
                   side rail.
@@ -423,48 +421,48 @@ export function MultisigList({
 
               {actions ? (
                 <div className="space-y-2">
-                  <p className="text-[0.66rem] tracking-[0.18em] text-zinc-500 uppercase">
+                  <p className="text-[0.66rem] tracking-[0.18em] text-muted-foreground/70 uppercase">
                     Intake
                   </p>
                   <div className="flex flex-col gap-2">{actions}</div>
                 </div>
               ) : null}
 
-              <div className="space-y-2 border-t border-zinc-800 pt-4">
-                <p className="text-[0.66rem] tracking-[0.18em] text-zinc-500 uppercase">
+              <div className="space-y-2 border-t border-border pt-4">
+                <p className="text-[0.66rem] tracking-[0.18em] text-muted-foreground/70 uppercase">
                   Current Scope
                 </p>
                 <div className="space-y-2">
-                  <div className="border border-zinc-800 bg-zinc-950/70 px-3 py-2">
-                    <p className="text-[0.62rem] tracking-[0.16em] text-zinc-500 uppercase">
+                  <div className="border border-border bg-card px-3 py-2">
+                    <p className="text-[0.62rem] tracking-[0.16em] text-muted-foreground/70 uppercase">
                       Visible
                     </p>
-                    <p className="mt-1 font-mono text-sm text-zinc-100">
+                    <p className="mt-1 font-mono text-sm text-foreground">
                       {filteredRegistryRows.length}/{multisigs.length}
                     </p>
                   </div>
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="border border-zinc-800 bg-zinc-950/70 px-2.5 py-2">
-                      <p className="text-[0.58rem] tracking-[0.16em] text-zinc-500 uppercase">
+                    <div className="border border-border bg-card px-2.5 py-2">
+                      <p className="text-[0.58rem] tracking-[0.16em] text-muted-foreground/70 uppercase">
                         Wait
                       </p>
-                      <p className="mt-1 font-mono text-sm text-zinc-100">
+                      <p className="mt-1 font-mono text-sm text-foreground">
                         {registrySummary.waiting}
                       </p>
                     </div>
-                    <div className="border border-zinc-800 bg-zinc-950/70 px-2.5 py-2">
-                      <p className="text-[0.58rem] tracking-[0.16em] text-zinc-500 uppercase">
+                    <div className="border border-border bg-card px-2.5 py-2">
+                      <p className="text-[0.58rem] tracking-[0.16em] text-muted-foreground/70 uppercase">
                         Exec
                       </p>
-                      <p className="mt-1 font-mono text-sm text-zinc-100">
+                      <p className="mt-1 font-mono text-sm text-foreground">
                         {registrySummary.executable}
                       </p>
                     </div>
-                    <div className="border border-zinc-800 bg-zinc-950/70 px-2.5 py-2">
-                      <p className="text-[0.58rem] tracking-[0.16em] text-zinc-500 uppercase">
+                    <div className="border border-border bg-card px-2.5 py-2">
+                      <p className="text-[0.58rem] tracking-[0.16em] text-muted-foreground/70 uppercase">
                         Safe
                       </p>
-                      <p className="mt-1 font-mono text-sm text-zinc-100">
+                      <p className="mt-1 font-mono text-sm text-foreground">
                         {registrySummary.safe}
                       </p>
                     </div>
@@ -473,8 +471,8 @@ export function MultisigList({
               </div>
 
               {allTags.length > 0 ? (
-                <div className="space-y-2 border-t border-zinc-800 pt-4">
-                  <p className="text-[0.66rem] tracking-[0.18em] text-zinc-500 uppercase">
+                <div className="space-y-2 border-t border-border pt-4">
+                  <p className="text-[0.66rem] tracking-[0.18em] text-muted-foreground/70 uppercase">
                     Tag Filters
                   </p>
                   <div className="flex flex-wrap gap-1.5">
@@ -488,8 +486,8 @@ export function MultisigList({
                           className={cn(
                             "cursor-pointer rounded-md text-xs",
                             selected
-                              ? "bg-zinc-100 text-zinc-950"
-                              : "border-zinc-800 bg-transparent text-zinc-400"
+                              ? "bg-primary text-primary-foreground"
+                              : "border-border bg-transparent text-muted-foreground"
                           )}
                           onClick={() => toggleFilterTag(tag)}
                         >
@@ -502,11 +500,11 @@ export function MultisigList({
               ) : null}
 
               {selectedForDeletion.size > 0 ? (
-                <div className="space-y-3 border-t border-zinc-800 pt-4">
-                  <p className="text-[0.66rem] tracking-[0.18em] text-zinc-500 uppercase">
+                <div className="space-y-3 border-t border-border pt-4">
+                  <p className="text-[0.66rem] tracking-[0.18em] text-muted-foreground/70 uppercase">
                     Selection
                   </p>
-                  <p className="text-sm leading-6 text-zinc-400">
+                  <p className="text-sm leading-6 text-muted-foreground">
                     {selectedForDeletion.size} saved multisig
                     {selectedForDeletion.size === 1 ? "" : "s"} selected for
                     bulk cleanup.
@@ -524,13 +522,13 @@ export function MultisigList({
               ) : null}
             </aside>
 
-            <div className="border border-zinc-800 bg-zinc-950/50">
-              <div className="flex flex-wrap items-start justify-between gap-3 border-b border-zinc-800 px-4 py-4">
+            <div className="border border-border bg-muted">
+              <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border px-4 py-4">
                 <div className="space-y-1">
-                  <p className="text-[0.66rem] tracking-[0.18em] text-zinc-500 uppercase">
+                  <p className="text-[0.66rem] tracking-[0.18em] text-muted-foreground/70 uppercase">
                     Saved Multisigs
                   </p>
-                  <p className="text-sm leading-6 text-zinc-400">
+                  <p className="text-sm leading-6 text-muted-foreground">
                     Keep the registry dense and readable. Labels, runtime,
                     signer threshold, and live queue pressure should all scan in
                     one pass.
@@ -543,7 +541,7 @@ export function MultisigList({
                       size="sm"
                       onClick={loadMultisigs}
                       disabled={loading}
-                      className="rounded-md border-zinc-800 bg-transparent text-zinc-200 hover:bg-zinc-900"
+                      className="rounded-md border-border bg-transparent text-foreground/80 hover:bg-muted"
                       aria-label="Refresh multisigs"
                       title="Refresh multisigs"
                     >
@@ -558,7 +556,7 @@ export function MultisigList({
                     variant="outline"
                     size="sm"
                     onClick={toggleSelectAll}
-                    className="rounded-md border-zinc-800 bg-transparent text-zinc-200 hover:bg-zinc-900"
+                    className="rounded-md border-border bg-transparent text-foreground/80 hover:bg-muted"
                   >
                     {selectedForDeletion.size === multisigs.length
                       ? "Deselect All"
@@ -567,23 +565,23 @@ export function MultisigList({
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2 border-b border-zinc-800 px-4 py-3">
+              <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-3">
                 <div className="relative min-w-[16rem] flex-1">
-                  <Filter className="absolute top-2.5 left-2.5 h-4 w-4 text-zinc-500" />
+                  <Filter className="absolute top-2.5 left-2.5 h-4 w-4 text-muted-foreground/70" />
                   <Input
                     placeholder="Search multisigs, addresses, tags..."
                     value={filterText}
                     onChange={(e) => setFilterText(e.target.value)}
-                    className="w-full border-zinc-800 bg-zinc-950 pl-8 text-zinc-100 placeholder:text-zinc-600"
+                    className="w-full border-border bg-card pl-8 text-foreground placeholder:text-muted-foreground/70"
                     aria-label="Search multisigs"
                   />
                 </div>
-                <p className="text-xs text-zinc-500">
+                <p className="text-xs text-muted-foreground/70">
                   {filteredRegistryRows.length} visible
                 </p>
               </div>
 
-              <div className="divide-y divide-zinc-800">
+              <div className="divide-y divide-border">
                 {filteredRegistryRows.map((row) => {
                   const multisig = getMultisigForRow(row);
                   if (!multisig) {
@@ -602,8 +600,8 @@ export function MultisigList({
                       className={cn(
                         "grid gap-3 px-4 py-4 transition-colors xl:grid-cols-[2rem_minmax(0,1.4fr)_minmax(11rem,0.72fr)_auto]",
                         isSelected || isActiveDesk
-                          ? "bg-zinc-900/80"
-                          : "bg-transparent hover:bg-zinc-950/80"
+                          ? "bg-muted"
+                          : "bg-transparent hover:bg-muted"
                       )}
                     >
                       <div className="flex items-start pt-1">
@@ -636,17 +634,17 @@ export function MultisigList({
                               }}
                               onBlur={() => handleSaveLabel(multisig)}
                               placeholder="Enter label"
-                              className="h-8 max-w-[16rem] border-zinc-800 bg-zinc-950 text-zinc-100"
+                              className="h-8 max-w-[16rem] border-border bg-card text-foreground"
                               autoFocus
                             />
                           ) : (
                             <>
-                              <p className="truncate text-[0.95rem] font-medium tracking-[-0.02em] text-zinc-100">
+                              <p className="truncate text-[0.95rem] font-medium tracking-[-0.02em] text-foreground">
                                 {row.label}
                               </p>
                               <Badge
                                 variant="outline"
-                                className="rounded-md border-cyan-500/25 bg-cyan-500/8 text-cyan-200"
+                                className="rounded-md border-border bg-muted text-foreground/80"
                               >
                                 {row.chainName}
                               </Badge>
@@ -656,7 +654,7 @@ export function MultisigList({
                                   "rounded-md",
                                   row.multisigProvider === "safe"
                                     ? "border-amber-500/25 bg-amber-500/8 text-amber-200"
-                                    : "border-zinc-700 bg-zinc-900 text-zinc-300"
+                                    : "border-border bg-muted text-foreground/80"
                                 )}
                               >
                                 {formatProviderLabel(row.multisigProvider)}
@@ -664,7 +662,7 @@ export function MultisigList({
                               {row.multisigProvider === "safe" ? (
                                 <Badge
                                   variant="outline"
-                                  className="rounded-md border-zinc-800 bg-zinc-950 text-zinc-400"
+                                  className="rounded-md border-border bg-card text-muted-foreground"
                                 >
                                   Read-only
                                 </Badge>
@@ -680,7 +678,7 @@ export function MultisigList({
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-6 w-6 rounded-md text-zinc-500 hover:bg-zinc-900 hover:text-zinc-100"
+                                className="h-6 w-6 rounded-md text-muted-foreground/70 hover:bg-muted hover:text-foreground"
                                 onClick={() =>
                                   handleStartEditLabel(
                                     getMultisigAccountKey(multisig),
@@ -696,15 +694,13 @@ export function MultisigList({
                           )}
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.72rem] text-zinc-500">
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.72rem] text-muted-foreground/70">
                           <span className="font-mono tabular-nums">
-                            {formatCompactMultisigAddress(
-                              multisig.publicKey.toString()
-                            )}
+                            {formatAddress(multisig.publicKey.toString(), 8, 8)}
                           </span>
                           <button
                             type="button"
-                            className="text-zinc-500 transition-colors hover:text-zinc-100"
+                            className="text-muted-foreground/70 transition-colors hover:text-foreground"
                             onClick={() => {
                               navigator.clipboard.writeText(
                                 multisig.publicKey.toString()
@@ -725,49 +721,49 @@ export function MultisigList({
                               <Badge
                                 key={tag}
                                 variant="outline"
-                                className="rounded-md border-zinc-800 bg-zinc-900/70 text-xs text-zinc-300"
+                                className="rounded-md border-border bg-muted text-xs text-foreground/80"
                               >
                                 {tag}
                               </Badge>
                             ))
                           ) : (
-                            <span className="text-xs text-zinc-600">
+                            <span className="text-xs text-muted-foreground/70">
                               No tags
                             </span>
                           )}
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-x-5 gap-y-2 border-l border-zinc-800/80 pl-4 xl:grid-cols-2">
+                      <div className="grid grid-cols-2 gap-x-5 gap-y-2 border-l border-border pl-4 xl:grid-cols-2">
                         <div>
-                          <p className="text-[0.58rem] tracking-[0.16em] text-zinc-500 uppercase">
+                          <p className="text-[0.58rem] tracking-[0.16em] text-muted-foreground/70 uppercase">
                             Threshold
                           </p>
-                          <p className="mt-1 font-mono text-sm text-zinc-100">
+                          <p className="mt-1 font-mono text-sm text-foreground">
                             {row.threshold}/{row.memberCount}
                           </p>
                         </div>
                         <div>
-                          <p className="text-[0.58rem] tracking-[0.16em] text-zinc-500 uppercase">
+                          <p className="text-[0.58rem] tracking-[0.16em] text-muted-foreground/70 uppercase">
                             Active
                           </p>
-                          <p className="mt-1 font-mono text-sm text-zinc-100">
+                          <p className="mt-1 font-mono text-sm text-foreground">
                             {row.active}
                           </p>
                         </div>
                         <div>
-                          <p className="text-[0.58rem] tracking-[0.16em] text-zinc-500 uppercase">
+                          <p className="text-[0.58rem] tracking-[0.16em] text-muted-foreground/70 uppercase">
                             Waiting
                           </p>
-                          <p className="mt-1 font-mono text-sm text-zinc-100">
+                          <p className="mt-1 font-mono text-sm text-foreground">
                             {row.waiting}
                           </p>
                         </div>
                         <div>
-                          <p className="text-[0.58rem] tracking-[0.16em] text-zinc-500 uppercase">
+                          <p className="text-[0.58rem] tracking-[0.16em] text-muted-foreground/70 uppercase">
                             Executable
                           </p>
-                          <p className="mt-1 font-mono text-sm text-zinc-100">
+                          <p className="mt-1 font-mono text-sm text-foreground">
                             {row.executable}
                           </p>
                         </div>
@@ -777,7 +773,7 @@ export function MultisigList({
                         <Button
                           variant="outline"
                           size="sm"
-                          className="rounded-md border-zinc-800 bg-transparent text-zinc-200 hover:bg-zinc-900"
+                          className="rounded-md border-border bg-transparent text-foreground/80 hover:bg-muted"
                           onClick={() => handleOpenTagDialog(multisig)}
                         >
                           <Tag className="mr-2 h-3 w-3" />
@@ -786,7 +782,7 @@ export function MultisigList({
                         <Button
                           variant="outline"
                           size="sm"
-                          className="rounded-md border-zinc-800 bg-transparent text-zinc-200 hover:bg-zinc-900"
+                          className="rounded-md border-border bg-transparent text-foreground/80 hover:bg-muted"
                           onClick={() =>
                             deleteMultisig(
                               multisig.publicKey.toString(),
@@ -800,10 +796,10 @@ export function MultisigList({
                         <Button
                           size="sm"
                           className={cn(
-                            "rounded-md text-zinc-950",
+                            "rounded-md",
                             row.waiting > 0
-                              ? "bg-lime-300 hover:bg-lime-200"
-                              : "bg-zinc-100 hover:bg-zinc-200"
+                              ? "bg-lime-300 text-zinc-950 hover:bg-lime-200"
+                              : "bg-primary text-primary-foreground hover:bg-primary/90"
                           )}
                           onClick={() => handleOpenDesk(multisig)}
                         >
@@ -823,9 +819,9 @@ export function MultisigList({
         hasMultisigs &&
         filteredRegistryRows.length > 0 &&
         !embedded && (
-          <div className="overflow-x-auto rounded-[1.15rem] border border-zinc-800 bg-zinc-950/70">
+          <div className="overflow-x-auto rounded-[1.15rem] border border-border bg-muted">
             <div className="min-w-[980px]">
-              <div className="grid grid-cols-[2.1rem_minmax(11rem,1.5fr)_minmax(8rem,0.8fr)_minmax(7rem,0.7fr)_minmax(8rem,0.7fr)_minmax(10rem,1fr)_minmax(8rem,0.75fr)] gap-3 border-b border-zinc-800 px-4 py-3 text-[0.68rem] font-medium tracking-[0.18em] text-zinc-500 uppercase">
+              <div className="grid grid-cols-[2.1rem_minmax(11rem,1.5fr)_minmax(8rem,0.8fr)_minmax(7rem,0.7fr)_minmax(8rem,0.7fr)_minmax(10rem,1fr)_minmax(8rem,0.75fr)] gap-3 border-b border-border px-4 py-3 text-[0.68rem] font-medium tracking-[0.18em] text-muted-foreground/70 uppercase">
                 <span />
                 <span>Multisig</span>
                 <span>Chain</span>
@@ -851,9 +847,9 @@ export function MultisigList({
                   <div
                     key={row.key}
                     className={cn(
-                      "grid grid-cols-[2.1rem_minmax(11rem,1.5fr)_minmax(8rem,0.8fr)_minmax(7rem,0.7fr)_minmax(8rem,0.7fr)_minmax(10rem,1fr)_minmax(8rem,0.75fr)] gap-3 border-b border-zinc-800 px-4 py-4 last:border-b-0",
+                      "grid grid-cols-[2.1rem_minmax(11rem,1.5fr)_minmax(8rem,0.8fr)_minmax(7rem,0.7fr)_minmax(8rem,0.7fr)_minmax(10rem,1fr)_minmax(8rem,0.75fr)] gap-3 border-b border-border px-4 py-4 last:border-b-0",
                       isSelected || isActiveDesk
-                        ? "bg-zinc-900/90"
+                        ? "bg-card"
                         : "bg-transparent"
                     )}
                   >
@@ -884,14 +880,14 @@ export function MultisigList({
                           }}
                           onBlur={() => handleSaveLabel(multisig)}
                           placeholder="Enter label"
-                          className="h-8 border-zinc-800 bg-zinc-950 text-zinc-100"
+                          className="h-8 border-border bg-card text-foreground"
                           autoFocus
                         />
                       ) : (
                         <div className="flex items-center gap-0.5">
                           <div className="min-w-0">
                             <div className="flex items-center gap-2">
-                              <span className="truncate text-sm font-medium text-zinc-100">
+                              <span className="truncate text-sm font-medium text-foreground">
                                 {row.label}
                               </span>
                               {isActiveDesk ? (
@@ -905,7 +901,7 @@ export function MultisigList({
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-6 w-6 rounded-md text-zinc-500 hover:bg-zinc-900 hover:text-zinc-100"
+                                className="h-6 w-6 rounded-md text-muted-foreground/70 hover:bg-muted hover:text-foreground"
                                 onClick={() =>
                                   handleStartEditLabel(
                                     getMultisigAccountKey(multisig),
@@ -919,13 +915,12 @@ export function MultisigList({
                               </Button>
                             </div>
                             <div className="mt-1 flex items-center gap-1">
-                              <span className="truncate font-mono text-xs text-zinc-500">
-                                {multisig.publicKey.toString().slice(0, 8)}...
-                                {multisig.publicKey.toString().slice(-8)}
+                              <span className="truncate font-mono text-xs text-muted-foreground/70">
+                                {formatAddress(multisig.publicKey.toString(), 8, 8)}
                               </span>
                               <button
                                 type="button"
-                                className="shrink-0 text-zinc-500 transition-colors hover:text-zinc-100"
+                                className="shrink-0 text-muted-foreground/70 transition-colors hover:text-foreground"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   navigator.clipboard.writeText(
@@ -939,7 +934,7 @@ export function MultisigList({
                                 <Copy className="h-3 w-3" />
                               </button>
                             </div>
-                            <p className="mt-2 text-xs text-zinc-500">
+                            <p className="mt-2 text-xs text-muted-foreground/70">
                               {row.attentionLine}
                             </p>
                           </div>
@@ -951,7 +946,7 @@ export function MultisigList({
                       <div className="flex flex-wrap items-center gap-1">
                         <Badge
                           variant="outline"
-                          className="rounded-md border-zinc-800 bg-transparent text-zinc-300"
+                          className="rounded-md border-border bg-transparent text-foreground/80"
                         >
                           {row.chainName}
                         </Badge>
@@ -961,7 +956,7 @@ export function MultisigList({
                             "rounded-md",
                             row.multisigProvider === "safe"
                               ? "border-amber-500/30 bg-amber-500/10 text-amber-200"
-                              : "border-zinc-800 bg-zinc-950 text-zinc-400"
+                              : "border-border bg-card text-muted-foreground"
                           )}
                         >
                           {formatProviderLabel(row.multisigProvider)}
@@ -969,11 +964,11 @@ export function MultisigList({
                       </div>
                     </div>
 
-                    <div className="pt-1 text-sm font-medium text-zinc-100">
+                    <div className="pt-1 text-sm font-medium text-foreground">
                       {row.threshold}
                     </div>
 
-                    <div className="pt-1 text-sm text-zinc-400">
+                    <div className="pt-1 text-sm text-muted-foreground">
                       {row.memberCount}
                     </div>
 
@@ -983,13 +978,13 @@ export function MultisigList({
                           <Badge
                             key={tag}
                             variant="outline"
-                            className="rounded-md border-zinc-800 bg-zinc-900/70 text-xs text-zinc-300"
+                            className="rounded-md border-border bg-muted text-xs text-foreground/80"
                           >
                             {tag}
                           </Badge>
                         ))
                       ) : (
-                        <span className="pt-1 text-sm text-zinc-600">
+                        <span className="pt-1 text-sm text-muted-foreground/70">
                           No tags
                         </span>
                       )}
@@ -1000,7 +995,7 @@ export function MultisigList({
                         <Button
                           variant="outline"
                           size="sm"
-                          className="rounded-md border-zinc-800 bg-transparent text-zinc-200 hover:bg-zinc-900"
+                          className="rounded-md border-border bg-transparent text-foreground/80 hover:bg-muted"
                           onClick={() => handleOpenTagDialog(multisig)}
                         >
                           <Tag className="mr-2 h-3 w-3" />
@@ -1009,10 +1004,10 @@ export function MultisigList({
                         <Button
                           size="sm"
                           className={cn(
-                            "rounded-md text-zinc-950",
+                            "rounded-md",
                             row.waiting > 0
-                              ? "bg-lime-300 hover:bg-lime-200"
-                              : "bg-zinc-100 hover:bg-zinc-200"
+                              ? "bg-lime-300 text-zinc-950 hover:bg-lime-200"
+                              : "bg-primary text-primary-foreground hover:bg-primary/90"
                           )}
                           onClick={() => handleOpenDesk(multisig)}
                         >

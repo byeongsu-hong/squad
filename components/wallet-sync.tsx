@@ -31,7 +31,6 @@ export function WalletSync() {
         (w) => w.adapter.name === walletName
       );
       if (walletToReconnect) {
-        console.log("Auto-reconnecting wallet adapter:", walletName);
         select(walletToReconnect.adapter.name);
         // Small delay to ensure selection is processed
         setTimeout(() => {

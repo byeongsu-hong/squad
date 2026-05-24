@@ -32,6 +32,7 @@ import {
   getDerivationPath,
   parseLedgerError,
 } from "@/types/wallet";
+import { formatAddress } from "@/lib/utils/format-address";
 
 interface WalletConnectDialogProps {
   open: boolean;
@@ -289,8 +290,7 @@ function SelectStep({
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <span className="font-mono text-sm">
-                  {account.publicKey.toString().slice(0, 8)}...
-                  {account.publicKey.toString().slice(-8)}
+                  {formatAddress(account.publicKey.toString(), 8, 8)}
                 </span>
                 <Badge variant="outline">
                   Account {currentPage * ACCOUNTS_PER_PAGE + index + 1}

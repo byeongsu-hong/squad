@@ -43,10 +43,6 @@ export const chainStorage = {
     chainListStorage.remove((chain) => chain.id === id);
   },
 
-  getChainById(id: string): ChainConfig | undefined {
-    return chainListStorage.find((chain) => chain.id === id);
-  },
-
   getSelectedChainId(): string | null {
     return selectedChainStorage.get();
   },

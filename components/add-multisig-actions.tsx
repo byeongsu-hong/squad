@@ -62,7 +62,7 @@ export function AddMultisigActions() {
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align="end"
-          className="border-zinc-800 bg-zinc-950 text-zinc-100"
+          className="border-border bg-card text-foreground"
         >
           <DropdownMenuItem
             onClick={handleCreateClick}

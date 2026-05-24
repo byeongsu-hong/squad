@@ -1,14 +1,11 @@
-export type ChainVmFamily = "svm" | "evm";
-export type ChainMultisigProvider = "squads" | "safe";
-
 export interface ChainConfig {
   id: string;
   name: string;
   rpcUrl: string;
   squadsV4ProgramId?: string;
   explorerUrl?: string;
-  vmFamily?: ChainVmFamily;
-  multisigProvider?: ChainMultisigProvider;
+  vmFamily?: "svm" | "evm";
+  multisigProvider?: "squads" | "safe";
   isDefault?: boolean;
 }
 

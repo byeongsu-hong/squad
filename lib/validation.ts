@@ -17,7 +17,7 @@ export const labelSchema = z
   .transform((val) => val.trim().replace(/\s+/g, " ")); // Sanitize: trim and collapse spaces
 
 // Public key validation
-export const publicKeySchema = z
+const publicKeySchema = z
   .string()
   .min(1, "Public key is required")
   .refine(
@@ -80,23 +80,10 @@ export const chainNameSchema = z
 // Program ID validation (same as public key)
 export const programIdSchema = publicKeySchema;
 
-// Threshold validation (contextual - needs member count)
-export const createThresholdSchema = (memberCount: number) =>
-  z
-    .number()
-    .int("Threshold must be an integer")
-    .min(1, "Threshold must be at least 1")
-    .max(memberCount, "Threshold cannot exceed number of members");
-
-// Member validation for multisig
-export const memberSchema = z.object({
+const memberSchema = z.object({
   key: publicKeySchema,
   permissions: z.object({
-    mask: z
-      .number()
-      .int()
-      .min(0)
-      .max(255, "Permission mask must be between 0 and 255"),
+    mask: z.number().int().min(0).max(255),
   }),
 });
 
@@ -114,127 +101,6 @@ export const createMultisigSchema = z
     path: ["threshold"],
   });
 
-// Import multisig form schema
-export const importMultisigSchema = z.object({
-  address: publicKeySchema,
-  label: labelSchema.optional(),
-});
-
-// Chain configuration schema
-export const chainConfigSchema = z.object({
-  id: chainIdSchema,
-  name: chainNameSchema,
-  rpcUrl: rpcUrlSchema,
-  programId: programIdSchema,
-  isCustom: z.boolean().optional(),
-});
-
-// Update chain schema
-export const updateChainSchema = chainConfigSchema.partial().required({
-  id: true,
-});
-
-// Multisig label update schema
-export const updateMultisigLabelSchema = z.object({
-  publicKey: publicKeySchema,
-  label: labelSchema,
-});
-
-/**
- * Helper function to safely parse and validate data
- */
-export function safeValidate<T>(
-  schema: z.ZodSchema<T>,
-  data: unknown
-): { success: true; data: T } | { success: false; error: string } {
-  try {
-    const result = schema.safeParse(data);
-    if (result.success) {
-      return { success: true, data: result.data };
-    } else {
-      const firstError = result.error.issues[0];
-      return {
-        success: false,
-        error: firstError?.message || "Validation failed",
-      };
-    }
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Validation failed",
-    };
-  }
-}
-
-/**
- * Rate limiter for client-side operations (XSS/DoS protection)
- */
-export class RateLimiter {
-  private requests: number[] = [];
-  private readonly maxRequests: number;
-  private readonly timeWindow: number;
-
-  constructor(maxRequests: number, timeWindowMs: number) {
-    this.maxRequests = maxRequests;
-    this.timeWindow = timeWindowMs;
-  }
-
-  canMakeRequest(): boolean {
-    const now = Date.now();
-    this.requests = this.requests.filter(
-      (timestamp) => now - timestamp < this.timeWindow
-    );
-
-    if (this.requests.length < this.maxRequests) {
-      this.requests.push(now);
-      return true;
-    }
-
-    return false;
-  }
-
-  getTimeUntilNextRequest(): number {
-    if (this.requests.length < this.maxRequests) {
-      return 0;
-    }
-
-    const oldestRequest = this.requests[0];
-    const timeElapsed = Date.now() - oldestRequest;
-    return Math.max(0, this.timeWindow - timeElapsed);
-  }
-
-  reset(): void {
-    this.requests = [];
-  }
-}
-
-/**
- * Sanitize text content to prevent XSS
- * React escapes by default, but this provides extra safety for edge cases
- */
-export function sanitizeText(text: string): string {
-  // Remove any control characters
-  return text.replace(/[\x00-\x1F\x7F]/g, "");
-}
-
-/**
- * Validate and sanitize a derivation path
- */
-export const derivationPathSchema = z
-  .string()
-  .regex(
-    /^[0-9'\/]+$/,
-    "Derivation path can only contain numbers, apostrophes, and slashes"
-  )
-  .refine(
-    (path) => {
-      // Basic BIP44 path validation
-      const parts = path.split("/");
-      return parts.length >= 3 && parts.length <= 6;
-    },
-    { message: "Invalid derivation path format" }
-  );
-
 /**
  * Validate a public key address
  */
@@ -245,10 +111,6 @@ export function validatePublicKey(address: string): boolean {
   } catch {
     return false;
   }
-}
-
-export function validateEvmAddress(address: string): boolean {
-  return /^0x[a-fA-F0-9]{40}$/.test(address.trim());
 }
 
 /**

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
+import { DM_Mono, DM_Sans } from "next/font/google";
 
 import { Header } from "@/components/header";
 import { Providers } from "@/components/providers";
@@ -7,14 +7,14 @@ import { Providers } from "@/components/providers";
 import "./globals.css";
 import "./wallet-adapter.css";
 
-const plexSans = IBM_Plex_Sans({
-  variable: "--font-plex-sans",
+const dmSans = DM_Sans({
+  variable: "--font-dm-sans",
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: ["400", "500", "600", "700"],
 });
 
-const plexMono = IBM_Plex_Mono({
-  variable: "--font-plex-mono",
+const dmMono = DM_Mono({
+  variable: "--font-dm-mono",
   subsets: ["latin"],
   weight: ["400", "500"],
 });
@@ -32,7 +32,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${plexSans.variable} ${plexMono.variable} min-h-screen antialiased`}
+        className={`${dmSans.variable} ${dmMono.variable} min-h-screen antialiased`}
       >
         <Providers>
           <Header />

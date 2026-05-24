@@ -1,8 +1,6 @@
 import { useMemo } from "react";
 
-import { useWorkspaceProposalRecords } from "@/lib/hooks/use-workspace-proposal-records";
 import { buildWorkspaceQueueItem } from "@/lib/workspace/squads-adapter";
-import type { ProposalAccount } from "@/types/multisig";
 import type {
   WorkspaceMultisig,
   WorkspaceProposal,
@@ -10,18 +8,16 @@ import type {
 } from "@/types/workspace";
 
 interface UseWorkspaceQueueOptions {
-  proposals: ProposalAccount[];
+  workspaceProposals: WorkspaceProposal[];
   multisigs: WorkspaceMultisig[];
   viewerAddress: string | null;
-  workspaceProposals?: WorkspaceProposal[];
   getViewerAddressForMultisig?: (multisig: WorkspaceMultisig) => string | null;
 }
 
 export function useWorkspaceQueue({
-  proposals,
+  workspaceProposals,
   multisigs,
   viewerAddress,
-  workspaceProposals = [],
   getViewerAddressForMultisig,
 }: UseWorkspaceQueueOptions) {
   const getCreatedAtValue = (createdAt?: string) => {
@@ -33,11 +29,7 @@ export function useWorkspaceQueue({
     return Number.isNaN(timestamp) ? null : timestamp;
   };
 
-  const { records } = useWorkspaceProposalRecords({
-    proposals,
-    multisigs,
-  });
-  const workspaceProposalRecords = useMemo(() => {
+  const records = useMemo(() => {
     const multisigMap = new Map(
       multisigs.map((multisig) => [multisig.key, multisig] as const)
     );
@@ -57,14 +49,10 @@ export function useWorkspaceQueue({
       })
       .filter((record) => record !== null);
   }, [multisigs, workspaceProposals]);
-  const allRecords = useMemo(
-    () => [...records, ...workspaceProposalRecords],
-    [records, workspaceProposalRecords]
-  );
 
   return useMemo(
     () =>
-      allRecords
+      records
         .map((record) =>
           buildWorkspaceQueueItem(
             record.proposal,
@@ -99,6 +87,6 @@ export function useWorkspaceQueue({
             right.proposal.transactionIndex - left.proposal.transactionIndex
           );
         }),
-    [allRecords, getViewerAddressForMultisig, viewerAddress]
+    [records, getViewerAddressForMultisig, viewerAddress]
   );
 }
