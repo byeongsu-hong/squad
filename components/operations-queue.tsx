@@ -468,9 +468,15 @@ export function OperationsQueue({
         <div className="space-y-4">
           {actionItems.length > 0 && (
             <div>
-              <p className="text-muted-foreground/70 mb-2 text-[10px] font-semibold tracking-widest uppercase">
-                Needs attention
-              </p>
+              <div className="mb-2 flex items-center gap-2">
+                <span className="bg-primary h-1.5 w-1.5 rounded-full" />
+                <p className="text-foreground/80 text-[10px] font-semibold uppercase tracking-widest">
+                  Needs attention
+                </p>
+                <span className="bg-primary/10 text-primary rounded-full px-1.5 py-0.5 text-[9px] font-bold tabular-nums">
+                  {actionItems.length}
+                </span>
+              </div>
               <div className="border-border bg-card overflow-hidden rounded-xl border">
                 <ColumnHeaders
                   selectable
