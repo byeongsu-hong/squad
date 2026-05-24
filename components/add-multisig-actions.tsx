@@ -41,7 +41,7 @@ export function AddMultisigActions() {
     }
 
     if (!publicKey) {
-      toast.error("Please connect your wallet to create a multisig");
+      toast.error("Connect a wallet to create a multisig");
       return;
     }
     setCreateDialogOpen(true);

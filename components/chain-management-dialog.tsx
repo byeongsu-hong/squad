@@ -97,7 +97,7 @@ export function ChainManagementController({
             : undefined,
         explorerUrl: data.explorerUrl || undefined,
       });
-      toast.success("Chain updated successfully");
+      toast.success("Chain updated");
     } else {
       const newChain: ChainConfig = {
         id: `custom-${crypto.randomUUID()}`,
@@ -112,7 +112,7 @@ export function ChainManagementController({
         explorerUrl: data.explorerUrl || undefined,
       };
       addChain(newChain);
-      toast.success("Chain added successfully");
+      toast.success("Chain added");
     }
 
     resetForm();
@@ -133,7 +133,7 @@ export function ChainManagementController({
   const handleDelete = (id: string) => {
     if (confirm("Are you sure you want to delete this chain configuration?")) {
       deleteChain(id);
-      toast.success("Chain deleted successfully");
+      toast.success("Chain deleted");
     }
   };
 

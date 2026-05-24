@@ -110,7 +110,7 @@ export function ExportImportController({
   const handleImport = async () => {
     try {
       if (!importContent.trim()) {
-        toast.error("Please paste YAML content");
+        toast.error("Paste YAML content first");
         return;
       }
 

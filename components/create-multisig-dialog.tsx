@@ -89,12 +89,12 @@ export function CreateMultisigDialog({
 
   const handleSubmit = form.handleSubmit(async (data) => {
     if (!publicKey) {
-      toast.error("Please connect your wallet first");
+      toast.error("Connect a wallet first");
       return;
     }
 
     if (!data.chainId) {
-      toast.error("Please select a chain");
+      toast.error("Select a chain first");
       return;
     }
 
@@ -183,7 +183,7 @@ export function CreateMultisigDialog({
         vaultPda,
       });
 
-      toast.success("Multisig created successfully!");
+      toast.success("Multisig created");
       onOpenChange(false);
       form.reset();
     } catch (error) {

@@ -73,7 +73,7 @@ export function ManageTagsDialog({
   const handleSave = () => {
     if (!currentMultisig) return;
     updateMultisigTags(currentMultisig.publicKey.toString(), tags);
-    toast.success("Tags updated successfully");
+    toast.success("Tags updated");
     onOpenChange(false);
   };
 

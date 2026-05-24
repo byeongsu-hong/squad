@@ -187,7 +187,7 @@ export function ImportMultisigDialog({
         });
       }
 
-      toast.success("Multisig imported successfully!");
+      toast.success("Multisig imported");
       onOpenChange(false);
       form.reset();
     } catch (error) {

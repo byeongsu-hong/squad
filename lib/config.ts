@@ -19,15 +19,15 @@ export const UI_CONFIG = {
 // Error messages
 export const ERROR_MESSAGES = {
   CHAIN_NOT_FOUND: "Chain configuration not found",
-  WALLET_NOT_CONNECTED: "Please connect your wallet",
-  RPC_RATE_LIMIT: "RPC rate limit reached. Please wait and try again.",
+  WALLET_NOT_CONNECTED: "Connect a wallet first",
+  RPC_RATE_LIMIT: "RPC rate limit reached. Try again in a moment.",
 } as const;
 
 // Success messages
 export const SUCCESS_MESSAGES = {
-  PROPOSAL_APPROVED: "Proposal approved!",
-  PROPOSAL_REJECTED: "Proposal rejected!",
-  PROPOSAL_EXECUTED: "Proposal executed!",
+  PROPOSAL_APPROVED: "Proposal approved",
+  PROPOSAL_REJECTED: "Proposal rejected",
+  PROPOSAL_EXECUTED: "Proposal executed",
 } as const;
 
 // Transaction discriminators

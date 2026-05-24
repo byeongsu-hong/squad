@@ -125,7 +125,7 @@ export function AddressLabelManagerController({
           description: formData.description || undefined,
           color: formData.color,
         });
-        toast.success("Label updated successfully");
+        toast.success("Label updated");
       } else {
         addLabel({
           address: formData.address,
@@ -133,7 +133,7 @@ export function AddressLabelManagerController({
           description: formData.description || undefined,
           color: formData.color,
         });
-        toast.success("Label added successfully");
+        toast.success("Label added");
       }
 
       handleReset();
@@ -157,7 +157,7 @@ export function AddressLabelManagerController({
   const handleDelete = (address: string) => {
     try {
       deleteLabel(address);
-      toast.success("Label deleted successfully");
+      toast.success("Label deleted");
       if (editingLabel?.address === address) {
         handleReset();
       }
