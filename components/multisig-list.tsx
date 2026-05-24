@@ -3,7 +3,6 @@
 import {
   ArrowUpRight,
   Copy,
-  Filter,
   Loader2,
   Pencil,
   RefreshCw,
@@ -16,7 +15,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { ManageTagsDialog } from "@/components/manage-tags-dialog";
-import { MultisigCardSkeletonList } from "@/components/skeletons";
+import { VaultListSkeletonList } from "@/components/skeletons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,8 +26,8 @@ import {
   type RegistrySummaryRow,
   buildRegistrySummaryRowsFromMultisigs,
 } from "@/lib/registry/registry-summary";
-import { formatAddress } from "@/lib/utils/format-address";
 import { cn } from "@/lib/utils";
+import { formatAddress } from "@/lib/utils/format-address";
 import { useChainStore } from "@/stores/chain-store";
 import { useMultisigStore } from "@/stores/multisig-store";
 import { useWalletStore } from "@/stores/wallet-store";
@@ -39,22 +38,11 @@ import {
   matchesMultisigSelectionKey,
 } from "@/types/multisig";
 
-interface MultisigListProps {
-  actions?: React.ReactNode;
-  statusText?: string;
-  embedded?: boolean;
-}
-
 function formatProviderLabel(provider: RegistrySummaryRow["multisigProvider"]) {
   return provider === "safe" ? "Safe" : "Squads";
 }
 
-
-export function MultisigList({
-  actions,
-  statusText,
-  embedded = false,
-}: MultisigListProps = {}) {
+export function MultisigList() {
   const router = useRouter();
   const [selectedForDeletion, setSelectedForDeletion] = useState<Set<string>>(
     new Set()
@@ -111,13 +99,13 @@ export function MultisigList({
     void loadMultisigs();
   }, [canLoadFromChain, getSelectedChain, loadMultisigs, publicKey]);
 
-  const toggleSelect = (publicKey: string) => {
+  const toggleSelect = (key: string) => {
     setSelectedForDeletion((prev) => {
       const next = new Set(prev);
-      if (next.has(publicKey)) {
-        next.delete(publicKey);
+      if (next.has(key)) {
+        next.delete(key);
       } else {
-        next.add(publicKey);
+        next.add(key);
       }
       return next;
     });
@@ -143,21 +131,16 @@ export function MultisigList({
     ) {
       selectedForDeletion.forEach((key) => {
         const multisig = multisigByKey.get(key);
-        if (!multisig) {
-          return;
-        }
-
+        if (!multisig) return;
         deleteMultisig(multisig.publicKey.toString(), multisig.chainId);
       });
       setSelectedForDeletion(new Set());
-      toast.success(
-        `${selectedForDeletion.size} multisig(s) removed from list`
-      );
+      toast.success(`${selectedForDeletion.size} multisig(s) removed`);
     }
   };
 
-  const handleStartEditLabel = (publicKey: string, currentLabel?: string) => {
-    setEditingLabel(publicKey);
+  const handleStartEditLabel = (key: string, currentLabel?: string) => {
+    setEditingLabel(key);
     setLabelInput(currentLabel || "");
   };
 
@@ -207,27 +190,12 @@ export function MultisigList({
 
   const filteredRegistryRows = useMemo(() => {
     return registryRows.filter((row) => {
-      const matchesTags =
+      return (
         selectedFilterTags.length === 0 ||
-        selectedFilterTags.some((tag) => row.tags.includes(tag));
-
-      return matchesTags;
+        selectedFilterTags.some((tag) => row.tags.includes(tag))
+      );
     });
   }, [registryRows, selectedFilterTags]);
-
-  const registrySummary = useMemo(
-    () => ({
-      safe: filteredRegistryRows.filter(
-        (row) => row.multisigProvider === "safe"
-      ).length,
-      waiting: filteredRegistryRows.reduce((sum, row) => sum + row.waiting, 0),
-      executable: filteredRegistryRows.reduce(
-        (sum, row) => sum + row.executable,
-        0
-      ),
-    }),
-    [filteredRegistryRows]
-  );
 
   const toggleFilterTag = (tag: string) => {
     setSelectedFilterTags((prev) =>
@@ -241,787 +209,310 @@ export function MultisigList({
     ? normalizeChainConfig(selectedChain)
     : null;
   const canSyncSelectedChain = canLoadFromChain(selectedChain?.id);
-  const syncStatusText = publicKey
-    ? canSyncSelectedChain
-      ? `Creator sync is available on ${normalizedSelectedChain?.name ?? "the selected chain"}.`
-      : selectedChain
-        ? `${normalizedSelectedChain?.name ?? selectedChain.id} is configured for ${(normalizedSelectedChain?.vmFamily ?? "svm").toUpperCase()} / ${normalizedSelectedChain?.multisigProvider ?? "squads"}. Creator sync stays local-only for now.`
-        : "Select a chain to sync registry entries from a connected creator wallet."
-    : "Connect a wallet to sync creator-owned Squads multisigs. Manual create and import stay available where supported.";
 
   const handleOpenDesk = (multisig: MultisigAccount) => {
     const multisigKey = getMultisigAccountKey(multisig);
-    const attention = attentionByMultisig[multisigKey];
-    const filter = attention?.waiting
-      ? "waiting"
-      : attention?.executable
-        ? "executable"
-        : "all";
-
     selectMultisig(multisigKey);
-    router.push(`/?multisig=${multisigKey}&filter=${filter}`);
+    router.push(`/vaults/${encodeURIComponent(multisigKey)}`);
   };
 
   const getMultisigForRow = (row: RegistrySummaryRow) =>
     multisigByKey.get(row.key);
 
   return (
-    <div className={cn("space-y-4", embedded && "space-y-3")}>
-      <div
-        className={cn(
-          "flex flex-col gap-3 border-b border-border pb-4",
-          embedded && "pb-3"
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <Input
+          placeholder="Search multisigs..."
+          value={filterText}
+          onChange={(e) => setFilterText(e.target.value)}
+          className="border-border bg-card text-foreground placeholder:text-muted-foreground/70 w-full sm:w-[280px]"
+          aria-label="Search multisigs"
+        />
+        {publicKey && canSyncSelectedChain ? (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={loadMultisigs}
+            disabled={loading}
+            className="border-border text-foreground/80 hover:bg-muted bg-transparent"
+            aria-label="Refresh multisigs"
+            title={`Creator sync on ${normalizedSelectedChain?.name ?? "selected chain"}`}
+          >
+            {loading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4" />
+            )}
+          </Button>
+        ) : null}
+        {hasMultisigs && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={toggleSelectAll}
+            className="border-border text-foreground/80 hover:bg-muted bg-transparent"
+          >
+            {selectedForDeletion.size === multisigs.length
+              ? "Deselect all"
+              : "Select all"}
+          </Button>
         )}
-      >
-        <div className="flex flex-wrap items-center gap-3">
-          {!embedded ? (
-            <>
-              <p className="text-[0.68rem] font-medium tracking-[0.22em] text-muted-foreground/70 uppercase">
-                Multisig Registry
-              </p>
-              <h1 className="text-xl font-semibold tracking-[-0.03em] text-foreground">
-                All multisigs
-              </h1>
-            </>
-          ) : (
-            <p className="text-[0.68rem] font-medium tracking-[0.22em] text-muted-foreground/70 uppercase">
-              Registry controls
-            </p>
-          )}
-          {statusText ? (
-            <>
-              <span className="hidden h-4 w-px bg-border sm:block" />
-              <span className="text-sm text-muted-foreground">{statusText}</span>
-            </>
-          ) : null}
-          {embedded ? (
-            <>
-              <span className="hidden h-4 w-px bg-border sm:block" />
-              <span className="text-sm text-muted-foreground/70">{syncStatusText}</span>
-            </>
-          ) : null}
-          {actions ? <div className="ml-auto">{actions}</div> : null}
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="relative">
-            <Filter className="absolute top-2.5 left-2.5 h-4 w-4 text-muted-foreground/70" />
-            <Input
-              placeholder="Search multisigs..."
-              value={filterText}
-              onChange={(e) => setFilterText(e.target.value)}
-              className="w-full min-w-[220px] border-border bg-muted pl-8 text-foreground placeholder:text-muted-foreground/70 sm:w-[320px]"
-              aria-label="Search multisigs"
-            />
+        {selectedForDeletion.size > 0 && (
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={handleDeleteSelected}
+          >
+            <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+            Remove ({selectedForDeletion.size})
+          </Button>
+        )}
+        {allTags.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {allTags.map((tag) => {
+              const selected = selectedFilterTags.includes(tag);
+              return (
+                <Badge
+                  key={tag}
+                  variant={selected ? "default" : "outline"}
+                  className={cn(
+                    "cursor-pointer text-xs",
+                    selected
+                      ? "bg-primary text-primary-foreground"
+                      : "border-border text-muted-foreground bg-transparent"
+                  )}
+                  onClick={() => toggleFilterTag(tag)}
+                >
+                  {tag}
+                </Badge>
+              );
+            })}
           </div>
-          {publicKey && canSyncSelectedChain ? (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={loadMultisigs}
-              disabled={loading}
-              className="rounded-md border-border bg-transparent text-foreground/80 hover:bg-muted"
-              aria-label="Refresh multisigs"
-              title="Refresh multisigs"
-            >
-              {loading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <RefreshCw className="h-4 w-4" />
-              )}
-            </Button>
-          ) : null}
-          {hasMultisigs && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={toggleSelectAll}
-              className="rounded-md border-border bg-transparent text-foreground/80 hover:bg-muted"
-            >
-              {selectedForDeletion.size === multisigs.length
-                ? "Deselect All"
-                : "Select All"}
-            </Button>
-          )}
-          {selectedForDeletion.size > 0 && (
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={handleDeleteSelected}
-              className="rounded-md"
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Delete ({selectedForDeletion.size})
-            </Button>
-          )}
-          {hasMultisigs && allTags.length > 0 ? (
-            <div className="flex flex-wrap gap-1.5">
-              {allTags.map((tag) => {
-                const selected = selectedFilterTags.includes(tag);
-
-                return (
-                  <Badge
-                    key={tag}
-                    variant={selected ? "default" : "outline"}
-                    className={cn(
-                      "cursor-pointer rounded-md text-xs",
-                      selected
-                        ? "bg-primary text-primary-foreground"
-                        : "border-border bg-transparent text-muted-foreground"
-                    )}
-                    onClick={() => toggleFilterTag(tag)}
-                  >
-                    {tag}
-                  </Badge>
-                );
-              })}
-            </div>
-          ) : null}
-          <div className="ml-auto text-sm text-muted-foreground/70">
-            {hasMultisigs
-              ? `${filteredRegistryRows.length} visible / ${multisigs.length} total`
-              : "No multisigs loaded"}
-          </div>
-        </div>
+        )}
+        <span className="text-muted-foreground/70 ml-auto text-sm">
+          {hasMultisigs
+            ? `${filteredRegistryRows.length} / ${multisigs.length}`
+            : ""}
+        </span>
       </div>
 
       {!hasMultisigs && !loading && (
-        <div className="flex items-center gap-3 border border-dashed border-border px-4 py-4 text-sm text-muted-foreground">
-          <Users className="h-4 w-4 shrink-0 text-muted-foreground/70" />
+        <div className="border-border text-muted-foreground flex items-center gap-3 rounded-xl border border-dashed px-5 py-8 text-sm">
+          <Users className="text-muted-foreground/50 h-4 w-4 shrink-0" />
           {publicKey
-            ? "No multisigs found. Create or import one from the registry controls."
-            : "Connect a wallet or import an existing multisig to start the registry."}
+            ? "No multisigs found. Use Add Multisig to create or import one."
+            : "Connect a wallet or use Add Multisig to import an existing one."}
         </div>
       )}
 
-      {filteredRegistryRows.length === 0 && multisigs.length > 0 && (
-        <div className="border border-dashed border-border px-4 py-4 text-sm text-muted-foreground">
-          No multisigs match the current filters.
-        </div>
-      )}
+      {filteredRegistryRows.length === 0 &&
+        multisigs.length > 0 &&
+        !loading && (
+          <div className="border-border text-muted-foreground rounded-xl border border-dashed px-5 py-8 text-sm">
+            No multisigs match the current filters.
+          </div>
+        )}
 
-      {loading && <MultisigCardSkeletonList />}
+      {loading && <VaultListSkeletonList />}
 
-      {!loading &&
-        hasMultisigs &&
-        filteredRegistryRows.length > 0 &&
-        embedded && (
-          <div className="grid gap-4 xl:grid-cols-[17.5rem_minmax(0,1fr)]">
-            <aside className="space-y-4 border border-border bg-muted p-4">
-              <div className="space-y-2 border-b border-border pb-4">
-                <p className="text-[0.66rem] tracking-[0.18em] text-muted-foreground/70 uppercase">
-                  Registry Tools
-                </p>
-                <p className="text-sm leading-6 text-muted-foreground">
-                  Curate the saved registry before it reaches the operations
-                  workspace. Search, sync, batch-select, and clean up from one
-                  side rail.
-                </p>
-              </div>
+      {!loading && hasMultisigs && filteredRegistryRows.length > 0 && (
+        <div className="border-border bg-muted overflow-x-auto rounded-[1.15rem] border">
+          <div className="min-w-[980px]">
+            <div className="border-border text-muted-foreground/70 grid grid-cols-[2.1rem_minmax(11rem,1.5fr)_minmax(8rem,0.8fr)_minmax(7rem,0.7fr)_minmax(8rem,0.7fr)_minmax(10rem,1fr)_minmax(8rem,0.75fr)] gap-3 border-b px-4 py-3 text-[0.68rem] font-medium tracking-[0.18em] uppercase">
+              <span />
+              <span>Multisig</span>
+              <span>Chain</span>
+              <span>Threshold</span>
+              <span>Members</span>
+              <span>Tags</span>
+              <span className="text-right">Actions</span>
+            </div>
 
-              {actions ? (
-                <div className="space-y-2">
-                  <p className="text-[0.66rem] tracking-[0.18em] text-muted-foreground/70 uppercase">
-                    Intake
-                  </p>
-                  <div className="flex flex-col gap-2">{actions}</div>
-                </div>
-              ) : null}
+            {filteredRegistryRows.map((row) => {
+              const multisig = getMultisigForRow(row);
+              if (!multisig) return null;
 
-              <div className="space-y-2 border-t border-border pt-4">
-                <p className="text-[0.66rem] tracking-[0.18em] text-muted-foreground/70 uppercase">
-                  Current Scope
-                </p>
-                <div className="space-y-2">
-                  <div className="border border-border bg-card px-3 py-2">
-                    <p className="text-[0.62rem] tracking-[0.16em] text-muted-foreground/70 uppercase">
-                      Visible
-                    </p>
-                    <p className="mt-1 font-mono text-sm text-foreground">
-                      {filteredRegistryRows.length}/{multisigs.length}
-                    </p>
+              const isSelected = selectedForDeletion.has(row.key);
+              const isActiveDesk = matchesMultisigSelectionKey(
+                multisig,
+                selectedMultisigKey
+              );
+
+              return (
+                <div
+                  key={row.key}
+                  className={cn(
+                    "border-border grid grid-cols-[2.1rem_minmax(11rem,1.5fr)_minmax(8rem,0.8fr)_minmax(7rem,0.7fr)_minmax(8rem,0.7fr)_minmax(10rem,1fr)_minmax(8rem,0.75fr)] gap-3 border-b px-4 py-4 last:border-b-0",
+                    isSelected || isActiveDesk ? "bg-card" : "bg-transparent"
+                  )}
+                >
+                  <div className="flex items-start pt-1">
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        toggleSelect(row.key);
+                      }}
+                      className="h-4 w-4 cursor-pointer"
+                      aria-label={`Select ${row.label || "unnamed multisig"}`}
+                    />
                   </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="border border-border bg-card px-2.5 py-2">
-                      <p className="text-[0.58rem] tracking-[0.16em] text-muted-foreground/70 uppercase">
-                        Wait
-                      </p>
-                      <p className="mt-1 font-mono text-sm text-foreground">
-                        {registrySummary.waiting}
-                      </p>
-                    </div>
-                    <div className="border border-border bg-card px-2.5 py-2">
-                      <p className="text-[0.58rem] tracking-[0.16em] text-muted-foreground/70 uppercase">
-                        Exec
-                      </p>
-                      <p className="mt-1 font-mono text-sm text-foreground">
-                        {registrySummary.executable}
-                      </p>
-                    </div>
-                    <div className="border border-border bg-card px-2.5 py-2">
-                      <p className="text-[0.58rem] tracking-[0.16em] text-muted-foreground/70 uppercase">
-                        Safe
-                      </p>
-                      <p className="mt-1 font-mono text-sm text-foreground">
-                        {registrySummary.safe}
-                      </p>
+
+                  <div className="min-w-0">
+                    {editingLabel === row.key ? (
+                      <Input
+                        value={labelInput}
+                        onChange={(e) => setLabelInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") handleSaveLabel(multisig);
+                          else if (e.key === "Escape") handleCancelEdit();
+                        }}
+                        onBlur={() => handleSaveLabel(multisig)}
+                        placeholder="Enter label"
+                        className="border-border bg-card text-foreground h-8"
+                        autoFocus
+                      />
+                    ) : (
+                      <div className="flex items-center gap-0.5">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-foreground truncate text-sm font-medium">
+                              {row.label}
+                            </span>
+                            {isActiveDesk ? (
+                              <Badge
+                                variant="outline"
+                                className="rounded-md border-lime-500/30 bg-lime-500/10 text-[0.65rem] text-lime-200"
+                              >
+                                Selected
+                              </Badge>
+                            ) : null}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-muted-foreground/70 hover:bg-muted hover:text-foreground h-6 w-6"
+                              onClick={() =>
+                                handleStartEditLabel(
+                                  getMultisigAccountKey(multisig),
+                                  multisig.label
+                                )
+                              }
+                              aria-label={`Edit label for ${row.label}`}
+                            >
+                              <Pencil className="h-3 w-3" />
+                            </Button>
+                          </div>
+                          <div className="mt-1 flex items-center gap-1">
+                            <span className="text-muted-foreground/70 truncate font-mono text-xs">
+                              {formatAddress(
+                                multisig.publicKey.toString(),
+                                8,
+                                8
+                              )}
+                            </span>
+                            <button
+                              type="button"
+                              className="text-muted-foreground/70 hover:text-foreground shrink-0 transition-colors"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigator.clipboard.writeText(
+                                  multisig.publicKey.toString()
+                                );
+                                toast.success("Address copied");
+                              }}
+                              aria-label={`Copy address for ${row.label}`}
+                            >
+                              <Copy className="h-3 w-3" />
+                            </button>
+                          </div>
+                          <p className="text-muted-foreground/70 mt-1 text-xs">
+                            {row.attentionLine}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-start">
+                    <div className="flex flex-wrap items-center gap-1">
+                      <Badge
+                        variant="outline"
+                        className="border-border text-foreground/80 bg-transparent"
+                      >
+                        {row.chainName}
+                      </Badge>
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          row.multisigProvider === "safe"
+                            ? "border-amber-500/30 bg-amber-500/10 text-amber-200"
+                            : "border-border bg-card text-muted-foreground"
+                        )}
+                      >
+                        {formatProviderLabel(row.multisigProvider)}
+                      </Badge>
                     </div>
                   </div>
-                </div>
-              </div>
 
-              {allTags.length > 0 ? (
-                <div className="space-y-2 border-t border-border pt-4">
-                  <p className="text-[0.66rem] tracking-[0.18em] text-muted-foreground/70 uppercase">
-                    Tag Filters
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {allTags.map((tag) => {
-                      const selected = selectedFilterTags.includes(tag);
+                  <div className="text-foreground pt-1 text-sm font-medium">
+                    {row.threshold}
+                  </div>
 
-                      return (
+                  <div className="text-muted-foreground pt-1 text-sm">
+                    {row.memberCount}
+                  </div>
+
+                  <div className="flex flex-wrap items-start gap-1">
+                    {row.tags.length ? (
+                      row.tags.map((tag) => (
                         <Badge
                           key={tag}
-                          variant={selected ? "default" : "outline"}
-                          className={cn(
-                            "cursor-pointer rounded-md text-xs",
-                            selected
-                              ? "bg-primary text-primary-foreground"
-                              : "border-border bg-transparent text-muted-foreground"
-                          )}
-                          onClick={() => toggleFilterTag(tag)}
+                          variant="outline"
+                          className="border-border bg-muted text-foreground/80 text-xs"
                         >
                           {tag}
                         </Badge>
-                      );
-                    })}
-                  </div>
-                </div>
-              ) : null}
-
-              {selectedForDeletion.size > 0 ? (
-                <div className="space-y-3 border-t border-border pt-4">
-                  <p className="text-[0.66rem] tracking-[0.18em] text-muted-foreground/70 uppercase">
-                    Selection
-                  </p>
-                  <p className="text-sm leading-6 text-muted-foreground">
-                    {selectedForDeletion.size} saved multisig
-                    {selectedForDeletion.size === 1 ? "" : "s"} selected for
-                    bulk cleanup.
-                  </p>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={handleDeleteSelected}
-                    className="w-full rounded-md"
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Remove Selected
-                  </Button>
-                </div>
-              ) : null}
-            </aside>
-
-            <div className="border border-border bg-muted">
-              <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border px-4 py-4">
-                <div className="space-y-1">
-                  <p className="text-[0.66rem] tracking-[0.18em] text-muted-foreground/70 uppercase">
-                    Saved Multisigs
-                  </p>
-                  <p className="text-sm leading-6 text-muted-foreground">
-                    Keep the registry dense and readable. Labels, runtime,
-                    signer threshold, and live queue pressure should all scan in
-                    one pass.
-                  </p>
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  {publicKey && canSyncSelectedChain ? (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={loadMultisigs}
-                      disabled={loading}
-                      className="rounded-md border-border bg-transparent text-foreground/80 hover:bg-muted"
-                      aria-label="Refresh multisigs"
-                      title="Refresh multisigs"
-                    >
-                      {loading ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <RefreshCw className="h-4 w-4" />
-                      )}
-                    </Button>
-                  ) : null}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={toggleSelectAll}
-                    className="rounded-md border-border bg-transparent text-foreground/80 hover:bg-muted"
-                  >
-                    {selectedForDeletion.size === multisigs.length
-                      ? "Deselect All"
-                      : "Select All"}
-                  </Button>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-3">
-                <div className="relative min-w-[16rem] flex-1">
-                  <Filter className="absolute top-2.5 left-2.5 h-4 w-4 text-muted-foreground/70" />
-                  <Input
-                    placeholder="Search multisigs, addresses, tags..."
-                    value={filterText}
-                    onChange={(e) => setFilterText(e.target.value)}
-                    className="w-full border-border bg-card pl-8 text-foreground placeholder:text-muted-foreground/70"
-                    aria-label="Search multisigs"
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground/70">
-                  {filteredRegistryRows.length} visible
-                </p>
-              </div>
-
-              <div className="divide-y divide-border">
-                {filteredRegistryRows.map((row) => {
-                  const multisig = getMultisigForRow(row);
-                  if (!multisig) {
-                    return null;
-                  }
-
-                  const isSelected = selectedForDeletion.has(row.key);
-                  const isActiveDesk = matchesMultisigSelectionKey(
-                    multisig,
-                    selectedMultisigKey
-                  );
-
-                  return (
-                    <div
-                      key={row.key}
-                      className={cn(
-                        "grid gap-3 px-4 py-4 transition-colors xl:grid-cols-[2rem_minmax(0,1.4fr)_minmax(11rem,0.72fr)_auto]",
-                        isSelected || isActiveDesk
-                          ? "bg-muted"
-                          : "bg-transparent hover:bg-muted"
-                      )}
-                    >
-                      <div className="flex items-start pt-1">
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={(event) => {
-                            event.stopPropagation();
-                            toggleSelect(row.key);
-                          }}
-                          className="h-4 w-4 cursor-pointer"
-                          aria-label={`Select ${row.label}`}
-                        />
-                      </div>
-
-                      <div className="min-w-0 space-y-2">
-                        <div className="flex flex-wrap items-center gap-2">
-                          {editingLabel === row.key ? (
-                            <Input
-                              value={labelInput}
-                              onChange={(event) =>
-                                setLabelInput(event.target.value)
-                              }
-                              onKeyDown={(event) => {
-                                if (event.key === "Enter") {
-                                  handleSaveLabel(multisig);
-                                } else if (event.key === "Escape") {
-                                  handleCancelEdit();
-                                }
-                              }}
-                              onBlur={() => handleSaveLabel(multisig)}
-                              placeholder="Enter label"
-                              className="h-8 max-w-[16rem] border-border bg-card text-foreground"
-                              autoFocus
-                            />
-                          ) : (
-                            <>
-                              <p className="truncate text-[0.95rem] font-medium tracking-[-0.02em] text-foreground">
-                                {row.label}
-                              </p>
-                              <Badge
-                                variant="outline"
-                                className="rounded-md border-border bg-muted text-foreground/80"
-                              >
-                                {row.chainName}
-                              </Badge>
-                              <Badge
-                                variant="outline"
-                                className={cn(
-                                  "rounded-md",
-                                  row.multisigProvider === "safe"
-                                    ? "border-amber-500/25 bg-amber-500/8 text-amber-200"
-                                    : "border-border bg-muted text-foreground/80"
-                                )}
-                              >
-                                {formatProviderLabel(row.multisigProvider)}
-                              </Badge>
-                              {row.multisigProvider === "safe" ? (
-                                <Badge
-                                  variant="outline"
-                                  className="rounded-md border-border bg-card text-muted-foreground"
-                                >
-                                  Read-only
-                                </Badge>
-                              ) : null}
-                              {isActiveDesk ? (
-                                <Badge
-                                  variant="outline"
-                                  className="rounded-md border-lime-500/25 bg-lime-500/8 text-lime-200"
-                                >
-                                  Focused
-                                </Badge>
-                              ) : null}
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-6 w-6 rounded-md text-muted-foreground/70 hover:bg-muted hover:text-foreground"
-                                onClick={() =>
-                                  handleStartEditLabel(
-                                    getMultisigAccountKey(multisig),
-                                    multisig.label
-                                  )
-                                }
-                                aria-label={`Edit label for ${row.label}`}
-                                title={`Edit label for ${row.label}`}
-                              >
-                                <Pencil className="h-3 w-3" />
-                              </Button>
-                            </>
-                          )}
-                        </div>
-
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.72rem] text-muted-foreground/70">
-                          <span className="font-mono tabular-nums">
-                            {formatAddress(multisig.publicKey.toString(), 8, 8)}
-                          </span>
-                          <button
-                            type="button"
-                            className="text-muted-foreground/70 transition-colors hover:text-foreground"
-                            onClick={() => {
-                              navigator.clipboard.writeText(
-                                multisig.publicKey.toString()
-                              );
-                              toast.success("Address copied");
-                            }}
-                            aria-label={`Copy address for ${row.label}`}
-                            title={`Copy address for ${row.label}`}
-                          >
-                            <Copy className="h-3.5 w-3.5" />
-                          </button>
-                          <span>{row.attentionLine}</span>
-                        </div>
-
-                        <div className="flex flex-wrap gap-1.5">
-                          {row.tags.length > 0 ? (
-                            row.tags.map((tag) => (
-                              <Badge
-                                key={tag}
-                                variant="outline"
-                                className="rounded-md border-border bg-muted text-xs text-foreground/80"
-                              >
-                                {tag}
-                              </Badge>
-                            ))
-                          ) : (
-                            <span className="text-xs text-muted-foreground/70">
-                              No tags
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-x-5 gap-y-2 border-l border-border pl-4 xl:grid-cols-2">
-                        <div>
-                          <p className="text-[0.58rem] tracking-[0.16em] text-muted-foreground/70 uppercase">
-                            Threshold
-                          </p>
-                          <p className="mt-1 font-mono text-sm text-foreground">
-                            {row.threshold}/{row.memberCount}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-[0.58rem] tracking-[0.16em] text-muted-foreground/70 uppercase">
-                            Active
-                          </p>
-                          <p className="mt-1 font-mono text-sm text-foreground">
-                            {row.active}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-[0.58rem] tracking-[0.16em] text-muted-foreground/70 uppercase">
-                            Waiting
-                          </p>
-                          <p className="mt-1 font-mono text-sm text-foreground">
-                            {row.waiting}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-[0.58rem] tracking-[0.16em] text-muted-foreground/70 uppercase">
-                            Executable
-                          </p>
-                          <p className="mt-1 font-mono text-sm text-foreground">
-                            {row.executable}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-wrap items-start justify-end gap-2 xl:min-w-[11.5rem]">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="rounded-md border-border bg-transparent text-foreground/80 hover:bg-muted"
-                          onClick={() => handleOpenTagDialog(multisig)}
-                        >
-                          <Tag className="mr-2 h-3 w-3" />
-                          Tags
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="rounded-md border-border bg-transparent text-foreground/80 hover:bg-muted"
-                          onClick={() =>
-                            deleteMultisig(
-                              multisig.publicKey.toString(),
-                              multisig.chainId
-                            )
-                          }
-                        >
-                          <Trash2 className="mr-2 h-3 w-3" />
-                          Remove
-                        </Button>
-                        <Button
-                          size="sm"
-                          className={cn(
-                            "rounded-md",
-                            row.waiting > 0
-                              ? "bg-lime-300 text-zinc-950 hover:bg-lime-200"
-                              : "bg-primary text-primary-foreground hover:bg-primary/90"
-                          )}
-                          onClick={() => handleOpenDesk(multisig)}
-                        >
-                          <ArrowUpRight className="mr-2 h-3 w-3" />
-                          Focus
-                        </Button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        )}
-
-      {!loading &&
-        hasMultisigs &&
-        filteredRegistryRows.length > 0 &&
-        !embedded && (
-          <div className="overflow-x-auto rounded-[1.15rem] border border-border bg-muted">
-            <div className="min-w-[980px]">
-              <div className="grid grid-cols-[2.1rem_minmax(11rem,1.5fr)_minmax(8rem,0.8fr)_minmax(7rem,0.7fr)_minmax(8rem,0.7fr)_minmax(10rem,1fr)_minmax(8rem,0.75fr)] gap-3 border-b border-border px-4 py-3 text-[0.68rem] font-medium tracking-[0.18em] text-muted-foreground/70 uppercase">
-                <span />
-                <span>Multisig</span>
-                <span>Chain</span>
-                <span>Threshold</span>
-                <span>Members</span>
-                <span>Tags</span>
-                <span className="text-right">Actions</span>
-              </div>
-
-              {filteredRegistryRows.map((row) => {
-                const multisig = getMultisigForRow(row);
-                if (!multisig) {
-                  return null;
-                }
-
-                const isSelected = selectedForDeletion.has(row.key);
-                const isActiveDesk = matchesMultisigSelectionKey(
-                  multisig,
-                  selectedMultisigKey
-                );
-
-                return (
-                  <div
-                    key={row.key}
-                    className={cn(
-                      "grid grid-cols-[2.1rem_minmax(11rem,1.5fr)_minmax(8rem,0.8fr)_minmax(7rem,0.7fr)_minmax(8rem,0.7fr)_minmax(10rem,1fr)_minmax(8rem,0.75fr)] gap-3 border-b border-border px-4 py-4 last:border-b-0",
-                      isSelected || isActiveDesk
-                        ? "bg-card"
-                        : "bg-transparent"
+                      ))
+                    ) : (
+                      <span className="text-muted-foreground/70 pt-1 text-sm">
+                        —
+                      </span>
                     )}
-                  >
-                    <div className="flex items-start pt-1">
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={(event) => {
-                          event.stopPropagation();
-                          toggleSelect(row.key);
-                        }}
-                        className="h-4 w-4 cursor-pointer"
-                        aria-label={`Select ${row.label || "unnamed multisig"}`}
-                      />
-                    </div>
+                  </div>
 
-                    <div className="min-w-0">
-                      {editingLabel === row.key ? (
-                        <Input
-                          value={labelInput}
-                          onChange={(e) => setLabelInput(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              handleSaveLabel(multisig);
-                            } else if (e.key === "Escape") {
-                              handleCancelEdit();
-                            }
-                          }}
-                          onBlur={() => handleSaveLabel(multisig)}
-                          placeholder="Enter label"
-                          className="h-8 border-border bg-card text-foreground"
-                          autoFocus
-                        />
-                      ) : (
-                        <div className="flex items-center gap-0.5">
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className="truncate text-sm font-medium text-foreground">
-                                {row.label}
-                              </span>
-                              {isActiveDesk ? (
-                                <Badge
-                                  variant="outline"
-                                  className="rounded-md border-lime-500/30 bg-lime-500/10 text-[0.65rem] text-lime-200"
-                                >
-                                  Desk
-                                </Badge>
-                              ) : null}
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-6 w-6 rounded-md text-muted-foreground/70 hover:bg-muted hover:text-foreground"
-                                onClick={() =>
-                                  handleStartEditLabel(
-                                    getMultisigAccountKey(multisig),
-                                    multisig.label
-                                  )
-                                }
-                                aria-label={`Edit label for ${row.label}`}
-                                title={`Edit label for ${row.label}`}
-                              >
-                                <Pencil className="h-3 w-3" />
-                              </Button>
-                            </div>
-                            <div className="mt-1 flex items-center gap-1">
-                              <span className="truncate font-mono text-xs text-muted-foreground/70">
-                                {formatAddress(multisig.publicKey.toString(), 8, 8)}
-                              </span>
-                              <button
-                                type="button"
-                                className="shrink-0 text-muted-foreground/70 transition-colors hover:text-foreground"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  navigator.clipboard.writeText(
-                                    multisig.publicKey.toString()
-                                  );
-                                  toast.success("Address copied");
-                                }}
-                                aria-label={`Copy address for ${row.label}`}
-                                title={`Copy address for ${row.label}`}
-                              >
-                                <Copy className="h-3 w-3" />
-                              </button>
-                            </div>
-                            <p className="mt-2 text-xs text-muted-foreground/70">
-                              {row.attentionLine}
-                            </p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex items-start">
-                      <div className="flex flex-wrap items-center gap-1">
-                        <Badge
-                          variant="outline"
-                          className="rounded-md border-border bg-transparent text-foreground/80"
-                        >
-                          {row.chainName}
-                        </Badge>
-                        <Badge
-                          variant="outline"
-                          className={cn(
-                            "rounded-md",
-                            row.multisigProvider === "safe"
-                              ? "border-amber-500/30 bg-amber-500/10 text-amber-200"
-                              : "border-border bg-card text-muted-foreground"
-                          )}
-                        >
-                          {formatProviderLabel(row.multisigProvider)}
-                        </Badge>
-                      </div>
-                    </div>
-
-                    <div className="pt-1 text-sm font-medium text-foreground">
-                      {row.threshold}
-                    </div>
-
-                    <div className="pt-1 text-sm text-muted-foreground">
-                      {row.memberCount}
-                    </div>
-
-                    <div className="flex flex-wrap items-start gap-1">
-                      {row.tags.length ? (
-                        row.tags.map((tag) => (
-                          <Badge
-                            key={tag}
-                            variant="outline"
-                            className="rounded-md border-border bg-muted text-xs text-foreground/80"
-                          >
-                            {tag}
-                          </Badge>
-                        ))
-                      ) : (
-                        <span className="pt-1 text-sm text-muted-foreground/70">
-                          No tags
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="flex items-start justify-end">
-                      <div className="flex flex-wrap justify-end gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="rounded-md border-border bg-transparent text-foreground/80 hover:bg-muted"
-                          onClick={() => handleOpenTagDialog(multisig)}
-                        >
-                          <Tag className="mr-2 h-3 w-3" />
-                          Tags
-                        </Button>
-                        <Button
-                          size="sm"
-                          className={cn(
-                            "rounded-md",
-                            row.waiting > 0
-                              ? "bg-lime-300 text-zinc-950 hover:bg-lime-200"
-                              : "bg-primary text-primary-foreground hover:bg-primary/90"
-                          )}
-                          onClick={() => handleOpenDesk(multisig)}
-                        >
-                          <ArrowUpRight className="mr-2 h-3 w-3" />
-                          Focus
-                        </Button>
-                      </div>
+                  <div className="flex items-start justify-end">
+                    <div className="flex flex-wrap justify-end gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-border text-foreground/80 hover:bg-muted bg-transparent"
+                        onClick={() => handleOpenTagDialog(multisig)}
+                      >
+                        <Tag className="mr-1.5 h-3 w-3" />
+                        Tags
+                      </Button>
+                      <Button
+                        size="sm"
+                        className={cn(
+                          row.waiting > 0
+                            ? "bg-lime-300 text-zinc-950 hover:bg-lime-200"
+                            : "bg-primary text-primary-foreground hover:bg-primary/90"
+                        )}
+                        onClick={() => handleOpenDesk(multisig)}
+                      >
+                        <ArrowUpRight className="mr-1.5 h-3 w-3" />
+                        Open
+                      </Button>
                     </div>
                   </div>
-                );
-              })}
-            </div>
+                </div>
+              );
+            })}
           </div>
-        )}
+        </div>
+      )}
 
       <ManageTagsDialog
         open={tagDialogOpen}
