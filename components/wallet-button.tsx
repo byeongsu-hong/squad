@@ -33,7 +33,7 @@ export function WalletButton() {
         <button
           type="button"
           onClick={() => setConnectOpen(true)}
-          className="border-border bg-muted text-foreground hover:bg-muted/80 inline-flex h-9 items-center gap-2 rounded-md border px-4 text-sm font-medium transition-colors"
+          className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-9 items-center gap-2 rounded-md px-4 text-sm font-medium transition-colors"
         >
           <Wallet className="h-4 w-4" />
           Connect Wallet
