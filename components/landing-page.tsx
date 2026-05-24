@@ -30,6 +30,9 @@ export function LandingPage() {
     (item) => item.proposal.status === "Active" && !item.readyToExecute
   ).length;
   const executableCount = queueItems.filter((item) => item.readyToExecute).length;
+  const needsSigningCount = queueItems.filter(
+    (i) => i.needsYourSignature && !i.currentUserApproved
+  ).length;
 
   if (workspaceMultisigs.length === 0) {
     return (
@@ -61,16 +64,35 @@ export function LandingPage() {
           <h1 className="text-foreground text-2xl font-bold tracking-[-0.02em]">
             Operations
           </h1>
-          {pendingCount > 0 && (
-            <span className="text-primary text-sm font-semibold tabular-nums">
-              {pendingCount} pending
+        </div>
+
+        <div className="bg-card border-border mb-5 flex items-center gap-6 rounded-xl border px-5 py-3">
+          <div className="flex flex-col">
+            <span className="text-foreground text-2xl font-bold tabular-nums">
+              {workspaceMultisigs.length}
             </span>
-          )}
-          {executableCount > 0 && (
-            <span className="text-sm font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
-              {executableCount} ready
+            <span className="text-muted-foreground text-[11px] uppercase tracking-wide">
+              Vaults
             </span>
-          )}
+          </div>
+          <div className="bg-border h-8 w-px" />
+          <div className="flex flex-col">
+            <span className="text-foreground text-2xl font-bold tabular-nums">
+              {needsSigningCount}
+            </span>
+            <span className="text-muted-foreground text-[11px] uppercase tracking-wide">
+              Needs signing
+            </span>
+          </div>
+          <div className="bg-border h-8 w-px" />
+          <div className="flex flex-col">
+            <span className="text-foreground text-2xl font-bold tabular-nums">
+              {executableCount}
+            </span>
+            <span className="text-muted-foreground text-[11px] uppercase tracking-wide">
+              Ready to execute
+            </span>
+          </div>
         </div>
 
         <OperationsQueue items={queueItems} loading={loading} showFilters />

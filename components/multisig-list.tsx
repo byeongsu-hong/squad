@@ -12,6 +12,16 @@ import {
   Trash2,
   Shield,
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -102,6 +112,7 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
     useState<MultisigAccount | null>(null);
   const [filterText, setFilterText] = useState("");
   const [selectedFilterTags, setSelectedFilterTags] = useState<string[]>([]);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const { publicKey } = useWalletStore();
   const { getSelectedChain, chains } = useChainStore();
@@ -167,19 +178,19 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
 
   const handleDeleteSelected = () => {
     if (selectedForDeletion.size === 0) return;
-    if (
-      confirm(
-        `Are you sure you want to remove ${selectedForDeletion.size} multisig(s) from your list?`
-      )
-    ) {
-      selectedForDeletion.forEach((key) => {
-        const multisig = multisigByKey.get(key);
-        if (!multisig) return;
-        deleteMultisig(multisig.publicKey.toString(), multisig.chainId);
-      });
-      setSelectedForDeletion(new Set());
-      toast.success(`${selectedForDeletion.size} multisig(s) removed`);
-    }
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    const count = selectedForDeletion.size;
+    selectedForDeletion.forEach((key) => {
+      const multisig = multisigByKey.get(key);
+      if (!multisig) return;
+      deleteMultisig(multisig.publicKey.toString(), multisig.chainId);
+    });
+    setSelectedForDeletion(new Set());
+    setDeleteDialogOpen(false);
+    toast.success(`${count} multisig${count !== 1 ? "s" : ""} removed`);
   };
 
   const handleStartEditLabel = (key: string, currentLabel?: string) => {
@@ -600,6 +611,26 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
         onOpenChange={setTagDialogOpen}
         multisig={selectedMultisigForTags}
       />
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove {selectedForDeletion.size} vault{selectedForDeletion.size !== 1 ? "s" : ""}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This removes {selectedForDeletion.size === 1 ? "this vault" : "these vaults"} from your local registry. No on-chain data is affected.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              className="border-destructive/30 bg-destructive text-destructive-foreground hover:bg-destructive/80"
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
