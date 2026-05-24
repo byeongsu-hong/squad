@@ -674,7 +674,6 @@ function ExportImportExportPanel({
           </>
         ) : (
           <>
-            <label className="text-foreground/80 text-xs font-medium">YAML Configuration:</label>
             <button
               type="button"
               onClick={onCopy}
@@ -734,7 +733,6 @@ function ExportImportImportPanel({
 
   return (
     <div className="space-y-3">
-      <label className="text-foreground/80 text-xs font-medium">Paste YAML content:</label>
         <div className="border-border bg-muted flex items-start justify-between gap-3 border px-3 py-3">
           <div className="space-y-1">
             <p className="text-foreground text-sm font-medium">Reset state</p>
