@@ -10,12 +10,13 @@ import {
   RefreshCw,
   Tag,
   Trash2,
-  Vault,
+  Shield,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import { AddMultisigActions } from "@/components/add-multisig-actions";
 import { ManageTagsDialog } from "@/components/manage-tags-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCreatorMultisigs } from "@/lib/hooks/use-creator-multisigs";
@@ -257,13 +258,16 @@ export function MultisigList() {
 
   return (
     <div className="space-y-3">
-      {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-2">
+      {/* Primary header: title + search + add */}
+      <div className="border-border flex items-center gap-2 border-b pb-4">
+        <h1 className="text-foreground mr-2 text-2xl font-bold tracking-[-0.02em]">
+          Vaults
+        </h1>
         <input
           placeholder="Search multisigs..."
           value={filterText}
           onChange={(e) => setFilterText(e.target.value)}
-          className="border-border bg-card text-foreground placeholder:text-muted-foreground/70 h-9 w-full rounded-md border px-3 text-sm focus:outline-none sm:w-[280px]"
+          className="border-border bg-card text-foreground placeholder:text-muted-foreground/50 h-9 flex-1 rounded-md border px-3 text-sm focus:outline-none sm:flex-none sm:w-[220px]"
           aria-label="Search multisigs"
         />
         {publicKey && canSyncSelectedChain ? (
@@ -282,60 +286,69 @@ export function MultisigList() {
             )}
           </button>
         ) : null}
-        {hasMultisigs && (
-          <button
-            type="button"
-            onClick={toggleSelectAll}
-            className="border-border text-foreground/80 hover:bg-muted inline-flex h-9 items-center rounded-md border bg-transparent px-3 text-sm transition-colors"
-          >
-            {selectedForDeletion.size === multisigs.length
-              ? "Deselect all"
-              : "Select all"}
-          </button>
-        )}
-        {selectedForDeletion.size > 0 && (
-          <button
-            type="button"
-            onClick={handleDeleteSelected}
-            className="inline-flex h-9 items-center gap-1.5 rounded-md bg-red-500 px-3 text-sm text-white transition-colors hover:bg-red-400"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-            Remove ({selectedForDeletion.size})
-          </button>
-        )}
-        {allTags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
-            {allTags.map((tag) => {
-              const isActive = selectedFilterTags.includes(tag);
-              return (
-                <button
-                  key={tag}
-                  type="button"
-                  onClick={() => toggleFilterTag(tag)}
-                  className={cn(
-                    "cursor-pointer rounded-full px-2.5 py-0.5 text-xs transition-colors",
-                    isActive
-                      ? "bg-primary/15 text-primary font-medium"
-                      : "bg-muted text-muted-foreground hover:bg-muted/80"
-                  )}
-                >
-                  {tag}
-                </button>
-              );
-            })}
-          </div>
-        )}
-        <span className="text-muted-foreground/70 ml-auto text-sm">
-          {hasMultisigs
-            ? `${filteredRegistryRows.length} / ${multisigs.length}`
-            : ""}
-        </span>
+        <div className="ml-auto">
+          <AddMultisigActions />
+        </div>
       </div>
+
+      {/* Secondary toolbar: bulk actions + tag filters (only when data exists) */}
+      {(hasMultisigs || allTags.length > 0) && (
+        <div className="flex flex-wrap items-center gap-2">
+          {hasMultisigs && (
+            <button
+              type="button"
+              onClick={toggleSelectAll}
+              className="border-border text-foreground/80 hover:bg-muted inline-flex h-8 items-center rounded-md border bg-transparent px-3 text-sm transition-colors"
+            >
+              {selectedForDeletion.size === multisigs.length
+                ? "Deselect all"
+                : "Select all"}
+            </button>
+          )}
+          {selectedForDeletion.size > 0 && (
+            <button
+              type="button"
+              onClick={handleDeleteSelected}
+              className="inline-flex h-8 items-center gap-1.5 rounded-md bg-red-500 px-3 text-sm text-white transition-colors hover:bg-red-400"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Remove ({selectedForDeletion.size})
+            </button>
+          )}
+          {allTags.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {allTags.map((tag) => {
+                const isActive = selectedFilterTags.includes(tag);
+                return (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => toggleFilterTag(tag)}
+                    className={cn(
+                      "cursor-pointer rounded-full px-2.5 py-0.5 text-xs transition-colors",
+                      isActive
+                        ? "bg-primary/15 text-primary font-medium"
+                        : "bg-muted text-muted-foreground hover:bg-muted/80"
+                    )}
+                  >
+                    {tag}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+          <span className="text-muted-foreground/70 ml-auto text-sm">
+            {hasMultisigs
+              ? `${filteredRegistryRows.length} / ${multisigs.length}`
+              : ""}
+          </span>
+        </div>
+      )}
 
       {!hasMultisigs && !loading && (
         <div className="flex flex-col items-center justify-center gap-5 py-20 text-center">
-          <div className="bg-muted flex h-14 w-14 items-center justify-center rounded-2xl">
-            <Vault className="text-muted-foreground/40 h-7 w-7" />
+          <div className="bg-card border-border flex h-14 w-14 items-center justify-center rounded-2xl border shadow-sm">
+            <Shield className="text-muted-foreground/50 h-7 w-7" />
           </div>
           <div className="space-y-1.5">
             <p className="text-foreground text-base font-semibold">

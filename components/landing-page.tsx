@@ -31,35 +31,26 @@ export function LandingPage() {
 
   if (workspaceMultisigs.length === 0) {
     return (
-      <div className="bg-background min-h-[calc(100svh-4.5rem)]">
-        <div className="mx-auto max-w-[1200px]">
-          <div className="mb-6">
-            <h1 className="text-foreground text-2xl font-bold tracking-[-0.02em]">
-              Operations
-            </h1>
-          </div>
-          <div className="flex flex-col items-center justify-center gap-5 py-28 text-center">
-            <div className="bg-muted flex h-16 w-16 items-center justify-center rounded-2xl">
-              <Inbox className="text-muted-foreground/40 h-8 w-8" />
-            </div>
-            <div className="space-y-1.5">
-              <p className="text-foreground text-base font-semibold">
-                No multisigs yet
-              </p>
-              <p className="text-muted-foreground text-sm">
-                {connected || evmConnected
-                  ? "Add multisigs in Vaults to see your workspace."
-                  : "Connect a wallet and add multisigs to get started."}
-              </p>
-            </div>
-            <Link
-              href="/vaults"
-              className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-8 items-center rounded-md px-3 text-sm font-medium transition-colors"
-            >
-              Go to Vaults
-            </Link>
-          </div>
+      <div className="flex min-h-[calc(100svh-4.5rem)] flex-col items-center justify-center gap-6 text-center">
+        <div className="bg-card border-border flex h-16 w-16 items-center justify-center rounded-2xl border shadow-sm">
+          <Inbox className="text-muted-foreground/50 h-8 w-8" />
         </div>
+        <div className="space-y-1.5">
+          <p className="text-foreground text-base font-semibold">
+            {connected || evmConnected ? "No operations yet" : "Get started"}
+          </p>
+          <p className="text-muted-foreground max-w-xs text-sm">
+            {connected || evmConnected
+              ? "Add multisigs in Vaults to see your workspace."
+              : "Connect a wallet and add multisigs to get started."}
+          </p>
+        </div>
+        <Link
+          href="/vaults"
+          className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-9 items-center rounded-md px-4 text-sm font-medium transition-colors"
+        >
+          Go to Vaults
+        </Link>
       </div>
     );
   }
@@ -67,7 +58,7 @@ export function LandingPage() {
   return (
     <div className="bg-background min-h-[calc(100svh-4.5rem)]">
       <div className="mx-auto max-w-[1200px]">
-        <div className="mb-5 flex flex-wrap items-baseline justify-between gap-3">
+        <div className="border-border mb-5 flex flex-wrap items-baseline justify-between gap-3 border-b pb-4">
           <h1 className="text-foreground text-2xl font-bold tracking-[-0.02em]">
             Operations
           </h1>
