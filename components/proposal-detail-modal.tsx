@@ -162,13 +162,15 @@ export function ProposalDetailView({
             </p>
           </div>
           {/* X close button */}
-          <button
+          <Button
+            variant="ghost"
+            size="icon-sm"
             onClick={onBack}
-            className="text-muted-foreground/50 hover:text-foreground hover:bg-muted shrink-0 rounded-md p-1.5 transition-colors"
+            className="text-muted-foreground/50 hover:text-foreground shrink-0"
             aria-label="Close"
           >
             <X className="h-4 w-4" />
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -344,9 +346,11 @@ export function ProposalDetailView({
           </div>
 
           {multisig.members.length > 8 && (
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => setSignersExpanded(!signersExpanded)}
-              className="text-muted-foreground hover:text-foreground hover:bg-muted/60 mt-1 flex w-full items-center justify-center gap-1 rounded-md py-1.5 text-[11px] transition-colors"
+              className="mt-1 h-7 w-full gap-1 text-[11px]"
             >
               {signersExpanded ? (
                 <>
@@ -359,15 +363,16 @@ export function ProposalDetailView({
                   {multisig.members.length - 8} more
                 </>
               )}
-            </button>
+            </Button>
           )}
         </div>
 
         {/* ── Payload (collapsible) ─────────────────────────────────────── */}
         <div className="border-border/60 border-b">
-          <button
+          <Button
+            variant="ghost"
             onClick={() => setPayloadOpen(!payloadOpen)}
-            className="hover:bg-muted/40 flex w-full items-center justify-between px-5 py-3.5 text-left transition-colors"
+            className="h-auto w-full justify-between rounded-none px-5 py-3.5 text-left"
           >
             <span className="text-muted-foreground/70 text-[10px] font-semibold uppercase tracking-widest">
               Transaction data
@@ -377,7 +382,7 @@ export function ProposalDetailView({
             ) : (
               <ChevronDown className="h-3.5 w-3.5 text-muted-foreground/40" />
             )}
-          </button>
+          </Button>
 
           {payloadOpen && (
             <div className="space-y-2 px-5 pb-5">
