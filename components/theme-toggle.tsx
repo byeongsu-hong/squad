@@ -5,50 +5,30 @@ import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 export function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  if (!mounted) {
-    return (
-      <Button type="button" variant="ghost" size="icon-sm" aria-label="Toggle theme">
-        <Sun className="h-4 w-4" />
-      </Button>
-    );
-  }
+  const toggle = () => setTheme(resolvedTheme === "dark" ? "light" : "dark");
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button type="button" variant="ghost" size="icon-sm" aria-label="Toggle theme">
-          {theme === "light" ? (
-            <Sun className="h-4 w-4" />
-          ) : (
-            <Moon className="h-4 w-4" />
-          )}
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => setTheme("light")}>
-          <Sun className="h-4 w-4" />
-          Light
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("dark")}>
-          <Moon className="h-4 w-4" />
-          Dark
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon-sm"
+      aria-label="Toggle theme"
+      onClick={mounted ? toggle : undefined}
+    >
+      {mounted && resolvedTheme === "dark" ? (
+        <Moon className="h-4 w-4" />
+      ) : (
+        <Sun className="h-4 w-4" />
+      )}
+    </Button>
   );
 }
