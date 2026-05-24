@@ -1,10 +1,16 @@
 "use client";
 
+import "@rainbow-me/rainbowkit/styles.css";
+
+import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { ThemeProvider } from "next-themes";
 import { useEffect, useRef } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { WagmiProvider } from "wagmi";
 
 import { Toaster } from "@/components/ui/sonner";
 import { resolveInitialMultisigs } from "@/lib/initial-config";
+import { wagmiConfig } from "@/lib/wagmi-config";
 import { useChainStore } from "@/stores/chain-store";
 import { useMultisigStore } from "@/stores/multisig-store";
 import { useProviderAdapterStore } from "@/stores/provider-adapter-store";
@@ -12,6 +18,16 @@ import { getMultisigAccountKey } from "@/types/multisig";
 
 import { WalletAdapterProvider } from "./wallet-adapter-provider";
 import { WalletSync } from "./wallet-sync";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60_000,
+      refetchOnWindowFocus: true,
+      retry: 1,
+    },
+  },
+});
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const didInitRef = useRef(false);
@@ -76,12 +92,18 @@ export function Providers({ children }: { children: React.ReactNode }) {
   ]);
 
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem={true}>
-      <WalletAdapterProvider>
-        <WalletSync />
-        {children}
-        <Toaster />
-      </WalletAdapterProvider>
-    </ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <WagmiProvider config={wagmiConfig}>
+        <RainbowKitProvider>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem={true}>
+            <WalletAdapterProvider>
+              <WalletSync />
+              {children}
+              <Toaster />
+            </WalletAdapterProvider>
+          </ThemeProvider>
+        </RainbowKitProvider>
+      </WagmiProvider>
+    </QueryClientProvider>
   );
 }
