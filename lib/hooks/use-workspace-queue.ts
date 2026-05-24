@@ -1,7 +1,6 @@
 import { useMemo } from "react";
 
-import { buildWorkspaceQueueItem, toWorkspaceProposalFromRaw } from "@/lib/workspace/squads-adapter";
-import type { ProposalAccount } from "@/types/multisig";
+import { buildWorkspaceQueueItem } from "@/lib/workspace/squads-adapter";
 import type {
   WorkspaceMultisig,
   WorkspaceProposal,
@@ -9,18 +8,16 @@ import type {
 } from "@/types/workspace";
 
 interface UseWorkspaceQueueOptions {
-  proposals: ProposalAccount[];
+  workspaceProposals: WorkspaceProposal[];
   multisigs: WorkspaceMultisig[];
   viewerAddress: string | null;
-  workspaceProposals?: WorkspaceProposal[];
   getViewerAddressForMultisig?: (multisig: WorkspaceMultisig) => string | null;
 }
 
 export function useWorkspaceQueue({
-  proposals,
+  workspaceProposals,
   multisigs,
   viewerAddress,
-  workspaceProposals = [],
   getViewerAddressForMultisig,
 }: UseWorkspaceQueueOptions) {
   const getCreatedAtValue = (createdAt?: string) => {
@@ -33,23 +30,6 @@ export function useWorkspaceQueue({
   };
 
   const records = useMemo(() => {
-    const multisigMap = new Map(multisigs.map((m) => [m.key, m] as const));
-    const multisigByAddress = new Map(multisigs.map((m) => [m.address, m] as const));
-    return proposals
-      .map((rawProposal) => {
-        const addr = rawProposal.multisig.toString();
-        const multisig = multisigByAddress.get(addr) ?? multisigMap.get(addr);
-        if (!multisig) return null;
-        const proposal = toWorkspaceProposalFromRaw(rawProposal, multisig.chainId);
-        return {
-          key: `${proposal.multisigKey}-${proposal.transactionIndex.toString()}`,
-          multisig,
-          proposal,
-        };
-      })
-      .filter((r): r is NonNullable<typeof r> => r !== null);
-  }, [multisigs, proposals]);
-  const workspaceProposalRecords = useMemo(() => {
     const multisigMap = new Map(
       multisigs.map((multisig) => [multisig.key, multisig] as const)
     );
@@ -69,14 +49,10 @@ export function useWorkspaceQueue({
       })
       .filter((record) => record !== null);
   }, [multisigs, workspaceProposals]);
-  const allRecords = useMemo(
-    () => [...records, ...workspaceProposalRecords],
-    [records, workspaceProposalRecords]
-  );
 
   return useMemo(
     () =>
-      allRecords
+      records
         .map((record) =>
           buildWorkspaceQueueItem(
             record.proposal,
@@ -111,6 +87,6 @@ export function useWorkspaceQueue({
             right.proposal.transactionIndex - left.proposal.transactionIndex
           );
         }),
-    [allRecords, getViewerAddressForMultisig, viewerAddress]
+    [records, getViewerAddressForMultisig, viewerAddress]
   );
 }

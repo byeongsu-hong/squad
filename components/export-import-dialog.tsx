@@ -772,7 +772,7 @@ function ExportImportImportPanel({
             <p>Duplicate multisigs are skipped.</p>
             <p>Missing-chain entries are reported as failures.</p>
             <p>Non-Squads chains import as settings only.</p>
-            <p>Multisigs targeting Safe-prepared chains are skipped for now.</p>
+            <p>Safe multisigs on prepared chains are fetched live via Safe API.</p>
           </div>
         </div>
       ) : null}

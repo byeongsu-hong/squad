@@ -8,7 +8,6 @@ import { getMultisigAccountKey } from "@/types/multisig";
 export function useWorkspaceMultisigs() {
   const chains = useChainStore((state) => state.chains);
   const multisigs = useMultisigStore((state) => state.multisigs);
-  const proposals = useMultisigStore((state) => state.proposals);
   const selectedMultisigKey = useMultisigStore(
     (state) => state.selectedMultisigKey
   );
@@ -42,7 +41,6 @@ export function useWorkspaceMultisigs() {
   return {
     chains,
     multisigs,
-    proposals,
     workspaceMultisigs,
     availableMultisigKeys: workspaceMultisigs.map((multisig) => multisig.key),
     rawMultisigMap,

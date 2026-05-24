@@ -403,23 +403,6 @@ async function loadSquadsWorkspacePayload(
   };
 }
 
-export function invalidateSquadsProposalCache(
-  chainId: string,
-  multisigKey: string,
-  chains: ChainConfig[]
-) {
-  const chain = getOperationalSquadsChain(chains, chainId);
-  if (!chain) {
-    return;
-  }
-
-  const squadService = new SquadService(
-    chain.rpcUrl,
-    getSquadsProgramId(chain)
-  );
-  squadService.invalidateProposalCache(new PublicKey(multisigKey));
-}
-
 export { toWorkspaceMultisig, toWorkspaceMultisigs };
 
 export const squadsWorkspaceAdapter: WorkspaceProviderAdapter = {
@@ -455,18 +438,3 @@ export const squadsWorkspaceAdapter: WorkspaceProviderAdapter = {
     return loadSquadsWorkspacePayload(multisig, proposal, chains);
   },
 };
-
-export function fromWorkspaceProposal(
-  proposal: WorkspaceProposal
-): ProposalAccount {
-  return {
-    multisig: new PublicKey(proposal.multisigAddress),
-    transactionIndex: proposal.transactionIndex,
-    creator: proposal.creator ? new PublicKey(proposal.creator) : undefined,
-    status: proposal.status,
-    approvals: proposal.approvals.map((item) => new PublicKey(item)),
-    rejections: proposal.rejections.map((item) => new PublicKey(item)),
-    cancelled: proposal.cancelled,
-    executed: proposal.executed,
-  };
-}

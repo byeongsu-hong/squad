@@ -3,14 +3,12 @@ import { create } from "zustand";
 import { multisigStorage } from "@/lib/storage";
 import {
   type MultisigAccount,
-  type ProposalAccount,
   getMultisigAccountKey,
   resolveMultisigSelectionKey,
 } from "@/types/multisig";
 
 interface MultisigStore {
   multisigs: MultisigAccount[];
-  proposals: ProposalAccount[];
   selectedMultisigKey: string | null;
   initialized: boolean;
   initializeMultisigs: () => void;
@@ -31,14 +29,12 @@ interface MultisigStore {
     tags: string[],
     chainId?: string
   ) => void;
-  setProposals: (proposals: ProposalAccount[]) => void;
   resetAll: () => void;
   selectMultisig: (publicKey: string | null) => void;
 }
 
 export const useMultisigStore = create<MultisigStore>((set, get) => ({
   multisigs: [],
-  proposals: [],
   selectedMultisigKey: null,
   initialized: false,
 
@@ -68,8 +64,16 @@ export const useMultisigStore = create<MultisigStore>((set, get) => ({
   },
 
   addMultisig: (multisig) => {
-    multisigStorage.addMultisig(multisig);
-    set((state) => ({ multisigs: [...state.multisigs, multisig] }));
+    set((state) => {
+      const alreadyExists = state.multisigs.some(
+        (m) =>
+          m.chainId === multisig.chainId &&
+          m.publicKey.toString() === multisig.publicKey.toString()
+      );
+      if (alreadyExists) return state;
+      multisigStorage.addMultisig(multisig);
+      return { multisigs: [...state.multisigs, multisig] };
+    });
   },
 
   deleteMultisig: (publicKey, chainId) => {
@@ -127,14 +131,11 @@ export const useMultisigStore = create<MultisigStore>((set, get) => ({
     });
   },
 
-  setProposals: (proposals) => set({ proposals }),
-
   resetAll: () => {
     multisigStorage.saveMultisigs([]);
     multisigStorage.clearSelectedMultisigKey();
     set({
       multisigs: [],
-      proposals: [],
       selectedMultisigKey: null,
       initialized: true,
     });
