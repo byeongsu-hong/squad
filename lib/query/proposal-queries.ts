@@ -1,3 +1,5 @@
+import { PublicKey } from "@solana/web3.js";
+
 import { getWorkspaceProviderAdapter } from "@/lib/workspace/provider-adapters";
 import { loadSquadsWorkspaceProposalsForMultisig } from "@/lib/workspace/squads-adapter";
 import type { ChainConfig } from "@/types/chain";
@@ -15,11 +17,11 @@ export function proposalsQueryKey(
 function toSquadsMultisigAccount(multisig: WorkspaceMultisig): MultisigAccount {
   return {
     provider: "squads",
-    publicKey: multisig.address,
+    publicKey: new PublicKey(multisig.address),
     chainId: multisig.chainId,
     threshold: multisig.threshold,
     members: multisig.members.map((m) => ({
-      key: m.address,
+      key: new PublicKey(m.address),
       permissions: { mask: m.permissionsMask },
     })),
     transactionIndex: 0n,
