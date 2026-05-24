@@ -39,15 +39,15 @@ export function ProviderAdaptersPanel() {
   );
 
   return (
-    <div className="space-y-4 rounded-xl border border-border bg-card p-4">
-      <div className="space-y-1 border-b border-border pb-4">
+    <div className="border-border bg-card space-y-4 rounded-xl border p-4">
+      <div className="border-border space-y-1 border-b pb-4">
         <div className="flex items-center gap-2">
-          <Layers3 className="h-4 w-4 text-primary" />
-          <p className="text-[0.68rem] tracking-[0.18em] text-muted-foreground uppercase">
+          <Layers3 className="text-primary h-4 w-4" />
+          <p className="text-muted-foreground text-[0.68rem] tracking-[0.18em] uppercase">
             Adapter Readiness
           </p>
         </div>
-        <p className="text-sm leading-6 text-muted-foreground">
+        <p className="text-muted-foreground text-sm leading-6">
           Keep future EVM Safe endpoints beside the current SVM chain
           configuration so extension work does not require another settings
           surface.
@@ -55,25 +55,27 @@ export function ProviderAdaptersPanel() {
       </div>
 
       <div className="grid gap-3 lg:grid-cols-2">
-        <div className="space-y-3 rounded-lg border border-border bg-muted p-3">
+        <div className="border-border bg-muted space-y-3 rounded-lg border p-3">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-sm font-medium text-foreground">SVM / Squads</p>
-              <p className="mt-1 text-xs text-muted-foreground">
+              <p className="text-foreground text-sm font-medium">
+                SVM / Squads
+              </p>
+              <p className="text-muted-foreground mt-1 text-xs">
                 Active runtime used by the current workspace.
               </p>
             </div>
-            <Badge className="rounded-md bg-primary text-primary-foreground">
+            <Badge className="bg-primary text-primary-foreground rounded-md">
               {liveSquadsChains} live
             </Badge>
           </div>
         </div>
 
-        <div className="space-y-3 rounded-lg border border-border bg-muted p-3">
+        <div className="border-border bg-muted space-y-3 rounded-lg border p-3">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-sm font-medium text-foreground">EVM / Safe</p>
-              <p className="mt-1 text-xs text-muted-foreground">
+              <p className="text-foreground text-sm font-medium">EVM / Safe</p>
+              <p className="text-muted-foreground mt-1 text-xs">
                 Stored locally for upcoming adapter work.
               </p>
             </div>
@@ -132,8 +134,8 @@ export function ProviderAdaptersPanel() {
         </div>
       </div>
 
-      <div className="flex items-start gap-2 rounded-lg border border-border bg-muted px-3 py-3 text-xs text-muted-foreground">
-        <Network className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground/70" />
+      <div className="border-border bg-muted text-muted-foreground flex items-start gap-2 rounded-lg border px-3 py-3 text-xs">
+        <Network className="text-muted-foreground/70 mt-0.5 h-3.5 w-3.5 shrink-0" />
         These values are saved locally as adapter configuration only. They do
         not change the current Squads runtime yet.
       </div>

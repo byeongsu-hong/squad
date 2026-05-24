@@ -6,4 +6,3 @@ export interface SquadMember {
     mask: number;
   };
 }
-

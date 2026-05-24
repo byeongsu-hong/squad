@@ -1,5 +1,5 @@
-import { loadSquadsWorkspaceProposalsForMultisig } from "@/lib/workspace/squads-adapter";
 import { getWorkspaceProviderAdapter } from "@/lib/workspace/provider-adapters";
+import { loadSquadsWorkspaceProposalsForMultisig } from "@/lib/workspace/squads-adapter";
 import type { ChainConfig } from "@/types/chain";
 import type { MultisigAccount } from "@/types/multisig";
 import type { WorkspaceMultisig, WorkspaceProposal } from "@/types/workspace";
@@ -32,7 +32,11 @@ export function proposalsQueryOptions(
   chains: ChainConfig[]
 ) {
   return {
-    queryKey: proposalsQueryKey(multisig.provider, multisig.chainId, multisig.address),
+    queryKey: proposalsQueryKey(
+      multisig.provider,
+      multisig.chainId,
+      multisig.address
+    ),
     queryFn: async (): Promise<WorkspaceProposal[]> => {
       if (multisig.provider === "safe") {
         const adapter = getWorkspaceProviderAdapter("safe");

@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  AlertTriangle,
-  Check,
-  Copy,
-  Loader2,
-  Upload,
-} from "lucide-react";
+import { AlertTriangle, Check, Copy, Loader2, Upload } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -53,7 +47,6 @@ interface ImportProgressState {
   total: number;
   label: string;
 }
-
 
 export function ExportImportController({
   embedded = false,
@@ -473,42 +466,42 @@ export function ExportImportController({
           </div>
 
           <div className="space-y-4 px-6 py-5">
-            <div className="grid gap-2 border border-border bg-muted p-4">
-              <p className="text-[0.68rem] tracking-[0.18em] text-muted-foreground/70 uppercase">
+            <div className="border-border bg-muted grid gap-2 border p-4">
+              <p className="text-muted-foreground/70 text-[0.68rem] tracking-[0.18em] uppercase">
                 What gets cleared
               </p>
-              <p className="text-sm text-foreground/80">
+              <p className="text-foreground/80 text-sm">
                 Saved multisigs, custom chains, address labels, provider
                 settings, and current workspace selections.
               </p>
             </div>
             <div className="grid gap-2 sm:grid-cols-3">
-              <div className="border border-border bg-muted px-3 py-3">
-                <p className="text-[0.62rem] tracking-[0.16em] text-muted-foreground/70 uppercase">
+              <div className="border-border bg-muted border px-3 py-3">
+                <p className="text-muted-foreground/70 text-[0.62rem] tracking-[0.16em] uppercase">
                   Multisigs
                 </p>
-                <p className="mt-1 text-lg font-medium text-foreground">
+                <p className="text-foreground mt-1 text-lg font-medium">
                   {multisigCount}
                 </p>
               </div>
-              <div className="border border-border bg-muted px-3 py-3">
-                <p className="text-[0.62rem] tracking-[0.16em] text-muted-foreground/70 uppercase">
+              <div className="border-border bg-muted border px-3 py-3">
+                <p className="text-muted-foreground/70 text-[0.62rem] tracking-[0.16em] uppercase">
                   Custom chains
                 </p>
-                <p className="mt-1 text-lg font-medium text-foreground">
+                <p className="text-foreground mt-1 text-lg font-medium">
                   {customChainCount}
                 </p>
               </div>
-              <div className="border border-border bg-muted px-3 py-3">
-                <p className="text-[0.62rem] tracking-[0.16em] text-muted-foreground/70 uppercase">
+              <div className="border-border bg-muted border px-3 py-3">
+                <p className="text-muted-foreground/70 text-[0.62rem] tracking-[0.16em] uppercase">
                   Labels
                 </p>
-                <p className="mt-1 text-lg font-medium text-foreground">
+                <p className="text-foreground mt-1 text-lg font-medium">
                   {labelCount}
                 </p>
               </div>
             </div>
-            <p className="text-sm leading-6 text-muted-foreground/70">
+            <p className="text-muted-foreground/70 text-sm leading-6">
               Default chain presets remain available after reset. Right now this
               action will remove {multisigCount} multisig
               {multisigCount === 1 ? "" : "s"}, {customChainCount} custom chain
@@ -517,7 +510,7 @@ export function ExportImportController({
             </p>
           </div>
 
-          <DialogFooter className="border-t border-border px-6 py-5 sm:justify-between">
+          <DialogFooter className="border-border border-t px-6 py-5 sm:justify-between">
             <Button
               type="button"
               variant="outline"
@@ -559,7 +552,7 @@ function ExportImportModePicker({
           htmlFor={embedded ? "settings-export" : "export"}
           className={
             embedded
-              ? "flex cursor-pointer items-start gap-3 border border-border bg-muted px-3 py-3 font-normal"
+              ? "border-border bg-muted flex cursor-pointer items-start gap-3 border px-3 py-3 font-normal"
               : "flex cursor-pointer items-center space-x-2 font-normal"
           }
         >
@@ -568,9 +561,11 @@ function ExportImportModePicker({
             id={embedded ? "settings-export" : "export"}
           />
           <span className="space-y-1">
-            <span className="block text-sm text-foreground">Export to YAML</span>
+            <span className="text-foreground block text-sm">
+              Export to YAML
+            </span>
             {embedded ? (
-              <span className="block text-xs text-muted-foreground">
+              <span className="text-muted-foreground block text-xs">
                 Generate the complete portable workspace snapshot.
               </span>
             ) : null}
@@ -580,7 +575,7 @@ function ExportImportModePicker({
           htmlFor={embedded ? "settings-import" : "import"}
           className={
             embedded
-              ? "flex cursor-pointer items-start gap-3 border border-border bg-muted px-3 py-3 font-normal"
+              ? "border-border bg-muted flex cursor-pointer items-start gap-3 border px-3 py-3 font-normal"
               : "flex cursor-pointer items-center space-x-2 font-normal"
           }
         >
@@ -589,11 +584,11 @@ function ExportImportModePicker({
             id={embedded ? "settings-import" : "import"}
           />
           <span className="space-y-1">
-            <span className="block text-sm text-foreground">
+            <span className="text-foreground block text-sm">
               Import from YAML
             </span>
             {embedded ? (
-              <span className="block text-xs text-muted-foreground">
+              <span className="text-muted-foreground block text-xs">
                 Merge chains and multisigs from another environment.
               </span>
             ) : null}
@@ -635,43 +630,43 @@ function ExportImportExportPanel({
       <div
         className={
           embedded
-            ? "space-y-3 border border-border bg-muted p-4"
+            ? "border-border bg-muted space-y-3 border p-4"
             : "flex items-center justify-between"
         }
       >
         {embedded ? (
           <>
             <div className="space-y-1">
-              <p className="text-[0.68rem] tracking-[0.18em] text-muted-foreground/70 uppercase">
+              <p className="text-muted-foreground/70 text-[0.68rem] tracking-[0.18em] uppercase">
                 Export package
               </p>
-              <p className="text-sm leading-6 text-muted-foreground">
+              <p className="text-muted-foreground text-sm leading-6">
                 Current output contains all saved chains and multisigs in a
                 single portable YAML document.
               </p>
             </div>
             <div className="grid gap-2">
-              <div className="border border-border bg-card px-3 py-2">
-                <p className="text-[0.62rem] tracking-[0.16em] text-muted-foreground/70 uppercase">
+              <div className="border-border bg-card border px-3 py-2">
+                <p className="text-muted-foreground/70 text-[0.62rem] tracking-[0.16em] uppercase">
                   Squads chains
                 </p>
-                <p className="mt-1 text-sm font-medium text-foreground">
+                <p className="text-foreground mt-1 text-sm font-medium">
                   {operationalSquadsChains.length}
                 </p>
               </div>
-              <div className="border border-border bg-card px-3 py-2">
-                <p className="text-[0.62rem] tracking-[0.16em] text-muted-foreground/70 uppercase">
+              <div className="border-border bg-card border px-3 py-2">
+                <p className="text-muted-foreground/70 text-[0.62rem] tracking-[0.16em] uppercase">
                   Multisigs
                 </p>
-                <p className="mt-1 text-sm font-medium text-foreground">
+                <p className="text-foreground mt-1 text-sm font-medium">
                   {multisigs.length}
                 </p>
               </div>
-              <div className="border border-border bg-card px-3 py-2">
-                <p className="text-[0.62rem] tracking-[0.16em] text-muted-foreground/70 uppercase">
+              <div className="border-border bg-card border px-3 py-2">
+                <p className="text-muted-foreground/70 text-[0.62rem] tracking-[0.16em] uppercase">
                   Safe-ready chains
                 </p>
-                <p className="mt-1 text-sm font-medium text-foreground">
+                <p className="text-foreground mt-1 text-sm font-medium">
                   {preparedSafeChains.length}
                 </p>
               </div>
@@ -679,7 +674,7 @@ function ExportImportExportPanel({
                 variant="outline"
                 onClick={onCopy}
                 disabled={copied}
-                className="justify-start border-border bg-transparent text-foreground/80 hover:bg-muted"
+                className="border-border text-foreground/80 hover:bg-muted justify-start bg-transparent"
               >
                 {copied ? (
                   <>
@@ -722,7 +717,7 @@ function ExportImportExportPanel({
       <div
         className={
           embedded
-            ? "min-h-[28rem] w-full overflow-auto border border-border bg-muted"
+            ? "border-border bg-muted min-h-[28rem] w-full overflow-auto border"
             : "h-[400px] w-full overflow-auto rounded-md border"
         }
       >
@@ -762,17 +757,19 @@ function ExportImportImportPanel({
       }
     >
       {embedded ? (
-        <div className="space-y-3 border border-border bg-muted p-4">
-          <p className="text-[0.68rem] tracking-[0.18em] text-muted-foreground/70 uppercase">
+        <div className="border-border bg-muted space-y-3 border p-4">
+          <p className="text-muted-foreground/70 text-[0.68rem] tracking-[0.18em] uppercase">
             Import rules
           </p>
-          <div className="space-y-2 text-sm leading-6 text-muted-foreground">
+          <div className="text-muted-foreground space-y-2 text-sm leading-6">
             <p>Existing items are preserved.</p>
             <p>New chains import before multisigs.</p>
             <p>Duplicate multisigs are skipped.</p>
             <p>Missing-chain entries are reported as failures.</p>
             <p>Non-Squads chains import as settings only.</p>
-            <p>Safe multisigs on prepared chains are fetched live via Safe API.</p>
+            <p>
+              Safe multisigs on prepared chains are fetched live via Safe API.
+            </p>
           </div>
         </div>
       ) : null}
@@ -781,10 +778,10 @@ function ExportImportImportPanel({
         <p className="text-muted-foreground text-sm">
           Existing items will be preserved. Only new items will be imported.
         </p>
-        <div className="flex items-start justify-between gap-3 border border-border bg-muted px-3 py-3">
+        <div className="border-border bg-muted flex items-start justify-between gap-3 border px-3 py-3">
           <div className="space-y-1">
-            <p className="text-sm font-medium text-foreground">Reset state</p>
-            <p className="text-xs leading-5 text-muted-foreground/70">
+            <p className="text-foreground text-sm font-medium">Reset state</p>
+            <p className="text-muted-foreground/70 text-xs leading-5">
               If a YAML import left local state broken, clear saved multisigs,
               custom chains, labels, and provider settings.
             </p>
@@ -800,10 +797,12 @@ function ExportImportImportPanel({
           </Button>
         </div>
         {isImporting && importProgress ? (
-          <div className="space-y-2 border border-border bg-muted px-3 py-3">
+          <div className="border-border bg-muted space-y-2 border px-3 py-3">
             <div className="flex items-center justify-between gap-3">
-              <p className="text-sm text-foreground/80">{importProgress.label}</p>
-              <p className="text-xs text-muted-foreground/70 tabular-nums">
+              <p className="text-foreground/80 text-sm">
+                {importProgress.label}
+              </p>
+              <p className="text-muted-foreground/70 text-xs tabular-nums">
                 {Math.min(importProgress.current, importProgress.total)} /{" "}
                 {importProgress.total}
               </p>
@@ -818,7 +817,7 @@ function ExportImportImportPanel({
           placeholder="Paste your YAML configuration here..."
           className={
             embedded
-              ? "border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring min-h-[28rem] w-full resize-y overflow-auto border border-border px-3 py-2 font-mono text-xs focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+              ? "border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring border-border min-h-[28rem] w-full resize-y overflow-auto border px-3 py-2 font-mono text-xs focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
               : "border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring min-h-[300px] w-full resize-none overflow-auto rounded-md border px-3 py-2 font-mono text-xs focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
           }
         />

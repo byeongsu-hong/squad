@@ -15,9 +15,7 @@ function serializePublicKey(publicKey: PublicKey | null): string | null {
   return publicKey ? publicKey.toString() : null;
 }
 
-function deserializePublicKey(
-  publicKey: string | null
-): PublicKey | null {
+function deserializePublicKey(publicKey: string | null): PublicKey | null {
   if (!publicKey) return null;
   try {
     return new PublicKey(publicKey);

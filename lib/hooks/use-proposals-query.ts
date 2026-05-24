@@ -1,8 +1,8 @@
-import { useMemo } from "react";
 import { useQueries } from "@tanstack/react-query";
+import { useMemo } from "react";
 
-import { proposalsQueryOptions } from "@/lib/query/proposal-queries";
 import { useWorkspaceMultisigs } from "@/lib/hooks/use-workspace-multisigs";
+import { proposalsQueryOptions } from "@/lib/query/proposal-queries";
 import type { WorkspaceProposal } from "@/types/workspace";
 
 export function useProposalsQuery() {

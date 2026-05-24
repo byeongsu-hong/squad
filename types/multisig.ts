@@ -36,7 +36,6 @@ interface SquadsMultisigAccount extends MultisigAccount {
   vaultPda?: PublicKey;
 }
 
-
 export function isSquadsMultisig(
   multisig: MultisigAccount | null | undefined
 ): multisig is SquadsMultisigAccount {

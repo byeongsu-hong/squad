@@ -139,7 +139,6 @@ class LedgerService {
 
     throw new Error("Failed to sign message");
   }
-
 }
 
 export const ledgerService = new LedgerService();

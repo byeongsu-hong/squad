@@ -1,21 +1,20 @@
-import { useQueryClient } from "@tanstack/react-query";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { useAccount } from "wagmi";
 import {
   PublicKey,
   Transaction,
   TransactionMessage,
   VersionedTransaction,
 } from "@solana/web3.js";
+import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useRef, useState } from "react";
 import { toast } from "sonner";
+import { useAccount } from "wagmi";
 
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from "@/lib/config";
 import {
   confirmSafeTransaction,
   executeSafeTransaction,
 } from "@/lib/safe-client";
-import { invalidateSafeProposalCache } from "@/lib/workspace/safe-adapter";
 import { SquadService } from "@/lib/squad";
 import { transactionSignerService } from "@/lib/transaction-signer";
 import {
@@ -23,6 +22,7 @@ import {
   getWorkspaceProviderAdapter,
   supportsProviderAction,
 } from "@/lib/workspace/provider-adapters";
+import { invalidateSafeProposalCache } from "@/lib/workspace/safe-adapter";
 import { useChainStore } from "@/stores/chain-store";
 import { useWalletStore } from "@/stores/wallet-store";
 import { getSquadsProgramId, isOperationalSquadsChain } from "@/types/chain";
@@ -316,10 +316,20 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
     setActionLoading(buildActionKey(action, multisigKey, transactionIndex));
     try {
       if (action === "approve") {
-        await confirmSafeTransaction({ chain, safeAddress: multisigKey, signer: evmAddress, nonce: transactionIndex });
+        await confirmSafeTransaction({
+          chain,
+          safeAddress: multisigKey,
+          signer: evmAddress,
+          nonce: transactionIndex,
+        });
         toast.success("Safe transaction confirmed.");
       } else {
-        await executeSafeTransaction({ chain, safeAddress: multisigKey, signer: evmAddress, nonce: transactionIndex });
+        await executeSafeTransaction({
+          chain,
+          safeAddress: multisigKey,
+          signer: evmAddress,
+          nonce: transactionIndex,
+        });
         toast.success("Safe transaction submitted.");
       }
       invalidateSafeProposalCache(chainId, multisigKey);
@@ -328,7 +338,11 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
     } catch (error) {
       const verb = action === "approve" ? "confirm" : "execute";
       console.error(`Failed to ${verb} Safe transaction:`, error);
-      toast.error(error instanceof Error ? error.message : `Failed to ${verb} Safe transaction.`);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : `Failed to ${verb} Safe transaction.`
+      );
       throw error;
     } finally {
       setActionLoading(null);
@@ -339,34 +353,53 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
     approve,
     reject,
     execute,
-    approveByAddress: async (multisigKey: string, transactionIndex: bigint, chainId: string) => {
+    approveByAddress: async (
+      multisigKey: string,
+      transactionIndex: bigint,
+      chainId: string
+    ) => {
       const chain = getChain(chainId);
       const provider = chain.multisigProvider ?? "squads";
       if (!supportsProviderAction(provider, "approve")) {
-        throw new Error(getUnsupportedProviderMessage(provider, "proposalActions"));
+        throw new Error(
+          getUnsupportedProviderMessage(provider, "proposalActions")
+        );
       }
-      if (provider === "safe") return runSafeAction("approve", multisigKey, transactionIndex, chainId);
+      if (provider === "safe")
+        return runSafeAction("approve", multisigKey, transactionIndex, chainId);
       return approve(new PublicKey(multisigKey), transactionIndex, chainId);
     },
-    rejectByAddress: async (multisigKey: string, transactionIndex: bigint, chainId: string) => {
+    rejectByAddress: async (
+      multisigKey: string,
+      transactionIndex: bigint,
+      chainId: string
+    ) => {
       const chain = getChain(chainId);
       const provider = chain.multisigProvider ?? "squads";
       if (!supportsProviderAction(provider, "reject")) {
-        const message = provider === "safe"
-          ? "Safe does not expose a direct reject action here."
-          : getUnsupportedProviderMessage(provider, "proposalActions");
+        const message =
+          provider === "safe"
+            ? "Safe does not expose a direct reject action here."
+            : getUnsupportedProviderMessage(provider, "proposalActions");
         toast.error(message);
         throw new Error(message);
       }
       return reject(new PublicKey(multisigKey), transactionIndex, chainId);
     },
-    executeByAddress: async (multisigKey: string, transactionIndex: bigint, chainId: string) => {
+    executeByAddress: async (
+      multisigKey: string,
+      transactionIndex: bigint,
+      chainId: string
+    ) => {
       const chain = getChain(chainId);
       const provider = chain.multisigProvider ?? "squads";
       if (!supportsProviderAction(provider, "execute")) {
-        throw new Error(getUnsupportedProviderMessage(provider, "proposalActions"));
+        throw new Error(
+          getUnsupportedProviderMessage(provider, "proposalActions")
+        );
       }
-      if (provider === "safe") return runSafeAction("execute", multisigKey, transactionIndex, chainId);
+      if (provider === "safe")
+        return runSafeAction("execute", multisigKey, transactionIndex, chainId);
       return execute(new PublicKey(multisigKey), transactionIndex, chainId);
     },
     buildActionKey,

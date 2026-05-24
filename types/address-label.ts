@@ -6,4 +6,3 @@ export interface AddressLabel {
   createdAt: number;
   updatedAt: number;
 }
-

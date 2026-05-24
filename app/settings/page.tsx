@@ -1,14 +1,12 @@
 "use client";
 
-import { Boxes, Database, Layers3, Network, Tag } from "lucide-react";
+import { Database, Layers3, Network, Tag } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useMemo } from "react";
 
-import { AddMultisigActions } from "@/components/add-multisig-actions";
 import { AddressLabelManagerController } from "@/components/address-label-manager-dialog";
 import { ChainManagementController } from "@/components/chain-management-dialog";
 import { ExportImportController } from "@/components/export-import-dialog";
-import { MultisigList } from "@/components/multisig-list";
 import { ProviderAdaptersPanel } from "@/components/provider-adapters-panel";
 import { useAddressLabels } from "@/lib/hooks/use-address-label";
 import { useSettingsQuerySync } from "@/lib/hooks/use-settings-query-sync";
@@ -25,18 +23,17 @@ const TABS: {
 }[] = [
   { id: "chains", label: "Chains", icon: Network },
   { id: "adapters", label: "Adapters", icon: Layers3 },
-  { id: "multisigs", label: "Multisig registry", icon: Boxes },
   { id: "registry", label: "Export / import", icon: Database },
   { id: "labels", label: "Label manager", icon: Tag },
 ];
 
 function StatPill({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex flex-col items-center border border-border bg-card px-3 py-1.5 rounded-lg shadow-sm">
-      <p className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+    <div className="border-border bg-card flex flex-col items-center rounded-lg border px-3 py-1.5 shadow-sm">
+      <p className="text-muted-foreground/70 text-[9px] font-semibold tracking-widest uppercase">
         {label}
       </p>
-      <p className="text-sm font-bold text-foreground">{value}</p>
+      <p className="text-foreground text-sm font-bold">{value}</p>
     </div>
   );
 }
@@ -73,23 +70,23 @@ function SettingsPageContent() {
 
   return (
     <div className="min-h-full space-y-0">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between pb-4 border-b border-border">
+      <div className="border-border flex flex-col gap-4 border-b pb-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 space-y-1">
-          <h1 className="text-2xl font-bold text-foreground tracking-tight">
+          <h1 className="text-foreground text-2xl font-bold tracking-tight">
             Settings
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             Network definitions, registry data, and address naming.
           </p>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex shrink-0 items-center gap-2">
           <StatPill label="Chains" value={String(chains.length)} />
           <StatPill label="Multisigs" value={String(multisigs.length)} />
           <StatPill label="Labels" value={String(labels.length)} />
         </div>
       </div>
 
-      <div className="border-b border-border -mb-px">
+      <div className="border-border -mb-px border-b">
         <nav className="flex gap-1 overflow-x-auto">
           {TABS.map((tab) => {
             const active = settingsActiveSection === tab.id;
@@ -100,10 +97,10 @@ function SettingsPageContent() {
                 type="button"
                 onClick={() => setSettingsActiveSection(tab.id)}
                 className={cn(
-                  "flex items-center gap-1.5 whitespace-nowrap px-4 py-3 text-sm transition-colors border-b-2",
+                  "flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm whitespace-nowrap transition-colors",
                   active
-                    ? "-mb-px border-primary font-semibold text-foreground"
-                    : "border-transparent text-muted-foreground/70 hover:text-foreground"
+                    ? "border-primary text-foreground -mb-px font-semibold"
+                    : "text-muted-foreground/70 hover:text-foreground border-transparent"
                 )}
               >
                 <Icon className="h-3.5 w-3.5 shrink-0" />
@@ -123,13 +120,6 @@ function SettingsPageContent() {
         ) : null}
         {settingsActiveSection === "adapters" ? (
           <ProviderAdaptersPanel />
-        ) : null}
-        {settingsActiveSection === "multisigs" ? (
-          <MultisigList
-            embedded
-            actions={<AddMultisigActions />}
-            statusText="Create, import, relabel, retag, and clean up stored multisigs from the main admin surface."
-          />
         ) : null}
         {settingsActiveSection === "registry" ? (
           <ExportImportController embedded />

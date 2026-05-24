@@ -1,7 +1,8 @@
 "use client";
 
-import { useWalletStore } from "@/stores/wallet-store";
 import { useAccount } from "wagmi";
+
+import { useWalletStore } from "@/stores/wallet-store";
 
 type MultisigProvider = "squads" | "safe";
 

@@ -152,5 +152,4 @@ export const useMultisigStore = create<MultisigStore>((set, get) => ({
     }
     set({ selectedMultisigKey: resolvedSelectionKey });
   },
-
 }));

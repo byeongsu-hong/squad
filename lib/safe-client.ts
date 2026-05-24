@@ -4,9 +4,9 @@ import Safe from "@safe-global/protocol-kit";
 import type { Eip1193Provider } from "@safe-global/protocol-kit";
 import { getAccount, switchChain } from "wagmi/actions";
 
-import { wagmiConfig } from "@/lib/wagmi-config";
 import type { SafeServiceMultisigTransaction } from "@/lib/safe";
 import { getSafeChainNumericId } from "@/lib/safe";
+import { wagmiConfig } from "@/features/wallet";
 import type { ChainConfig } from "@/types/chain";
 
 async function getSafeSdk(
@@ -24,7 +24,9 @@ async function getSafeSdk(
     throw new Error("No EVM wallet connected.");
   }
 
-  await switchChain(wagmiConfig, { chainId: Number(chainId) as 1 | 10 | 56 | 8453 | 42161 });
+  await switchChain(wagmiConfig, {
+    chainId: Number(chainId) as 1 | 10 | 56 | 8453 | 42161,
+  });
 
   const provider = await connector.getProvider();
 

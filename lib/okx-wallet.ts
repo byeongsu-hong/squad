@@ -102,7 +102,6 @@ class OkxWalletService {
     const result = await provider.signMessage(message, "utf8");
     return result.signature;
   }
-
 }
 
 export const okxWalletService = new OkxWalletService();

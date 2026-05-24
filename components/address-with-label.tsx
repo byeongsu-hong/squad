@@ -5,8 +5,8 @@ import { toast } from "sonner";
 
 import { AddressLabelManagerDialog } from "@/components/address-label-manager-dialog";
 import { useAddressLabel } from "@/lib/hooks/use-address-label";
-import { formatAddress } from "@/lib/utils/format-address";
 import { cn } from "@/lib/utils";
+import { formatAddress } from "@/lib/utils/format-address";
 
 interface AddressWithLabelProps {
   address: string;
@@ -131,7 +131,7 @@ export function AddressWithLabel({
               interactiveDisplayClass
             )}
           >
-            <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-border bg-card px-2.5 py-1 text-xs text-foreground transition-colors hover:bg-muted">
+            <div className="border-border bg-card text-foreground hover:bg-muted inline-flex max-w-full items-center gap-2 rounded-full border px-2.5 py-1 text-xs transition-colors">
               <span
                 className="h-1.5 w-1.5 shrink-0 rounded-full"
                 style={{ backgroundColor: label.color }}
@@ -139,7 +139,7 @@ export function AddressWithLabel({
               <span className="truncate">{label.label}</span>
             </div>
             {showFull ? (
-              <code className="max-w-full truncate font-mono text-xs text-muted-foreground tabular-nums transition-colors hover:text-foreground">
+              <code className="text-muted-foreground hover:text-foreground max-w-full truncate font-mono text-xs tabular-nums transition-colors">
                 {address}
               </code>
             ) : null}
@@ -152,7 +152,7 @@ export function AddressWithLabel({
             )}
             title={`${label.label}${label.description ? `\n${label.description}` : ""}\n${address}`}
           >
-            <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-border bg-card px-2.5 py-1 text-xs text-foreground transition-colors hover:bg-muted">
+            <div className="border-border bg-card text-foreground hover:bg-muted inline-flex max-w-full items-center gap-2 rounded-full border px-2.5 py-1 text-xs transition-colors">
               <span
                 className="h-1.5 w-1.5 shrink-0 rounded-full"
                 style={{ backgroundColor: label.color }}
@@ -160,7 +160,7 @@ export function AddressWithLabel({
               <span className="truncate">{label.label}</span>
             </div>
             {showFull ? (
-              <code className="max-w-full truncate font-mono text-xs text-muted-foreground tabular-nums transition-colors hover:text-foreground">
+              <code className="text-muted-foreground hover:text-foreground max-w-full truncate font-mono text-xs tabular-nums transition-colors">
                 {address}
               </code>
             ) : null}
@@ -173,7 +173,7 @@ export function AddressWithLabel({
           aria-label="Copy address"
           title={address}
           className={cn(
-            "rounded-md border border-border bg-card px-2 py-1 font-mono text-xs text-foreground/80 transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-1 focus-visible:ring-border focus-visible:outline-none",
+            "border-border bg-card text-foreground/80 hover:bg-muted hover:text-foreground focus-visible:ring-border rounded-md border px-2 py-1 font-mono text-xs transition-colors focus-visible:ring-1 focus-visible:outline-none",
             interactiveDisplayClass
           )}
         >
@@ -181,7 +181,7 @@ export function AddressWithLabel({
         </button>
       ) : (
         <code
-          className="rounded-md border border-border bg-card px-2 py-1 font-mono text-xs text-foreground/80 transition-colors hover:bg-muted hover:text-foreground"
+          className="border-border bg-card text-foreground/80 hover:bg-muted hover:text-foreground rounded-md border px-2 py-1 font-mono text-xs transition-colors"
           title={address}
         >
           {displayAddress}
@@ -192,7 +192,7 @@ export function AddressWithLabel({
         {showCopy && (
           <button
             type="button"
-            className="rounded-sm p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="text-muted-foreground hover:bg-muted hover:text-foreground rounded-sm p-1 transition-colors"
             onClick={handleCopy}
             aria-label="Copy address"
             title="Copy address"
@@ -205,7 +205,7 @@ export function AddressWithLabel({
           <AddressLabelManagerDialog defaultAddress={address}>
             <button
               type="button"
-              className="rounded-sm p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="text-muted-foreground hover:bg-muted hover:text-foreground rounded-sm p-1 transition-colors"
               aria-label="Label address"
               title="Label address"
             >

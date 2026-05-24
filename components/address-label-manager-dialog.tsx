@@ -193,7 +193,12 @@ export function AddressLabelManagerController({
   useEffect(() => {
     setIsEditing(false);
     setEditingLabel(null);
-    setFormData({ address: defaultAddress || "", label: "", description: "", color: DEFAULT_COLORS[0] });
+    setFormData({
+      address: defaultAddress || "",
+      label: "",
+      description: "",
+      color: DEFAULT_COLORS[0],
+    });
   }, [defaultAddress, embedded]);
 
   return (
@@ -216,7 +221,7 @@ export function AddressLabelManagerController({
       <div
         className={
           embedded
-            ? "min-w-0 border border-border bg-muted"
+            ? "border-border bg-muted min-w-0 border"
             : "flex min-h-0 flex-1 flex-col overflow-hidden"
         }
       >
@@ -267,16 +272,16 @@ function AddressLabelEditor({
     <div
       className={
         embedded
-          ? "space-y-4 border border-border bg-muted p-4"
+          ? "border-border bg-muted space-y-4 border p-4"
           : "w-[320px] shrink-0 overflow-y-auto border-r p-4"
       }
     >
       {embedded ? (
-        <div className="space-y-1 border-b border-border pb-4">
-          <p className="text-[0.68rem] tracking-[0.18em] text-muted-foreground/70 uppercase">
+        <div className="border-border space-y-1 border-b pb-4">
+          <p className="text-muted-foreground/70 text-[0.68rem] tracking-[0.18em] uppercase">
             Label editor
           </p>
-          <p className="text-sm leading-6 text-muted-foreground">
+          <p className="text-muted-foreground text-sm leading-6">
             Create or revise reusable aliases for addresses that appear across
             explorer rows, signer maps, and proposal metadata.
           </p>
@@ -390,14 +395,14 @@ function AddressLabelRegistry({
     <div
       className={
         embedded
-          ? "min-w-0 border border-border bg-muted"
+          ? "border-border bg-muted min-w-0 border"
           : "flex min-h-0 flex-1 flex-col overflow-hidden"
       }
     >
       <div
         className={
           embedded
-            ? "border-b border-border px-4 py-3"
+            ? "border-border border-b px-4 py-3"
             : "shrink-0 border-b px-4 py-3"
         }
       >
@@ -413,27 +418,27 @@ function AddressLabelRegistry({
         </div>
         {embedded ? (
           <div className="mt-3 grid grid-cols-3 gap-2">
-            <div className="border border-border bg-card px-3 py-2">
-              <p className="text-[0.62rem] tracking-[0.16em] text-muted-foreground/70 uppercase">
+            <div className="border-border bg-card border px-3 py-2">
+              <p className="text-muted-foreground/70 text-[0.62rem] tracking-[0.16em] uppercase">
                 Total labels
               </p>
-              <p className="mt-1 text-sm font-medium text-foreground">
+              <p className="text-foreground mt-1 text-sm font-medium">
                 {labels.length}
               </p>
             </div>
-            <div className="border border-border bg-card px-3 py-2">
-              <p className="text-[0.62rem] tracking-[0.16em] text-muted-foreground/70 uppercase">
+            <div className="border-border bg-card border px-3 py-2">
+              <p className="text-muted-foreground/70 text-[0.62rem] tracking-[0.16em] uppercase">
                 With notes
               </p>
-              <p className="mt-1 text-sm font-medium text-foreground">
+              <p className="text-foreground mt-1 text-sm font-medium">
                 {labels.filter((label) => Boolean(label.description)).length}
               </p>
             </div>
-            <div className="border border-border bg-card px-3 py-2">
-              <p className="text-[0.62rem] tracking-[0.16em] text-muted-foreground/70 uppercase">
+            <div className="border-border bg-card border px-3 py-2">
+              <p className="text-muted-foreground/70 text-[0.62rem] tracking-[0.16em] uppercase">
                 Search result
               </p>
-              <p className="mt-1 text-sm font-medium text-foreground">
+              <p className="text-foreground mt-1 text-sm font-medium">
                 {filteredLabels.length}
               </p>
             </div>
@@ -459,10 +464,10 @@ function AddressLabelRegistry({
         ) : (
           <TooltipProvider>
             <div
-              className={embedded ? "divide-y divide-border" : "space-y-1.5"}
+              className={embedded ? "divide-border divide-y" : "space-y-1.5"}
             >
               {embedded ? (
-                <div className="grid grid-cols-[minmax(0,0.95fr)_minmax(0,1.15fr)_minmax(0,1.3fr)_8rem_4.5rem] gap-3 px-3 py-2 text-[0.62rem] tracking-[0.16em] text-muted-foreground/70 uppercase">
+                <div className="text-muted-foreground/70 grid grid-cols-[minmax(0,0.95fr)_minmax(0,1.15fr)_minmax(0,1.3fr)_8rem_4.5rem] gap-3 px-3 py-2 text-[0.62rem] tracking-[0.16em] uppercase">
                   <span>Label</span>
                   <span>Description</span>
                   <span>Address</span>
@@ -506,7 +511,7 @@ function AddressLabelRegistry({
                         </div>
                       </div>
                       {embedded ? (
-                        <div className="min-w-0 text-sm text-muted-foreground">
+                        <div className="text-muted-foreground min-w-0 text-sm">
                           <p className="truncate">
                             {label.description || "No description"}
                           </p>
@@ -515,14 +520,14 @@ function AddressLabelRegistry({
                       <code
                         className={cn(
                           embedded
-                            ? "truncate font-mono text-[0.72rem] text-foreground/80"
+                            ? "text-foreground/80 truncate font-mono text-[0.72rem]"
                             : "bg-muted ml-auto w-fit shrink-0 rounded px-1.5 py-0.5 font-mono text-[10px] leading-tight"
                         )}
                       >
                         {label.address}
                       </code>
                       {embedded ? (
-                        <div className="text-[0.72rem] text-muted-foreground/70">
+                        <div className="text-muted-foreground/70 text-[0.72rem]">
                           {formatUpdatedAt(label.updatedAt)}
                         </div>
                       ) : null}

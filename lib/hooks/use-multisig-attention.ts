@@ -1,5 +1,5 @@
-import { useMemo } from "react";
 import { useQueries } from "@tanstack/react-query";
+import { useMemo } from "react";
 
 import { proposalsQueryOptions } from "@/lib/query/proposal-queries";
 import { toWorkspaceMultisig } from "@/lib/workspace/multisig-conversion";
@@ -56,9 +56,9 @@ export function useMultisigAttention({
 
         const isMember = Boolean(
           viewerAddress &&
-            workspaceMultisig.members.some(
-              (member) => member.address === viewerAddress
-            )
+          workspaceMultisig.members.some(
+            (member) => member.address === viewerAddress
+          )
         );
         const needsSignature =
           isMember &&

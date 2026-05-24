@@ -99,4 +99,3 @@ export function buildRegistrySummaryRowsFromMultisigs({
     })
     .filter((row) => !needle || row.searchText.includes(needle));
 }
-

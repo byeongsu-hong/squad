@@ -29,8 +29,8 @@ export function RegistryManagementDialog({
       size={compact ? "sm" : "default"}
       className={
         compact
-          ? "h-8 rounded-md border border-border bg-card text-foreground hover:bg-muted"
-          : "rounded-md border-border bg-transparent text-foreground hover:bg-muted"
+          ? "border-border bg-card text-foreground hover:bg-muted h-8 rounded-md border"
+          : "border-border text-foreground hover:bg-muted rounded-md bg-transparent"
       }
       onClick={handleOpenSettings}
     >

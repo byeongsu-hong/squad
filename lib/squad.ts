@@ -465,5 +465,4 @@ export class SquadService {
     const cacheKey = `proposals:${multisigPda.toString()}:${this.programId.toString()}`;
     cache.invalidate(cacheKey);
   }
-
 }

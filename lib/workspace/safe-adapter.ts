@@ -1,16 +1,9 @@
-import {
-  SAFE_PROPOSALS_TTL,
-  cache,
-  safeProposalsCacheKey,
-} from "@/lib/cache";
+import { SAFE_PROPOSALS_TTL, cache, safeProposalsCacheKey } from "@/lib/cache";
 import type {
   WorkspaceProposalLoaderOptions,
   WorkspaceProviderAdapter,
 } from "@/lib/workspace/provider-contract";
-import type {
-  WorkspacePayload,
-  WorkspaceProposal,
-} from "@/types/workspace";
+import type { WorkspacePayload, WorkspaceProposal } from "@/types/workspace";
 
 async function fetchSafeProposals(
   chain: { id: string; name: string },
@@ -54,7 +47,9 @@ async function loadSafeWorkspaceProposalsForMultisig({
   chains,
   multisig,
   force = false,
-}: WorkspaceProposalLoaderOptions & { force?: boolean }): Promise<WorkspaceProposal[]> {
+}: WorkspaceProposalLoaderOptions & { force?: boolean }): Promise<
+  WorkspaceProposal[]
+> {
   const chain = chains.find((item) => item.id === multisig.chainId);
   if (!chain) return [];
 

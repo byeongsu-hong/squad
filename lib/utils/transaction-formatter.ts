@@ -20,7 +20,9 @@ export function formatConfigAction(
 
   switch (type) {
     case "AddMember": {
-      const newMember = action.newMember as { key: unknown; permissions?: { mask: number } } | undefined;
+      const newMember = action.newMember as
+        | { key: unknown; permissions?: { mask: number } }
+        | undefined;
       const memberKey = String(newMember?.key || "Unknown");
       return {
         type: "Add Member",
@@ -57,7 +59,9 @@ export function formatConfigAction(
       return {
         type: "Change Threshold",
         summary: `Set threshold to ${newThreshold ?? "Unknown"}`,
-        fields: [{ label: "New Threshold", value: String(newThreshold ?? "Unknown") }],
+        fields: [
+          { label: "New Threshold", value: String(newThreshold ?? "Unknown") },
+        ],
       };
     }
 
@@ -66,7 +70,12 @@ export function formatConfigAction(
       return {
         type: "Set Time Lock",
         summary: `Set time lock to ${timeLock ?? "Unknown"}s`,
-        fields: [{ label: "Time Lock (seconds)", value: String(timeLock ?? "Unknown") }],
+        fields: [
+          {
+            label: "Time Lock (seconds)",
+            value: String(timeLock ?? "Unknown"),
+          },
+        ],
       };
     }
 
@@ -138,4 +147,3 @@ export function formatConfigAction(
     }
   }
 }
-
