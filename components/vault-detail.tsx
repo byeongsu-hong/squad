@@ -238,12 +238,24 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
       )}
 
       {/* Operations */}
-      <OperationsQueue
-        items={vaultItems}
-        loading={loading}
-        showFilters={false}
-        compact
-      />
+      <div>
+        <div className="mb-2 flex items-center justify-between">
+          <p className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">
+            Transactions
+          </p>
+          {pendingCount !== null && pendingCount > 0 && (
+            <span className="text-primary/70 font-mono text-[11px] tabular-nums">
+              {pendingCount} active
+            </span>
+          )}
+        </div>
+        <OperationsQueue
+          items={vaultItems}
+          loading={loading}
+          showFilters={false}
+          compact
+        />
+      </div>
     </div>
   );
 }
