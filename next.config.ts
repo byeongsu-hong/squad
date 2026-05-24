@@ -18,6 +18,7 @@ const nextConfig: NextConfig = {
               // Allow HTTPS/WSS to any domain for custom RPC URLs
               // This is necessary for users to use their own RPC endpoints
               "connect-src 'self' https: wss:",
+              "frame-src https://verify.walletconnect.org https://verify.walletconnect.com",
               // Prevent framing
               "frame-ancestors 'none'",
               "base-uri 'self'",
