@@ -293,9 +293,9 @@ function ChainEditor({
       }
     >
       {embedded && (
-        <h3 className="text-sm font-semibold">
+        <p className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">
           {editingChain ? "Edit Chain" : "New Chain"}
-        </h3>
+        </p>
       )}
       <Form {...form}>
         <form onSubmit={onSubmit} className="space-y-4">
@@ -469,7 +469,7 @@ function ChainRegistry({
       }
     >
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold">Configured Chains</h3>
+        <p className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">Configured Chains</p>
         <Button type="button" variant="outline" onClick={onResetToDefaults}>
           <RotateCcw className="h-3 w-3" />
           Reset to Defaults
