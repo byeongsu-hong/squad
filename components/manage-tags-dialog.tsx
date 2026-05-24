@@ -11,6 +11,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useMultisigStore } from "@/stores/multisig-store";
 import type { MultisigAccount } from "@/types/multisig";
 
@@ -97,21 +99,22 @@ export function ManageTagsDialog({
               Add New Tag
             </label>
             <div className="flex gap-2">
-              <input
+              <Input
                 id="new-tag"
                 placeholder="Enter tag name..."
                 value={newTag}
                 onChange={(e) => setNewTag(e.target.value)}
                 onKeyPress={handleKeyPress}
-                className="border-border bg-card text-foreground placeholder:text-muted-foreground/50 h-9 flex-1 rounded-md border px-3 text-sm focus:outline-none"
+                className="flex-1"
               />
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon-sm"
                 onClick={() => handleAddTag()}
-                className="border-border bg-muted text-foreground hover:bg-muted/80 inline-flex h-9 w-9 items-center justify-center rounded-md border transition-colors"
               >
                 <Plus className="h-4 w-4" />
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -123,14 +126,15 @@ export function ManageTagsDialog({
                   {allGlobalTags
                     .filter((tag) => !tags.includes(tag))
                     .map((tag) => (
-                      <button
+                      <Button
                         key={tag}
                         type="button"
+                        variant="outline"
                         onClick={() => handleAddTag(tag)}
-                        className="border-border hover:bg-muted text-foreground/80 rounded-full border px-3 py-1 text-xs transition-colors"
+                        className="h-auto rounded-full px-3 py-1 text-xs"
                       >
                         {tag}
-                      </button>
+                      </Button>
                     ))}
                 </div>
               </div>
@@ -146,13 +150,14 @@ export function ManageTagsDialog({
                     className="bg-muted text-foreground/80 inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs"
                   >
                     {tag}
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
                       onClick={() => handleRemoveTag(tag)}
-                      className="hover:text-destructive ml-0.5 inline-flex transition-colors"
+                      className="hover:text-destructive ml-0.5 h-auto w-auto border-none p-0"
                     >
                       <X className="h-3 w-3" />
-                    </button>
+                    </Button>
                   </span>
                 ))}
               </div>
@@ -167,20 +172,20 @@ export function ManageTagsDialog({
         </div>
 
         <DialogFooter>
-          <button
+          <Button
             type="button"
+            variant="outline"
             onClick={() => onOpenChange(false)}
-            className="border-border text-foreground/80 hover:bg-muted inline-flex h-9 items-center rounded-md border bg-transparent px-4 text-sm transition-colors"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
             onClick={handleSave}
-            className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-9 items-center rounded-md px-4 text-sm font-medium transition-colors"
+            className="bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20"
           >
             Save Tags
-          </button>
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
