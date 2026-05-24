@@ -4,8 +4,6 @@ import { Plus, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -14,8 +12,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useMultisigStore } from "@/stores/multisig-store";
 import type { MultisigAccount } from "@/types/multisig";
 
@@ -32,7 +28,6 @@ export function ManageTagsDialog({
 }: ManageTagsDialogProps) {
   const { updateMultisigTags, multisigs } = useMultisigStore();
 
-  // Get the latest multisig data from the store
   const currentMultisig = multisig
     ? multisigs.find(
         (m) => m.publicKey.toString() === multisig.publicKey.toString()
@@ -41,23 +36,19 @@ export function ManageTagsDialog({
 
   const multisigKey = currentMultisig?.publicKey.toString();
 
-  // State with a key to track which multisig we're editing
   const [editingKey, setEditingKey] = useState<string | undefined>();
   const [newTag, setNewTag] = useState("");
   const [tags, setTags] = useState<string[]>([]);
 
-  // Get all unique tags from all multisigs
   const allGlobalTags = Array.from(
     new Set(multisigs.flatMap((m) => m.tags || []))
   ).sort();
 
-  // Reset tags when multisig changes or dialog opens with a different multisig
   if (open && multisigKey !== editingKey) {
     setEditingKey(multisigKey);
     setTags(currentMultisig?.tags || []);
   }
 
-  // Clear editing key when dialog closes
   if (!open && editingKey) {
     setEditingKey(undefined);
   }
@@ -68,12 +59,10 @@ export function ManageTagsDialog({
       toast.error("Tag cannot be empty");
       return;
     }
-
     if (tags.includes(trimmedTag)) {
       toast.error("Tag already exists");
       return;
     }
-
     setTags([...tags, trimmedTag]);
     setNewTag("");
   };
@@ -84,7 +73,6 @@ export function ManageTagsDialog({
 
   const handleSave = () => {
     if (!currentMultisig) return;
-
     updateMultisigTags(currentMultisig.publicKey.toString(), tags);
     toast.success("Tags updated successfully");
     onOpenChange(false);
@@ -108,62 +96,68 @@ export function ManageTagsDialog({
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="new-tag">Add New Tag</Label>
+          <div className="space-y-1.5">
+            <label htmlFor="new-tag" className="text-foreground/80 text-xs font-medium">
+              Add New Tag
+            </label>
             <div className="flex gap-2">
-              <Input
+              <input
                 id="new-tag"
                 placeholder="Enter tag name..."
                 value={newTag}
                 onChange={(e) => setNewTag(e.target.value)}
                 onKeyPress={handleKeyPress}
+                className="border-border bg-card text-foreground placeholder:text-muted-foreground/50 h-9 flex-1 rounded-md border px-3 text-sm focus:outline-none"
               />
-              <Button onClick={() => handleAddTag()} size="icon">
+              <button
+                type="button"
+                onClick={() => handleAddTag()}
+                className="border-border bg-muted text-foreground hover:bg-muted/80 inline-flex h-9 w-9 items-center justify-center rounded-md border transition-colors"
+              >
                 <Plus className="h-4 w-4" />
-              </Button>
+              </button>
             </div>
           </div>
 
           {allGlobalTags.length > 0 &&
             allGlobalTags.some((tag) => !tags.includes(tag)) && (
-              <div className="space-y-2">
-                <Label>Available Tags (click to add)</Label>
+              <div className="space-y-1.5">
+                <p className="text-foreground/80 text-xs font-medium">Available Tags (click to add)</p>
                 <div className="flex flex-wrap gap-1.5">
                   {allGlobalTags
                     .filter((tag) => !tags.includes(tag))
                     .map((tag) => (
-                      <Badge
+                      <button
                         key={tag}
-                        variant="outline"
-                        className="hover:bg-accent cursor-pointer px-3 py-1"
+                        type="button"
                         onClick={() => handleAddTag(tag)}
+                        className="border-border hover:bg-muted text-foreground/80 rounded-full border px-3 py-1 text-xs transition-colors"
                       >
                         {tag}
-                      </Badge>
+                      </button>
                     ))}
                 </div>
               </div>
             )}
 
           {tags.length > 0 && (
-            <div className="space-y-2">
-              <Label>Current Tags</Label>
+            <div className="space-y-1.5">
+              <p className="text-foreground/80 text-xs font-medium">Current Tags</p>
               <div className="flex flex-wrap gap-2">
                 {tags.map((tag) => (
-                  <Badge
+                  <span
                     key={tag}
-                    variant="secondary"
-                    className="flex items-center gap-1 px-3 py-1"
+                    className="bg-muted text-foreground/80 inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs"
                   >
                     {tag}
                     <button
                       type="button"
                       onClick={() => handleRemoveTag(tag)}
-                      className="hover:text-destructive ml-1 inline-flex"
+                      className="hover:text-destructive ml-0.5 inline-flex transition-colors"
                     >
                       <X className="h-3 w-3" />
                     </button>
-                  </Badge>
+                  </span>
                 ))}
               </div>
             </div>
@@ -177,10 +171,20 @@ export function ManageTagsDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <button
+            type="button"
+            onClick={() => onOpenChange(false)}
+            className="border-border text-foreground/80 hover:bg-muted inline-flex h-9 items-center rounded-md border bg-transparent px-4 text-sm transition-colors"
+          >
             Cancel
-          </Button>
-          <Button onClick={handleSave}>Save Tags</Button>
+          </button>
+          <button
+            type="button"
+            onClick={handleSave}
+            className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-9 items-center rounded-md px-4 text-sm font-medium transition-colors"
+          >
+            Save Tags
+          </button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
