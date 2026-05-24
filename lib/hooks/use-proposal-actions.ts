@@ -1,4 +1,6 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useWallet } from "@solana/wallet-adapter-react";
+import { useAccount } from "wagmi";
 import {
   PublicKey,
   Transaction,
@@ -43,9 +45,10 @@ function buildActionKey(
 export function useProposalActions(options: UseProposalActionsOptions = {}) {
   const optionsRef = useRef(options);
   optionsRef.current = options;
+  const queryClient = useQueryClient();
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const { publicKey, derivationPath, walletType, evmAddress } =
-    useWalletStore();
+  const { publicKey, derivationPath, walletType } = useWalletStore();
+  const { address: evmAddress } = useAccount();
   const { chains } = useChainStore();
   const { signTransaction, connected: walletAdapterConnected } = useWallet();
 
@@ -190,6 +193,7 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
 
         toast.success(SUCCESS_MESSAGES.PROPOSAL_APPROVED);
         squadService.invalidateProposalCache(multisigPda);
+        void queryClient.invalidateQueries({ queryKey: ["proposals"] });
         await optionsRef.current.onSuccess?.();
       } catch (error) {
         console.error("Failed to approve proposal:", error);
@@ -231,6 +235,7 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
 
         toast.success(SUCCESS_MESSAGES.PROPOSAL_REJECTED);
         squadService.invalidateProposalCache(multisigPda);
+        void queryClient.invalidateQueries({ queryKey: ["proposals"] });
         await optionsRef.current.onSuccess?.();
       } catch (error) {
         console.error("Failed to reject proposal:", error);
@@ -277,6 +282,7 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
 
         toast.success(SUCCESS_MESSAGES.PROPOSAL_EXECUTED);
         squadService.invalidateProposalCache(multisigPda);
+        void queryClient.invalidateQueries({ queryKey: ["proposals"] });
         await optionsRef.current.onSuccess?.();
       } catch (error) {
         console.error("Failed to execute proposal:", error);
@@ -317,6 +323,7 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
         toast.success("Safe transaction submitted.");
       }
       invalidateSafeProposalCache(chainId, multisigKey);
+      void queryClient.invalidateQueries({ queryKey: ["proposals"] });
       await optionsRef.current.onSuccess?.();
     } catch (error) {
       const verb = action === "approve" ? "confirm" : "execute";
