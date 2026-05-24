@@ -406,7 +406,7 @@ function AddressLabelRegistry({
             <div className="text-muted-foreground text-center text-sm">
               {searchQuery
                 ? "No labels found"
-                : "No labels yet. Add your first label!"}
+                : "No labels yet."}
             </div>
           </div>
         ) : (

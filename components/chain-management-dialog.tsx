@@ -473,7 +473,7 @@ function ChainRegistry({
             <div className="flex w-[4.25rem] gap-1 justify-self-start xl:justify-self-end">
               <button
                 type="button"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-md border transition-colors"
+                className="border-border text-muted-foreground/50 hover:text-foreground hover:bg-muted inline-flex h-9 w-9 items-center justify-center rounded-md border transition-colors"
                 onClick={(event) => {
                   event.stopPropagation();
                   onEdit(chain);
@@ -484,13 +484,13 @@ function ChainRegistry({
               {chain.id !== "solana-mainnet" ? (
                 <button
                   type="button"
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-md border transition-colors"
+                  className="border-border text-muted-foreground/50 hover:text-destructive hover:bg-muted inline-flex h-9 w-9 items-center justify-center rounded-md border transition-colors"
                   onClick={(event) => {
                     event.stopPropagation();
                     onDelete(chain.id);
                   }}
                 >
-                  <Trash2 className="text-destructive h-4 w-4" />
+                  <Trash2 className="h-4 w-4" />
                 </button>
               ) : (
                 <span className="h-9 w-9" aria-hidden="true" />
