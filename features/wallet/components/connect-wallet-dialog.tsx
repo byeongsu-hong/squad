@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -51,11 +50,6 @@ export function ConnectWalletDialog({
           <DialogTitle>
             {view === "ledger" ? "Connect Ledger" : "Connect Wallet"}
           </DialogTitle>
-          <DialogDescription>
-            {view === "ledger"
-              ? "Connect your Ledger hardware wallet to Solana"
-              : "Select a network and connect your wallet"}
-          </DialogDescription>
         </DialogHeader>
 
         {view === "tabs" ? (

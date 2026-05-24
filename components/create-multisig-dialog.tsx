@@ -12,7 +12,6 @@ import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -226,9 +225,6 @@ export function CreateMultisigDialog({
       >
         <DialogHeader>
           <DialogTitle>Create Multisig</DialogTitle>
-          <DialogDescription>
-            Create a new multisig wallet with custom threshold and members
-          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>

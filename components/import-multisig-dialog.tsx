@@ -12,7 +12,6 @@ import { z } from "zod";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -227,9 +226,6 @@ export function ImportMultisigDialog({
       <DialogContent key={`import-dialog-${open}`} className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Import Multisig</DialogTitle>
-          <DialogDescription>
-            Import an existing multisig by entering its address
-          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>

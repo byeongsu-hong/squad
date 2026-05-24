@@ -7,7 +7,6 @@ import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -90,9 +89,6 @@ export function ManageTagsDialog({
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Manage Tags</DialogTitle>
-          <DialogDescription>
-            Add tags to organize and filter your multisigs.
-          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
@@ -164,8 +160,8 @@ export function ManageTagsDialog({
           )}
 
           {tags.length === 0 && (
-            <div className="text-muted-foreground rounded-md border border-dashed p-8 text-center text-sm">
-              No tags yet. Add some tags to organize your multisigs.
+            <div className="text-muted-foreground py-8 text-center text-sm">
+              No tags yet.
             </div>
           )}
         </div>

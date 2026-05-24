@@ -10,7 +10,6 @@ import { z } from "zod";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -500,7 +499,7 @@ function ChainRegistry({
           </div>
         ))}
         {chains.length === 0 ? (
-          <div className="text-muted-foreground rounded-lg border border-dashed p-4 text-sm">
+          <div className="text-muted-foreground py-8 text-center text-sm">
             No chains configured.
           </div>
         ) : null}

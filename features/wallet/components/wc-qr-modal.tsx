@@ -5,7 +5,6 @@ import { QRCodeSVG } from "qrcode.react";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -21,9 +20,6 @@ export function WcQrModal({ uri, onClose }: WcQrModalProps) {
       <DialogContent className="sm:max-w-[380px]">
         <DialogHeader>
           <DialogTitle>Scan with mobile wallet</DialogTitle>
-          <DialogDescription>
-            Open any WalletConnect-compatible wallet and scan this QR code
-          </DialogDescription>
         </DialogHeader>
         {uri && (
           <div className="flex justify-center p-2">

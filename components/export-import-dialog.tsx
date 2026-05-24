@@ -465,7 +465,7 @@ export function ExportImportController({
 
           <div className="space-y-4 px-6 py-5">
             <div className="border-border bg-muted grid gap-2 border p-4">
-              <p className="text-muted-foreground/70 text-[0.68rem] tracking-[0.18em] uppercase">
+              <p className="text-muted-foreground/60 text-xs font-medium">
                 What gets cleared
               </p>
               <p className="text-foreground/80 text-sm">

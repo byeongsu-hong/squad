@@ -7,7 +7,6 @@ import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -71,9 +70,6 @@ function DialogShell({
       <DialogContent className="flex h-[600px] w-[900px] !max-w-[900px] flex-col gap-0 p-0">
         <DialogHeader className="shrink-0 border-b px-5 py-3">
           <DialogTitle>Address Label Manager</DialogTitle>
-          <DialogDescription>
-            Add labels to addresses for easier identification
-          </DialogDescription>
         </DialogHeader>
         <AddressLabelManagerController defaultAddress={defaultAddress} />
       </DialogContent>
