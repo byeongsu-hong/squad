@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, Copy, Check, X, Users, User } from "lucide-react";
+import { ArrowLeftRight, ChevronLeft, Copy, Check, X, Users, User } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -273,10 +273,16 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
 
       {/* Transactions */}
       <div className={cn(isPanel ? "pt-4" : "")}>
-        <div className="mb-2 flex items-center justify-between">
-          <p className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">
+        <div className="mb-2 flex items-center gap-2">
+          <ArrowLeftRight className="text-muted-foreground/60 h-3.5 w-3.5" />
+          <span className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">
             Transactions
-          </p>
+          </span>
+          {!loading && vaultItems.length > 0 && (
+            <span className="text-muted-foreground/40 font-mono text-[11px] tabular-nums">
+              {vaultItems.length}
+            </span>
+          )}
         </div>
         <OperationsQueue
           items={vaultItems}
