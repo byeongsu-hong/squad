@@ -32,7 +32,7 @@ function CopyButton({ value }: { value: string }) {
       aria-label="Copy address"
     >
       {copied ? (
-        <Check className="h-3 w-3 text-green-500" />
+        <Check className="h-3 w-3 text-primary" />
       ) : (
         <Copy className="h-3 w-3" />
       )}
@@ -106,17 +106,21 @@ export function VaultDetail({ vaultKey }: VaultDetailProps) {
       {/* Vault header card */}
       <div className="bg-card border-border rounded-2xl border p-5">
         <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <h1 className="text-foreground text-xl font-bold tracking-[-0.02em]">
               {multisig.label ?? "Unnamed Vault"}
             </h1>
-            <p className="text-muted-foreground mt-0.5 text-xs">
-              {multisig.chainName}
-              <span className="mx-1 opacity-40">·</span>
-              {isSquads ? "Squads" : "Safe"}
-              <span className="mx-1 opacity-40">·</span>
-              {multisig.threshold} of {multisig.members.length} required
-            </p>
+            <div className="mt-2 flex flex-wrap items-center gap-1.5">
+              <span className="border-border bg-muted text-muted-foreground rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide">
+                {multisig.chainName}
+              </span>
+              <span className="border-border bg-muted text-muted-foreground rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide">
+                {isSquads ? "Squads" : "Safe"}
+              </span>
+              <span className="text-muted-foreground/70 text-xs">
+                {multisig.threshold}/{multisig.members.length} required
+              </span>
+            </div>
           </div>
           {pendingCount !== null && pendingCount > 0 && (
             <span className="bg-primary/10 text-primary shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold">
@@ -124,12 +128,24 @@ export function VaultDetail({ vaultKey }: VaultDetailProps) {
             </span>
           )}
         </div>
-        <div className="mt-3 flex items-center">
+        <div className="mt-3 flex items-center gap-1">
           <span className="font-mono text-muted-foreground/60 text-xs">
             {truncateAddress(multisig.address)}
           </span>
           <CopyButton value={multisig.address} />
         </div>
+        {multisig.tags.length > 0 && (
+          <div className="mt-2.5 flex flex-wrap gap-1.5">
+            {multisig.tags.map((tag) => (
+              <span
+                key={tag}
+                className="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-[10px] font-medium"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Operations */}

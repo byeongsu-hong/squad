@@ -1,6 +1,6 @@
 "use client";
 
-import { Inbox, Loader2 } from "lucide-react";
+import { Check, Inbox, Loader2, Zap } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { ProposalDetailView } from "@/components/proposal-detail-modal";
@@ -38,7 +38,7 @@ function formatAge(createdAt?: string): string {
 function StatusBadge({ item }: { item: WorkspaceQueueItem }) {
   if (item.readyToExecute) {
     return (
-      <span className="border-green-200 bg-green-50 text-[10px] text-green-600 dark:border-green-800/50 dark:bg-green-950/30 dark:text-green-400 rounded border px-1.5 py-0.5">
+      <span className="border-emerald-200 bg-emerald-50 text-[10px] text-emerald-700 dark:border-emerald-800/50 dark:bg-emerald-950/30 dark:text-emerald-400 rounded border px-1.5 py-0.5">
         Ready to execute
       </span>
     );
@@ -52,7 +52,7 @@ function StatusBadge({ item }: { item: WorkspaceQueueItem }) {
   }
   if (item.proposal.status === "Rejected") {
     return (
-      <span className="border-red-200 bg-red-50 text-[10px] text-red-600 dark:border-red-800/50 dark:bg-red-950/30 dark:text-red-400 rounded border px-1.5 py-0.5">
+      <span className="border-destructive/30 bg-destructive/10 text-[10px] text-destructive rounded border px-1.5 py-0.5">
         Rejected
       </span>
     );
@@ -77,7 +77,7 @@ function ProgressBar({ item }: { item: WorkspaceQueueItem }) {
     Math.round((item.approvalCount / item.multisig.threshold) * 100)
   );
   const barColor = item.readyToExecute
-    ? "bg-green-600 dark:bg-green-500"
+    ? "bg-emerald-600 dark:bg-emerald-500"
     : item.needsYourSignature
       ? "bg-primary"
       : "bg-muted-foreground/30";
@@ -638,8 +638,8 @@ export function OperationsQueue({
                   {isActionInProgress ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   ) : (
-                    "✓"
-                  )}{" "}
+                    <Check className="h-3.5 w-3.5" />
+                  )}
                   Approve ({canApproveItems.length})
                 </button>
               )}
@@ -648,13 +648,13 @@ export function OperationsQueue({
                   type="button"
                   disabled={isActionInProgress}
                   onClick={handleBatchExecute}
-                  className="bg-green-600 text-white hover:bg-green-700 inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-[13px] font-medium transition-colors disabled:pointer-events-none disabled:opacity-50"
+                  className="bg-emerald-600 text-white hover:bg-emerald-500 inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-[13px] font-medium transition-colors disabled:pointer-events-none disabled:opacity-50"
                 >
                   {isActionInProgress ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   ) : (
-                    "→"
-                  )}{" "}
+                    <Zap className="h-3.5 w-3.5" />
+                  )}
                   Execute ({canExecuteItems.length})
                 </button>
               )}

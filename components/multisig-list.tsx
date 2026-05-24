@@ -18,6 +18,7 @@ import { toast } from "sonner";
 
 import { AddMultisigActions } from "@/components/add-multisig-actions";
 import { ManageTagsDialog } from "@/components/manage-tags-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCreatorMultisigs } from "@/lib/hooks/use-creator-multisigs";
 import { useDebounce } from "@/lib/hooks/use-debounce";
@@ -416,12 +417,11 @@ export function MultisigList() {
                       toggleSelect(row.key);
                     }}
                   >
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       checked={isSelected}
-                      onChange={() => toggleSelect(row.key)}
+                      onCheckedChange={() => toggleSelect(row.key)}
                       onClick={(e) => e.stopPropagation()}
-                      className="h-3.5 w-3.5 cursor-pointer accent-amber-600"
+                      className="size-3.5"
                       aria-label={`Select ${row.label || "unnamed multisig"}`}
                     />
                   </div>

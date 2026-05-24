@@ -108,7 +108,7 @@ export function AddressWithLabel({
 
   const handleCopy = () => {
     navigator.clipboard.writeText(address);
-    toast.success("Address copied to clipboard");
+    toast.success("Address copied");
   };
 
   const displayAddress = showFull ? address : formatAddress(address, 6, 6);

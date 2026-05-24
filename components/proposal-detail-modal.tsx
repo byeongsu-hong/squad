@@ -537,7 +537,7 @@ function CopyBtn({ text }: { text: string }) {
       className="text-muted-foreground/40 hover:text-foreground shrink-0 transition-colors"
     >
       {copied ? (
-        <Check className="h-3 w-3 text-emerald-500" />
+        <Check className="h-3 w-3 text-primary" />
       ) : (
         <Copy className="h-3 w-3" />
       )}

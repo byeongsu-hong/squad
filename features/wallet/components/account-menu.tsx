@@ -85,7 +85,7 @@ export function AccountMenu({ onAddWallet }: AccountMenuProps) {
             "focus-visible:ring-ring focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
           )}
         >
-          <span className="h-2 w-2 shrink-0 rounded-full bg-green-500" />
+          <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
           {primaryLabel}
           <ChevronDown className="text-muted-foreground/60 h-3 w-3" />
         </button>
