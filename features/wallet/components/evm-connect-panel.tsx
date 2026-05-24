@@ -68,7 +68,7 @@ export function EvmConnectPanel({ onClose }: EvmConnectPanelProps) {
 
   if (isConnected && address) {
     return (
-      <div className="border-border bg-card rounded-xl border p-4">
+      <div className="border-border bg-muted rounded-xl border p-4">
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500/10">
             <CheckCircle2 className="h-5 w-5 text-emerald-500" />

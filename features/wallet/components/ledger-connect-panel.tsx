@@ -131,7 +131,7 @@ export function LedgerConnectPanel({
             </p>
           </div>
 
-          <div className="border-border bg-card w-full space-y-3 rounded-xl border p-4">
+          <div className="border-border bg-muted w-full space-y-3 rounded-xl border p-4">
             <p className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">
               Derivation Path
             </p>
