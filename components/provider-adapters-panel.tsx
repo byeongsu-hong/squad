@@ -4,6 +4,7 @@ import { Network } from "lucide-react";
 import { useMemo } from "react";
 
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 import { useChainStore } from "@/stores/chain-store";
 import { useProviderAdapterStore } from "@/stores/provider-adapter-store";
@@ -74,7 +75,7 @@ export function ProviderAdaptersPanel() {
 
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="space-y-1.5">
-          <label htmlFor="safe-tx-service" className="text-foreground/80 text-xs font-medium">Safe Transaction Service URL</label>
+          <Label htmlFor="safe-tx-service">Safe Transaction Service URL</Label>
           <Input
             id="safe-tx-service"
             value={settings.safeTransactionServiceUrl}
@@ -86,7 +87,7 @@ export function ProviderAdaptersPanel() {
         </div>
 
         <div className="space-y-1.5">
-          <label htmlFor="safe-singleton" className="text-foreground/80 text-xs font-medium">Safe Singleton Address</label>
+          <Label htmlFor="safe-singleton">Safe Singleton Address</Label>
           <Input
             id="safe-singleton"
             value={settings.safeSingletonAddress}
@@ -98,7 +99,7 @@ export function ProviderAdaptersPanel() {
         </div>
 
         <div className="space-y-1.5">
-          <label htmlFor="safe-proxy-factory" className="text-foreground/80 text-xs font-medium">Safe Proxy Factory</label>
+          <Label htmlFor="safe-proxy-factory">Safe Proxy Factory</Label>
           <Input
             id="safe-proxy-factory"
             value={settings.safeProxyFactoryAddress}

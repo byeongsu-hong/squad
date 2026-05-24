@@ -1,12 +1,13 @@
 "use client";
 
-import { ChevronLeft, Copy, Check, X, Users } from "lucide-react";
+import { ChevronLeft, Copy, Check, X, Users, User } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 import { OperationsQueue } from "@/components/operations-queue";
+import { Button } from "@/components/ui/button";
 import { useAddressLabel } from "@/lib/hooks/use-address-label";
 import { useProposalsQuery } from "@/lib/hooks/use-proposals-query";
 import { useViewerAddressForMultisig } from "@/lib/hooks/use-viewer-address";
@@ -30,9 +31,10 @@ function CopyButton({ value }: { value: string }) {
   };
 
   return (
-    <button
+    <Button
+      variant="ghost"
       onClick={handleCopy}
-      className="text-muted-foreground hover:text-foreground ml-1 inline-flex items-center transition-colors"
+      className="text-muted-foreground/50 hover:text-foreground ml-0.5 h-5 w-5 shrink-0 p-0"
       aria-label="Copy address"
     >
       {copied ? (
@@ -40,7 +42,7 @@ function CopyButton({ value }: { value: string }) {
       ) : (
         <Copy className="h-3 w-3" />
       )}
-    </button>
+    </Button>
   );
 }
 
@@ -62,15 +64,25 @@ function MemberRow({ member, isViewer }: { member: MemberEntry; isViewer: boolea
     );
   };
 
+  const avatarInitial = labelText
+    ? labelText.slice(0, 1).toUpperCase()
+    : /[a-zA-Z]/.test(member.address[0])
+      ? member.address[0].toUpperCase()
+      : null;
+
   return (
     <div className="flex items-center gap-2 py-1.5">
       <div
         className={cn(
-          "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold",
+          "flex h-6 w-6 shrink-0 items-center justify-center rounded-full",
           isViewer ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground"
         )}
       >
-        {(labelText ?? member.address).slice(0, 1).toUpperCase()}
+        {avatarInitial ? (
+          <span className="text-[10px] font-bold">{avatarInitial}</span>
+        ) : (
+          <User className="h-3 w-3 opacity-60" />
+        )}
       </div>
       <div className="min-w-0 flex-1">
         {labelText && (
@@ -87,14 +99,15 @@ function MemberRow({ member, isViewer }: { member: MemberEntry; isViewer: boolea
           you
         </span>
       )}
-      <button
+      <Button
         type="button"
+        variant="ghost"
         onClick={handleCopy}
-        className="text-muted-foreground/30 hover:text-muted-foreground shrink-0 transition-colors"
+        className="text-muted-foreground/30 hover:text-muted-foreground h-5 w-5 shrink-0 p-0"
         aria-label="Copy address"
       >
         <Copy className="h-3 w-3" />
-      </button>
+      </Button>
     </div>
   );
 }

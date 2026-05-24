@@ -407,7 +407,11 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
                   key={row.key}
                   className={cn(
                     "grid cursor-pointer items-center px-3 py-2.5 transition-colors",
-                    isSelected ? "bg-primary/8" : "hover:bg-muted"
+                    isSelected
+                      ? "bg-primary/8"
+                      : isActiveDesk
+                        ? "bg-primary/5 [box-shadow:inset_2px_0_0_rgba(217,119,6,0.5)]"
+                        : "hover:bg-muted"
                   )}
                   style={{ gridTemplateColumns: GRID_COLS }}
                   onClick={() => handleOpenDesk(multisig)}

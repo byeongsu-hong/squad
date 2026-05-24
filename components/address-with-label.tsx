@@ -4,6 +4,7 @@ import { Copy, Tag } from "lucide-react";
 import { toast } from "sonner";
 
 import { AddressLabelManagerDialog } from "@/components/address-label-manager-dialog";
+import { Button } from "@/components/ui/button";
 import { useAddressLabel } from "@/lib/hooks/use-address-label";
 import { cn } from "@/lib/utils";
 import { formatAddress } from "@/lib/utils/format-address";
@@ -190,27 +191,29 @@ export function AddressWithLabel({
 
       <div className="flex items-center gap-0.5">
         {showCopy && (
-          <button
+          <Button
             type="button"
-            className="text-muted-foreground hover:bg-muted hover:text-foreground rounded-sm p-1 transition-colors"
+            variant="ghost"
+            className="text-muted-foreground hover:text-foreground h-6 w-6 shrink-0 p-0"
             onClick={handleCopy}
             aria-label="Copy address"
             title="Copy address"
           >
             <Copy className="h-3 w-3 shrink-0" />
-          </button>
+          </Button>
         )}
 
         {shouldShowLabelButton && (
           <AddressLabelManagerDialog defaultAddress={address}>
-            <button
+            <Button
               type="button"
-              className="text-muted-foreground hover:bg-muted hover:text-foreground rounded-sm p-1 transition-colors"
+              variant="ghost"
+              className="text-muted-foreground hover:text-foreground h-6 w-6 shrink-0 p-0"
               aria-label="Label address"
               title="Label address"
             >
               <Tag className="h-3 w-3 shrink-0" />
-            </button>
+            </Button>
           </AddressLabelManagerDialog>
         )}
       </div>

@@ -24,6 +24,8 @@ import {
 } from "@/types/chain";
 import type { MultisigAccount } from "@/types/multisig";
 
+import { cn } from "@/lib/utils";
+
 import {
   Dialog,
   DialogContent,
@@ -35,6 +37,7 @@ import {
 import { Button } from "./ui/button";
 import { Progress } from "./ui/progress";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
+import { Textarea } from "./ui/textarea";
 
 interface ExportImportControllerProps {
   embedded?: boolean;
@@ -777,16 +780,15 @@ function ExportImportImportPanel({
             <Progress value={progressValue} className="h-1.5" />
           </div>
         ) : null}
-        <textarea
+        <Textarea
           value={importContent}
           onChange={(e) => onImportContentChange(e.target.value)}
           disabled={isImporting}
           placeholder="Paste your YAML configuration here..."
-          className={
-            embedded
-              ? "border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring border-border min-h-[28rem] w-full resize-y overflow-auto border px-3 py-2 font-mono text-xs focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-              : "border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring min-h-[300px] w-full resize-none overflow-auto rounded-md border px-3 py-2 font-mono text-xs focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-          }
+          className={cn(
+            "font-mono text-xs",
+            embedded ? "min-h-[28rem] resize-y rounded-none" : "min-h-[300px] resize-none rounded-md"
+          )}
         />
     </div>
   );

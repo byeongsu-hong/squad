@@ -4,6 +4,8 @@ import { Database, Layers3, Network, Tag } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useMemo } from "react";
 
+import { Button } from "@/components/ui/button";
+
 import { AddressLabelManagerController } from "@/components/address-label-manager-dialog";
 import { ChainManagementController } from "@/components/chain-management-dialog";
 import { ExportImportController } from "@/components/export-import-dialog";
@@ -71,25 +73,26 @@ function SettingsPageContent() {
             const active = settingsActiveSection === tab.id;
             const Icon = tab.icon;
             return (
-              <button
+              <Button
                 key={tab.id}
                 type="button"
+                variant="ghost"
                 onClick={() => setSettingsActiveSection(tab.id)}
                 className={cn(
-                  "flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm whitespace-nowrap transition-colors",
+                  "h-auto gap-1.5 rounded-none border-b-2 px-4 py-3 text-sm whitespace-nowrap transition-colors",
                   active
-                    ? "border-primary text-foreground -mb-px font-semibold"
-                    : "text-muted-foreground/70 hover:text-foreground border-transparent"
+                    ? "border-primary text-foreground -mb-px font-semibold hover:bg-transparent"
+                    : "text-muted-foreground/70 hover:text-foreground border-transparent hover:bg-transparent"
                 )}
               >
                 <Icon className="h-3.5 w-3.5 shrink-0" />
                 {tab.label}
                 {sectionCounts[tab.id] > 0 && (
-                  <span className="font-mono text-xs tabular-nums">
+                  <span className="font-mono text-xs tabular-nums opacity-60">
                     {sectionCounts[tab.id]}
                   </span>
                 )}
-              </button>
+              </Button>
             );
           })}
         </nav>
