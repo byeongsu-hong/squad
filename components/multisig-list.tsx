@@ -271,11 +271,7 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
 
   return (
     <div className="space-y-3">
-      {/* Primary header: title + search + add */}
       <div className="border-border flex items-center gap-2 border-b pb-4">
-        <h1 className="text-foreground mr-2 text-2xl font-bold tracking-[-0.02em]">
-          Vaults
-        </h1>
         <Input
           placeholder="Search vaults..."
           value={filterText}

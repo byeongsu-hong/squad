@@ -123,7 +123,7 @@ function ColumnHeaders({
     : ["Multisig", "TX", "Chain", "Status", "Progress", "Age", ""];
   return (
     <div
-      className="border-border bg-background grid items-center border-b px-3 py-2"
+      className="border-border bg-muted/60 grid items-center border-b px-3 py-2"
       style={{ gridTemplateColumns: compact ? GRID_COLS_COMPACT : GRID_COLS_FULL }}
     >
       <div className="flex items-center justify-center">
