@@ -37,7 +37,7 @@ export function proposalsQueryOptions(
       if (multisig.provider === "safe") {
         const adapter = getWorkspaceProviderAdapter("safe");
         if (!adapter.capabilities.proposalLoading) return [];
-        return adapter.loadProposalsForMultisig({ chains, multisig, force: true });
+        return adapter.loadProposalsForMultisig({ chains, multisig });
       }
       return loadSquadsWorkspaceProposalsForMultisig(
         toSquadsMultisigAccount(multisig),
