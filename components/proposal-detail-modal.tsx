@@ -4,12 +4,8 @@ import { Check, ChevronDown, ChevronUp, Copy, Loader2, X } from "lucide-react";
 import { type ReactNode, useState } from "react";
 
 import { AddressWithLabel } from "@/components/address-with-label";
-import {
-  Sheet,
-  SheetContent,
-  SheetTitle,
-} from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { useProposalActions } from "@/lib/hooks/use-proposal-actions";
 import { useViewerAddressForMultisig } from "@/lib/hooks/use-viewer-address";
 import { useWorkspacePayload } from "@/lib/hooks/use-workspace-payload";
@@ -32,13 +28,34 @@ interface ProposalDetailModalProps {
   onActionSuccess?: () => Promise<void>;
 }
 
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  const handle = () => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+  return (
+    <button
+      onClick={handle}
+      className="shrink-0 text-muted-foreground/50 transition-colors hover:text-muted-foreground"
+    >
+      {copied ? (
+        <Check className="h-3 w-3 text-green-500" />
+      ) : (
+        <Copy className="h-3 w-3" />
+      )}
+    </button>
+  );
+}
+
 export function ProposalDetailModal({
   item,
   open,
   onClose,
   onActionSuccess,
 }: ProposalDetailModalProps) {
-  const [tab, setTab] = useState<"overview" | "payload">("overview");
+  const [payloadOpen, setPayloadOpen] = useState(false);
   const [signersExpanded, setSignersExpanded] = useState(false);
 
   const { chains } = useChainStore();
@@ -69,7 +86,6 @@ export function ProposalDetailModal({
     proposal,
     approvalCount,
     currentUserApproved,
-    currentUserRejected,
     needsYourSignature,
     readyToExecute,
   } = item;
@@ -87,639 +103,487 @@ export function ProposalDetailModal({
   const rejectSupported = supportsProviderAction(multisig.provider, "reject");
   const executeSupported = supportsProviderAction(multisig.provider, "execute");
 
-  const isApproveLoading = isActionLoading(
-    "approve",
-    multisig.key,
-    proposal.transactionIndex
-  );
-  const isRejectLoading = isActionLoading(
-    "reject",
-    multisig.key,
-    proposal.transactionIndex
-  );
-  const isExecuteLoading = isActionLoading(
-    "execute",
-    multisig.key,
-    proposal.transactionIndex
-  );
+  const isApproveLoading = isActionLoading("approve", multisig.key, proposal.transactionIndex);
+  const isRejectLoading = isActionLoading("reject", multisig.key, proposal.transactionIndex);
+  const isExecuteLoading = isActionLoading("execute", multisig.key, proposal.transactionIndex);
 
   const handleApprove = () =>
-    approveByAddress(
-      multisig.address,
-      proposal.transactionIndex,
-      multisig.chainId
-    );
+    approveByAddress(multisig.address, proposal.transactionIndex, multisig.chainId);
   const handleReject = () =>
-    rejectByAddress(
-      multisig.address,
-      proposal.transactionIndex,
-      multisig.chainId
-    );
+    rejectByAddress(multisig.address, proposal.transactionIndex, multisig.chainId);
   const handleExecute = () =>
-    executeByAddress(
-      multisig.address,
-      proposal.transactionIndex,
-      multisig.chainId
-    );
+    executeByAddress(multisig.address, proposal.transactionIndex, multisig.chainId);
 
-  // ── Status stripe color ──────────────────────────────────────────────────
+  const currentUserAddress = getViewerAddress(multisig.provider);
+
+  const approvalPct =
+    multisig.threshold > 0
+      ? Math.min(100, Math.round((approvalCount / multisig.threshold) * 100))
+      : 0;
+
+  // Status stripe
   const stripeColor =
     proposal.status === "Executed"
-      ? "bg-muted-foreground/30"
+      ? "bg-muted-foreground/20"
       : proposal.status === "Rejected"
         ? "bg-red-500"
         : readyToExecute
-          ? "bg-green-500"
+          ? "bg-emerald-500"
           : needsYourSignature
             ? "bg-primary"
             : "bg-muted-foreground/20";
 
-  // ── Status label & badge styling ─────────────────────────────────────────
-  const statusLabel =
-    proposal.status === "Executed"
-      ? "Executed"
-      : proposal.status === "Rejected"
-        ? "Rejected"
-        : readyToExecute
-          ? "Executable"
-          : proposal.status === "Active"
-            ? "Pending"
-            : proposal.status;
+  // Action card
+  const actionCardBg = readyToExecute
+    ? "bg-emerald-50 dark:bg-emerald-950/30"
+    : needsYourSignature
+      ? "bg-primary/8 dark:bg-primary/10"
+      : "bg-muted/50";
 
-  const statusBadgeClass =
-    proposal.status === "Executed"
-      ? "bg-muted text-muted-foreground"
-      : proposal.status === "Rejected"
-        ? "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300"
-        : readyToExecute
-          ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300"
-          : needsYourSignature
-            ? "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
-            : "bg-muted text-muted-foreground";
-
-  // ── Approval progress ────────────────────────────────────────────────────
-  const approvalPct = multisig.threshold > 0
-    ? Math.min(100, Math.round((approvalCount / multisig.threshold) * 100))
-    : 0;
-  const progressBarColor =
-    proposal.status === "Rejected"
-      ? "bg-red-500"
-      : approvalCount >= multisig.threshold
-        ? "bg-green-500"
-        : needsYourSignature
-          ? "bg-primary"
-          : "bg-muted-foreground/40";
-
-  // ── Signers ──────────────────────────────────────────────────────────────
   const visibleMembers = signersExpanded
     ? multisig.members
-    : multisig.members.slice(0, 5);
-  const currentUserAddress = getViewerAddress(multisig.provider);
+    : multisig.members.slice(0, 6);
 
   return (
     <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
-      <SheetContent showCloseButton={false} className="flex flex-col p-0 gap-0">
-        {/* Accessibility title (visually hidden) */}
+      <SheetContent showCloseButton={false} className="flex flex-col gap-0 p-0">
         <SheetTitle className="sr-only">
           {multisig.label || "Unnamed"} · #{proposal.transactionIndex.toString()}
         </SheetTitle>
 
-        {/* Status stripe */}
-        <div className={cn("h-1.5 w-full shrink-0", stripeColor)} />
+        {/* ── Top stripe ──────────────────────────────────────────────── */}
+        <div className={cn("h-[3px] w-full shrink-0", stripeColor)} />
 
-        {/* ── Header ────────────────────────────────────────────────────── */}
-        <div className="px-6 pt-5 pb-4 shrink-0">
-          {/* Row 1: badges + close */}
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex flex-wrap gap-1.5">
-              {/* Status badge */}
-              <span
-                className={cn(
-                  "inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold",
-                  statusBadgeClass
-                )}
-              >
-                {statusLabel}
-              </span>
-
-              {/* Chain */}
-              <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 font-mono text-[11px] text-muted-foreground">
-                {multisig.chainName}
-              </span>
-
-              {/* Provider */}
-              <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-[11px] text-muted-foreground">
-                {multisig.provider === "safe" ? "Safe" : "Squads"}
-              </span>
-
-              {/* You signed */}
-              {currentUserApproved && (
-                <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-[11px] font-semibold text-green-700 dark:bg-green-900/40 dark:text-green-300">
-                  You signed
+        {/* ── Identity header ─────────────────────────────────────────── */}
+        <div className="shrink-0 px-6 pt-5 pb-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+                <span className="rounded-full bg-muted px-2 py-0.5 font-mono">
+                  {multisig.chainName}
                 </span>
-              )}
-
-              {/* Waiting on you */}
-              {needsYourSignature && !currentUserApproved && (
-                <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-semibold text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
-                  Waiting on you
+                <span className="rounded-full bg-muted px-2 py-0.5">
+                  {multisig.provider === "safe" ? "Safe" : "Squads"}
                 </span>
+                <span className="font-mono text-muted-foreground/60">
+                  #{proposal.transactionIndex.toString()}
+                </span>
+              </div>
+              <h2 className="mt-2 truncate text-lg font-bold tracking-tight text-foreground">
+                {multisig.label || "Unnamed"}
+              </h2>
+              {proposal.creator && (
+                <div className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground/70">
+                  <span>by</span>
+                  <AddressWithLabel
+                    address={proposal.creator}
+                    showCopy={false}
+                    showLabelButton={false}
+                    className="font-mono text-muted-foreground/70"
+                  />
+                </div>
               )}
             </div>
-
-            {/* Close button */}
             <button
               onClick={onClose}
-              className="ml-1 shrink-0 rounded-md p-1.5 text-muted-foreground/70 transition-colors hover:bg-muted hover:text-foreground"
-              aria-label="Close"
+              className="shrink-0 rounded-lg p-1.5 text-muted-foreground/50 transition-colors hover:bg-muted hover:text-foreground"
             >
               <X className="h-4 w-4" />
             </button>
           </div>
-
-          {/* Row 2: big title */}
-          <h2 className="mt-3 text-xl font-bold tracking-[-0.02em] text-foreground">
-            {multisig.label || "Unnamed"}{" "}
-            <span className="text-muted-foreground font-normal">
-              #{proposal.transactionIndex.toString()}
-            </span>
-          </h2>
-
-          {/* Row 3: meta */}
-          <div className="mt-1.5 flex flex-wrap gap-4 text-[11px] text-muted-foreground/70">
-            <span className="flex items-center gap-1">
-              Address{" "}
-              <AddressWithLabel
-                address={multisig.address}
-                showCopy={false}
-                showLabelButton={false}
-                className="font-mono text-muted-foreground"
-              />
-            </span>
-            {proposal.creator && (
-              <span className="flex items-center gap-1">
-                By{" "}
-                <AddressWithLabel
-                  address={proposal.creator}
-                  showCopy={false}
-                  showLabelButton={false}
-                  className="font-mono text-muted-foreground"
-                />
-              </span>
-            )}
-          </div>
         </div>
 
-        {/* ── Tabs ──────────────────────────────────────────────────────── */}
-        <div className="border-border flex shrink-0 border-b px-6">
-          {(["overview", "payload"] as const).map((t) => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={cn(
-                "-mb-px border-b-2 px-4 py-2.5 text-[13px] capitalize transition-colors",
-                tab === t
-                  ? "border-primary text-foreground font-semibold"
-                  : "border-transparent text-muted-foreground/70 hover:text-foreground"
-              )}
-            >
-              {t}
-            </button>
-          ))}
-        </div>
+        {/* ── Scrollable body ─────────────────────────────────────────── */}
+        <div className="flex-1 overflow-y-auto">
 
-        {/* ── Scrollable body ───────────────────────────────────────────── */}
-        <div className="flex-1 overflow-y-auto px-6 py-5">
-          {tab === "overview" ? (
-            <div className="space-y-6">
-              {/* Approval Progress */}
-              <div>
-                <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Approval Progress
-                </p>
-                <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-                  <div
-                    className={cn("h-full rounded-full transition-all", progressBarColor)}
-                    style={{ width: `${approvalPct}%` }}
-                  />
-                </div>
-                <div className="mt-2 flex items-center justify-between text-[12px]">
-                  <span className="text-muted-foreground">
-                    <span className="font-semibold text-foreground">{approvalCount}</span>
-                    {" of "}
-                    <span className="font-semibold text-foreground">{multisig.threshold}</span>
-                    {" signatures"}
-                    {proposal.rejections.length > 0 && (
-                      <span className="ml-2 text-red-500">
-                        · {proposal.rejections.length} rejection{proposal.rejections.length !== 1 ? "s" : ""}
-                      </span>
-                    )}
-                  </span>
-                  <span
-                    className={cn(
-                      "font-semibold tabular-nums",
-                      approvalCount >= multisig.threshold
-                        ? "text-green-600 dark:text-green-400"
-                        : "text-muted-foreground"
-                    )}
-                  >
-                    {approvalPct}%
-                  </span>
-                </div>
-              </div>
-
-              {/* Signers */}
-              <div>
-                <div className="mb-3 flex items-center justify-between">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    Signers
-                    <span className="ml-2 font-normal normal-case tracking-normal text-muted-foreground/60">
-                      {multisig.members.length} member{multisig.members.length !== 1 ? "s" : ""}
-                    </span>
+          {/* Action card — primary CTA, shown first */}
+          {!isComplete && actionsSupported && (
+            <div className={cn("mx-6 rounded-2xl p-4", actionCardBg)}>
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-foreground">
+                    {readyToExecute
+                      ? "Ready to execute"
+                      : needsYourSignature
+                        ? "Your signature needed"
+                        : `${multisig.threshold - approvalCount} more signature${multisig.threshold - approvalCount !== 1 ? "s" : ""} needed`}
                   </p>
-                  {multisig.members.length > 5 && (
-                    <button
-                      onClick={() => setSignersExpanded(!signersExpanded)}
-                      className="flex items-center gap-1 text-[11px] font-medium text-primary hover:text-primary/80"
-                    >
-                      {signersExpanded ? (
-                        <>
-                          <ChevronUp className="h-3 w-3" />
-                          Collapse
-                        </>
-                      ) : (
-                        <>
-                          <ChevronDown className="h-3 w-3" />
-                          Show all {multisig.members.length}
-                        </>
-                      )}
-                    </button>
-                  )}
+                  <p className="mt-0.5 text-[11px] text-muted-foreground">
+                    {currentUserApproved
+                      ? "You have already signed this proposal"
+                      : readyToExecute
+                        ? "All required signatures collected"
+                        : needsYourSignature
+                          ? "Approve or reject below"
+                          : "Waiting for other signers"}
+                  </p>
                 </div>
-
-                <div className="rounded-xl border border-border overflow-hidden">
-                  {visibleMembers.map((member, idx) => {
-                    const isApproved = proposal.approvals.includes(member.address);
-                    const isRejected = proposal.rejections.includes(member.address);
-                    const isCurrentUser = member.address === currentUserAddress;
-                    const isProposer = member.address === proposal.creator;
-                    const memberState = isApproved
-                      ? "Signed"
-                      : isRejected
-                        ? "Rejected"
-                        : "No action";
-
-                    return (
-                      <div
-                        key={member.address}
-                        className={cn(
-                          "flex items-center justify-between px-4 py-3",
-                          idx !== 0 && "border-t border-border"
-                        )}
-                      >
-                        <div className="flex min-w-0 items-center gap-2">
-                          {isCurrentUser && (
-                            <span className="shrink-0 rounded-[3px] bg-green-100 px-1.5 py-0.5 text-[9px] font-bold uppercase text-green-700 dark:bg-green-900/40 dark:text-green-400">
-                              YOU
-                            </span>
-                          )}
-                          {isProposer && !isCurrentUser && (
-                            <span className="shrink-0 rounded-[3px] bg-primary/10 px-1.5 py-0.5 text-[9px] font-bold uppercase text-primary">
-                              PROPOSER
-                            </span>
-                          )}
-                          <AddressWithLabel
-                            address={member.address}
-                            showCopy={false}
-                            showLabelButton={false}
-                            className="min-w-0 truncate font-mono text-[12px] text-muted-foreground"
-                          />
-                        </div>
-                        <span
-                          className={cn(
-                            "ml-3 shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-semibold",
-                            isApproved
-                              ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300"
-                              : isRejected
-                                ? "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300"
-                                : "border border-border bg-transparent text-muted-foreground/70"
-                          )}
-                        >
-                          {memberState}
-                        </span>
-                      </div>
-                    );
-                  })}
-                  {!signersExpanded && multisig.members.length > 5 && (
-                    <div className="border-t border-border bg-muted/40 px-4 py-2.5 text-center text-[11px] text-muted-foreground/60">
-                      +{multisig.members.length - 5} more
-                    </div>
+                <div className="flex shrink-0 gap-2">
+                  {approveSupported && !currentUserApproved && needsYourSignature && (
+                    <Button
+                      size="sm"
+                      onClick={handleApprove}
+                      disabled={isActionInProgress}
+                    >
+                      {isApproveLoading
+                        ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        : <Check className="h-3.5 w-3.5" />}
+                      {multisig.provider === "safe" ? "Confirm" : "Approve"}
+                    </Button>
+                  )}
+                  {rejectSupported && needsYourSignature && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleReject}
+                      disabled={isActionInProgress}
+                    >
+                      {isRejectLoading
+                        ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        : <X className="h-3.5 w-3.5" />}
+                      Reject
+                    </Button>
+                  )}
+                  {executeSupported && readyToExecute && (
+                    <Button
+                      size="sm"
+                      className="bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-600"
+                      onClick={handleExecute}
+                      disabled={isActionInProgress}
+                    >
+                      {isExecuteLoading
+                        ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        : null}
+                      Execute
+                    </Button>
                   )}
                 </div>
               </div>
             </div>
-          ) : (
-            /* ── Payload tab ────────────────────────────────────────────── */
-            <div className="space-y-3">
-              {payloadLoading && (
-                <div className="flex items-center justify-center py-10">
-                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground/70" />
-                </div>
-              )}
-              {payloadError && !payloadLoading && (
-                <p className="rounded-xl border border-dashed border-border px-4 py-5 text-sm text-muted-foreground/70">
-                  {payloadError}
-                </p>
-              )}
+          )}
 
-              {/* Squads transaction PDA */}
-              {payload && "transactionPda" in payload && (
-                <div className="rounded-xl border border-border bg-muted/50 p-4">
-                  <div className="mb-2 flex items-center justify-between">
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                      Transaction PDA
-                    </p>
-                    <button
-                      onClick={() =>
-                        navigator.clipboard.writeText(payload.transactionPda)
-                      }
-                      className="text-muted-foreground/70 transition-colors hover:text-muted-foreground"
-                    >
-                      <Copy className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                  <code className="block break-all rounded-lg bg-card px-3 py-2 font-mono text-[11px] text-foreground/80">
-                    {payload.transactionPda}
-                  </code>
-                </div>
-              )}
+          {/* Completed notice */}
+          {isComplete && (
+            <div className="mx-6 rounded-2xl bg-muted/50 px-4 py-3">
+              <p className="text-sm text-muted-foreground">
+                This proposal was{" "}
+                <span className="font-medium text-foreground">
+                  {proposal.status.toLowerCase()}
+                </span>
+                .
+              </p>
+            </div>
+          )}
 
-              {/* Safe payload */}
-              {payload?.type === "safe" && (
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-xl border border-border bg-muted/50 p-4">
-                    <div className="mb-2 flex items-center justify-between">
-                      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                        Safe Tx Hash
-                      </p>
-                      {payload.safeTxHash && (
-                        <button
-                          onClick={() =>
-                            navigator.clipboard.writeText(payload.safeTxHash ?? "")
-                          }
-                          className="text-muted-foreground/70 transition-colors hover:text-muted-foreground"
-                        >
-                          <Copy className="h-3.5 w-3.5" />
-                        </button>
-                      )}
-                    </div>
-                    <code className="block break-all rounded-lg bg-card px-3 py-2 font-mono text-[11px] text-foreground/80">
-                      {payload.safeTxHash ?? "Unavailable"}
-                    </code>
-                  </div>
-
-                  {payload.nonce !== undefined && (
-                    <div className="rounded-xl border border-border bg-muted/50 p-4">
-                      <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                        Nonce
-                      </p>
-                      <code className="block rounded-lg bg-card px-3 py-2 font-mono text-sm text-foreground/80">
-                        {payload.nonce}
-                      </code>
-                    </div>
-                  )}
-
-                  {payload.toAddress && (
-                    <div className="rounded-xl border border-border bg-muted/50 p-4">
-                      <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                        Target
-                      </p>
-                      <div className="rounded-lg bg-card px-3 py-2">
-                        <AddressWithLabel
-                          address={payload.toAddress}
-                          showFull
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="rounded-xl border border-border bg-muted/50 p-4">
-                    <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                      Value / Operation
-                    </p>
-                    <div className="rounded-lg bg-card px-3 py-2">
-                      <p className="font-mono text-sm text-foreground/80">
-                        {payload.value ?? "0"} wei
-                      </p>
-                      <p className="mt-0.5 text-[11px] text-muted-foreground/70">
-                        Operation {payload.operation ?? 0}
-                      </p>
-                    </div>
-                  </div>
-
-                  {payload.data && (
-                    <div className="rounded-xl border border-border bg-muted/50 p-4 sm:col-span-2">
-                      <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                        Calldata
-                      </p>
-                      <code className="block break-all rounded-lg bg-card px-3 py-2 font-mono text-[11px] text-muted-foreground">
-                        {payload.data}
-                      </code>
-                    </div>
-                  )}
-
-                  {payload.dataDecoded != null && (
-                    <div className="rounded-xl border border-border bg-muted/50 p-4 sm:col-span-2">
-                      <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                        Decoded Payload
-                      </p>
-                      <pre className="overflow-x-auto rounded-lg bg-card px-3 py-2 font-mono text-[11px] text-muted-foreground">
-                        {JSON.stringify(payload.dataDecoded, null, 2)}
-                      </pre>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Config actions */}
-              {payload?.type === "config" && (
-                <div className="space-y-3">
-                  {payload.actions.map((action, i) => {
-                    const formatted = formatConfigAction(action as ConfigAction);
+          {/* ── Signatures ──────────────────────────────────────────── */}
+          <div className="px-6 pt-6">
+            <div className="mb-3 flex items-center justify-between">
+              <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                Signatures
+              </span>
+              <div className="flex items-center gap-2">
+                {/* Dot indicators */}
+                <div className="flex gap-1">
+                  {multisig.members.map((m) => {
+                    const approved = proposal.approvals.includes(m.address);
+                    const rejected = proposal.rejections.includes(m.address);
                     return (
                       <div
-                        key={i}
-                        className="rounded-xl border border-border bg-muted/50 p-4"
-                      >
-                        <div className="mb-3 flex items-center gap-2">
-                          <span className="rounded-md bg-card px-2 py-0.5 text-[11px] text-muted-foreground border border-border">
-                            Action {i + 1}
-                          </span>
-                          <span className="text-sm font-semibold text-foreground">
-                            {formatted.type}
-                          </span>
-                        </div>
-                        <div className="space-y-3">
-                          {formatted.fields.map((field, j) => (
-                            <div key={j}>
-                              <p className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                                {field.label}
-                              </p>
-                              {typeof field.value === "string" ? (
-                                <p className="break-all rounded-lg bg-card px-3 py-2 text-sm text-foreground/80">
-                                  {field.value}
-                                </p>
-                              ) : (
-                                (field.value as ReactNode)
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
+                        key={m.address}
+                        className={cn(
+                          "h-2 w-2 rounded-full",
+                          approved
+                            ? "bg-emerald-500"
+                            : rejected
+                              ? "bg-red-500"
+                              : "bg-muted-foreground/20"
+                        )}
+                      />
                     );
                   })}
                 </div>
-              )}
+                <span className="text-xs font-medium tabular-nums text-muted-foreground">
+                  {approvalCount}
+                  <span className="text-muted-foreground/50">/{multisig.threshold}</span>
+                </span>
+              </div>
+            </div>
 
-              {/* Vault instructions */}
-              {payload?.type === "vault" && (
-                <div className="space-y-3">
-                  {payload.instructions.map((instruction, i) => (
-                    <div
-                      key={i}
-                      className="rounded-xl border border-border bg-muted/50 p-4"
+            {/* Progress bar */}
+            <div className="mb-4 h-1 overflow-hidden rounded-full bg-muted">
+              <div
+                className={cn(
+                  "h-full rounded-full transition-all",
+                  proposal.status === "Rejected"
+                    ? "bg-red-500"
+                    : approvalCount >= multisig.threshold
+                      ? "bg-emerald-500"
+                      : needsYourSignature
+                        ? "bg-primary"
+                        : "bg-muted-foreground/30"
+                )}
+                style={{ width: `${approvalPct}%` }}
+              />
+            </div>
+
+            {/* Signer rows */}
+            <div className="space-y-0.5">
+              {visibleMembers.map((member) => {
+                const isApproved = proposal.approvals.includes(member.address);
+                const isRejected = proposal.rejections.includes(member.address);
+                const isCurrentUser = member.address === currentUserAddress;
+                const isProposer = member.address === proposal.creator;
+
+                return (
+                  <div
+                    key={member.address}
+                    className="flex items-center justify-between rounded-lg px-3 py-2 transition-colors hover:bg-muted/40"
+                  >
+                    <div className="flex min-w-0 items-center gap-2">
+                      <div
+                        className={cn(
+                          "h-1.5 w-1.5 shrink-0 rounded-full",
+                          isApproved
+                            ? "bg-emerald-500"
+                            : isRejected
+                              ? "bg-red-500"
+                              : "bg-muted-foreground/25"
+                        )}
+                      />
+                      {isCurrentUser && (
+                        <span className="shrink-0 rounded bg-primary/10 px-1 py-0.5 text-[9px] font-bold uppercase text-primary">
+                          you
+                        </span>
+                      )}
+                      {isProposer && !isCurrentUser && (
+                        <span className="shrink-0 rounded bg-muted px-1 py-0.5 text-[9px] font-bold uppercase text-muted-foreground">
+                          proposer
+                        </span>
+                      )}
+                      <AddressWithLabel
+                        address={member.address}
+                        showCopy={false}
+                        showLabelButton={false}
+                        className="min-w-0 font-mono text-xs text-muted-foreground"
+                      />
+                    </div>
+                    <span
+                      className={cn(
+                        "shrink-0 text-[11px] font-medium",
+                        isApproved
+                          ? "text-emerald-600 dark:text-emerald-400"
+                          : isRejected
+                            ? "text-red-500 dark:text-red-400"
+                            : "text-muted-foreground/40"
+                      )}
                     >
-                      <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                        Instruction {i + 1}
-                      </p>
-                      <div className="rounded-lg bg-card px-3 py-2 mb-3">
+                      {isApproved ? "Signed" : isRejected ? "Rejected" : "—"}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+
+            {multisig.members.length > 6 && (
+              <button
+                onClick={() => setSignersExpanded(!signersExpanded)}
+                className="mt-1 flex w-full items-center justify-center gap-1 rounded-lg py-2 text-[11px] font-medium text-muted-foreground/60 transition-colors hover:bg-muted/40 hover:text-muted-foreground"
+              >
+                {signersExpanded ? (
+                  <>
+                    <ChevronUp className="h-3 w-3" />
+                    Collapse
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="h-3 w-3" />
+                    {multisig.members.length - 6} more
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+
+          {/* ── Payload (collapsible) ────────────────────────────────── */}
+          <div className="px-6 pb-8 pt-5">
+            <button
+              onClick={() => setPayloadOpen(!payloadOpen)}
+              className="flex w-full items-center justify-between rounded-xl bg-muted/40 px-4 py-3 text-left transition-colors hover:bg-muted/60"
+            >
+              <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                Payload
+              </span>
+              {payloadOpen ? (
+                <ChevronUp className="h-3.5 w-3.5 text-muted-foreground/50" />
+              ) : (
+                <ChevronDown className="h-3.5 w-3.5 text-muted-foreground/50" />
+              )}
+            </button>
+
+            {payloadOpen && (
+              <div className="mt-3 space-y-3">
+                {payloadLoading && (
+                  <div className="flex justify-center py-6">
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground/50" />
+                  </div>
+                )}
+                {payloadError && !payloadLoading && (
+                  <p className="rounded-xl border border-dashed border-border px-4 py-4 text-sm text-muted-foreground/60">
+                    {payloadError}
+                  </p>
+                )}
+
+                {payload && "transactionPda" in payload && (
+                  <PayloadField
+                    label="Transaction PDA"
+                    value={payload.transactionPda}
+                    mono
+                    copyable
+                  />
+                )}
+
+                {payload?.type === "safe" && (
+                  <>
+                    {payload.safeTxHash && (
+                      <PayloadField
+                        label="Safe Tx Hash"
+                        value={payload.safeTxHash}
+                        mono
+                        copyable
+                      />
+                    )}
+                    {payload.nonce !== undefined && (
+                      <PayloadField label="Nonce" value={String(payload.nonce)} mono />
+                    )}
+                    {payload.toAddress && (
+                      <div className="rounded-xl bg-muted/40 px-4 py-3">
+                        <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+                          Target
+                        </p>
+                        <AddressWithLabel address={payload.toAddress} showFull />
+                      </div>
+                    )}
+                    {(payload.value || payload.operation !== undefined) && (
+                      <div className="rounded-xl bg-muted/40 px-4 py-3">
+                        <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+                          Value / Operation
+                        </p>
+                        <p className="font-mono text-sm text-foreground/80">
+                          {payload.value ?? "0"} wei
+                        </p>
+                        <p className="text-[11px] text-muted-foreground/60">
+                          Operation {payload.operation ?? 0}
+                        </p>
+                      </div>
+                    )}
+                    {payload.data && (
+                      <PayloadField label="Calldata" value={payload.data} mono />
+                    )}
+                    {payload.dataDecoded != null && (
+                      <div className="rounded-xl bg-muted/40 px-4 py-3">
+                        <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+                          Decoded
+                        </p>
+                        <pre className="overflow-x-auto rounded-lg bg-card px-3 py-2 font-mono text-[11px] text-muted-foreground">
+                          {JSON.stringify(payload.dataDecoded, null, 2)}
+                        </pre>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {payload?.type === "config" && (
+                  <div className="space-y-3">
+                    {payload.actions.map((action, i) => {
+                      const formatted = formatConfigAction(action as ConfigAction);
+                      return (
+                        <div key={i} className="rounded-xl bg-muted/40 px-4 py-3">
+                          <div className="mb-2 flex items-center gap-2">
+                            <span className="text-[10px] font-medium text-muted-foreground/70">
+                              Action {i + 1}
+                            </span>
+                            <span className="text-sm font-semibold text-foreground">
+                              {formatted.type}
+                            </span>
+                          </div>
+                          <div className="space-y-2">
+                            {formatted.fields.map((field, j) => (
+                              <div key={j}>
+                                <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground/70">
+                                  {field.label}
+                                </p>
+                                {typeof field.value === "string" ? (
+                                  <p className="mt-0.5 break-all text-sm text-foreground/80">
+                                    {field.value}
+                                  </p>
+                                ) : (
+                                  (field.value as ReactNode)
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {payload?.type === "vault" && (
+                  <div className="space-y-3">
+                    {payload.instructions.map((instruction, i) => (
+                      <div key={i} className="rounded-xl bg-muted/40 px-4 py-3">
+                        <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+                          Instruction {i + 1}
+                        </p>
                         <AddressWithLabel
                           address={instruction.programAddress}
                           showFull
                           vaultAddress={payload.vaultAddress ?? undefined}
                         />
-                      </div>
-                      <div className="space-y-3 text-[11px] text-muted-foreground">
-                        <div>
-                          <p className="mb-2 font-semibold uppercase tracking-wider">
-                            Accounts ({instruction.accountIndexes.length})
-                          </p>
-                          <div className="space-y-1">
-                            {instruction.accountIndexes.map((idx: number) => (
-                              <div
-                                key={`${i}-${idx}`}
-                                className="flex items-center gap-2 rounded-md bg-card/60 px-2 py-1"
-                              >
-                                <span className="w-5 font-mono text-muted-foreground/70">
-                                  {idx}
-                                </span>
-                                <AddressWithLabel
-                                  address={
-                                    instruction.accountAddresses[
-                                      instruction.accountIndexes.indexOf(idx)
-                                    ]
-                                  }
-                                  vaultAddress={payload.vaultAddress ?? undefined}
-                                />
-                              </div>
-                            ))}
+                        <div className="mt-3 space-y-2 text-[11px] text-muted-foreground">
+                          <div>
+                            <p className="mb-1 uppercase tracking-widest text-muted-foreground/70">
+                              Accounts ({instruction.accountIndexes.length})
+                            </p>
+                            <div className="space-y-0.5">
+                              {instruction.accountIndexes.map((idx: number) => (
+                                <div
+                                  key={`${i}-${idx}`}
+                                  className="flex items-center gap-2 rounded-md bg-card/60 px-2 py-1"
+                                >
+                                  <span className="w-4 font-mono text-muted-foreground/50">
+                                    {idx}
+                                  </span>
+                                  <AddressWithLabel
+                                    address={
+                                      instruction.accountAddresses[
+                                        instruction.accountIndexes.indexOf(idx)
+                                      ]
+                                    }
+                                    vaultAddress={payload.vaultAddress ?? undefined}
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                          <div>
+                            <p className="mb-1 uppercase tracking-widest text-muted-foreground/70">
+                              Data
+                            </p>
+                            <code className="block break-all rounded-lg bg-card px-3 py-2 font-mono text-muted-foreground">
+                              {instruction.data}
+                            </code>
                           </div>
                         </div>
-                        <div>
-                          <p className="mb-2 font-semibold uppercase tracking-wider">
-                            Data (base58)
-                          </p>
-                          <code className="block break-all rounded-lg bg-card px-3 py-2 font-mono text-muted-foreground">
-                            {instruction.data}
-                          </code>
-                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {!payloadLoading && !payloadError && !payload && (
-                <p className="rounded-xl border border-dashed border-border px-4 py-5 text-sm text-muted-foreground/70">
-                  No payload details available for this proposal.
-                </p>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* ── Footer ────────────────────────────────────────────────────── */}
-        <div className="shrink-0 border-t border-border px-6 py-4">
-          <div className="flex items-center justify-between gap-3">
-            {/* Status message */}
-            <span
-              className={cn(
-                "text-[12px]",
-                isComplete
-                  ? "text-muted-foreground/70"
-                  : readyToExecute
-                    ? "text-green-600 dark:text-green-400"
-                    : needsYourSignature
-                      ? "text-primary"
-                      : "text-muted-foreground/70"
-              )}
-            >
-              {isComplete
-                ? `This proposal was ${proposal.status.toLowerCase()}.`
-                : readyToExecute
-                  ? "Ready to execute — all signatures collected."
-                  : needsYourSignature
-                    ? "Your signature is needed."
-                    : "Waiting for more signatures."}
-            </span>
-
-            {/* Action buttons */}
-            {actionsSupported && !isComplete && (
-              <div className="flex shrink-0 gap-2">
-                {approveSupported &&
-                  !currentUserApproved &&
-                  needsYourSignature && (
-                    <Button
-                      onClick={handleApprove}
-                      disabled={isActionInProgress}
-                      size="sm"
-                      className="bg-primary text-primary-foreground hover:bg-primary/90 border-primary/20"
-                    >
-                      {isApproveLoading ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      ) : (
-                        <Check className="h-3.5 w-3.5" />
-                      )}
-                      {multisig.provider === "safe" ? "Confirm" : "Approve"}
-                    </Button>
-                  )}
-                {rejectSupported && needsYourSignature && (
-                  <Button
-                    onClick={handleReject}
-                    disabled={isActionInProgress}
-                    variant="outline"
-                    size="sm"
-                  >
-                    {isRejectLoading ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      <X className="h-3.5 w-3.5" />
-                    )}
-                    Reject
-                  </Button>
+                    ))}
+                  </div>
                 )}
-                {executeSupported && readyToExecute && (
-                  <Button
-                    onClick={handleExecute}
-                    disabled={isActionInProgress}
-                    size="sm"
-                    className="border-green-600/20 bg-green-600 text-white hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700"
-                  >
-                    {isExecuteLoading ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : null}
-                    Execute
-                  </Button>
+
+                {!payloadLoading && !payloadError && !payload && (
+                  <p className="rounded-xl border border-dashed border-border px-4 py-4 text-sm text-muted-foreground/60">
+                    No payload details available.
+                  </p>
                 )}
               </div>
             )}
@@ -727,5 +591,36 @@ export function ProposalDetailModal({
         </div>
       </SheetContent>
     </Sheet>
+  );
+}
+
+function PayloadField({
+  label,
+  value,
+  mono = false,
+  copyable = false,
+}: {
+  label: string;
+  value: string;
+  mono?: boolean;
+  copyable?: boolean;
+}) {
+  return (
+    <div className="rounded-xl bg-muted/40 px-4 py-3">
+      <div className="mb-1.5 flex items-center justify-between">
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+          {label}
+        </p>
+        {copyable && <CopyButton text={value} />}
+      </div>
+      <p
+        className={cn(
+          "break-all text-sm text-foreground/80",
+          mono && "font-mono text-[11px]"
+        )}
+      >
+        {value}
+      </p>
+    </div>
   );
 }
