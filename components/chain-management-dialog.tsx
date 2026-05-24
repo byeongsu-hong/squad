@@ -17,7 +17,6 @@ import {
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -231,17 +230,6 @@ function ChainEditor({
           : "space-y-6"
       }
     >
-      {embedded ? (
-        <div className="border-border space-y-1 border-b pb-4">
-          <p className="text-muted-foreground text-[0.68rem] tracking-[0.18em] uppercase">
-            Chain Editor
-          </p>
-          <p className="text-muted-foreground text-sm leading-6">
-            Define the RPC, program, and explorer endpoints that this workspace
-            trusts for proposal loading and execution.
-          </p>
-        </div>
-      ) : null}
       <Form {...form}>
         <form onSubmit={onSubmit} className="space-y-4">
           <FormField
@@ -281,9 +269,6 @@ function ChainEditor({
                       <SelectItem value="evm">EVM</SelectItem>
                     </SelectContent>
                   </Select>
-                  <FormDescription>
-                    Determines the transaction runtime this chain belongs to.
-                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -309,10 +294,6 @@ function ChainEditor({
                       <SelectItem value="safe">Safe</SelectItem>
                     </SelectContent>
                   </Select>
-                  <FormDescription>
-                    Safe chains are settings-only for now and do not participate
-                    in current signing flows.
-                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -331,9 +312,6 @@ function ChainEditor({
                   <input className="border-border bg-card text-foreground placeholder:text-muted-foreground/50 h-9 w-full rounded-md border px-3 text-sm focus:outline-none" placeholder="https://..." {...field} />
                 </FormControl>
                 <FormMessage />
-                <FormDescription>
-                  Must use HTTPS or WSS protocol for security
-                </FormDescription>
               </FormItem>
             )}
           />
@@ -422,14 +400,7 @@ function ChainRegistry({
       }
     >
       <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <h3 className="text-sm font-semibold">Configured Chains</h3>
-          {embedded ? (
-            <p className="text-muted-foreground text-sm">
-              Review every configured endpoint before editing or deleting it.
-            </p>
-          ) : null}
-        </div>
+        <h3 className="text-sm font-semibold">Configured Chains</h3>
         <button type="button" className="border-border text-foreground/80 hover:bg-muted inline-flex h-9 items-center rounded-md border bg-transparent px-4 text-sm transition-colors" onClick={onResetToDefaults}>
           <RotateCcw className="mr-2 h-3 w-3" />
           Reset to Defaults
