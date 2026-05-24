@@ -67,8 +67,7 @@ export function LandingPage() {
   }
 
   return (
-    <div className="bg-background min-h-[calc(100svh-4.5rem)]">
-      <div className="mx-auto max-w-[1200px] pt-1">
+    <div className="mx-auto max-w-[1200px] pt-1">
         <div className="bg-card border-border mb-5 flex items-center gap-6 overflow-x-auto rounded-xl border px-5 py-3">
           <Link
             href="/vaults"
@@ -158,7 +157,6 @@ export function LandingPage() {
             </Button>
           }
         />
-      </div>
     </div>
   );
 }
