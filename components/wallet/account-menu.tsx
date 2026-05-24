@@ -49,14 +49,18 @@ export function AccountMenu({ onAddWallet }: AccountMenuProps) {
 
   function copySolana() {
     if (!publicKey) return;
-    navigator.clipboard.writeText(publicKey.toString());
-    toast.success("Solana address copied");
+    navigator.clipboard.writeText(publicKey.toString()).then(
+      () => toast.success("Solana address copied"),
+      () => toast.error("Failed to copy address")
+    );
   }
 
   function copyEvm() {
     if (!evmAddress) return;
-    navigator.clipboard.writeText(evmAddress);
-    toast.success("EVM address copied");
+    navigator.clipboard.writeText(evmAddress).then(
+      () => toast.success("EVM address copied"),
+      () => toast.error("Failed to copy address")
+    );
   }
 
   async function handleDisconnect() {

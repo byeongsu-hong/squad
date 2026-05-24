@@ -13,7 +13,6 @@ import Image from "next/image";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
 import { useBrowserWallet } from "@/lib/hooks/use-browser-wallet";
 import { okxWalletService } from "@/lib/okx-wallet";
 import { cn } from "@/lib/utils";
@@ -109,7 +108,7 @@ function DetectedBadge() {
   );
 }
 
-function InstallLink({ url, children }: { url: string; children: React.ReactNode }) {
+function InstallLink({ children }: { url: string; children: React.ReactNode }) {
   return (
     <span className="inline-flex items-center gap-1 text-muted-foreground/70">
       {children}

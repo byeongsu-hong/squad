@@ -92,15 +92,6 @@ function ConnectorIcon({ icon, name }: { icon?: string; name: string }) {
   );
 }
 
-function DetectedBadge() {
-  return (
-    <span className="inline-flex items-center gap-1">
-      <span className="inline-block h-1.5 w-1.5 rounded-full bg-green-500" />
-      Detected
-    </span>
-  );
-}
-
 function isWalletConnect(connector: Connector) {
   return (
     connector.id === "walletConnect" ||
@@ -197,7 +188,7 @@ export function EvmConnectPanel({ onClose }: EvmConnectPanelProps) {
 
       {inlineConnectors.length > 0 && (
         <div className="flex flex-col gap-2">
-          <SectionLabel>Installed</SectionLabel>
+          <SectionLabel>Wallets</SectionLabel>
           {inlineConnectors.map((connector) => (
             <WalletRow
               key={connector.id}
@@ -205,7 +196,6 @@ export function EvmConnectPanel({ onClose }: EvmConnectPanelProps) {
                 <ConnectorIcon icon={connector.icon} name={connector.name} />
               }
               name={connector.name}
-              subtitle={<DetectedBadge />}
               isLoading={connectingId === connector.id}
               disabled={isAnyConnecting}
               onClick={() => handleConnect(connector)}

@@ -65,6 +65,7 @@ export function ConnectWalletDialog({
               {(["solana", "ethereum"] as const).map((tab) => (
                 <button
                   key={tab}
+                  type="button"
                   role="tab"
                   aria-selected={activeTab === tab}
                   onClick={() => setActiveTab(tab)}
