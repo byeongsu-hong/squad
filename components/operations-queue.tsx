@@ -223,33 +223,33 @@ function QueueRow({
           onClick={(e) => e.stopPropagation()}
         >
           {onExecute && item.readyToExecute ? (
-            <button
-              type="button"
+            <Button
+              size="xs"
               disabled={isActioning}
               onClick={onExecute}
-              className="bg-emerald-600 text-white hover:bg-emerald-500 inline-flex h-6 items-center gap-1 rounded px-2 text-[10px] font-semibold transition-colors disabled:opacity-50"
+              className="bg-emerald-600 text-white hover:bg-emerald-500 border-emerald-700/30 font-semibold"
             >
               {isActioning ? (
-                <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                <Loader2 className="animate-spin" />
               ) : (
-                <Zap className="h-2.5 w-2.5" />
+                <Zap />
               )}
               Execute
-            </button>
+            </Button>
           ) : onApprove && item.needsYourSignature && !item.currentUserApproved ? (
-            <button
-              type="button"
+            <Button
+              size="xs"
               disabled={isActioning}
               onClick={onApprove}
-              className="bg-primary text-primary-foreground hover:bg-primary/80 inline-flex h-6 items-center gap-1 rounded px-2 text-[10px] font-semibold transition-colors disabled:opacity-50"
+              className="bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20 font-semibold"
             >
               {isActioning ? (
-                <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                <Loader2 className="animate-spin" />
               ) : (
-                <Check className="h-2.5 w-2.5" />
+                <Check />
               )}
               Approve
-            </button>
+            </Button>
           ) : null}
         </div>
       )}
@@ -444,22 +444,24 @@ export function OperationsQueue({
         <div className="mb-3 flex flex-wrap items-center gap-2">
           <div className="flex flex-wrap items-center gap-1">
             {STATUS_FILTERS.map((f) => (
-              <button
+              <Button
                 key={f}
                 type="button"
+                size="sm"
                 onClick={() => {
                   setStatusFilter(f);
                   resetPage();
                 }}
                 className={cn(
-                  "rounded-full px-3 py-1 text-[11px] font-medium transition-colors",
+                  "h-7 rounded-full px-3 text-[11px] font-medium",
                   statusFilter === f
-                    ? "bg-foreground text-background"
-                    : "border-border text-muted-foreground hover:text-foreground border"
+                    ? "bg-foreground text-background hover:bg-foreground/90 border-foreground/20"
+                    : ""
                 )}
+                variant={statusFilter === f ? undefined : "outline"}
               >
                 {f}
-              </button>
+              </Button>
             ))}
           </div>
           {chainOptions.length > 1 && (

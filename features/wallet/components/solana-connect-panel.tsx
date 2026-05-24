@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { Button } from "@/components/ui/button";
 import { okxWalletService } from "@/lib/okx-wallet";
 import { useWalletStore } from "@/stores/wallet-store";
 
@@ -90,14 +91,16 @@ export function SolanaConnectPanel({
         <div className="border-destructive/20 bg-destructive/5 flex items-start gap-3 rounded-xl border px-4 py-3">
           <AlertCircle className="text-destructive mt-0.5 h-4 w-4 shrink-0" />
           <p className="text-destructive flex-1 text-sm">{error}</p>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon-sm"
             onClick={() => setError(null)}
-            className="text-destructive/60 hover:text-destructive shrink-0 transition-colors"
+            className="text-destructive/60 hover:text-destructive hover:bg-destructive/10 h-7 w-7 shrink-0 rounded-md"
             aria-label="Dismiss error"
           >
             <X className="h-4 w-4" />
-          </button>
+          </Button>
         </div>
       )}
 

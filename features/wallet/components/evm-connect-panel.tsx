@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useAccount, useConnect } from "wagmi";
 import type { Connector } from "wagmi";
 
+import { Button } from "@/components/ui/button";
 import { formatAddress } from "@/lib/utils/format-address";
 
 import { useWcUri } from "../hooks/use-wc-uri";
@@ -110,14 +111,16 @@ export function EvmConnectPanel({ onClose }: EvmConnectPanelProps) {
           <div className="border-destructive/20 bg-destructive/5 flex items-start gap-3 rounded-xl border px-4 py-3">
             <AlertCircle className="text-destructive mt-0.5 h-4 w-4 shrink-0" />
             <p className="text-destructive flex-1 text-sm">{error}</p>
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon-sm"
               onClick={() => setError(null)}
-              className="text-destructive/60 hover:text-destructive shrink-0 transition-colors"
+              className="text-destructive/60 hover:text-destructive hover:bg-destructive/10 h-7 w-7 shrink-0 rounded-md"
               aria-label="Dismiss error"
             >
               <X className="h-4 w-4" />
-            </button>
+            </Button>
           </div>
         )}
 

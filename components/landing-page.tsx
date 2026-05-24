@@ -67,7 +67,7 @@ export function LandingPage() {
             </span>
           )}
           {executableCount > 0 && (
-            <span className="text-emerald-600 text-sm font-semibold tabular-nums dark:text-emerald-400">
+            <span className="text-sm font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
               {executableCount} ready
             </span>
           )}
