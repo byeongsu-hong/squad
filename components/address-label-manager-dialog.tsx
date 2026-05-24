@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useAddressLabels } from "@/lib/hooks/use-address-label";
 import { cn } from "@/lib/utils";
 import type { AddressLabel } from "@/types/address-label";
@@ -284,7 +285,7 @@ function AddressLabelEditor({
 
       <form onSubmit={onSubmit} className="space-y-3.5">
         <div className="space-y-2">
-          <label htmlFor="address" className="text-foreground/80 text-xs font-medium">Address</label>
+          <Label htmlFor="address">Address</Label>
           <Input
             id="address"
             placeholder="Enter Solana address"
@@ -298,7 +299,7 @@ function AddressLabelEditor({
         </div>
 
         <div className="space-y-2">
-          <label htmlFor="label" className="text-foreground/80 text-xs font-medium">Label (max 12 chars)</label>
+          <Label htmlFor="label">Label <span className="text-muted-foreground/50 font-normal">(max 12 chars)</span></Label>
           <Input
             id="label"
             placeholder="Enter label name"
@@ -312,7 +313,7 @@ function AddressLabelEditor({
         </div>
 
         <div className="space-y-2">
-          <label htmlFor="description" className="text-foreground/80 text-xs font-medium">Description (Optional)</label>
+          <Label htmlFor="description">Description <span className="text-muted-foreground/50 font-normal">(Optional)</span></Label>
           <Input
             id="description"
             placeholder="Add description"
@@ -324,7 +325,7 @@ function AddressLabelEditor({
         </div>
 
         <div className="space-y-2">
-          <label className="text-foreground/80 text-xs font-medium">Color</label>
+          <Label>Color</Label>
           <div className="flex flex-wrap gap-2">
             {DEFAULT_COLORS.map((color) => (
               <Button

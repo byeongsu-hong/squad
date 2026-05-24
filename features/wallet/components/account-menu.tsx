@@ -12,6 +12,7 @@ import {
 import { toast } from "sonner";
 import { useAccount } from "wagmi";
 
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -77,18 +78,17 @@ export function AccountMenu({ onAddWallet }: AccountMenuProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button
+        <Button
+          variant="outline"
           className={cn(
-            "border-border bg-card flex items-center gap-2 rounded-full border",
-            "text-muted-foreground px-3.5 py-1.5 font-mono text-[12px] shadow-sm",
-            "hover:bg-muted hover:border-border/80 transition-all hover:shadow-none",
-            "focus-visible:ring-ring focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+            "rounded-full px-3.5 py-1.5 h-auto font-mono text-[12px]",
+            "text-muted-foreground shadow-sm hover:shadow-none"
           )}
         >
           <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
           {primaryLabel}
           <ChevronDown className="text-muted-foreground/60 h-3 w-3" />
-        </button>
+        </Button>
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end" className="w-72 p-1.5">
@@ -109,7 +109,7 @@ export function AccountMenu({ onAddWallet }: AccountMenuProps) {
                 <p className="truncate text-sm font-medium">
                   {walletName ?? "Solana Wallet"}
                 </p>
-                <span className="text-muted-foreground bg-muted shrink-0 rounded px-1.5 py-0.5 font-sans text-[10px]">
+                <span className="border-primary/30 bg-primary/10 text-primary shrink-0 rounded px-1.5 py-0.5 font-sans text-[10px]">
                   SVM
                 </span>
               </div>
@@ -117,16 +117,18 @@ export function AccountMenu({ onAddWallet }: AccountMenuProps) {
                 {formatAddress(publicKey.toString(), 8, 6)}
               </p>
               <div className="mt-1.5 flex items-center gap-2">
-                <button
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="text-muted-foreground hover:text-foreground h-auto gap-1 p-0 text-[11px] font-normal"
                   onClick={(e) => {
                     e.stopPropagation();
                     copySolana();
                   }}
-                  className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-[11px] transition-colors"
                 >
                   <Copy className="h-3 w-3" />
                   Copy
-                </button>
+                </Button>
                 <span className="text-muted-foreground/30">·</span>
                 <a
                   href={`https://solscan.io/account/${publicKey.toString()}`}
@@ -156,7 +158,7 @@ export function AccountMenu({ onAddWallet }: AccountMenuProps) {
                 <p className="truncate text-sm font-medium">
                   {connector?.name ?? "Ethereum Wallet"}
                 </p>
-                <span className="text-muted-foreground bg-muted shrink-0 rounded px-1.5 py-0.5 font-sans text-[10px]">
+                <span className="border-blue-300/50 bg-blue-50 text-blue-700 dark:border-blue-700/30 dark:bg-blue-950/30 dark:text-blue-400 shrink-0 rounded px-1.5 py-0.5 font-sans text-[10px]">
                   EVM
                 </span>
               </div>
@@ -164,16 +166,18 @@ export function AccountMenu({ onAddWallet }: AccountMenuProps) {
                 {formatAddress(evmAddress, 8, 6)}
               </p>
               <div className="mt-1.5 flex items-center gap-2">
-                <button
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="text-muted-foreground hover:text-foreground h-auto gap-1 p-0 text-[11px] font-normal"
                   onClick={(e) => {
                     e.stopPropagation();
                     copyEvm();
                   }}
-                  className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-[11px] transition-colors"
                 >
                   <Copy className="h-3 w-3" />
                   Copy
-                </button>
+                </Button>
                 <span className="text-muted-foreground/30">·</span>
                 <a
                   href={`https://etherscan.io/address/${evmAddress}`}

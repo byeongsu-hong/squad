@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 import { EvmConnectPanel } from "./evm-connect-panel";
@@ -59,21 +60,22 @@ export function ConnectWalletDialog({
               className="bg-muted flex items-center gap-0.5 rounded-lg p-1"
             >
               {(["solana", "ethereum"] as const).map((tab) => (
-                <button
+                <Button
                   key={tab}
                   type="button"
+                  variant="ghost"
                   role="tab"
                   aria-selected={activeTab === tab}
                   onClick={() => setActiveTab(tab)}
                   className={cn(
-                    "flex-1 rounded-md py-1.5 text-sm font-medium transition-all",
+                    "h-auto flex-1 rounded-md py-1.5 text-sm font-medium transition-all",
                     activeTab === tab
-                      ? "bg-card text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
+                      ? "bg-card text-foreground shadow-sm hover:bg-card"
+                      : "text-muted-foreground hover:text-foreground hover:bg-transparent"
                   )}
                 >
                   {tab === "solana" ? "Solana" : "Ethereum"}
-                </button>
+                </Button>
               ))}
             </div>
 
