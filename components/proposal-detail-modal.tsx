@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import { type ReactNode, useState } from "react";
 
+import { Button } from "@/components/ui/button";
+
 import { AddressWithLabel } from "@/components/address-with-label";
 import { useProposalActions } from "@/lib/hooks/use-proposal-actions";
 import { useViewerAddressForMultisig } from "@/lib/hooks/use-viewer-address";
@@ -177,7 +179,7 @@ export function ProposalDetailView({
         {!isComplete && actionsSupported && (
           <div className="border-border/60 space-y-2 border-b px-5 py-4">
             {executeSupported && readyToExecute && (
-              <button
+              <Button
                 onClick={() =>
                   executeByAddress(
                     multisig.address,
@@ -186,14 +188,14 @@ export function ProposalDetailView({
                   )
                 }
                 disabled={isActionInProgress}
-                className="flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 py-2.5 text-sm font-bold text-white transition-colors hover:bg-emerald-500 disabled:opacity-50"
+                className="w-full bg-emerald-600 text-white hover:bg-emerald-500 border-emerald-700/30 font-bold"
               >
                 {isExecuteLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                 Execute Transaction
-              </button>
+              </Button>
             )}
             {approveSupported && !currentUserApproved && needsYourSignature && (
-              <button
+              <Button
                 onClick={() =>
                   approveByAddress(
                     multisig.address,
@@ -202,7 +204,7 @@ export function ProposalDetailView({
                   )
                 }
                 disabled={isActionInProgress}
-                className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-2.5 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+                className="w-full bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20 font-bold"
               >
                 {isApproveLoading ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -210,10 +212,11 @@ export function ProposalDetailView({
                   <Check className="h-3.5 w-3.5" />
                 )}
                 {multisig.provider === "safe" ? "Confirm" : "Approve"}
-              </button>
+              </Button>
             )}
             {rejectSupported && needsYourSignature && (
-              <button
+              <Button
+                variant="outline"
                 onClick={() =>
                   rejectByAddress(
                     multisig.address,
@@ -222,11 +225,11 @@ export function ProposalDetailView({
                   )
                 }
                 disabled={isActionInProgress}
-                className="border-border text-muted-foreground flex w-full items-center justify-center gap-2 rounded-lg border py-2 text-sm transition-colors hover:bg-muted disabled:opacity-50"
+                className="w-full"
               >
                 {isRejectLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                 Reject
-              </button>
+              </Button>
             )}
             {currentUserApproved && !readyToExecute && (
               <div className="flex items-center justify-center gap-2 rounded-lg bg-muted py-2.5 text-sm text-muted-foreground">

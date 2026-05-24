@@ -4,6 +4,7 @@ import { Check, Inbox, Loader2, Zap } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { ProposalDetailView } from "@/components/proposal-detail-modal";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Pagination } from "@/components/ui/pagination";
@@ -709,11 +710,11 @@ export function OperationsQueue({
             </div>
             <div className="flex items-center gap-2">
               {canApproveItems.length > 0 && (
-                <button
-                  type="button"
+                <Button
+                  size="sm"
                   disabled={isActionInProgress}
                   onClick={handleBatchApprove}
-                  className="bg-primary text-primary-foreground hover:bg-primary/80 inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-[13px] font-medium transition-colors disabled:pointer-events-none disabled:opacity-50"
+                  className="bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20"
                 >
                   {isActionInProgress ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -721,14 +722,14 @@ export function OperationsQueue({
                     <Check className="h-3.5 w-3.5" />
                   )}
                   Approve ({canApproveItems.length})
-                </button>
+                </Button>
               )}
               {canExecuteItems.length > 0 && (
-                <button
-                  type="button"
+                <Button
+                  size="sm"
                   disabled={isActionInProgress}
                   onClick={handleBatchExecute}
-                  className="bg-emerald-600 text-white hover:bg-emerald-500 inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-[13px] font-medium transition-colors disabled:pointer-events-none disabled:opacity-50"
+                  className="bg-emerald-600 text-white hover:bg-emerald-500 border-emerald-700/30"
                 >
                   {isActionInProgress ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -736,15 +737,16 @@ export function OperationsQueue({
                     <Zap className="h-3.5 w-3.5" />
                   )}
                   Execute ({canExecuteItems.length})
-                </button>
+                </Button>
               )}
-              <button
-                type="button"
+              <Button
+                size="sm"
+                variant="ghost"
                 onClick={() => setSelected(new Set())}
-                className="border-background/20 text-background/70 hover:border-background/30 hover:text-background inline-flex h-8 items-center rounded-md border px-3 text-[13px] font-medium transition-colors"
+                className="text-background/70 hover:text-background hover:bg-background/10 border-background/20"
               >
                 Clear
-              </button>
+              </Button>
             </div>
           </div>
         </div>
