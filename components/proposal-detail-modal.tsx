@@ -9,6 +9,7 @@ import {
   X,
   Zap,
 } from "lucide-react";
+import Link from "next/link";
 import { type ReactNode, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -138,9 +139,13 @@ export function ProposalDetailView({
           <div className="min-w-0 flex-1">
             {/* Vault label + tx index + status pill */}
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-foreground truncate font-semibold leading-snug">
+              <Link
+                href={`/vaults/${encodeURIComponent(multisig.key)}`}
+                className="text-foreground truncate font-semibold leading-snug hover:underline"
+                onClick={onBack}
+              >
                 {multisig.label || "Unnamed"}
-              </span>
+              </Link>
               <span className="text-muted-foreground shrink-0 font-mono text-sm">
                 #{proposal.transactionIndex.toString()}
               </span>
