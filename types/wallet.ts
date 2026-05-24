@@ -13,9 +13,6 @@ export interface WalletState {
   walletName?: string;
   derivationPath?: string;
   deviceModel?: string;
-  evmConnected: boolean;
-  evmAddress: string | null;
-  evmWalletName?: string;
 }
 
 export interface LedgerAccount {

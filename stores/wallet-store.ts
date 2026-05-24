@@ -8,7 +8,6 @@ import {
 } from "@/lib/wallet-serialization";
 import type { WalletState } from "@/types/wallet";
 import { WalletType } from "@/types/wallet";
-import type { WorkspaceProviderId } from "@/types/workspace";
 
 interface WalletStore extends WalletState {
   connectLedger: (
@@ -21,9 +20,7 @@ interface WalletStore extends WalletState {
     walletName: string
   ) => void;
   connectOkx: (publicKey: WalletState["publicKey"]) => void;
-  connectEvm: (address: string, walletName?: string) => void;
   disconnect: () => void;
-  getWalletAddressForProvider: (provider: WorkspaceProviderId) => string | null;
 }
 
 const initialState: WalletState = {
@@ -33,14 +30,11 @@ const initialState: WalletState = {
   walletName: undefined,
   derivationPath: undefined,
   deviceModel: undefined,
-  evmConnected: false,
-  evmAddress: null,
-  evmWalletName: undefined,
 };
 
 export const useWalletStore = create<WalletStore>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       ...initialState,
 
       connectLedger: (publicKey, derivationPath, deviceModel) => {
@@ -76,23 +70,8 @@ export const useWalletStore = create<WalletStore>()(
         });
       },
 
-      connectEvm: (address, walletName) => {
-        set({
-          evmConnected: true,
-          evmAddress: address,
-          evmWalletName: walletName,
-        });
-      },
-
       disconnect: () => {
         set(initialState);
-      },
-
-      getWalletAddressForProvider: (provider): string | null => {
-        const state = get();
-        return provider === "safe"
-          ? state.evmAddress
-          : (state.publicKey?.toString() ?? null);
       },
     }),
     {
