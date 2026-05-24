@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
+import { Inbox, Loader2 } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { ProposalDetailView } from "@/components/proposal-detail-modal";
@@ -410,7 +410,6 @@ export function OperationsQueue({
               </button>
             ))}
           </div>
-          <div className="bg-border mx-1 h-5 w-px" />
           {chainOptions.length > 1 && (
             <select
               value={chainFilter}
@@ -453,7 +452,7 @@ export function OperationsQueue({
               setSearch(e.target.value);
               resetPage();
             }}
-            className="border-border bg-card text-foreground/80 placeholder:text-muted-foreground/70 focus:ring-border ml-auto rounded-md border px-3 py-1.5 text-[12px] focus:ring-1 focus:outline-none"
+            className="border-border bg-card text-foreground/80 placeholder:text-muted-foreground/70 focus:ring-border rounded-md border px-3 py-1.5 text-[12px] focus:ring-1 focus:outline-none sm:w-44"
           />
         </div>
       )}
@@ -474,10 +473,15 @@ export function OperationsQueue({
       )}
 
       {filtered.length === 0 ? (
-        <div className="border-border text-muted-foreground/70 rounded-xl border border-dashed px-6 py-8 text-center text-sm">
-          {items.length === 0
-            ? "No transactions found."
-            : "No transactions match your filters."}
+        <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
+          <div className="bg-card border-border flex h-12 w-12 items-center justify-center rounded-2xl border shadow-sm">
+            <Inbox className="text-muted-foreground/40 h-5 w-5" />
+          </div>
+          <p className="text-muted-foreground text-sm">
+            {items.length === 0
+              ? "No transactions found."
+              : "No transactions match your filters."}
+          </p>
         </div>
       ) : (
         <div className="space-y-4">

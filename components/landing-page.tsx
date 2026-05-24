@@ -58,25 +58,20 @@ export function LandingPage() {
   return (
     <div className="bg-background min-h-[calc(100svh-4.5rem)]">
       <div className="mx-auto max-w-[1200px]">
-        <div className="border-border mb-5 flex flex-wrap items-baseline justify-between gap-3 border-b pb-4">
+        <div className="border-border mb-5 flex items-baseline gap-3 border-b pb-4">
           <h1 className="text-foreground text-2xl font-bold tracking-[-0.02em]">
             Operations
           </h1>
-          <div className="flex items-center gap-3">
-            {pendingCount > 0 && (
-              <span className="text-primary text-sm font-semibold tabular-nums">
-                {pendingCount} pending
-              </span>
-            )}
-            {executableCount > 0 && (
-              <span className="text-emerald-600 text-sm font-semibold tabular-nums dark:text-emerald-400">
-                {executableCount} executable
-              </span>
-            )}
-            <span className="text-muted-foreground/60 text-sm tabular-nums">
-              {queueItems.length} total
+          {pendingCount > 0 && (
+            <span className="text-primary text-sm font-semibold tabular-nums">
+              {pendingCount} pending
             </span>
-          </div>
+          )}
+          {executableCount > 0 && (
+            <span className="text-emerald-600 text-sm font-semibold tabular-nums dark:text-emerald-400">
+              {executableCount} ready
+            </span>
+          )}
         </div>
 
         <OperationsQueue items={queueItems} loading={loading} showFilters />

@@ -27,17 +27,6 @@ const TABS: {
   { id: "labels", label: "Label manager", icon: Tag },
 ];
 
-function StatPill({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="border-border bg-card flex flex-col items-center rounded-lg border px-3 py-1.5 shadow-sm">
-      <p className="text-muted-foreground/70 text-[9px] font-semibold tracking-widest uppercase">
-        {label}
-      </p>
-      <p className="text-foreground text-sm font-bold">{value}</p>
-    </div>
-  );
-}
-
 function SettingsPageContent() {
   const pathname = usePathname();
   const router = useRouter();
@@ -69,21 +58,11 @@ function SettingsPageContent() {
   );
 
   return (
-    <div className="min-h-full space-y-0">
-      <div className="border-border flex flex-col gap-4 border-b pb-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0 space-y-1">
-          <h1 className="text-foreground text-2xl font-bold tracking-tight">
-            Settings
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            Network definitions, registry data, and address naming.
-          </p>
-        </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <StatPill label="Chains" value={String(chains.length)} />
-          <StatPill label="Multisigs" value={String(multisigs.length)} />
-          <StatPill label="Labels" value={String(labels.length)} />
-        </div>
+    <div className="mx-auto max-w-[1200px] space-y-0">
+      <div className="border-border border-b pb-4">
+        <h1 className="text-foreground text-2xl font-bold tracking-[-0.02em]">
+          Settings
+        </h1>
       </div>
 
       <div className="border-border -mb-px border-b">

@@ -6,7 +6,7 @@ import { MultisigList } from "@/components/multisig-list";
 
 function VaultsContent() {
   return (
-    <div className="min-h-full">
+    <div className="mx-auto max-w-[1200px]">
       <MultisigList />
     </div>
   );

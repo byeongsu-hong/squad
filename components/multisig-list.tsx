@@ -38,7 +38,7 @@ import {
   matchesMultisigSelectionKey,
 } from "@/types/multisig";
 
-const GRID_COLS = "36px 1.5fr 1.1fr 80px 1fr 90px";
+const GRID_COLS = "36px minmax(0,1.5fr) 148px 96px minmax(0,1fr) 90px";
 
 function formatProviderLabel(provider: RegistrySummaryRow["multisigProvider"]) {
   return provider === "safe" ? "Safe" : "Squads";
