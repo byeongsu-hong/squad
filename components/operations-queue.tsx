@@ -12,12 +12,14 @@ import { cn } from "@/lib/utils";
 import type { WorkspaceQueueItem } from "@/types/workspace";
 
 const PAGE_SIZE = 15;
-const GRID_COLS = "36px 1.4fr 54px 80px 1fr 80px 48px";
+const GRID_COLS_FULL = "36px 1.4fr 54px 80px 1fr 80px 48px";
+const GRID_COLS_COMPACT = "36px 54px 80px 1fr 80px 48px";
 
 interface OperationsQueueProps {
   items: WorkspaceQueueItem[];
   loading?: boolean;
   showFilters?: boolean;
+  compact?: boolean;
 }
 
 function formatAge(createdAt?: string): string {
@@ -98,15 +100,20 @@ function ColumnHeaders({
   selectable,
   allSelected,
   onToggleAll,
+  compact = false,
 }: {
   selectable: boolean;
   allSelected: boolean;
   onToggleAll: () => void;
+  compact?: boolean;
 }) {
+  const cols = compact
+    ? ["TX", "Chain", "Status", "Progress", "Age"]
+    : ["Multisig", "TX", "Chain", "Status", "Progress", "Age"];
   return (
     <div
       className="border-border bg-background grid items-center border-b px-3 py-2"
-      style={{ gridTemplateColumns: GRID_COLS }}
+      style={{ gridTemplateColumns: compact ? GRID_COLS_COMPACT : GRID_COLS_FULL }}
     >
       <div className="flex items-center justify-center">
         {selectable && (
@@ -118,7 +125,7 @@ function ColumnHeaders({
           />
         )}
       </div>
-      {["Multisig", "TX", "Chain", "Status", "Progress", "Age"].map((h) => (
+      {cols.map((h) => (
         <span
           key={h}
           className="text-muted-foreground/70 text-[10px] font-semibold tracking-widest uppercase"
@@ -136,12 +143,14 @@ function QueueRow({
   isSelectable,
   onToggle,
   onClick,
+  compact = false,
 }: {
   item: WorkspaceQueueItem;
   isSelected: boolean;
   isSelectable: boolean;
   onToggle: () => void;
   onClick: () => void;
+  compact?: boolean;
 }) {
   return (
     <div
@@ -149,7 +158,7 @@ function QueueRow({
         "grid cursor-pointer items-center px-3 py-2.5 transition-colors",
         isSelected ? "bg-primary/8" : "hover:bg-muted"
       )}
-      style={{ gridTemplateColumns: GRID_COLS }}
+      style={{ gridTemplateColumns: compact ? GRID_COLS_COMPACT : GRID_COLS_FULL }}
       onClick={onClick}
     >
       <div
@@ -170,14 +179,16 @@ function QueueRow({
           />
         )}
       </div>
-      <div className="min-w-0 pr-2">
-        <p className="text-foreground truncate text-[13px] font-medium">
-          {item.multisig.label ?? "Unnamed"}
-        </p>
-        <p className="text-muted-foreground truncate text-[10px]">
-          {item.multisig.provider === "safe" ? "Safe" : "Squads"}
-        </p>
-      </div>
+      {!compact && (
+        <div className="min-w-0 pr-2">
+          <p className="text-foreground truncate text-[13px] font-medium">
+            {item.multisig.label ?? "Unnamed"}
+          </p>
+          <p className="text-muted-foreground truncate text-[10px]">
+            {item.multisig.provider === "safe" ? "Safe" : "Squads"}
+          </p>
+        </div>
+      )}
       <span className="text-muted-foreground font-mono text-xs">
         #{item.proposal.transactionIndex.toString()}
       </span>
@@ -195,17 +206,19 @@ function QueueRow({
   );
 }
 
-function RowSkeleton() {
+function RowSkeleton({ compact = false }: { compact?: boolean }) {
   return (
     <div
       className="grid items-center px-3 py-2.5"
-      style={{ gridTemplateColumns: GRID_COLS }}
+      style={{ gridTemplateColumns: compact ? GRID_COLS_COMPACT : GRID_COLS_FULL }}
     >
       <div />
-      <div className="space-y-1 pr-2">
-        <Skeleton className="h-3 w-24 rounded-sm" />
-        <Skeleton className="h-2.5 w-10 rounded-sm" />
-      </div>
+      {!compact && (
+        <div className="space-y-1 pr-2">
+          <Skeleton className="h-3 w-24 rounded-sm" />
+          <Skeleton className="h-2.5 w-10 rounded-sm" />
+        </div>
+      )}
       <Skeleton className="h-3 w-8 rounded-sm" />
       <Skeleton className="h-3 w-16 rounded-sm" />
       <Skeleton className="h-4 w-20 rounded-full" />
@@ -229,6 +242,7 @@ export function OperationsQueue({
   items,
   loading = false,
   showFilters = false,
+  compact = false,
 }: OperationsQueueProps) {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("All");
   const [chainFilter, setChainFilter] = useState("All");
@@ -361,10 +375,11 @@ export function OperationsQueue({
           selectable={false}
           allSelected={false}
           onToggleAll={() => {}}
+          compact={compact}
         />
         <div className="divide-border/50 divide-y">
           {Array.from({ length: 6 }).map((_, i) => (
-            <RowSkeleton key={i} />
+            <RowSkeleton key={i} compact={compact} />
           ))}
         </div>
       </div>
@@ -482,6 +497,7 @@ export function OperationsQueue({
                   selectable
                   allSelected={allSelected}
                   onToggleAll={toggleSelectAll}
+                  compact={compact}
                 />
                 <div className="divide-border/50 divide-y">
                   {actionItems.map((item) => (
@@ -492,6 +508,7 @@ export function OperationsQueue({
                       isSelectable
                       onToggle={() => toggleSelect(item.focusKey)}
                       onClick={() => setSelectedItem(item)}
+                      compact={compact}
                     />
                   ))}
                 </div>
@@ -511,6 +528,7 @@ export function OperationsQueue({
                   selectable={false}
                   allSelected={false}
                   onToggleAll={() => {}}
+                  compact={compact}
                 />
                 <div className="divide-border/50 divide-y">
                   {paginatedHistory.map((item) => (
@@ -521,6 +539,7 @@ export function OperationsQueue({
                       isSelectable={false}
                       onToggle={() => {}}
                       onClick={() => setSelectedItem(item)}
+                      compact={compact}
                     />
                   ))}
                 </div>

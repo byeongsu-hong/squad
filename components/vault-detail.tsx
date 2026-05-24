@@ -190,6 +190,7 @@ export function VaultDetail({ vaultKey }: VaultDetailProps) {
           items={vaultItems}
           loading={loading}
           showFilters={false}
+          compact
         />
       </div>
     </div>
