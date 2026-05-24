@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
-import { AddressWithLabel } from "@/components/address-with-label";
 import { OperationsQueue } from "@/components/operations-queue";
 import { useProposalsQuery } from "@/lib/hooks/use-proposals-query";
 import { useViewerAddressForMultisig } from "@/lib/hooks/use-viewer-address";
@@ -44,15 +43,6 @@ function CopyButton({ value }: { value: string }) {
 function truncateAddress(address: string) {
   if (address.length <= 12) return address;
   return `${address.slice(0, 6)}…${address.slice(-4)}`;
-}
-
-function AvatarPlaceholder({ address }: { address: string }) {
-  const initials = address.slice(0, 2).toUpperCase();
-  return (
-    <div className="bg-primary/10 text-primary flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold">
-      {initials}
-    </div>
-  );
 }
 
 export function VaultDetail({ vaultKey }: VaultDetailProps) {
@@ -160,32 +150,6 @@ export function VaultDetail({ vaultKey }: VaultDetailProps) {
           )}
         </p>
       </div>
-
-      {/* Signers list */}
-      {multisig.members.length > 0 && (
-        <div className="bg-card border-border rounded-2xl border p-4">
-          <p className="text-muted-foreground/70 mb-3 text-[10px] font-semibold uppercase tracking-widest">
-            Signers ({multisig.members.length})
-          </p>
-          <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-            {multisig.members.map((member) => (
-              <div
-                key={member.address}
-                className="bg-muted/40 flex items-center gap-3 rounded-lg px-3 py-2.5"
-              >
-                <AvatarPlaceholder address={member.address} />
-                <div className="min-w-0 flex-1">
-                  <AddressWithLabel
-                    address={member.address}
-                    showCopy
-                    showLabelButton
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Operations section */}
       <div>
