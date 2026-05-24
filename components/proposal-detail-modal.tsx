@@ -25,6 +25,8 @@ import {
   supportsProviderCapability,
 } from "@/lib/workspace/provider-adapters";
 import { useChainStore } from "@/stores/chain-store";
+import { useAccount } from "wagmi";
+
 import { useWalletStore } from "@/stores/wallet-store";
 import type { WorkspaceQueueItem } from "@/types/workspace";
 
@@ -45,7 +47,8 @@ export function ProposalDetailModal({
   const [signersExpanded, setSignersExpanded] = useState(false);
 
   const { chains } = useChainStore();
-  const { publicKey, getWalletAddressForProvider } = useWalletStore();
+  const { publicKey } = useWalletStore();
+  const { address: evmAddress } = useAccount();
 
   const { loading: payloadLoading, payload, error: payloadError } =
     useWorkspacePayload({
@@ -98,7 +101,8 @@ export function ProposalDetailModal({
   const visibleMembers = signersExpanded
     ? multisig.members
     : multisig.members.slice(0, 5);
-  const currentUserAddress = getWalletAddressForProvider(multisig.provider) ?? publicKey?.toString() ?? null;
+  const currentUserAddress =
+    (multisig.provider === "safe" ? evmAddress : publicKey?.toString()) ?? null;
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
