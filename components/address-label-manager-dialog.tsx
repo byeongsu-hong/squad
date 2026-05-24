@@ -404,7 +404,7 @@ function AddressLabelRegistry({
       >
         {filteredLabels.length === 0 ? (
           <div className="flex h-full min-h-[12rem] flex-col items-center justify-center gap-3 text-center">
-            <div className="bg-background border-border flex h-10 w-10 items-center justify-center rounded-2xl border shadow-sm">
+            <div className="bg-muted border-border flex h-10 w-10 items-center justify-center rounded-2xl border">
               <Tag className="text-muted-foreground/60 h-5 w-5" />
             </div>
             <p className="text-muted-foreground/60 text-sm">

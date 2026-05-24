@@ -60,7 +60,7 @@ function formatProviderLabel(provider: RegistrySummaryRow["multisigProvider"]) {
 function VaultColumnHeaders() {
   return (
     <div
-      className="border-border bg-background grid items-center border-b px-3 py-2"
+      className="border-border bg-muted/60 grid items-center border-b px-3 py-2"
       style={{ gridTemplateColumns: GRID_COLS }}
     >
       <div />
