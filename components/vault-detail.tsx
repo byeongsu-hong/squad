@@ -1,16 +1,19 @@
 "use client";
 
-import { ChevronLeft, Copy, Check, X } from "lucide-react";
+import { ChevronLeft, Copy, Check, X, Users } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 import { OperationsQueue } from "@/components/operations-queue";
+import { useAddressLabel } from "@/lib/hooks/use-address-label";
 import { useProposalsQuery } from "@/lib/hooks/use-proposals-query";
 import { useViewerAddressForMultisig } from "@/lib/hooks/use-viewer-address";
 import { useWorkspaceMultisigs } from "@/lib/hooks/use-workspace-multisigs";
 import { useWorkspaceQueue } from "@/lib/hooks/use-workspace-queue";
 import { useWalletStore } from "@/stores/wallet-store";
+import type { WorkspaceMultisig } from "@/types/workspace";
 
 interface VaultDetailProps {
   vaultKey: string;
@@ -46,8 +49,58 @@ function truncateAddress(address: string) {
   return `${address.slice(0, 6)}…${address.slice(-4)}`;
 }
 
+type MemberEntry = WorkspaceMultisig["members"][number];
+
+function MemberRow({ member, isViewer }: { member: MemberEntry; isViewer: boolean }) {
+  const addressLabel = useAddressLabel(member.address);
+  const labelText = addressLabel?.label ?? null;
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(member.address).then(
+      () => toast.success("Address copied"),
+      () => toast.error("Failed to copy")
+    );
+  };
+
+  return (
+    <div className="flex items-center gap-2 py-1.5">
+      <div
+        className={cn(
+          "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold",
+          isViewer ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground"
+        )}
+      >
+        {(labelText ?? member.address).slice(0, 1).toUpperCase()}
+      </div>
+      <div className="min-w-0 flex-1">
+        {labelText && (
+          <p className="truncate text-[12px] font-medium leading-tight">
+            {labelText}
+          </p>
+        )}
+        <p className={cn("font-mono text-[11px] text-muted-foreground/70", labelText && "leading-tight")}>
+          {truncateAddress(member.address)}
+        </p>
+      </div>
+      {isViewer && (
+        <span className="shrink-0 text-[9px] font-medium text-primary/70 uppercase tracking-wide">
+          you
+        </span>
+      )}
+      <button
+        type="button"
+        onClick={handleCopy}
+        className="text-muted-foreground/30 hover:text-muted-foreground shrink-0 transition-colors"
+        aria-label="Copy address"
+      >
+        <Copy className="h-3 w-3" />
+      </button>
+    </div>
+  );
+}
+
 export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
-  const { publicKey } = useWalletStore();
+  const { publicKey, connected } = useWalletStore();
   const getViewerAddress = useViewerAddressForMultisig();
   const { workspaceMultisigMap } = useWorkspaceMultisigs();
   const { proposals, loading, workspaceMultisigs } = useProposalsQuery();
@@ -106,9 +159,10 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
   }
 
   const isSquads = multisig.provider === "squads";
+  const viewerAddress = getViewerAddress(multisig.provider);
 
   return (
-    <div className="mx-auto max-w-[1200px] space-y-5">
+    <div className="mx-auto max-w-[1200px] space-y-4">
       {!onBack && BackLink}
 
       {/* Vault header card */}
@@ -158,6 +212,30 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
           </div>
         )}
       </div>
+
+      {/* Members */}
+      {multisig.members.length > 0 && (
+        <div className="bg-card border-border rounded-2xl border px-4 py-3">
+          <div className="mb-2 flex items-center gap-2">
+            <Users className="text-muted-foreground/50 h-3.5 w-3.5" />
+            <span className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">
+              Signers
+            </span>
+            <span className="text-muted-foreground/40 font-mono text-[11px]">
+              {multisig.threshold}/{multisig.members.length}
+            </span>
+          </div>
+          <div className="divide-border/60 divide-y">
+            {multisig.members.map((member) => (
+              <MemberRow
+                key={member.address}
+                member={member}
+                isViewer={viewerAddress === member.address}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Operations */}
       <OperationsQueue
