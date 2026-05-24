@@ -308,7 +308,7 @@ export function CreateMultisigDialog({
               )}
             />
 
-            <div className="bg-muted/40 border-border rounded-xl border space-y-3 px-4 py-4">
+            <div className="bg-muted border-border rounded-xl border space-y-3 px-4 py-4">
               <p className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">Signers</p>
 
               <FormField
