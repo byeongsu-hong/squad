@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, Copy, Check } from "lucide-react";
+import { ChevronLeft, Copy, Check, X } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -73,10 +73,10 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
     <button
       type="button"
       onClick={onBack}
-      className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm transition-colors"
+      className="text-muted-foreground/50 hover:text-foreground hover:bg-muted rounded-md p-1.5 transition-colors"
+      aria-label="Close"
     >
-      <ChevronLeft className="h-4 w-4" />
-      Back to Vaults
+      <X className="h-4 w-4" />
     </button>
   ) : (
     <Link
@@ -91,8 +91,11 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
   if (!multisig) {
     return (
       <div className="mx-auto max-w-[1200px]">
-        <div className="mb-6">{BackLink}</div>
+        {!onBack && <div className="mb-6">{BackLink}</div>}
         <div className="flex flex-col items-center gap-3 py-20 text-center">
+          {onBack && (
+            <div className="flex w-full justify-end px-2">{BackLink}</div>
+          )}
           <p className="text-foreground text-sm font-semibold">Vault not found</p>
           <p className="text-muted-foreground text-xs">
             It may have been removed from your registry.
@@ -106,7 +109,7 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
 
   return (
     <div className="mx-auto max-w-[1200px] space-y-5">
-      {BackLink}
+      {!onBack && BackLink}
 
       {/* Vault header card */}
       <div className="bg-card border-border rounded-2xl border p-5">
@@ -127,11 +130,14 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
               </span>
             </div>
           </div>
-          {pendingCount !== null && pendingCount > 0 && (
-            <span className="bg-primary/10 text-primary shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold">
-              {pendingCount} pending
-            </span>
-          )}
+          <div className="flex shrink-0 items-center gap-2">
+            {pendingCount !== null && pendingCount > 0 && (
+              <span className="bg-primary/10 text-primary rounded-full px-2.5 py-1 text-xs font-semibold">
+                {pendingCount} pending
+              </span>
+            )}
+            {onBack && BackLink}
+          </div>
         </div>
         <div className="mt-3 flex items-center gap-1">
           <span className="font-mono text-muted-foreground/60 text-xs">
