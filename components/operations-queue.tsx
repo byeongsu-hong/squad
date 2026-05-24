@@ -1,7 +1,7 @@
 "use client";
 
 import { Check, Inbox, Loader2, Zap } from "lucide-react";
-import { useMemo, useState } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 
 import { ProposalDetailView } from "@/components/proposal-detail-modal";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,7 @@ interface OperationsQueueProps {
   loading?: boolean;
   showFilters?: boolean;
   compact?: boolean;
+  emptyStateCta?: ReactNode;
 }
 
 function formatAge(createdAt?: string): string {
@@ -295,6 +296,7 @@ export function OperationsQueue({
   loading = false,
   showFilters = false,
   compact = false,
+  emptyStateCta,
 }: OperationsQueueProps) {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("All");
   const [chainFilter, setChainFilter] = useState("All");
@@ -544,6 +546,7 @@ export function OperationsQueue({
               ? "No transactions found."
               : "No transactions match your filters."}
           </p>
+          {emptyStateCta && items.length === 0 && emptyStateCta}
         </div>
       ) : (
         <div className="space-y-4">

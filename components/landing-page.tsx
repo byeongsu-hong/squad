@@ -1,6 +1,6 @@
 "use client";
 
-import { Inbox } from "lucide-react";
+import { Inbox, PenLine, Shield, Zap } from "lucide-react";
 import Link from "next/link";
 import { useAccount } from "wagmi";
 
@@ -60,42 +60,60 @@ export function LandingPage() {
   return (
     <div className="bg-background min-h-[calc(100svh-4.5rem)]">
       <div className="mx-auto max-w-[1200px]">
-        <div className="border-border mb-5 flex items-baseline gap-3 border-b pb-4">
-          <h1 className="text-foreground text-2xl font-bold tracking-[-0.02em]">
+        <div className="mb-4">
+          <h1 className="text-foreground mb-3 text-2xl font-bold tracking-[-0.02em]">
             Operations
           </h1>
         </div>
 
         <div className="bg-card border-border mb-5 flex items-center gap-6 rounded-xl border px-5 py-3">
-          <div className="flex flex-col">
-            <span className="text-foreground text-2xl font-bold tabular-nums">
-              {workspaceMultisigs.length}
-            </span>
-            <span className="text-muted-foreground text-[11px] uppercase tracking-wide">
-              Vaults
-            </span>
+          <div className="flex items-center gap-2">
+            <Shield className="text-muted-foreground/40 h-4 w-4 shrink-0" />
+            <div className="flex flex-col">
+              <span className="text-foreground text-2xl font-bold tabular-nums leading-tight">
+                {workspaceMultisigs.length}
+              </span>
+              <span className="text-muted-foreground text-[11px] uppercase tracking-wide">
+                Vaults
+              </span>
+            </div>
           </div>
           <div className="bg-border h-8 w-px" />
-          <div className="flex flex-col">
-            <span className="text-foreground text-2xl font-bold tabular-nums">
-              {needsSigningCount}
-            </span>
-            <span className="text-muted-foreground text-[11px] uppercase tracking-wide">
-              Needs signing
-            </span>
+          <div className="flex items-center gap-2">
+            <PenLine className={needsSigningCount > 0 ? "text-primary/60 h-4 w-4 shrink-0" : "text-muted-foreground/30 h-4 w-4 shrink-0"} />
+            <div className="flex flex-col">
+              <span className={needsSigningCount > 0 ? "text-primary text-2xl font-bold tabular-nums leading-tight" : "text-foreground text-2xl font-bold tabular-nums leading-tight"}>
+                {needsSigningCount}
+              </span>
+              <span className="text-muted-foreground text-[11px] uppercase tracking-wide">
+                Needs signing
+              </span>
+            </div>
           </div>
           <div className="bg-border h-8 w-px" />
-          <div className="flex flex-col">
-            <span className="text-foreground text-2xl font-bold tabular-nums">
-              {executableCount}
-            </span>
-            <span className="text-muted-foreground text-[11px] uppercase tracking-wide">
-              Ready to execute
-            </span>
+          <div className="flex items-center gap-2">
+            <Zap className={executableCount > 0 ? "text-emerald-600/60 dark:text-emerald-400/60 h-4 w-4 shrink-0" : "text-muted-foreground/30 h-4 w-4 shrink-0"} />
+            <div className="flex flex-col">
+              <span className={executableCount > 0 ? "text-emerald-600 dark:text-emerald-400 text-2xl font-bold tabular-nums leading-tight" : "text-foreground text-2xl font-bold tabular-nums leading-tight"}>
+                {executableCount}
+              </span>
+              <span className="text-muted-foreground text-[11px] uppercase tracking-wide">
+                Ready to execute
+              </span>
+            </div>
           </div>
         </div>
 
-        <OperationsQueue items={queueItems} loading={loading} showFilters />
+        <OperationsQueue
+          items={queueItems}
+          loading={loading}
+          showFilters
+          emptyStateCta={
+            <Button variant="outline" asChild size="sm">
+              <Link href="/vaults">Browse Vaults</Link>
+            </Button>
+          }
+        />
       </div>
     </div>
   );

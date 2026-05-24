@@ -35,6 +35,7 @@ import {
   DialogTitle,
 } from "./ui/dialog";
 import { Button } from "./ui/button";
+import { Label } from "./ui/label";
 import { Progress } from "./ui/progress";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import { Textarea } from "./ui/textarea";
@@ -553,13 +554,14 @@ function ExportImportModePicker({
   return (
     <RadioGroup value={mode} onValueChange={onModeChange} disabled={disabled}>
       <div className={embedded ? "grid gap-2 sm:grid-cols-2" : "space-y-2"}>
-        <label
+        <Label
           htmlFor={embedded ? "settings-export" : "export"}
-          className={
+          className={cn(
+            "cursor-pointer font-normal text-foreground/80",
             embedded
-              ? "border-border bg-muted flex cursor-pointer items-start gap-3 border px-3 py-3 font-normal text-foreground/80 text-xs font-medium"
-              : "flex cursor-pointer items-center space-x-2 font-normal text-foreground/80 text-xs font-medium"
-          }
+              ? "border-border bg-muted flex items-start gap-3 border px-3 py-3 text-xs font-medium"
+              : "flex items-center space-x-2 text-xs font-medium"
+          )}
         >
           <RadioGroupItem
             value="export"
@@ -575,14 +577,15 @@ function ExportImportModePicker({
               </span>
             ) : null}
           </span>
-        </label>
-        <label
+        </Label>
+        <Label
           htmlFor={embedded ? "settings-import" : "import"}
-          className={
+          className={cn(
+            "cursor-pointer font-normal text-foreground/80",
             embedded
-              ? "border-border bg-muted flex cursor-pointer items-start gap-3 border px-3 py-3 font-normal text-foreground/80 text-xs font-medium"
-              : "flex cursor-pointer items-center space-x-2 font-normal text-foreground/80 text-xs font-medium"
-          }
+              ? "border-border bg-muted flex items-start gap-3 border px-3 py-3 text-xs font-medium"
+              : "flex items-center space-x-2 text-xs font-medium"
+          )}
         >
           <RadioGroupItem
             value="import"
@@ -598,7 +601,7 @@ function ExportImportModePicker({
               </span>
             ) : null}
           </span>
-        </label>
+        </Label>
       </div>
     </RadioGroup>
   );

@@ -1,5 +1,6 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 interface PaginationProps {
@@ -12,9 +13,6 @@ interface PaginationProps {
   endIndex: number;
   totalItems: number;
 }
-
-const pageBtn =
-  "border-border bg-card text-foreground/80 hover:bg-muted inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border text-sm transition-colors disabled:opacity-40 disabled:pointer-events-none";
 
 export function Pagination({
   currentPage,
@@ -55,15 +53,16 @@ export function Pagination({
       </div>
 
       <div className="flex min-w-0 items-center gap-2">
-        <button
+        <Button
           type="button"
+          variant="outline"
           onClick={() => onPageChange(currentPage - 1)}
           disabled={!canGoPrevious}
-          className={pageBtn}
+          className="h-9 w-9 text-foreground/80"
           aria-label="Previous page"
         >
           <ChevronLeft className="h-4 w-4" />
-        </button>
+        </Button>
 
         <div className="min-w-0 flex-1 overflow-x-auto">
           <div className="flex min-w-max items-center gap-1 whitespace-nowrap">
@@ -80,31 +79,33 @@ export function Pagination({
               }
               const isActive = currentPage === page;
               return (
-                <button
+                <Button
                   key={page}
                   type="button"
+                  variant="outline"
                   onClick={() => onPageChange(page as number)}
                   className={cn(
-                    pageBtn,
-                    isActive && "bg-foreground text-background pointer-events-none border-foreground"
+                    "h-9 w-9 text-foreground/80",
+                    isActive && "bg-foreground text-background pointer-events-none border-foreground hover:bg-foreground hover:text-background"
                   )}
                 >
                   {page}
-                </button>
+                </Button>
               );
             })}
           </div>
         </div>
 
-        <button
+        <Button
           type="button"
+          variant="outline"
           onClick={() => onPageChange(currentPage + 1)}
           disabled={!canGoNext}
-          className={pageBtn}
+          className="h-9 w-9 text-foreground/80"
           aria-label="Next page"
         >
           <ChevronRight className="h-4 w-4" />
-        </button>
+        </Button>
       </div>
     </div>
   );
