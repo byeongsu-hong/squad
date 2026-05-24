@@ -22,7 +22,7 @@ import type { WorkspaceQueueItem } from "@/types/workspace";
 
 const PAGE_SIZE = 15;
 const GRID_COLS_FULL = "36px 1.4fr 54px 80px 1fr 80px 48px 80px";
-const GRID_COLS_COMPACT = "36px 54px 80px 1fr 80px 48px";
+const GRID_COLS_COMPACT = "36px 54px 80px 1fr 80px 48px 60px";
 
 interface OperationsQueueProps {
   items: WorkspaceQueueItem[];
@@ -118,7 +118,7 @@ function ColumnHeaders({
   compact?: boolean;
 }) {
   const cols = compact
-    ? ["TX", "Chain", "Status", "Progress", "Age"]
+    ? ["TX", "Chain", "Status", "Progress", "Age", ""]
     : ["Multisig", "TX", "Chain", "Status", "Progress", "Age", ""];
   return (
     <div
@@ -221,42 +221,46 @@ function QueueRow({
       <span className="text-muted-foreground/70 font-mono text-[11px]">
         {formatAge(item.proposal.createdAt)}
       </span>
-      {!compact && (
-        <div
-          className="flex items-center justify-end"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {onExecute && item.readyToExecute ? (
-            <Button
-              size="xs"
-              disabled={isActioning}
-              onClick={onExecute}
-              className="bg-emerald-600 text-white hover:bg-emerald-500 border-emerald-700/30 font-semibold"
-            >
-              {isActioning ? (
-                <Loader2 className="animate-spin" />
-              ) : (
-                <Zap />
-              )}
-              Execute
-            </Button>
-          ) : onApprove && item.needsYourSignature && !item.currentUserApproved ? (
-            <Button
-              size="xs"
-              disabled={isActioning}
-              onClick={onApprove}
-              className="bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20 font-semibold"
-            >
-              {isActioning ? (
-                <Loader2 className="animate-spin" />
-              ) : (
-                <Check />
-              )}
-              Approve
-            </Button>
-          ) : null}
-        </div>
-      )}
+      <div
+        className="flex items-center justify-end"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {onExecute && item.readyToExecute ? (
+          <Button
+            size="xs"
+            disabled={isActioning}
+            onClick={onExecute}
+            className={cn(
+              "bg-emerald-600 text-white hover:bg-emerald-500 border-emerald-700/30 font-semibold",
+              compact && "h-6 w-6 p-0"
+            )}
+          >
+            {isActioning ? (
+              <Loader2 className="animate-spin" />
+            ) : (
+              <Zap />
+            )}
+            {!compact && "Execute"}
+          </Button>
+        ) : onApprove && item.needsYourSignature && !item.currentUserApproved ? (
+          <Button
+            size="xs"
+            disabled={isActioning}
+            onClick={onApprove}
+            className={cn(
+              "bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20 font-semibold",
+              compact && "h-6 w-6 p-0"
+            )}
+          >
+            {isActioning ? (
+              <Loader2 className="animate-spin" />
+            ) : (
+              <Check />
+            )}
+            {!compact && "Approve"}
+          </Button>
+        ) : null}
+      </div>
     </div>
   );
 }
@@ -279,7 +283,7 @@ function RowSkeleton({ compact = false }: { compact?: boolean }) {
       <Skeleton className="h-4 w-20 rounded-full" />
       <Skeleton className="h-1.5 w-10 rounded-full" />
       <Skeleton className="h-3 w-6 rounded-sm" />
-      {!compact && <div />}
+      <div />
     </div>
   );
 }
@@ -541,7 +545,7 @@ export function OperationsQueue({
 
       {filtered.length === 0 ? (
         <div className={cn("flex flex-col items-center justify-center gap-4 text-center", compact ? "py-10" : "py-16")}>
-          <div className="bg-card border-border flex h-12 w-12 items-center justify-center rounded-2xl border shadow-sm">
+          <div className="bg-muted border-border flex h-12 w-12 items-center justify-center rounded-2xl border">
             <Inbox className="text-muted-foreground/60 h-5 w-5" />
           </div>
           <p className="text-muted-foreground text-sm">
