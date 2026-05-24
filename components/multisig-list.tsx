@@ -10,7 +10,7 @@ import {
   RefreshCw,
   Tag,
   Trash2,
-  Users,
+  Vault,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -332,21 +332,31 @@ export function MultisigList() {
         </span>
       </div>
 
-      {/* Empty states */}
       {!hasMultisigs && !loading && (
-        <div className="border-border text-muted-foreground flex items-center gap-3 rounded-xl border border-dashed px-5 py-8 text-sm">
-          <Users className="text-muted-foreground/50 h-4 w-4 shrink-0" />
-          {publicKey
-            ? "No multisigs found. Use Add Multisig to create or import one."
-            : "Connect a wallet or use Add Multisig to import an existing one."}
+        <div className="flex flex-col items-center justify-center gap-5 py-20 text-center">
+          <div className="bg-muted flex h-14 w-14 items-center justify-center rounded-2xl">
+            <Vault className="text-muted-foreground/40 h-7 w-7" />
+          </div>
+          <div className="space-y-1.5">
+            <p className="text-foreground text-base font-semibold">
+              No vaults yet
+            </p>
+            <p className="text-muted-foreground text-sm">
+              {publicKey
+                ? "No multisigs found. Use Add Multisig to create or import one."
+                : "Connect a wallet or use Add Multisig to import an existing one."}
+            </p>
+          </div>
         </div>
       )}
 
       {filteredRegistryRows.length === 0 &&
         multisigs.length > 0 &&
         !loading && (
-          <div className="border-border text-muted-foreground rounded-xl border border-dashed px-5 py-8 text-sm">
-            No multisigs match the current filters.
+          <div className="py-12 text-center">
+            <p className="text-muted-foreground/60 text-sm">
+              No vaults match the current filters.
+            </p>
           </div>
         )}
 
