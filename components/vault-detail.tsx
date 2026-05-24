@@ -182,12 +182,14 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
   const isSquads = multisig.provider === "squads";
   const viewerAddress = getViewerAddress(multisig.provider);
 
+  const isPanel = !!onBack;
+
   return (
-    <div className="mx-auto max-w-[1200px] space-y-4">
+    <div className={cn("max-w-[1200px]", isPanel ? "" : "mx-auto space-y-4")}>
       {!onBack && BackLink}
 
-      {/* Vault header card */}
-      <div className="bg-card border-border rounded-2xl border p-5">
+      {/* Vault header */}
+      <div className={cn(isPanel ? "pb-4 border-b border-border/50" : "bg-card border-border rounded-2xl border p-5")}>
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <h1 className="text-foreground text-xl font-bold tracking-[-0.02em]">
@@ -251,7 +253,7 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
 
       {/* Members */}
       {multisig.members.length > 0 && (
-        <div className="bg-card border-border rounded-2xl border px-4 py-3">
+        <div className={cn(isPanel ? "py-4 border-b border-border/50" : "bg-card border-border rounded-2xl border px-4 py-3")}>
           <div className="mb-2 flex items-center gap-2">
             <Users className="text-muted-foreground/50 h-3.5 w-3.5" />
             <span className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">
@@ -273,8 +275,8 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
         </div>
       )}
 
-      {/* Operations */}
-      <div>
+      {/* Transactions */}
+      <div className={cn(isPanel ? "pt-4" : "")}>
         <div className="mb-2 flex items-center justify-between">
           <p className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">
             Transactions
