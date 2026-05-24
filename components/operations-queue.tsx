@@ -3,7 +3,7 @@
 import { Loader2 } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import { ProposalDetailModal } from "@/components/proposal-detail-modal";
+import { ProposalDetailView } from "@/components/proposal-detail-modal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -254,7 +254,7 @@ export function OperationsQueue({
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [historyPage, setHistoryPage] = useState(1);
-  const [modalItem, setModalItem] = useState<WorkspaceQueueItem | null>(null);
+  const [selectedItem, setSelectedItem] = useState<WorkspaceQueueItem | null>(null);
 
   const { approveByAddress, executeByAddress, isActionInProgress } =
     useProposalActions();
@@ -371,6 +371,18 @@ export function OperationsQueue({
   };
 
   const resetPage = () => setHistoryPage(1);
+
+  if (selectedItem) {
+    return (
+      <ProposalDetailView
+        item={selectedItem}
+        onBack={() => setSelectedItem(null)}
+        onActionSuccess={async () => {
+          setSelectedItem(null);
+        }}
+      />
+    );
+  }
 
   if (loading && items.length === 0) {
     return (
@@ -511,7 +523,7 @@ export function OperationsQueue({
                       isSelected={selected.has(item.focusKey)}
                       isSelectable
                       onToggle={() => toggleSelect(item.focusKey)}
-                      onClick={() => setModalItem(item)}
+                      onClick={() => setSelectedItem(item)}
                     />
                   ))}
                 </div>
@@ -540,7 +552,7 @@ export function OperationsQueue({
                       isSelected={false}
                       isSelectable={false}
                       onToggle={() => {}}
-                      onClick={() => setModalItem(item)}
+                      onClick={() => setSelectedItem(item)}
                     />
                   ))}
                 </div>
@@ -638,11 +650,6 @@ export function OperationsQueue({
         </div>
       </div>
 
-      <ProposalDetailModal
-        item={modalItem}
-        open={modalItem !== null}
-        onClose={() => setModalItem(null)}
-      />
     </div>
   );
 }
