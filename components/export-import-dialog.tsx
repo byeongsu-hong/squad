@@ -444,12 +444,12 @@ export function ExportImportController({
       <Dialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
         <DialogContent
           showCloseButton={false}
-          className="max-w-[30rem] gap-0 overflow-hidden border-red-500/20 bg-[linear-gradient(180deg,rgba(35,20,20,0.98),rgba(20,15,18,0.99))] p-0"
+          className="max-w-[30rem] gap-0 overflow-hidden border-destructive/20 bg-[linear-gradient(180deg,rgba(35,20,20,0.98),rgba(20,15,18,0.99))] p-0"
         >
-          <div className="border-b border-red-500/15 px-6 py-5">
+          <div className="border-b border-destructive/15 px-6 py-5">
             <div className="flex items-start gap-4">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-red-500/20 bg-red-500/10">
-                <AlertTriangle className="h-5 w-5 text-red-300" />
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-destructive/20 bg-destructive/10">
+                <AlertTriangle className="text-destructive/70 h-5 w-5" />
               </div>
               <div className="space-y-2">
                 <DialogTitle className="text-[1.1rem]">
@@ -511,7 +511,7 @@ export function ExportImportController({
             </button>
             <button
               type="button"
-              className="bg-red-500 text-white hover:bg-red-400 inline-flex h-9 items-center gap-1.5 rounded-md px-3 text-sm transition-colors disabled:opacity-50"
+              className="bg-destructive text-white hover:bg-destructive/90 inline-flex h-9 items-center gap-1.5 rounded-md px-3 text-sm transition-colors disabled:opacity-50"
               onClick={handleResetImportedState}
             >
               Reset Workspace State

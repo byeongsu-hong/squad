@@ -309,7 +309,7 @@ export function MultisigList() {
             <button
               type="button"
               onClick={handleDeleteSelected}
-              className="inline-flex h-8 items-center gap-1.5 rounded-md bg-red-500 px-3 text-sm text-white transition-colors hover:bg-red-400"
+              className="inline-flex h-8 items-center gap-1.5 rounded-md bg-destructive px-3 text-sm text-white transition-colors hover:bg-destructive/90"
             >
               <Trash2 className="h-3.5 w-3.5" />
               Remove ({selectedForDeletion.size})
@@ -453,7 +453,7 @@ export function MultisigList() {
                           {row.label}
                         </p>
                         {isActiveDesk && (
-                          <span className="shrink-0 rounded-full bg-lime-500/10 px-1.5 py-0.5 text-[9px] font-medium text-lime-600 dark:text-lime-300">
+                          <span className="bg-primary/10 text-primary shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-medium">
                             Active
                           </span>
                         )}
