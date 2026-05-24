@@ -402,7 +402,7 @@ export function ProposalDetailView({
             onClick={() => setPayloadOpen(!payloadOpen)}
             className="h-auto w-full justify-between rounded-none px-5 py-3.5 text-left"
           >
-            <span className="text-muted-foreground/70 text-[10px] font-semibold uppercase tracking-widest">
+            <span className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">
               Transaction data
             </span>
             {payloadOpen ? (
@@ -440,7 +440,7 @@ export function ProposalDetailView({
                   )}
                   {payload.toAddress && (
                     <div className="bg-muted rounded-lg px-3 py-2.5">
-                      <p className="text-muted-foreground/60 mb-1 text-[10px] font-semibold uppercase tracking-widest">
+                      <p className="text-muted-foreground/60 mb-1 text-[11px] font-semibold uppercase tracking-widest">
                         Target
                       </p>
                       <AddressWithLabel address={payload.toAddress} showFull />
@@ -449,7 +449,7 @@ export function ProposalDetailView({
                   {payload.data && <PayloadBlock label="Calldata" value={payload.data} />}
                   {payload.dataDecoded != null && (
                     <div className="bg-muted rounded-lg px-3 py-2.5">
-                      <p className="text-muted-foreground/60 mb-1.5 text-[10px] font-semibold uppercase tracking-widest">
+                      <p className="text-muted-foreground/60 mb-1.5 text-[11px] font-semibold uppercase tracking-widest">
                         Decoded
                       </p>
                       <pre className="bg-background overflow-x-auto rounded-md px-3 py-2 font-mono text-[11px] text-muted-foreground">
@@ -475,7 +475,7 @@ export function ProposalDetailView({
                       </div>
                       {fmt.fields.map((f, j) => (
                         <div key={j} className="mt-1.5">
-                          <p className="text-muted-foreground/60 text-[10px] uppercase tracking-widest">
+                          <p className="text-muted-foreground/60 text-[11px] uppercase tracking-widest">
                             {f.label}
                           </p>
                           {typeof f.value === "string" ? (
@@ -494,7 +494,7 @@ export function ProposalDetailView({
               {payload?.type === "vault" &&
                 payload.instructions.map((instr, i) => (
                   <div key={i} className="bg-muted rounded-lg px-3 py-2.5">
-                    <p className="text-muted-foreground/60 mb-2 text-[10px] font-semibold uppercase tracking-widest">
+                    <p className="text-muted-foreground/60 mb-2 text-[11px] font-semibold uppercase tracking-widest">
                       Instruction {i + 1}
                     </p>
                     <AddressWithLabel
@@ -553,7 +553,7 @@ function PayloadBlock({
   return (
     <div className="bg-muted rounded-lg px-3 py-2.5">
       <div className="mb-1 flex items-center justify-between">
-        <p className="text-muted-foreground/60 text-[10px] font-semibold uppercase tracking-widest">
+        <p className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">
           {label}
         </p>
         {copyable && <CopyBtn text={value} />}

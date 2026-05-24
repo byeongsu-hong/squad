@@ -332,11 +332,12 @@ function AddressLabelEditor({
                 key={color}
                 type="button"
                 variant="ghost"
-                className={`h-8 w-8 rounded-full border-2 p-0 transition-all ${
+                className={cn(
+                  "h-8 w-8 rounded-full border-2 p-0 transition-all",
                   formData.color === color
-                    ? "border-foreground scale-110"
+                    ? "scale-110 border-foreground"
                     : "border-transparent hover:scale-105"
-                }`}
+                )}
                 style={{ backgroundColor: color }}
                 onClick={() => onFormDataChange({ ...formData, color })}
                 aria-label={`Select color ${color}`}
