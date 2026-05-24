@@ -113,7 +113,7 @@ function MemberRow({ member, isViewer }: { member: MemberEntry; isViewer: boolea
 }
 
 export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
-  const { publicKey, connected } = useWalletStore();
+  const { publicKey } = useWalletStore();
   const getViewerAddress = useViewerAddressForMultisig();
   const { workspaceMultisigMap } = useWorkspaceMultisigs();
   const { proposals, loading, workspaceMultisigs } = useProposalsQuery();
@@ -134,6 +134,12 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
     : vaultItems.filter(
         (i) => !i.proposal.executed && !i.proposal.cancelled
       ).length;
+  const needsSigningCount = loading
+    ? null
+    : vaultItems.filter((i) => i.needsYourSignature && !i.currentUserApproved).length;
+  const executableCount = loading
+    ? null
+    : vaultItems.filter((i) => i.readyToExecute).length;
 
   const BackLink = onBack ? (
     <Button
@@ -205,8 +211,18 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-2">
-            {pendingCount !== null && pendingCount > 0 && (
-              <span className="bg-primary/10 text-primary rounded-full px-2.5 py-1 text-xs font-semibold">
+            {needsSigningCount !== null && needsSigningCount > 0 && (
+              <span className="border-primary/20 bg-primary/10 text-primary rounded-full border px-2.5 py-1 text-xs font-semibold">
+                {needsSigningCount} need signing
+              </span>
+            )}
+            {executableCount !== null && executableCount > 0 && (
+              <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:border-emerald-800/40 dark:bg-emerald-950/20 dark:text-emerald-400">
+                {executableCount} executable
+              </span>
+            )}
+            {pendingCount !== null && pendingCount > 0 && !needsSigningCount && !executableCount && (
+              <span className="bg-muted text-muted-foreground rounded-full px-2.5 py-1 text-xs font-semibold">
                 {pendingCount} pending
               </span>
             )}
@@ -263,11 +279,6 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
           <p className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">
             Transactions
           </p>
-          {pendingCount !== null && pendingCount > 0 && (
-            <span className="text-primary/70 font-mono text-[11px] tabular-nums">
-              {pendingCount} active
-            </span>
-          )}
         </div>
         <OperationsQueue
           items={vaultItems}

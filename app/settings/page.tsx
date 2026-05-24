@@ -61,11 +61,9 @@ function SettingsPageContent() {
 
   return (
     <div className="mx-auto max-w-[1200px] space-y-0">
-      <div className="border-border border-b pb-4">
-        <h1 className="text-foreground text-2xl font-bold tracking-[-0.02em]">
-          Settings
-        </h1>
-      </div>
+      <h1 className="text-foreground mb-4 text-2xl font-bold tracking-[-0.02em]">
+        Settings
+      </h1>
 
       <div className="border-border -mb-px border-b">
         <nav className="flex gap-1 overflow-x-auto">

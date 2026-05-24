@@ -177,6 +177,34 @@ export function ProposalDetailView({
       {/* ── Scrollable body ────────────────────────────────────────────── */}
       <div className="flex-1 overflow-y-auto">
 
+        {/* ── Completion banner ────────────────────────────────────────── */}
+        {isComplete && (
+          <div className={cn(
+            "border-b px-5 py-3 flex items-center gap-2",
+            proposal.status === "Executed"
+              ? "border-emerald-100 bg-emerald-50/60 dark:border-emerald-900/30 dark:bg-emerald-950/20"
+              : "border-destructive/15 bg-destructive/5"
+          )}>
+            {proposal.status === "Executed" ? (
+              <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            ) : (
+              <X className="h-3.5 w-3.5 text-destructive/70 shrink-0" />
+            )}
+            <span className={cn(
+              "text-sm font-medium",
+              proposal.status === "Executed"
+                ? "text-emerald-700 dark:text-emerald-400"
+                : "text-destructive/80"
+            )}>
+              {proposal.status === "Executed"
+                ? "Transaction executed"
+                : proposal.status === "Rejected"
+                  ? "Transaction rejected"
+                  : "Transaction cancelled"}
+            </span>
+          </div>
+        )}
+
         {/* ── Actions ──────────────────────────────────────────────────── */}
         {!isComplete && actionsSupported && (
           <div className="border-border/60 space-y-2 border-b px-5 py-4">
@@ -234,9 +262,9 @@ export function ProposalDetailView({
               </Button>
             )}
             {currentUserApproved && !readyToExecute && (
-              <div className="flex items-center justify-center gap-2 rounded-lg bg-muted py-2.5 text-sm text-muted-foreground">
-                <Check className="h-3.5 w-3.5 text-emerald-500" />
-                You signed
+              <div className="flex items-center justify-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50/60 px-4 py-2.5 text-sm text-emerald-700 dark:border-emerald-900/30 dark:bg-emerald-950/20 dark:text-emerald-400">
+                <Check className="h-3.5 w-3.5 shrink-0" />
+                You signed · waiting for others
               </div>
             )}
           </div>
