@@ -1,6 +1,7 @@
 "use client";
 
 import Safe from "@safe-global/protocol-kit";
+import type { Eip1193Provider } from "@safe-global/protocol-kit";
 import { getAccount, switchChain } from "wagmi/actions";
 
 import { wagmiConfig } from "@/lib/wagmi-config";
@@ -28,7 +29,7 @@ async function getSafeSdk(
   const provider = await connector.getProvider();
 
   return Safe.init({
-    provider: provider as never,
+    provider: provider as Eip1193Provider,
     signer,
     safeAddress,
   });
