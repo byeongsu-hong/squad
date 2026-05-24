@@ -31,8 +31,18 @@ bun-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-reference
+# tools & ai assistants
+.claude
+.playwright-mcp
+.cursor
+.aider*
+.continue
+.copilot
+.windsurf
 .impeccable.md
 
-.playwright-mcp/
-.claude/
+# pnpm
+.pnpm-store
+
+# misc
+reference
