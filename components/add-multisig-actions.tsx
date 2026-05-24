@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { CreateMultisigDialog } from "@/components/create-multisig-dialog";
 import { ImportMultisigDialog } from "@/components/import-multisig-dialog";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -51,15 +52,14 @@ export function AddMultisigActions() {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button
-            type="button"
+          <Button
             disabled={!hasOperationalSquadsChains && !hasImportableChains}
-            className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-9 items-center gap-2 rounded-md px-4 text-sm font-medium transition-colors disabled:opacity-50"
+            className="bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20"
           >
             <Plus className="h-4 w-4" />
             Add Multisig
             <ChevronDown className="h-4 w-4" />
-          </button>
+          </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align="end"

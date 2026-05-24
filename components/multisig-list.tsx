@@ -434,7 +434,7 @@ export function MultisigList() {
                     onClick={(e) => e.stopPropagation()}
                   >
                     {isEditing ? (
-                      <input
+                      <Input
                         value={labelInput}
                         onChange={(e) => setLabelInput(e.target.value)}
                         onKeyDown={(e) => {
@@ -443,7 +443,7 @@ export function MultisigList() {
                         }}
                         onBlur={() => handleSaveLabel(multisig)}
                         placeholder="Enter label"
-                        className="border-border bg-muted text-foreground h-6 w-40 rounded border px-2 text-sm focus:outline-none"
+                        className="h-6 w-40 text-sm"
                         autoFocus
                       />
                     ) : (
