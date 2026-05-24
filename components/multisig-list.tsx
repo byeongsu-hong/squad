@@ -1,7 +1,9 @@
 "use client";
 
 import {
+  AlertTriangle,
   ArrowUpRight,
+  CheckCircle2,
   Copy,
   Loader2,
   Pencil,
@@ -221,6 +223,7 @@ export function MultisigList() {
 
   return (
     <div className="space-y-3">
+      {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-2">
         <Input
           placeholder="Search multisigs..."
@@ -273,19 +276,19 @@ export function MultisigList() {
             {allTags.map((tag) => {
               const selected = selectedFilterTags.includes(tag);
               return (
-                <Badge
+                <button
                   key={tag}
-                  variant={selected ? "default" : "outline"}
-                  className={cn(
-                    "cursor-pointer text-xs",
-                    selected
-                      ? "bg-primary text-primary-foreground"
-                      : "border-border text-muted-foreground bg-transparent"
-                  )}
+                  type="button"
                   onClick={() => toggleFilterTag(tag)}
+                  className={cn(
+                    "cursor-pointer rounded-full px-2.5 py-0.5 text-xs transition-colors",
+                    selected
+                      ? "bg-primary/15 text-primary font-medium"
+                      : "bg-muted text-muted-foreground hover:bg-muted/80"
+                  )}
                 >
                   {tag}
-                </Badge>
+                </button>
               );
             })}
           </div>
@@ -297,6 +300,7 @@ export function MultisigList() {
         </span>
       </div>
 
+      {/* Empty states */}
       {!hasMultisigs && !loading && (
         <div className="border-border text-muted-foreground flex items-center gap-3 rounded-xl border border-dashed px-5 py-8 text-sm">
           <Users className="text-muted-foreground/50 h-4 w-4 shrink-0" />
@@ -314,40 +318,38 @@ export function MultisigList() {
           </div>
         )}
 
+      {/* Loading skeleton */}
       {loading && <VaultListSkeletonList />}
 
+      {/* Vault card list */}
       {!loading && hasMultisigs && filteredRegistryRows.length > 0 && (
-        <div className="border-border bg-muted overflow-x-auto rounded-[1.15rem] border">
-          <div className="min-w-[980px]">
-            <div className="border-border text-muted-foreground/70 grid grid-cols-[2.1rem_minmax(11rem,1.5fr)_minmax(8rem,0.8fr)_minmax(7rem,0.7fr)_minmax(8rem,0.7fr)_minmax(10rem,1fr)_minmax(8rem,0.75fr)] gap-3 border-b px-4 py-3 text-[0.68rem] font-medium tracking-[0.18em] uppercase">
-              <span />
-              <span>Multisig</span>
-              <span>Chain</span>
-              <span>Threshold</span>
-              <span>Members</span>
-              <span>Tags</span>
-              <span className="text-right">Actions</span>
-            </div>
+        <div className="space-y-2">
+          {filteredRegistryRows.map((row) => {
+            const multisig = getMultisigForRow(row);
+            if (!multisig) return null;
 
-            {filteredRegistryRows.map((row) => {
-              const multisig = getMultisigForRow(row);
-              if (!multisig) return null;
+            const isSelected = selectedForDeletion.has(row.key);
+            const isActiveDesk = matchesMultisigSelectionKey(
+              multisig,
+              selectedMultisigKey
+            );
+            const isEditing = editingLabel === row.key;
 
-              const isSelected = selectedForDeletion.has(row.key);
-              const isActiveDesk = matchesMultisigSelectionKey(
-                multisig,
-                selectedMultisigKey
-              );
-
-              return (
-                <div
-                  key={row.key}
-                  className={cn(
-                    "border-border grid grid-cols-[2.1rem_minmax(11rem,1.5fr)_minmax(8rem,0.8fr)_minmax(7rem,0.7fr)_minmax(8rem,0.7fr)_minmax(10rem,1fr)_minmax(8rem,0.75fr)] gap-3 border-b px-4 py-4 last:border-b-0",
-                    isSelected || isActiveDesk ? "bg-card" : "bg-transparent"
-                  )}
-                >
-                  <div className="flex items-start pt-1">
+            return (
+              <div
+                key={row.key}
+                className={cn(
+                  "border-border rounded-xl border transition-colors",
+                  isSelected
+                    ? "bg-muted/60"
+                    : isActiveDesk
+                      ? "bg-card"
+                      : "bg-card hover:bg-muted/30"
+                )}
+              >
+                <div className="flex items-start gap-3 p-4">
+                  {/* Checkbox */}
+                  <div className="mt-0.5 shrink-0">
                     <input
                       type="checkbox"
                       checked={isSelected}
@@ -355,44 +357,42 @@ export function MultisigList() {
                         e.stopPropagation();
                         toggleSelect(row.key);
                       }}
-                      className="h-4 w-4 cursor-pointer"
+                      className="h-4 w-4 cursor-pointer accent-amber-600"
                       aria-label={`Select ${row.label || "unnamed multisig"}`}
                     />
                   </div>
 
-                  <div className="min-w-0">
-                    {editingLabel === row.key ? (
-                      <Input
-                        value={labelInput}
-                        onChange={(e) => setLabelInput(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") handleSaveLabel(multisig);
-                          else if (e.key === "Escape") handleCancelEdit();
-                        }}
-                        onBlur={() => handleSaveLabel(multisig)}
-                        placeholder="Enter label"
-                        className="border-border bg-card text-foreground h-8"
-                        autoFocus
-                      />
-                    ) : (
-                      <div className="flex items-center gap-0.5">
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="text-foreground truncate text-sm font-medium">
+                  {/* Main content */}
+                  <div className="min-w-0 flex-1">
+                    {/* Row 1: Name + badges */}
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex min-w-0 items-center gap-2">
+                        {isEditing ? (
+                          <Input
+                            value={labelInput}
+                            onChange={(e) => setLabelInput(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") handleSaveLabel(multisig);
+                              else if (e.key === "Escape") handleCancelEdit();
+                            }}
+                            onBlur={() => handleSaveLabel(multisig)}
+                            placeholder="Enter label"
+                            className="border-border bg-muted text-foreground h-7 w-48 text-sm"
+                            autoFocus
+                          />
+                        ) : (
+                          <>
+                            <span className="text-foreground truncate text-sm font-semibold">
                               {row.label}
                             </span>
-                            {isActiveDesk ? (
-                              <Badge
-                                variant="outline"
-                                className="rounded-md border-lime-500/30 bg-lime-500/10 text-[0.65rem] text-lime-200"
-                              >
+                            {isActiveDesk && (
+                              <span className="shrink-0 rounded-full bg-lime-500/10 px-2 py-0.5 text-[0.65rem] font-medium text-lime-600 dark:text-lime-300">
                                 Selected
-                              </Badge>
-                            ) : null}
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="text-muted-foreground/70 hover:bg-muted hover:text-foreground h-6 w-6"
+                              </span>
+                            )}
+                            <button
+                              type="button"
+                              className="text-muted-foreground/50 hover:text-foreground shrink-0 transition-colors"
                               onClick={() =>
                                 handleStartEditLabel(
                                   getMultisigAccountKey(multisig),
@@ -402,115 +402,138 @@ export function MultisigList() {
                               aria-label={`Edit label for ${row.label}`}
                             >
                               <Pencil className="h-3 w-3" />
-                            </Button>
-                          </div>
-                          <div className="mt-1 flex items-center gap-1">
-                            <span className="text-muted-foreground/70 truncate font-mono text-xs">
-                              {formatAddress(
-                                multisig.publicKey.toString(),
-                                8,
-                                8
-                              )}
-                            </span>
-                            <button
-                              type="button"
-                              className="text-muted-foreground/70 hover:text-foreground shrink-0 transition-colors"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                navigator.clipboard.writeText(
-                                  multisig.publicKey.toString()
-                                );
-                                toast.success("Address copied");
-                              }}
-                              aria-label={`Copy address for ${row.label}`}
-                            >
-                              <Copy className="h-3 w-3" />
                             </button>
-                          </div>
-                          <p className="text-muted-foreground/70 mt-1 text-xs">
-                            {row.attentionLine}
-                          </p>
-                        </div>
+                          </>
+                        )}
+                      </div>
+
+                      {/* Chain + provider badges */}
+                      <div className="flex shrink-0 items-center gap-1.5">
+                        <span className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-xs">
+                          {row.chainName}
+                        </span>
+                        <span
+                          className={cn(
+                            "rounded-full px-2 py-0.5 text-xs",
+                            row.multisigProvider === "safe"
+                              ? "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
+                              : "bg-muted text-muted-foreground"
+                          )}
+                        >
+                          {formatProviderLabel(row.multisigProvider)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Row 2: Address + copy */}
+                    <div className="mt-1 flex items-center gap-1.5">
+                      <span className="text-muted-foreground/70 font-mono text-xs">
+                        {formatAddress(multisig.publicKey.toString(), 8, 8)}
+                      </span>
+                      <button
+                        type="button"
+                        className="text-muted-foreground/50 hover:text-foreground shrink-0 transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigator.clipboard.writeText(
+                            multisig.publicKey.toString()
+                          );
+                          toast.success("Address copied");
+                        }}
+                        aria-label={`Copy address for ${row.label}`}
+                      >
+                        <Copy className="h-3 w-3" />
+                      </button>
+                      <span className="text-muted-foreground/40 text-xs">
+                        ·
+                      </span>
+                      <span className="text-muted-foreground/70 text-xs">
+                        {row.threshold}/{row.memberCount} threshold &middot;{" "}
+                        {row.memberCount} signers
+                      </span>
+                    </div>
+
+                    {/* Row 3: Attention line */}
+                    {row.attentionLine && (
+                      <div className="mt-1.5 flex items-center gap-1">
+                        {row.waiting > 0 ? (
+                          <>
+                            <AlertTriangle className="h-3 w-3 shrink-0 text-amber-500 dark:text-amber-400" />
+                            <span className="text-xs text-amber-600 dark:text-amber-400">
+                              {row.attentionLine}
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle2 className="text-muted-foreground/40 h-3 w-3 shrink-0" />
+                            <span className="text-muted-foreground/60 text-xs">
+                              {row.attentionLine}
+                            </span>
+                          </>
+                        )}
                       </div>
                     )}
-                  </div>
 
-                  <div className="flex items-start">
-                    <div className="flex flex-wrap items-center gap-1">
-                      <Badge
-                        variant="outline"
-                        className="border-border text-foreground/80 bg-transparent"
-                      >
-                        {row.chainName}
-                      </Badge>
-                      <Badge
-                        variant="outline"
-                        className={cn(
-                          row.multisigProvider === "safe"
-                            ? "border-amber-500/30 bg-amber-500/10 text-amber-200"
-                            : "border-border bg-card text-muted-foreground"
+                    {/* Row 4: Tags + action buttons */}
+                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                      {/* Tag pills */}
+                      <div className="flex flex-wrap items-center gap-1">
+                        {row.tags.length > 0 ? (
+                          row.tags.map((tag) => {
+                            const isFilterActive =
+                              selectedFilterTags.includes(tag);
+                            return (
+                              <span
+                                key={tag}
+                                className={cn(
+                                  "rounded-full px-2 py-0.5 text-xs",
+                                  isFilterActive
+                                    ? "bg-primary/15 text-primary font-medium"
+                                    : "bg-muted text-muted-foreground"
+                                )}
+                              >
+                                {tag}
+                              </span>
+                            );
+                          })
+                        ) : (
+                          <span className="text-muted-foreground/40 text-xs italic">
+                            no tags
+                          </span>
                         )}
-                      >
-                        {formatProviderLabel(row.multisigProvider)}
-                      </Badge>
-                    </div>
-                  </div>
+                      </div>
 
-                  <div className="text-foreground pt-1 text-sm font-medium">
-                    {row.threshold}
-                  </div>
-
-                  <div className="text-muted-foreground pt-1 text-sm">
-                    {row.memberCount}
-                  </div>
-
-                  <div className="flex flex-wrap items-start gap-1">
-                    {row.tags.length ? (
-                      row.tags.map((tag) => (
-                        <Badge
-                          key={tag}
-                          variant="outline"
-                          className="border-border bg-muted text-foreground/80 text-xs"
+                      {/* Action buttons */}
+                      <div className="flex shrink-0 items-center gap-1.5">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-muted-foreground/70 hover:text-foreground h-7 px-2 text-xs"
+                          onClick={() => handleOpenTagDialog(multisig)}
                         >
-                          {tag}
-                        </Badge>
-                      ))
-                    ) : (
-                      <span className="text-muted-foreground/70 pt-1 text-sm">
-                        —
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex items-start justify-end">
-                    <div className="flex flex-wrap justify-end gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="border-border text-foreground/80 hover:bg-muted bg-transparent"
-                        onClick={() => handleOpenTagDialog(multisig)}
-                      >
-                        <Tag className="mr-1.5 h-3 w-3" />
-                        Tags
-                      </Button>
-                      <Button
-                        size="sm"
-                        className={cn(
-                          row.waiting > 0
-                            ? "bg-lime-300 text-zinc-950 hover:bg-lime-200"
-                            : "bg-primary text-primary-foreground hover:bg-primary/90"
-                        )}
-                        onClick={() => handleOpenDesk(multisig)}
-                      >
-                        <ArrowUpRight className="mr-1.5 h-3 w-3" />
-                        Open
-                      </Button>
+                          <Tag className="mr-1 h-3 w-3" />
+                          Tags
+                        </Button>
+                        <Button
+                          size="sm"
+                          className={cn(
+                            "h-7 px-3 text-xs",
+                            row.waiting > 0
+                              ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                              : "border-border bg-transparent text-foreground/80 hover:bg-muted border"
+                          )}
+                          onClick={() => handleOpenDesk(multisig)}
+                        >
+                          Open
+                          <ArrowUpRight className="ml-1 h-3 w-3" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>
-              );
-            })}
-          </div>
+              </div>
+            );
+          })}
         </div>
       )}
 
