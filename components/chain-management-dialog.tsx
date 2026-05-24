@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Pencil, Plus, RotateCcw, Trash2 } from "lucide-react";
+import { Plus, RotateCcw, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { type UseFormReturn, useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -496,8 +496,8 @@ function ChainRegistry({
             }}
             className={
               embedded
-                ? "border-border hover:bg-muted focus-visible:ring-ring grid cursor-pointer gap-3 border-b px-4 py-3 transition-colors last:border-b-0 focus-visible:ring-1 focus-visible:outline-none xl:grid-cols-[minmax(12rem,0.58fr)_minmax(0,1.22fr)_auto] xl:items-center"
-                : "hover:bg-muted border-border focus-visible:ring-ring flex cursor-pointer items-center justify-between rounded-lg border p-3 transition-colors focus-visible:ring-1 focus-visible:outline-none"
+                ? "group border-border hover:bg-muted focus-visible:ring-ring grid cursor-pointer gap-3 border-b px-4 py-3 transition-colors last:border-b-0 focus-visible:ring-1 focus-visible:outline-none xl:grid-cols-[minmax(12rem,0.58fr)_minmax(0,1.22fr)_auto] xl:items-center"
+                : "group hover:bg-muted border-border focus-visible:ring-ring flex cursor-pointer items-center justify-between rounded-lg border p-3 transition-colors focus-visible:ring-1 focus-visible:outline-none"
             }
           >
             <div className="min-w-0 space-y-1">
@@ -545,24 +545,13 @@ function ChainRegistry({
                 </p>
               ) : null}
             </div>
-            <div className="flex w-[4.25rem] gap-1 justify-self-start xl:justify-self-end">
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-sm"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onEdit(chain);
-                }}
-              >
-                <Pencil className="h-4 w-4" />
-              </Button>
+            <div className="flex w-9 justify-self-start xl:justify-self-end">
               {chain.id !== "solana-mainnet" ? (
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon-sm"
-                  className="hover:text-destructive"
+                  className="opacity-0 group-hover:opacity-100 transition-opacity hover:text-destructive"
                   onClick={(event) => {
                     event.stopPropagation();
                     onDelete(chain.id);
