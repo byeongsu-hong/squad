@@ -22,7 +22,8 @@ import { WalletSync } from "./wallet-sync";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 60_000,
+      staleTime: 15_000,
+      gcTime: 300_000,
       refetchOnWindowFocus: true,
       retry: 1,
     },

@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import { ProposalDetailModal } from "@/components/proposal-detail-modal";
 import { Button } from "@/components/ui/button";
 import { useProposalsQuery } from "@/lib/hooks/use-proposals-query";
+import { useViewerAddressForMultisig } from "@/lib/hooks/use-viewer-address";
 import { useWorkspaceQueue } from "@/lib/hooks/use-workspace-queue";
 import { cn } from "@/lib/utils";
 import { useAccount } from "wagmi";
@@ -29,17 +30,15 @@ function timeAgo(dateStr?: string): string {
 
 export function LandingPage() {
   const { publicKey, connected } = useWalletStore();
-  const { isConnected: evmConnected, address: evmAddress } = useAccount();
+  const { isConnected: evmConnected } = useAccount();
+  const getViewerAddress = useViewerAddressForMultisig();
   const { proposals, workspaceMultisigs } = useProposalsQuery();
 
   const queueItems = useWorkspaceQueue({
     workspaceProposals: proposals,
     multisigs: workspaceMultisigs,
     viewerAddress: publicKey?.toString() ?? null,
-    getViewerAddressForMultisig: (multisig) =>
-      multisig.provider === "safe"
-        ? (evmAddress ?? null)
-        : (publicKey?.toString() ?? null),
+    getViewerAddressForMultisig: (multisig) => getViewerAddress(multisig.provider),
   });
 
   const [selectedItem, setSelectedItem] = useState<WorkspaceQueueItem | null>(
@@ -55,7 +54,8 @@ export function LandingPage() {
   const attentionItems = useMemo(() => {
     return [...queueItems]
       .sort((a, b) => a.priority - b.priority)
-      .filter((item) => item.proposal.status === "Active" || item.readyToExecute);
+      .filter((item) => item.proposal.status === "Active" || item.readyToExecute)
+      .slice(0, 5);
   }, [queueItems]);
 
   const chainBreakdown = useMemo(() => {

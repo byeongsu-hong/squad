@@ -6,8 +6,9 @@ import { useMemo, useState } from "react";
 import { ProposalDetailModal } from "@/components/proposal-detail-modal";
 import { RegistryManagementDialog } from "@/components/registry-management-dialog";
 import { ProposalCardSkeletonList } from "@/components/skeletons";
-import { useProposalsQuery } from "@/lib/hooks/use-proposals-query";
 import { useProposalActions } from "@/lib/hooks/use-proposal-actions";
+import { useProposalsQuery } from "@/lib/hooks/use-proposals-query";
+import { useViewerAddressForMultisig } from "@/lib/hooks/use-viewer-address";
 import { useWorkspaceQueue } from "@/lib/hooks/use-workspace-queue";
 import { cn } from "@/lib/utils";
 import { useAccount } from "wagmi";
@@ -97,17 +98,15 @@ type StatusFilter = (typeof STATUS_FILTERS)[number];
 
 export function OperationsDashboard({ actions }: OperationsDashboardProps = {}) {
   const { publicKey, connected } = useWalletStore();
-  const { isConnected: evmConnected, address: evmAddress } = useAccount();
+  const getViewerAddress = useViewerAddressForMultisig();
+  const { isConnected: evmConnected } = useAccount();
   const { loading, proposals, workspaceMultisigs } = useProposalsQuery();
 
   const queueItems = useWorkspaceQueue({
     workspaceProposals: proposals,
     multisigs: workspaceMultisigs,
     viewerAddress: publicKey?.toString() ?? null,
-    getViewerAddressForMultisig: (multisig) =>
-      multisig.provider === "safe"
-        ? (evmAddress ?? null)
-        : (publicKey?.toString() ?? null),
+    getViewerAddressForMultisig: (multisig) => getViewerAddress(multisig.provider),
   });
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("All");
@@ -470,7 +469,6 @@ export function OperationsDashboard({ actions }: OperationsDashboardProps = {}) 
         item={modalItem}
         open={modalItem !== null}
         onClose={() => setModalItem(null)}
-        onActionSuccess={async () => {}}
       />
     </section>
   );
