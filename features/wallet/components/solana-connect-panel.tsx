@@ -103,8 +103,8 @@ export function SolanaConnectPanel({
 
       {hasNoWallets && (
         <div className="flex flex-col items-center gap-4 py-8 text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-950/40">
-            <Wallet className="h-8 w-8 text-amber-600 dark:text-amber-400" />
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+            <Wallet className="h-8 w-8 text-primary" />
           </div>
           <div className="space-y-1">
             <p className="text-sm font-semibold">No Wallets Found</p>

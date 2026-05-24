@@ -102,8 +102,8 @@ export function ProposalDetailView({
     if (proposal.status === "Rejected")
       return {
         label: "Rejected",
-        pill: "bg-red-500/15 text-red-600 dark:text-red-400",
-        bar: "bg-red-500",
+        pill: "bg-destructive/15 text-destructive",
+        bar: "bg-destructive",
         icon: null,
       };
     if (readyToExecute)
@@ -269,7 +269,7 @@ export function ProposalDetailView({
                     approved
                       ? "bg-emerald-500"
                       : rejected
-                      ? "bg-red-500"
+                      ? "bg-destructive"
                       : "bg-muted-foreground/20"
                   )}
                 />
@@ -301,7 +301,7 @@ export function ProposalDetailView({
                         isApproved
                           ? "bg-emerald-500"
                           : isRejected
-                          ? "bg-red-500"
+                          ? "bg-destructive"
                           : "bg-muted-foreground/20"
                       )}
                     />
@@ -328,7 +328,7 @@ export function ProposalDetailView({
                       isApproved
                         ? "text-emerald-600 dark:text-emerald-400"
                         : isRejected
-                        ? "text-red-500"
+                        ? "text-destructive"
                         : "text-muted-foreground/30"
                     )}
                   >

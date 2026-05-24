@@ -4,7 +4,7 @@ import Image from "next/image";
 export function DetectedBadge() {
   return (
     <span className="inline-flex items-center gap-1">
-      <span className="inline-block h-1.5 w-1.5 rounded-full bg-green-500" />
+      <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
       Detected
     </span>
   );
