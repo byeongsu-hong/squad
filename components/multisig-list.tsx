@@ -351,15 +351,12 @@ export function MultisigList() {
             <Shield className="text-muted-foreground/50 h-7 w-7" />
           </div>
           <div className="space-y-1.5">
-            <p className="text-foreground text-base font-semibold">
-              No vaults yet
-            </p>
+            <p className="text-foreground text-base font-semibold">No vaults yet</p>
             <p className="text-muted-foreground text-sm">
-              {publicKey
-                ? "No multisigs found. Use Add Multisig to create or import one."
-                : "Connect a wallet or use Add Multisig to import an existing one."}
+              {publicKey ? "No multisigs found." : "Connect a wallet to get started."}
             </p>
           </div>
+          <AddMultisigActions />
         </div>
       )}
 
