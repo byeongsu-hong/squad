@@ -19,8 +19,8 @@ export function RegistryManagementDialog({
   );
 
   const handleOpenSettings = () => {
-    setSettingsActiveSection("multisigs");
-    router.push("/settings?section=multisigs");
+    setSettingsActiveSection("registry");
+    router.push("/settings?section=registry");
   };
 
   return (
