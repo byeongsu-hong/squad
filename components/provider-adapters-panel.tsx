@@ -1,6 +1,6 @@
 "use client";
 
-import { Layers3, Network } from "lucide-react";
+import { Network } from "lucide-react";
 import { useMemo } from "react";
 
 import { useChainStore } from "@/stores/chain-store";
@@ -37,20 +37,6 @@ export function ProviderAdaptersPanel() {
 
   return (
     <div className="border-border bg-card space-y-4 rounded-xl border p-4">
-      <div className="border-border space-y-1 border-b pb-4">
-        <div className="flex items-center gap-2">
-          <Layers3 className="text-primary h-4 w-4" />
-          <p className="text-muted-foreground text-[0.68rem] tracking-[0.18em] uppercase">
-            Adapter Readiness
-          </p>
-        </div>
-        <p className="text-muted-foreground text-sm leading-6">
-          Keep future EVM Safe endpoints beside the current SVM chain
-          configuration so extension work does not require another settings
-          surface.
-        </p>
-      </div>
-
       <div className="grid gap-3 lg:grid-cols-2">
         <div className="border-border bg-muted space-y-3 rounded-lg border p-3">
           <div className="flex items-center justify-between gap-3">
@@ -77,7 +63,8 @@ export function ProviderAdaptersPanel() {
               </p>
             </div>
             <span className="rounded-md border border-violet-500/30 bg-violet-500/10 px-2 py-0.5 text-xs font-medium text-violet-600 dark:text-violet-300">
-              {safePreparedChains} chains · {safeAdapterFieldsConfigured}/3 ready
+              {safePreparedChains} chains
+              {safeAdapterFieldsConfigured > 0 && ` · ${safeAdapterFieldsConfigured}/3 ready`}
             </span>
           </div>
         </div>

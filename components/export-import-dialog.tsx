@@ -634,15 +634,6 @@ function ExportImportExportPanel({
       >
         {embedded ? (
           <>
-            <div className="space-y-1">
-              <p className="text-muted-foreground/70 text-[0.68rem] tracking-[0.18em] uppercase">
-                Export package
-              </p>
-              <p className="text-muted-foreground text-sm leading-6">
-                Current output contains all saved chains and multisigs in a
-                single portable YAML document.
-              </p>
-            </div>
             <div className="grid gap-2">
               <div className="border-border bg-card border px-3 py-2">
                 <p className="text-muted-foreground/70 text-[0.62rem] tracking-[0.16em] uppercase">
@@ -750,32 +741,10 @@ function ExportImportImportPanel({
 
   return (
     <div
-      className={
-        embedded ? "grid gap-4 xl:grid-cols-[16rem_minmax(0,1fr)]" : "space-y-3"
-      }
+      className="space-y-3"
     >
-      {embedded ? (
-        <div className="border-border bg-muted space-y-3 border p-4">
-          <p className="text-muted-foreground/70 text-[0.68rem] tracking-[0.18em] uppercase">
-            Import rules
-          </p>
-          <div className="text-muted-foreground space-y-2 text-sm leading-6">
-            <p>Existing items are preserved.</p>
-            <p>New chains import before multisigs.</p>
-            <p>Duplicate multisigs are skipped.</p>
-            <p>Missing-chain entries are reported as failures.</p>
-            <p>Non-Squads chains import as settings only.</p>
-            <p>
-              Safe multisigs on prepared chains are fetched live via Safe API.
-            </p>
-          </div>
-        </div>
-      ) : null}
       <div className="space-y-3">
         <label className="text-foreground/80 text-xs font-medium">Paste YAML content:</label>
-        <p className="text-muted-foreground text-sm">
-          Existing items will be preserved. Only new items will be imported.
-        </p>
         <div className="border-border bg-muted flex items-start justify-between gap-3 border px-3 py-3">
           <div className="space-y-1">
             <p className="text-foreground text-sm font-medium">Reset state</p>
