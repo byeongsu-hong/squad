@@ -260,15 +260,16 @@ export function ProposalDetailView({
           </div>
 
           {/* Dot row */}
-          <div className="mb-2 flex items-center gap-1.5">
+          <div className="mb-2 flex flex-wrap items-center gap-1.5">
             {multisig.members.map((m) => {
               const approved = proposal.approvals.includes(m.address);
               const rejected = proposal.rejections.includes(m.address);
               return (
                 <div
                   key={m.address}
+                  title={approved ? "Signed" : rejected ? "Rejected" : "Pending"}
                   className={cn(
-                    "h-2.5 w-2.5 rounded-full",
+                    "h-3 w-3 rounded-full",
                     approved
                       ? "bg-emerald-500"
                       : rejected
@@ -381,8 +382,9 @@ export function ProposalDetailView({
           {payloadOpen && (
             <div className="space-y-2 px-5 pb-5">
               {payloadLoading && (
-                <div className="flex justify-center py-6">
-                  <Loader2 className="text-muted-foreground/40 h-4 w-4 animate-spin" />
+                <div className="flex items-center justify-center gap-2 py-6">
+                  <Loader2 className="text-muted-foreground/50 h-4 w-4 animate-spin" />
+                  <span className="text-muted-foreground/50 text-xs">Loading transaction data…</span>
                 </div>
               )}
               {payloadError && !payloadLoading && (

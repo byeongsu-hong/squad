@@ -57,7 +57,7 @@ function VaultColumnHeaders() {
       {["Vault", "Address", "Chain", "Status", ""].map((h, i) => (
         <span
           key={i}
-          className="text-muted-foreground/70 text-[10px] font-semibold uppercase tracking-widest"
+          className="text-muted-foreground/70 text-[11px] font-semibold uppercase tracking-widest"
         >
           {h}
         </span>

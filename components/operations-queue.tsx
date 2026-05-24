@@ -137,7 +137,7 @@ function ColumnHeaders({
       {cols.map((h) => (
         <span
           key={h}
-          className="text-muted-foreground/70 text-[10px] font-semibold tracking-widest uppercase"
+          className="text-muted-foreground/70 text-[11px] font-semibold tracking-widest uppercase"
         >
           {h}
         </span>
@@ -548,11 +548,11 @@ export function OperationsQueue({
           {actionItems.length > 0 && (
             <div>
               <div className="mb-2 flex items-center gap-2">
-                <span className="bg-primary h-1.5 w-1.5 rounded-full" />
-                <p className="text-foreground/80 text-[10px] font-semibold uppercase tracking-widest">
+                <span className="bg-primary h-2 w-2 rounded-full" />
+                <p className="text-foreground/80 text-xs font-semibold uppercase tracking-widest">
                   Needs attention
                 </p>
-                <span className="bg-primary/10 text-primary rounded-full px-1.5 py-0.5 text-[9px] font-bold tabular-nums">
+                <span className="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-[10px] font-bold tabular-nums">
                   {actionItems.length}
                 </span>
               </div>
@@ -604,7 +604,7 @@ export function OperationsQueue({
           {historyItems.length > 0 && (
             <div>
               {actionItems.length > 0 && (
-                <p className="text-muted-foreground/50 mb-2 text-[10px] font-medium">
+                <p className="text-muted-foreground/60 mb-2 text-xs font-medium uppercase tracking-widest">
                   History
                 </p>
               )}
