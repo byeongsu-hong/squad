@@ -105,103 +105,63 @@ export function VaultDetail({ vaultKey }: VaultDetailProps) {
   return (
     <div className="mx-auto max-w-[1200px] space-y-5">
       {/* Back link */}
-      <div>
-        <Link
-          href="/vaults"
-          className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm transition-colors"
-        >
-          <ChevronLeft className="h-4 w-4" />
-          Back to Vaults
-        </Link>
-      </div>
+      <Link
+        href="/vaults"
+        className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm transition-colors"
+      >
+        <ChevronLeft className="h-4 w-4" />
+        Back to Vaults
+      </Link>
 
-      {/* Hero card */}
-      <div className="bg-card border-border rounded-2xl border p-6 shadow-sm">
-        {/* Top row */}
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="min-w-0">
-            <h1 className="text-foreground text-2xl font-bold tracking-tight">
-              {multisig.label ?? "Unnamed Vault"}
-            </h1>
-            <div className="mt-2 flex flex-wrap items-center gap-2">
-              {/* Address */}
-              <span className="font-mono text-muted-foreground text-xs">
-                {truncateAddress(multisig.address)}
-              </span>
-              <CopyButton value={multisig.address} />
-
-              <span className="text-border">·</span>
-
-              {/* Chain badge */}
-              <span className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-xs font-medium">
-                {multisig.chainName}
-              </span>
-
-              {/* Provider badge */}
-              <span
-                className={cn(
-                  "rounded-full px-2 py-0.5 text-xs font-medium",
-                  isSquads
-                    ? "bg-muted text-muted-foreground"
-                    : "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
-                )}
-              >
-                {isSquads ? "Squads" : "Safe"}
-              </span>
-            </div>
-          </div>
+      {/* Vault header card */}
+      <div className="bg-card border-border rounded-2xl border p-5">
+        {/* Row 1: name + badges */}
+        <div className="flex flex-wrap items-center gap-2">
+          <h1 className="text-foreground text-xl font-bold tracking-tight">
+            {multisig.label ?? "Unnamed Vault"}
+          </h1>
+          <span className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-xs font-medium">
+            {multisig.chainName}
+          </span>
+          <span
+            className={cn(
+              "rounded-full px-2 py-0.5 text-xs font-medium",
+              isSquads
+                ? "bg-muted text-muted-foreground"
+                : "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
+            )}
+          >
+            {isSquads ? "Squads" : "Safe"}
+          </span>
         </div>
 
-        {/* Stats row */}
-        <div className="mt-5 grid grid-cols-3 gap-3">
-          <div className="bg-background border-border rounded-xl border p-4 text-center">
-            <p className="text-muted-foreground text-[10px] font-semibold uppercase tracking-widest">
-              Threshold
-            </p>
-            <p className="text-foreground mt-1 text-2xl font-bold">
-              {multisig.threshold}
-              <span className="text-muted-foreground text-lg font-medium">
-                /{multisig.members.length}
-              </span>
-            </p>
-          </div>
-          <div className="bg-background border-border rounded-xl border p-4 text-center">
-            <p className="text-muted-foreground text-[10px] font-semibold uppercase tracking-widest">
-              Signers
-            </p>
-            <p className="text-foreground mt-1 text-2xl font-bold">
-              {multisig.members.length}
-            </p>
-          </div>
-          <div className="bg-background border-border rounded-xl border p-4 text-center">
-            <p className="text-muted-foreground text-[10px] font-semibold uppercase tracking-widest">
-              Pending
-            </p>
-            <p className="text-foreground mt-1 text-2xl font-bold">
-              {pendingCount === null ? (
-                <span className="bg-muted inline-block h-7 w-8 animate-pulse rounded" />
-              ) : (
-                pendingCount
-              )}
-            </p>
-          </div>
+        {/* Row 2: address + copy */}
+        <div className="mt-2 flex items-center">
+          <span className="font-mono text-muted-foreground text-xs">
+            {truncateAddress(multisig.address)}
+          </span>
+          <CopyButton value={multisig.address} />
         </div>
+
+        {/* Row 3: inline stats */}
+        <p className="text-muted-foreground mt-2 text-xs">
+          {multisig.threshold}/{multisig.members.length} threshold
+          {" · "}
+          {multisig.members.length} signers
+          {" · "}
+          {pendingCount === null ? (
+            <span className="bg-muted inline-block h-3 w-5 animate-pulse rounded align-middle" />
+          ) : (
+            pendingCount
+          )}{" "}
+          pending
+        </p>
       </div>
 
-      {/* Signers section */}
+      {/* Signers list */}
       {multisig.members.length > 0 && (
-        <div className="bg-card border-border overflow-hidden rounded-2xl border">
-          <div className="border-border flex items-center justify-between border-b px-6 py-4">
-            <div className="flex items-center gap-2">
-              <span className="text-foreground text-sm font-semibold">
-                Signers
-              </span>
-              <span className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-xs font-medium">
-                {multisig.members.length}
-              </span>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 gap-2 p-4 sm:grid-cols-2">
+        <div className="bg-card border-border rounded-2xl border p-4">
+          <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
             {multisig.members.map((member) => (
               <div
                 key={member.address}
@@ -223,9 +183,9 @@ export function VaultDetail({ vaultKey }: VaultDetailProps) {
 
       {/* Operations section */}
       <div>
-        <h2 className="text-foreground mb-3 text-base font-semibold">
+        <p className="text-muted-foreground mb-2 text-xs font-medium uppercase tracking-widest">
           Operations
-        </h2>
+        </p>
         <OperationsQueue
           items={vaultItems}
           loading={loading}
