@@ -12,11 +12,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Tooltip,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { useAddressLabels } from "@/lib/hooks/use-address-label";
 import { cn } from "@/lib/utils";
 import type { AddressLabel } from "@/types/address-label";
@@ -419,32 +414,30 @@ function AddressLabelRegistry({
             </div>
           </div>
         ) : (
-          <TooltipProvider>
-            <div
-              className={embedded ? "divide-border divide-y" : "space-y-1.5"}
-            >
-              {embedded ? (
-                <div className="text-muted-foreground/70 grid grid-cols-[minmax(0,0.95fr)_minmax(0,1.15fr)_minmax(0,1.3fr)_8rem_4.5rem] gap-3 px-3 py-2 text-[0.62rem] tracking-[0.16em] uppercase">
-                  <span>Label</span>
-                  <span>Description</span>
-                  <span>Address</span>
-                  <span>Updated</span>
-                  <span className="text-right">Actions</span>
-                </div>
-              ) : null}
-              {filteredLabels.map((label) => (
-                <Tooltip key={label.address} delayDuration={300}>
-                  <TooltipTrigger asChild>
-                    <div
-                      className={cn(
-                        "group hover:bg-accent flex cursor-pointer items-center gap-2 transition-colors",
-                        embedded
-                          ? "grid grid-cols-[minmax(0,0.95fr)_minmax(0,1.15fr)_minmax(0,1.3fr)_8rem_4.5rem] gap-3 px-3 py-3"
-                          : "rounded-md border px-2.5 py-1.5"
-                      )}
-                      onClick={() => onEdit(label)}
-                    >
-                      <div className="min-w-0">
+          <div
+            className={embedded ? "divide-border divide-y" : "space-y-1.5"}
+          >
+            {embedded ? (
+              <div className="text-muted-foreground/70 grid grid-cols-[minmax(0,0.95fr)_minmax(0,1.15fr)_minmax(0,1.3fr)_8rem_4.5rem] gap-3 px-3 py-2 text-[0.62rem] tracking-[0.16em] uppercase">
+                <span>Label</span>
+                <span>Description</span>
+                <span>Address</span>
+                <span>Updated</span>
+                <span className="text-right">Actions</span>
+              </div>
+            ) : null}
+            {filteredLabels.map((label) => (
+              <div
+                key={label.address}
+                className={cn(
+                  "group hover:bg-accent flex cursor-pointer items-center gap-2 transition-colors",
+                  embedded
+                    ? "grid grid-cols-[minmax(0,0.95fr)_minmax(0,1.15fr)_minmax(0,1.3fr)_8rem_4.5rem] gap-3 px-3 py-3"
+                    : "rounded-md border px-2.5 py-1.5"
+                )}
+                onClick={() => onEdit(label)}
+              >
+                <div className="min-w-0">
                         <div className="flex items-center gap-2">
                           <div
                             className="h-2 w-2 shrink-0 rounded-full"
@@ -517,12 +510,9 @@ function AddressLabelRegistry({
                           <Trash2 className="h-3 w-3" />
                         </button>
                       </div>
-                    </div>
-                  </TooltipTrigger>
-                </Tooltip>
-              ))}
-            </div>
-          </TooltipProvider>
+              </div>
+            ))}
+          </div>
         )}
       </div>
     </div>
