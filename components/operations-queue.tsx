@@ -703,7 +703,7 @@ export function OperationsQueue({
 
         {/* Detail panel - full-screen on mobile, sticky 42% panel on desktop */}
         {selectedItem && (
-          <div className="flex-1 bg-card lg:flex-none lg:w-[42%] lg:min-w-[360px] lg:border-l lg:border-border lg:sticky lg:top-[54px] lg:max-h-[calc(100svh-54px)] lg:overflow-y-auto">
+          <div className="flex-1 bg-background lg:flex-none lg:w-[42%] lg:min-w-[360px] lg:border-l lg:border-border lg:sticky lg:top-[54px] lg:max-h-[calc(100svh-54px)] lg:overflow-y-auto">
             <ProposalDetailView
               item={selectedItem}
               onBack={() => setSelectedItem(null)}

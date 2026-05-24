@@ -57,13 +57,30 @@ function formatProviderLabel(provider: RegistrySummaryRow["multisigProvider"]) {
   return provider === "safe" ? "Safe" : "Squads";
 }
 
-function VaultColumnHeaders() {
+function VaultColumnHeaders({
+  selectable = false,
+  allSelected = false,
+  onToggleAll,
+}: {
+  selectable?: boolean;
+  allSelected?: boolean;
+  onToggleAll?: () => void;
+}) {
   return (
     <div
       className="border-border bg-muted/60 grid items-center border-b px-3 py-2"
       style={{ gridTemplateColumns: GRID_COLS }}
     >
-      <div />
+      <div className="flex items-center justify-center">
+        {selectable && (
+          <Checkbox
+            checked={allSelected}
+            onCheckedChange={onToggleAll}
+            className="size-3.5"
+            aria-label="Select all"
+          />
+        )}
+      </div>
       {["Vault", "Chain", "", ""].map((h, i) => (
         <span
           key={i}
@@ -301,19 +318,8 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
       </div>
 
       {/* Secondary toolbar: bulk actions + tag filters (only when data exists) */}
-      {(hasMultisigs || allTags.length > 0) && (
+      {(selectedForDeletion.size > 0 || allTags.length > 0) && (
         <div className="flex flex-wrap items-center gap-2">
-          {hasMultisigs && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={toggleSelectAll}
-            >
-              {selectedForDeletion.size === multisigs.length
-                ? "Deselect all"
-                : "Select all"}
-            </Button>
-          )}
           {selectedForDeletion.size > 0 && (
             <Button
               variant="destructive"
@@ -393,7 +399,11 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
       {/* Vault table */}
       {!loading && hasMultisigs && filteredRegistryRows.length > 0 && (
         <div className="border-border bg-card overflow-hidden rounded-xl border">
-          <VaultColumnHeaders />
+          <VaultColumnHeaders
+            selectable
+            allSelected={selectedForDeletion.size === multisigs.length && multisigs.length > 0}
+            onToggleAll={toggleSelectAll}
+          />
           <div className="divide-border/50 divide-y">
             {filteredRegistryRows.map((row) => {
               const multisig = getMultisigForRow(row);
