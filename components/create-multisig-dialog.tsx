@@ -33,6 +33,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
+const PERMISSION_OPTIONS = [
+  { value: 7, label: "Full access", description: "Propose, vote, and execute" },
+  { value: 3, label: "Propose + Vote", description: "Cannot execute" },
+  { value: 6, label: "Vote + Execute", description: "Cannot propose" },
+  { value: 1, label: "Propose only", description: "" },
+  { value: 2, label: "Vote only", description: "" },
+  { value: 4, label: "Execute only", description: "" },
+];
 import { SquadService } from "@/lib/squad";
 import { transactionSignerService } from "@/lib/transaction-signer";
 import { createMultisigSchema } from "@/lib/validation";
@@ -360,18 +369,29 @@ export function CreateMultisigDialog({
                         control={form.control}
                         name={`members.${index}.permissions.mask`}
                         render={({ field }) => (
-                          <FormItem className="w-20">
-                            <FormControl>
-                              <Input
-                                type="number"
-                                placeholder="Perms"
-                                {...field}
-                                onChange={(e) =>
-                                  field.onChange(parseInt(e.target.value))
-                                }
-                              />
-                            </FormControl>
-                            <FormDescription>7 = full</FormDescription>
+                          <FormItem className="w-44">
+                            <Select
+                              value={String(field.value)}
+                              onValueChange={(v) => field.onChange(parseInt(v))}
+                            >
+                              <FormControl>
+                                <SelectTrigger className="w-full">
+                                  <SelectValue />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {PERMISSION_OPTIONS.map((opt) => (
+                                  <SelectItem key={opt.value} value={String(opt.value)}>
+                                    <span>{opt.label}</span>
+                                    {opt.description && (
+                                      <span className="text-muted-foreground ml-1 text-[11px]">
+                                        · {opt.description}
+                                      </span>
+                                    )}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                             <FormMessage />
                           </FormItem>
                         )}
