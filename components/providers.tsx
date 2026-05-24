@@ -4,7 +4,7 @@ import "@rainbow-me/rainbowkit/styles.css";
 
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { ThemeProvider, useTheme } from "next-themes";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiProvider } from "wagmi";
 
@@ -33,8 +33,12 @@ const queryClient = new QueryClient({
 
 function RainbowKitThemeBridge({ children }: { children: React.ReactNode }) {
   const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   return (
-    <RainbowKitProvider theme={resolvedTheme === "dark" ? daylightDarkTheme : daylightLightTheme}>
+    <RainbowKitProvider
+      theme={mounted && resolvedTheme === "dark" ? daylightDarkTheme : daylightLightTheme}
+    >
       {children}
     </RainbowKitProvider>
   );
