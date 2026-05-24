@@ -1,15 +1,18 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 
 import { ProposalDetailModal } from "@/components/proposal-detail-modal";
 import { RegistryManagementDialog } from "@/components/registry-management-dialog";
 import { ProposalCardSkeletonList } from "@/components/skeletons";
-import { useAllProposalsLoader } from "@/lib/hooks/use-all-proposals-loader";
 import { useProposalActions } from "@/lib/hooks/use-proposal-actions";
+import { useProposalsQuery } from "@/lib/hooks/use-proposals-query";
+import { useViewerAddressForMultisig } from "@/lib/hooks/use-viewer-address";
 import { useWorkspaceQueue } from "@/lib/hooks/use-workspace-queue";
 import { cn } from "@/lib/utils";
+import { useAccount } from "wagmi";
+
 import { useWalletStore } from "@/stores/wallet-store";
 import type { WorkspaceQueueItem } from "@/types/workspace";
 
@@ -94,25 +97,16 @@ const STATUS_FILTERS = ["All", "Action needed", "Pending", "Executable", "Execut
 type StatusFilter = (typeof STATUS_FILTERS)[number];
 
 export function OperationsDashboard({ actions }: OperationsDashboardProps = {}) {
-  const { publicKey, connected, evmConnected, getWalletAddressForProvider } = useWalletStore();
-  const { loading, proposals, safeProposals, workspaceMultisigs, loadAll } =
-    useAllProposalsLoader({ errorMessage: "Failed to load dashboard" });
-
-  const autoLoadedRef = useRef(false);
-
-  useEffect(() => {
-    if (autoLoadedRef.current || workspaceMultisigs.length === 0) return;
-    autoLoadedRef.current = true;
-    void loadAll();
-  }, [workspaceMultisigs.length, loadAll]);
+  const { publicKey, connected } = useWalletStore();
+  const getViewerAddress = useViewerAddressForMultisig();
+  const { isConnected: evmConnected } = useAccount();
+  const { loading, proposals, workspaceMultisigs } = useProposalsQuery();
 
   const queueItems = useWorkspaceQueue({
-    proposals,
+    workspaceProposals: proposals,
     multisigs: workspaceMultisigs,
     viewerAddress: publicKey?.toString() ?? null,
-    workspaceProposals: safeProposals,
-    getViewerAddressForMultisig: (multisig) =>
-      getWalletAddressForProvider(multisig.provider),
+    getViewerAddressForMultisig: (multisig) => getViewerAddress(multisig.provider),
   });
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("All");
@@ -165,9 +159,7 @@ export function OperationsDashboard({ actions }: OperationsDashboardProps = {}) 
   );
   const canExecuteItems = selectedItems.filter((i) => i.readyToExecute);
 
-  const { approveByAddress, executeByAddress, isActionInProgress } = useProposalActions({
-    onSuccess: () => loadAll({ force: true }),
-  });
+  const { approveByAddress, executeByAddress, isActionInProgress } = useProposalActions();
 
   const handleBatchApprove = async () => {
     for (const item of canApproveItems) {
@@ -246,12 +238,6 @@ export function OperationsDashboard({ actions }: OperationsDashboardProps = {}) 
         <div className="flex items-center gap-2">
           {actions}
           <RegistryManagementDialog compact />
-          <button
-            type="button"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-1.5 text-[12px] font-semibold text-primary-foreground transition-colors hover:bg-primary/80"
-          >
-            + New proposal
-          </button>
         </div>
       </div>
 
@@ -423,7 +409,7 @@ export function OperationsDashboard({ actions }: OperationsDashboardProps = {}) 
         )}
       >
         <div className="mx-auto max-w-3xl px-4 pb-6">
-          <div className="flex items-center justify-between rounded-2xl bg-card px-5 py-3 shadow-[0_8px_32px_rgba(0,0,0,0.24)]">
+          <div className="flex items-center justify-between rounded-2xl bg-foreground px-5 py-3 shadow-[0_8px_32px_rgba(0,0,0,0.24)]">
             <div className="flex items-center gap-3">
               <input
                 type="checkbox"
@@ -432,7 +418,7 @@ export function OperationsDashboard({ actions }: OperationsDashboardProps = {}) 
                 className="h-3.5 w-3.5 rounded accent-primary"
                 aria-label="Clear selection"
               />
-              <span className="text-[13px] text-white">
+              <span className="text-[13px] text-background">
                 {selected.size} transaction{selected.size !== 1 ? "s" : ""} selected
               </span>
             </div>
@@ -470,7 +456,7 @@ export function OperationsDashboard({ actions }: OperationsDashboardProps = {}) 
               <button
                 type="button"
                 onClick={() => setSelected(new Set())}
-                className="rounded-lg border border-border px-3.5 py-1.5 text-[12px] text-muted-foreground transition-colors hover:border-border/80 hover:text-foreground"
+                className="rounded-lg border border-background/20 px-3.5 py-1.5 text-[12px] text-background/70 transition-colors hover:border-background/30 hover:text-background"
               >
                 Clear
               </button>
@@ -483,7 +469,6 @@ export function OperationsDashboard({ actions }: OperationsDashboardProps = {}) 
         item={modalItem}
         open={modalItem !== null}
         onClose={() => setModalItem(null)}
-        onActionSuccess={() => loadAll({ force: true })}
       />
     </section>
   );

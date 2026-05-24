@@ -1,8 +1,10 @@
 "use client";
 
 import Safe from "@safe-global/protocol-kit";
+import type { Eip1193Provider } from "@safe-global/protocol-kit";
+import { getAccount, switchChain } from "wagmi/actions";
 
-import { evmWalletService } from "@/lib/evm-wallet";
+import { wagmiConfig } from "@/lib/wagmi-config";
 import type { SafeServiceMultisigTransaction } from "@/lib/safe";
 import { getSafeChainNumericId } from "@/lib/safe";
 import type { ChainConfig } from "@/types/chain";
@@ -17,14 +19,17 @@ async function getSafeSdk(
     throw new Error(`Safe actions are not configured for ${chain.name}.`);
   }
 
-  await evmWalletService.switchToChain(chainId);
-
-  if (typeof window === "undefined" || !window.ethereum) {
-    throw new Error("No injected EVM wallet was found in this browser.");
+  const { connector } = getAccount(wagmiConfig);
+  if (!connector) {
+    throw new Error("No EVM wallet connected.");
   }
 
+  await switchChain(wagmiConfig, { chainId: Number(chainId) as 1 | 10 | 56 | 8453 | 42161 });
+
+  const provider = await connector.getProvider();
+
   return Safe.init({
-    provider: window.ethereum,
+    provider: provider as Eip1193Provider,
     signer,
     safeAddress,
   });
