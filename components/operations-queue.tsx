@@ -388,7 +388,7 @@ export function OperationsQueue({
 
   const queueContent = (
     <div>
-      {showFilters && (
+      {showFilters && items.length > 0 && (
         <div className="mb-3 flex flex-wrap items-center gap-2">
           <div className="flex flex-wrap items-center gap-1">
             {STATUS_FILTERS.map((f) => (
@@ -457,7 +457,7 @@ export function OperationsQueue({
         </div>
       )}
 
-      {!showFilters && (
+      {!showFilters && items.length > 0 && (
         <div className="mb-3">
           <input
             type="search"

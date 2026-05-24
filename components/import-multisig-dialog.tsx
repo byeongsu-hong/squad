@@ -312,9 +312,6 @@ export function ImportMultisigDialog({
                     />
                   </FormControl>
                   <FormMessage />
-                  <FormDescription>
-                    A friendly name for this multisig
-                  </FormDescription>
                 </FormItem>
               )}
             />
@@ -333,9 +330,6 @@ export function ImportMultisigDialog({
                     />
                   </FormControl>
                   <FormMessage />
-                  <FormDescription>
-                    Comma-separated tags to organize your multisigs
-                  </FormDescription>
                 </FormItem>
               )}
             />
@@ -352,7 +346,7 @@ export function ImportMultisigDialog({
               <button
                 type="submit"
                 disabled={loading}
-                className="bg-amber-500 hover:bg-amber-400 disabled:bg-amber-500/50 inline-flex h-9 items-center rounded-md px-4 text-sm font-medium text-white transition-colors disabled:cursor-not-allowed"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-9 items-center rounded-md px-4 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <>
