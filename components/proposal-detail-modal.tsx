@@ -325,7 +325,7 @@ export function ProposalDetailView({
                     "flex items-center justify-between rounded-md px-2 py-1.5",
                     isCurrentUser
                       ? "bg-primary/5 hover:bg-primary/8"
-                      : "hover:bg-muted/60"
+                      : "hover:bg-muted"
                   )}
                 >
                   <div className="flex min-w-0 items-center gap-2">

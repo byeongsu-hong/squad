@@ -68,7 +68,7 @@ function VaultColumnHeaders({
 }) {
   return (
     <div
-      className="border-border bg-muted/60 grid items-center border-b px-3 py-2"
+      className="border-border bg-muted grid items-center border-b px-3 py-2"
       style={{ gridTemplateColumns: GRID_COLS }}
     >
       <div className="flex items-center justify-center">
@@ -420,7 +420,7 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
                 <div
                   key={row.key}
                   className={cn(
-                    "grid cursor-pointer items-center px-3 py-2.5 transition-colors",
+                    "group grid cursor-pointer items-center px-3 py-2.5 transition-colors",
                     isSelected
                       ? "bg-primary/8"
                       : isActiveDesk
@@ -570,7 +570,7 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      className="h-7 w-7 text-muted-foreground/50"
+                      className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground/50"
                       onClick={() => handleOpenTagDialog(multisig)}
                       title="Manage tags"
                     >

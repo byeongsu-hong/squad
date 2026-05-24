@@ -86,7 +86,7 @@ export function LandingPage() {
           <div className="bg-border h-8 w-px" />
           <button
             type="button"
-            onClick={() => toggleFilter("Action needed")}
+            onClick={() => needsSigningCount > 0 && toggleFilter("Action needed")}
             className={cn(
               "flex items-center gap-2 rounded-lg px-1 py-0.5 transition-opacity",
               needsSigningCount > 0 ? "hover:opacity-70 cursor-pointer" : "cursor-default",
@@ -106,7 +106,7 @@ export function LandingPage() {
           <div className="bg-border h-8 w-px" />
           <button
             type="button"
-            onClick={() => toggleFilter("Executable")}
+            onClick={() => executableCount > 0 && toggleFilter("Executable")}
             className={cn(
               "flex items-center gap-2 rounded-lg px-1 py-0.5 transition-opacity",
               executableCount > 0 ? "hover:opacity-70 cursor-pointer" : "cursor-default",
@@ -126,7 +126,7 @@ export function LandingPage() {
           <div className="bg-border h-8 w-px" />
           <button
             type="button"
-            onClick={() => toggleFilter("Pending")}
+            onClick={() => watchingCount > 0 && toggleFilter("Pending")}
             className={cn(
               "flex items-center gap-2 rounded-lg px-1 py-0.5 transition-opacity",
               watchingCount > 0 ? "hover:opacity-70 cursor-pointer" : "cursor-default",
@@ -139,7 +139,7 @@ export function LandingPage() {
                 {watchingCount}
               </span>
               <span className="text-muted-foreground text-[11px] uppercase tracking-widest">
-                Watching
+                Pending
               </span>
             </div>
           </button>
