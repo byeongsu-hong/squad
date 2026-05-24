@@ -18,7 +18,9 @@ import { toast } from "sonner";
 
 import { AddMultisigActions } from "@/components/add-multisig-actions";
 import { ManageTagsDialog } from "@/components/manage-tags-dialog";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCreatorMultisigs } from "@/lib/hooks/use-creator-multisigs";
 import { useDebounce } from "@/lib/hooks/use-debounce";
@@ -264,19 +266,19 @@ export function MultisigList() {
         <h1 className="text-foreground mr-2 text-2xl font-bold tracking-[-0.02em]">
           Vaults
         </h1>
-        <input
+        <Input
           placeholder="Search multisigs..."
           value={filterText}
           onChange={(e) => setFilterText(e.target.value)}
-          className="border-border bg-card text-foreground placeholder:text-muted-foreground/50 h-9 flex-1 rounded-md border px-3 text-sm focus:outline-none sm:flex-none sm:w-[220px]"
+          className="h-9 flex-1 sm:flex-none sm:w-[220px]"
           aria-label="Search multisigs"
         />
         {publicKey && canSyncSelectedChain ? (
-          <button
-            type="button"
+          <Button
+            variant="outline"
+            size="icon-sm"
             onClick={loadMultisigs}
             disabled={loading}
-            className="border-border text-foreground/80 hover:bg-muted inline-flex h-9 items-center rounded-md border bg-transparent px-3 transition-colors disabled:opacity-50"
             aria-label="Refresh multisigs"
             title={`Creator sync on ${normalizedSelectedChain?.name ?? "selected chain"}`}
           >
@@ -285,7 +287,7 @@ export function MultisigList() {
             ) : (
               <RefreshCw className="h-4 w-4" />
             )}
-          </button>
+          </Button>
         ) : null}
         <div className="ml-auto">
           <AddMultisigActions />
@@ -296,25 +298,25 @@ export function MultisigList() {
       {(hasMultisigs || allTags.length > 0) && (
         <div className="flex flex-wrap items-center gap-2">
           {hasMultisigs && (
-            <button
-              type="button"
+            <Button
+              variant="outline"
+              size="sm"
               onClick={toggleSelectAll}
-              className="border-border text-foreground/80 hover:bg-muted inline-flex h-8 items-center rounded-md border bg-transparent px-3 text-sm transition-colors"
             >
               {selectedForDeletion.size === multisigs.length
                 ? "Deselect all"
                 : "Select all"}
-            </button>
+            </Button>
           )}
           {selectedForDeletion.size > 0 && (
-            <button
-              type="button"
+            <Button
+              variant="destructive"
+              size="sm"
               onClick={handleDeleteSelected}
-              className="inline-flex h-8 items-center gap-1.5 rounded-md bg-destructive px-3 text-sm text-white transition-colors hover:bg-destructive/90"
             >
               <Trash2 className="h-3.5 w-3.5" />
               Remove ({selectedForDeletion.size})
-            </button>
+            </Button>
           )}
           {allTags.length > 0 && (
             <div className="flex flex-wrap gap-1.5">

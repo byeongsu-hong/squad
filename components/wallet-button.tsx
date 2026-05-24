@@ -4,6 +4,7 @@ import { Wallet } from "lucide-react";
 import { useState } from "react";
 import { useAccount } from "wagmi";
 
+import { Button } from "@/components/ui/button";
 import { AccountMenu, ConnectWalletDialog } from "@/features/wallet";
 import { useWalletStore } from "@/stores/wallet-store";
 
@@ -30,14 +31,14 @@ export function WalletButton() {
       {hasAnyWallet ? (
         <AccountMenu onAddWallet={handleAddWallet} />
       ) : (
-        <button
+        <Button
           type="button"
           onClick={() => setConnectOpen(true)}
-          className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-9 items-center gap-2 rounded-md px-4 text-sm font-medium transition-colors"
+          className="bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20"
         >
           <Wallet className="h-4 w-4" />
           Connect Wallet
-        </button>
+        </Button>
       )}
       <ConnectWalletDialog
         open={connectOpen}
