@@ -90,9 +90,9 @@ export function VaultDetail({ vaultKey }: VaultDetailProps) {
             Back to Vaults
           </Link>
         </div>
-        <div className="border-border text-muted-foreground/60 rounded-2xl border border-dashed px-6 py-20 text-center">
-          <p className="text-sm font-medium">Vault not found</p>
-          <p className="mt-1 text-xs">
+        <div className="flex flex-col items-center gap-3 py-20 text-center">
+          <p className="text-foreground text-sm font-semibold">Vault not found</p>
+          <p className="text-muted-foreground text-xs">
             It may have been removed from your registry.
           </p>
         </div>
@@ -145,22 +145,28 @@ export function VaultDetail({ vaultKey }: VaultDetailProps) {
 
         {/* Row 3: inline stats */}
         <p className="text-muted-foreground mt-2 text-xs">
-          {multisig.threshold}/{multisig.members.length} threshold
-          {" · "}
-          {multisig.members.length} signers
-          {" · "}
-          {pendingCount === null ? (
-            <span className="bg-muted inline-block h-3 w-5 animate-pulse rounded align-middle" />
-          ) : (
-            pendingCount
-          )}{" "}
-          pending
+          {multisig.threshold} of {multisig.members.length} required
+          {pendingCount !== null && pendingCount > 0 && (
+            <>
+              {" · "}
+              <span className="text-primary font-medium">{pendingCount} pending</span>
+            </>
+          )}
+          {pendingCount === null && (
+            <>
+              {" · "}
+              <span className="bg-muted inline-block h-3 w-5 animate-pulse rounded align-middle" />
+            </>
+          )}
         </p>
       </div>
 
       {/* Signers list */}
       {multisig.members.length > 0 && (
         <div className="bg-card border-border rounded-2xl border p-4">
+          <p className="text-muted-foreground/70 mb-3 text-[10px] font-semibold uppercase tracking-widest">
+            Signers ({multisig.members.length})
+          </p>
           <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
             {multisig.members.map((member) => (
               <div

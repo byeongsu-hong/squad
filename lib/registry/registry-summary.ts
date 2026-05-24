@@ -26,19 +26,23 @@ export interface RegistrySummaryRow {
 }
 
 function buildAttentionLine(summary: RegistryAttentionSummary | null) {
-  if (!summary) {
-    return "Attention loading";
-  }
+  if (!summary) return "";
 
   if (summary.waiting > 0) {
-    return `${summary.waiting} waiting on you · ${summary.executable} executable · ${summary.active} active`;
+    const parts = [`${summary.waiting} waiting`];
+    if (summary.executable > 0) parts.push(`${summary.executable} ready`);
+    return parts.join(" · ");
   }
 
   if (summary.executable > 0) {
-    return `${summary.executable} executable · ${summary.active} active`;
+    return `${summary.executable} ready to execute`;
   }
 
-  return `${summary.active} active`;
+  if (summary.active > 0) {
+    return `${summary.active} active`;
+  }
+
+  return "";
 }
 
 function toSearchText(parts: Array<string | undefined>) {
