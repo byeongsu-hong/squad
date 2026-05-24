@@ -51,9 +51,7 @@ export function LedgerConnectPanel({
 
   const loadAccounts = async (page: number) => {
     const chain = getSelectedChain();
-    if (!chain) {
-      throw new Error("No chain selected");
-    }
+    if (!chain) throw new Error("No chain selected");
 
     const paths = Array.from({ length: ACCOUNTS_PER_PAGE }, (_, i) =>
       getDerivationPath(page * ACCOUNTS_PER_PAGE + i, pathType)

@@ -20,10 +20,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useWalletDisconnect } from "@/lib/hooks/use-wallet-disconnect";
 import { cn } from "@/lib/utils";
 import { formatAddress } from "@/lib/utils/format-address";
 import { useWalletStore } from "@/stores/wallet-store";
+
+import { useWalletDisconnect } from "../hooks/use-wallet-disconnect";
 
 interface AccountMenuProps {
   onAddWallet: (tab?: "solana" | "ethereum") => void;

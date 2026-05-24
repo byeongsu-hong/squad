@@ -1,17 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
+
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog";
-import { EvmConnectPanel } from "@/components/wallet/evm-connect-panel";
-import { LedgerConnectPanel } from "@/components/wallet/ledger-connect-panel";
-import { SolanaConnectPanel } from "@/components/wallet/solana-connect-panel";
 import { cn } from "@/lib/utils";
+
+import { EvmConnectPanel } from "./evm-connect-panel";
+import { LedgerConnectPanel } from "./ledger-connect-panel";
+import { SolanaConnectPanel } from "./solana-connect-panel";
 
 interface ConnectWalletDialogProps {
   open: boolean;
@@ -60,7 +62,7 @@ export function ConnectWalletDialog({
           <div className="flex flex-col gap-3">
             <div
               role="tablist"
-              className="flex items-center rounded-lg bg-muted p-1 gap-0.5"
+              className="bg-muted flex items-center gap-0.5 rounded-lg p-1"
             >
               {(["solana", "ethereum"] as const).map((tab) => (
                 <button

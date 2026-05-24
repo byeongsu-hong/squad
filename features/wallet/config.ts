@@ -1,7 +1,6 @@
-import { getDefaultConfig } from "@rainbow-me/rainbowkit";
-import { type Config, createConfig, http } from "wagmi";
+import { createConfig, http } from "wagmi";
 import { arbitrum, base, bsc, mainnet, optimism } from "wagmi/chains";
-import { injected } from "wagmi/connectors";
+import { injected, walletConnect } from "wagmi/connectors";
 
 const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID ?? "";
 
@@ -31,12 +30,13 @@ const transports = {
   ),
 };
 
-export const wagmiConfig: Config = projectId
-  ? getDefaultConfig({
-      appName: "Squad",
-      projectId,
-      chains,
-      ssr: true,
-      transports,
-    })
-  : createConfig({ chains, ssr: true, connectors: [injected()], transports });
+const connectors = projectId
+  ? [walletConnect({ projectId })]
+  : [injected()];
+
+export const wagmiConfig = createConfig({
+  chains,
+  ssr: true,
+  connectors,
+  transports,
+});

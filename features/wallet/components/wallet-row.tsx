@@ -1,6 +1,15 @@
 import { ChevronRight, Loader2, Wallet } from "lucide-react";
 import Image from "next/image";
 
+export function DetectedBadge() {
+  return (
+    <span className="inline-flex items-center gap-1">
+      <span className="inline-block h-1.5 w-1.5 rounded-full bg-green-500" />
+      Detected
+    </span>
+  );
+}
+
 export function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <p className="text-muted-foreground px-1 text-xs font-medium tracking-wide uppercase">
@@ -16,7 +25,7 @@ export function WalletIcon({
   icon?: string | null;
   name: string;
 }) {
-  const src = icon?.trimStart();
+  const src = icon?.trim();
   if (!src) {
     return (
       <Wallet className="text-muted-foreground h-6 w-6" aria-hidden="true" />

@@ -29,20 +29,14 @@ export function useBrowserWallet() {
   const connect = useCallback(
     async (wallet: Wallet) => {
       try {
-        // Select the wallet in the wallet adapter context
         select(wallet.adapter.name);
 
-        // Wait a bit longer to ensure the wallet is selected
         await new Promise((resolve) => setTimeout(resolve, 100));
 
-        // Connect using the wallet adapter's connect method
-        // This ensures the wallet adapter context is properly updated
         await walletAdapterConnect();
 
-        // Wait for connection to be established
         await new Promise((resolve) => setTimeout(resolve, 100));
 
-        // Get the public key and wallet name
         const publicKey = wallet.adapter.publicKey;
         if (!publicKey) {
           throw new Error("Failed to get public key from wallet");
@@ -63,38 +57,27 @@ export function useBrowserWallet() {
     await walletAdapterDisconnect();
   }, [walletAdapterDisconnect]);
 
-  // Listen for wallet adapter account changes
   useEffect(() => {
     const connectedWallet = wallets.find((w) => w.adapter.connected);
     if (!connectedWallet) return;
 
     const handleAccountChange = (publicKey: unknown) => {
       if (!publicKey) return;
-
-      // Type guard to ensure publicKey has toString method
       if (
         typeof publicKey === "object" &&
         publicKey !== null &&
         "toString" in publicKey
       ) {
         const pubkeyStr = (publicKey as { toString: () => string }).toString();
-        toast.info(
-          `Account changed: ${formatAddress(pubkeyStr, 4, 4)}`
-        );
+        toast.info(`Account changed: ${formatAddress(pubkeyStr, 4, 4)}`);
       }
     };
 
     connectedWallet.adapter.on("connect", handleAccountChange);
-
     return () => {
       connectedWallet.adapter.off("connect", handleAccountChange);
     };
   }, [wallets]);
 
-  return {
-    installedWallets,
-    availableWallets,
-    connect,
-    disconnect,
-  };
+  return { installedWallets, availableWallets, connect, disconnect };
 }

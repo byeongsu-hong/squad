@@ -7,7 +7,11 @@ import { useWalletStore } from "@/stores/wallet-store";
 import { WalletType } from "@/types/wallet";
 
 export function WalletSync() {
-  const { connected: storeConnected, walletName, walletType } = useWalletStore();
+  const {
+    connected: storeConnected,
+    walletName,
+    walletType,
+  } = useWalletStore();
   const { connected: adapterConnected, wallets, select, connect } = useWallet();
 
   useEffect(() => {
@@ -29,7 +33,15 @@ export function WalletSync() {
         }, 100);
       }
     }
-  }, [storeConnected, walletType, walletName, adapterConnected, wallets, select, connect]);
+  }, [
+    storeConnected,
+    walletType,
+    walletName,
+    adapterConnected,
+    wallets,
+    select,
+    connect,
+  ]);
 
   return null;
 }

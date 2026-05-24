@@ -5,25 +5,16 @@ import Image from "next/image";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { useBrowserWallet } from "@/lib/hooks/use-browser-wallet";
 import { okxWalletService } from "@/lib/okx-wallet";
-import { OKX_EXTENSION_URL, OKX_WALLET_ICON } from "@/lib/wallet/okx-icon";
 import { useWalletStore } from "@/stores/wallet-store";
 
-import { SectionLabel, WalletIcon, WalletRow } from "./wallet-row";
+import { useBrowserWallet } from "../hooks/use-browser-wallet";
+import { OKX_EXTENSION_URL, OKX_WALLET_ICON } from "../assets/okx-icon";
+import { DetectedBadge, SectionLabel, WalletIcon, WalletRow } from "./wallet-row";
 
 interface SolanaConnectPanelProps {
   onClose: () => void;
   onOpenLedger: () => void;
-}
-
-function DetectedBadge() {
-  return (
-    <span className="inline-flex items-center gap-1">
-      <span className="inline-block h-1.5 w-1.5 rounded-full bg-green-500" />
-      Detected
-    </span>
-  );
 }
 
 function InstallLink({ children }: { children: React.ReactNode }) {
@@ -169,11 +160,7 @@ export function SolanaConnectPanel({
           }
           isLoading={loadingWallet === "OKX Wallet"}
           disabled={isAnyLoading}
-          onClick={
-            isOkxInstalled
-              ? handleOkx
-              : () => handleInstallLink(OKX_EXTENSION_URL)
-          }
+          onClick={isOkxInstalled ? handleOkx : () => handleInstallLink(OKX_EXTENSION_URL)}
         />
 
         <WalletRow

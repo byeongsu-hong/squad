@@ -1,17 +1,18 @@
 "use client";
 
+import { Wallet } from "lucide-react";
 import { useState } from "react";
 import { useAccount } from "wagmi";
 
 import { Button } from "@/components/ui/button";
+import { AccountMenu, ConnectWalletDialog } from "@/features/wallet";
 import { useWalletStore } from "@/stores/wallet-store";
-import { AccountMenu } from "@/components/wallet/account-menu";
-import { ConnectWalletDialog } from "@/components/wallet/connect-wallet-dialog";
-import { Wallet } from "lucide-react";
 
 export function WalletButton() {
   const [connectOpen, setConnectOpen] = useState(false);
-  const [connectDefaultTab, setConnectDefaultTab] = useState<"solana" | "ethereum">("solana");
+  const [connectDefaultTab, setConnectDefaultTab] = useState<
+    "solana" | "ethereum"
+  >("solana");
 
   const { connected, publicKey } = useWalletStore();
   const { address: evmAddress, isConnected: evmConnected } = useAccount();
