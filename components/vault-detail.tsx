@@ -71,7 +71,7 @@ function MemberRow({ member, isViewer }: { member: MemberEntry; isViewer: boolea
       : null;
 
   return (
-    <div className="flex items-center gap-2 py-1.5">
+    <div className="group flex items-center gap-2 py-1.5">
       <div
         className={cn(
           "flex h-6 w-6 shrink-0 items-center justify-center rounded-full",
@@ -103,7 +103,7 @@ function MemberRow({ member, isViewer }: { member: MemberEntry; isViewer: boolea
         type="button"
         variant="ghost"
         onClick={handleCopy}
-        className="text-muted-foreground/30 hover:text-muted-foreground h-5 w-5 shrink-0 p-0"
+        className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground/50 hover:text-foreground h-5 w-5 shrink-0 p-0"
         aria-label="Copy address"
       >
         <Copy className="h-3 w-3" />

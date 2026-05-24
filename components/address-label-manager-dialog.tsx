@@ -395,10 +395,20 @@ function AddressLabelRegistry({
         </div>
       </div>
 
+      {embedded && filteredLabels.length > 0 && (
+        <div className="border-border text-muted-foreground/60 grid grid-cols-[minmax(0,0.95fr)_minmax(0,1.15fr)_minmax(0,1.3fr)_8rem_4.5rem] gap-3 border-b px-4 py-2 text-[0.62rem] tracking-[0.16em] uppercase">
+          <span>Label</span>
+          <span>Description</span>
+          <span>Address</span>
+          <span>Updated</span>
+          <span className="text-right">Actions</span>
+        </div>
+      )}
+
       <div
         className={
           embedded
-            ? "max-h-[36rem] overflow-y-auto px-4 py-2.5"
+            ? "max-h-[36rem] overflow-y-auto px-4 pb-2.5"
             : "min-h-0 flex-1 overflow-y-auto px-4 py-2.5"
         }
       >
@@ -415,15 +425,6 @@ function AddressLabelRegistry({
           <div
             className={embedded ? "divide-border divide-y" : "space-y-1.5"}
           >
-            {embedded ? (
-              <div className="text-muted-foreground/60 grid grid-cols-[minmax(0,0.95fr)_minmax(0,1.15fr)_minmax(0,1.3fr)_8rem_4.5rem] gap-3 px-3 py-2 text-[0.62rem] tracking-[0.16em] uppercase">
-                <span>Label</span>
-                <span>Description</span>
-                <span>Address</span>
-                <span>Updated</span>
-                <span className="text-right">Actions</span>
-              </div>
-            ) : null}
             {filteredLabels.map((label) => (
               <div
                 key={label.address}

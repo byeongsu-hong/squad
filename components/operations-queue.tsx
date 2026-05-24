@@ -530,7 +530,7 @@ export function OperationsQueue({
         </div>
       )}
 
-      {!showFilters && items.length > 0 && (
+      {!showFilters && items.length > 5 && (
         <div className="mb-3">
           <Input
             type="search"
@@ -631,17 +631,15 @@ export function OperationsQueue({
 
           {historyItems.length > 0 && (
             <div>
-              {actionItems.length > 0 && (
-                <div className="mb-2 flex items-center gap-2">
-                  <span className="bg-muted-foreground/25 h-2 w-2 rounded-full" />
-                  <p className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">
-                    History
-                  </p>
-                  <span className="text-muted-foreground/40 font-mono text-[11px] tabular-nums">
-                    {historyItems.length}
-                  </span>
-                </div>
-              )}
+              <div className="mb-2 flex items-center gap-2">
+                <span className="bg-muted-foreground/25 h-2 w-2 rounded-full" />
+                <p className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">
+                  History
+                </p>
+                <span className="text-muted-foreground/40 font-mono text-[11px] tabular-nums">
+                  {historyItems.length}
+                </span>
+              </div>
               <div className="border-border bg-card overflow-hidden rounded-xl border">
                 <ColumnHeaders
                   selectable={false}
