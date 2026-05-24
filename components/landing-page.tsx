@@ -73,7 +73,7 @@ export function LandingPage() {
               <span className="text-foreground text-2xl font-bold tabular-nums leading-tight">
                 {workspaceMultisigs.length}
               </span>
-              <span className="text-muted-foreground text-[11px] uppercase tracking-wide">
+              <span className="text-muted-foreground text-[11px] uppercase tracking-widest">
                 Vaults
               </span>
             </div>
@@ -85,7 +85,7 @@ export function LandingPage() {
               <span className={needsSigningCount > 0 ? "text-primary text-2xl font-bold tabular-nums leading-tight" : "text-foreground text-2xl font-bold tabular-nums leading-tight"}>
                 {needsSigningCount}
               </span>
-              <span className="text-muted-foreground text-[11px] uppercase tracking-wide">
+              <span className="text-muted-foreground text-[11px] uppercase tracking-widest">
                 Needs signing
               </span>
             </div>
@@ -97,7 +97,7 @@ export function LandingPage() {
               <span className={executableCount > 0 ? "text-emerald-600 dark:text-emerald-400 text-2xl font-bold tabular-nums leading-tight" : "text-foreground text-2xl font-bold tabular-nums leading-tight"}>
                 {executableCount}
               </span>
-              <span className="text-muted-foreground text-[11px] uppercase tracking-wide">
+              <span className="text-muted-foreground text-[11px] uppercase tracking-widest">
                 Ready to execute
               </span>
             </div>
@@ -109,7 +109,7 @@ export function LandingPage() {
               <span className={watchingCount > 0 ? "text-foreground text-2xl font-bold tabular-nums leading-tight" : "text-muted-foreground text-2xl font-bold tabular-nums leading-tight"}>
                 {watchingCount}
               </span>
-              <span className="text-muted-foreground text-[11px] uppercase tracking-wide">
+              <span className="text-muted-foreground text-[11px] uppercase tracking-widest">
                 Watching
               </span>
             </div>
