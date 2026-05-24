@@ -7,6 +7,8 @@ import { type UseFormReturn, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
+import { cn } from "@/lib/utils";
+
 import {
   Dialog,
   DialogContent,
@@ -453,10 +455,20 @@ function ChainRegistry({
                     Default
                   </span>
                 ) : null}
-                <span className="border-border bg-muted text-muted-foreground rounded-full border px-1.5 py-0.5 text-[0.62rem] tracking-[0.16em] uppercase">
+                <span className={cn(
+                  "rounded-full border px-1.5 py-0.5 text-[0.62rem] tracking-[0.16em] uppercase",
+                  (chain.vmFamily ?? "svm") === "svm"
+                    ? "border-primary/30 bg-primary/10 text-primary"
+                    : "border-blue-300/50 bg-blue-50 text-blue-700 dark:border-blue-700/30 dark:bg-blue-950/30 dark:text-blue-400"
+                )}>
                   {(chain.vmFamily ?? "svm").toUpperCase()}
                 </span>
-                <span className="border-border bg-muted text-muted-foreground rounded-full border px-1.5 py-0.5 text-[0.62rem] tracking-[0.16em] uppercase">
+                <span className={cn(
+                  "rounded-full border px-1.5 py-0.5 text-[0.62rem] tracking-[0.16em] uppercase",
+                  (chain.multisigProvider ?? "squads") === "squads"
+                    ? "border-primary/30 bg-primary/10 text-primary"
+                    : "border-blue-300/50 bg-blue-50 text-blue-700 dark:border-blue-700/30 dark:bg-blue-950/30 dark:text-blue-400"
+                )}>
                   {chain.multisigProvider ?? "squads"}
                 </span>
               </div>

@@ -189,7 +189,12 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
               <span className="border-border bg-muted text-muted-foreground rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide">
                 {multisig.chainName}
               </span>
-              <span className="border-border bg-muted text-muted-foreground rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide">
+              <span className={cn(
+                "rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide",
+                isSquads
+                  ? "border-primary/30 bg-primary/10 text-primary"
+                  : "border-blue-300/50 bg-blue-50 text-blue-700 dark:border-blue-700/30 dark:bg-blue-950/30 dark:text-blue-400"
+              )}>
                 {isSquads ? "Squads" : "Safe"}
               </span>
               <span className="text-muted-foreground/70 text-xs">
