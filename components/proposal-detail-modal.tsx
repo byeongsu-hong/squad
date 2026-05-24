@@ -239,42 +239,42 @@ export function ProposalDetailView({
 
         {/* ── Signatures ───────────────────────────────────────────────── */}
         <div className="border-border/60 border-b px-5 py-4">
-          {/* Dot row + count */}
-          <div className="mb-2 flex items-center justify-between">
-            <div className="flex items-center gap-1">
-              {multisig.members.map((m) => {
-                const approved = proposal.approvals.includes(m.address);
-                const rejected = proposal.rejections.includes(m.address);
-                return (
-                  <div
-                    key={m.address}
-                    className={cn(
-                      "h-2 w-2 rounded-full",
-                      approved
-                        ? "bg-emerald-500"
-                        : rejected
-                        ? "bg-red-500"
-                        : "bg-muted-foreground/20"
-                    )}
-                  />
-                );
-              })}
+          {/* Progress bar + count */}
+          <div className="mb-3 flex items-center gap-3">
+            <div className="flex-1 h-1.5 overflow-hidden rounded-full bg-muted">
+              <div
+                className={cn(
+                  "h-full rounded-full transition-all duration-500",
+                  statusConfig.bar
+                )}
+                style={{ width: `${approvalPct}%` }}
+              />
             </div>
-            <span className="text-foreground font-mono text-sm font-bold tabular-nums">
+            <span className="text-foreground shrink-0 font-mono text-sm font-bold tabular-nums">
               {approvalCount}
               <span className="text-muted-foreground/40">/{multisig.threshold}</span>
             </span>
           </div>
 
-          {/* Progress bar */}
-          <div className="mb-3 h-1 overflow-hidden rounded-full bg-muted">
-            <div
-              className={cn(
-                "h-full rounded-full transition-all duration-500",
-                statusConfig.bar
-              )}
-              style={{ width: `${approvalPct}%` }}
-            />
+          {/* Dot row */}
+          <div className="mb-2 flex items-center gap-1.5">
+            {multisig.members.map((m) => {
+              const approved = proposal.approvals.includes(m.address);
+              const rejected = proposal.rejections.includes(m.address);
+              return (
+                <div
+                  key={m.address}
+                  className={cn(
+                    "h-2.5 w-2.5 rounded-full",
+                    approved
+                      ? "bg-emerald-500"
+                      : rejected
+                      ? "bg-red-500"
+                      : "bg-muted-foreground/20"
+                  )}
+                />
+              );
+            })}
           </div>
 
           {/* Member rows */}
@@ -287,7 +287,12 @@ export function ProposalDetailView({
               return (
                 <div
                   key={member.address}
-                  className="hover:bg-muted/60 flex items-center justify-between rounded-md px-2 py-1.5"
+                  className={cn(
+                    "flex items-center justify-between rounded-md px-2 py-1.5",
+                    isCurrentUser
+                      ? "bg-primary/5 hover:bg-primary/8"
+                      : "hover:bg-muted/60"
+                  )}
                 >
                   <div className="flex min-w-0 items-center gap-2">
                     <div
@@ -361,7 +366,7 @@ export function ProposalDetailView({
             className="hover:bg-muted/40 flex w-full items-center justify-between px-5 py-3.5 text-left transition-colors"
           >
             <span className="text-muted-foreground/70 text-[10px] font-semibold uppercase tracking-widest">
-              Payload
+              Transaction data
             </span>
             {payloadOpen ? (
               <ChevronUp className="h-3.5 w-3.5 text-muted-foreground/40" />
