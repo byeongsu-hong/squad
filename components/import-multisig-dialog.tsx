@@ -237,7 +237,7 @@ export function ImportMultisigDialog({
               name="chainId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
+                  <FormLabel className="text-[11px] font-medium text-muted-foreground/50">
                     Chain <span className="text-destructive">*</span>
                   </FormLabel>
                   <Select
@@ -267,7 +267,7 @@ export function ImportMultisigDialog({
               name="multisigAddress"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
+                  <FormLabel className="text-[11px] font-medium text-muted-foreground/50">
                     Vault Address <span className="text-destructive">*</span>
                   </FormLabel>
                   <FormControl>
@@ -293,7 +293,7 @@ export function ImportMultisigDialog({
               name="label"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
+                  <FormLabel className="text-[11px] font-medium text-muted-foreground/50">
                     Label <span className="text-destructive">*</span>
                   </FormLabel>
                   <FormControl>
@@ -312,7 +312,9 @@ export function ImportMultisigDialog({
               name="tags"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Tags (Optional)</FormLabel>
+                  <FormLabel className="text-[11px] font-medium text-muted-foreground/50">
+                    Tags <span className="text-muted-foreground/30 font-normal">· optional</span>
+                  </FormLabel>
                   <FormControl>
                     <Input
                       placeholder="treasury, dao, mainnet"
