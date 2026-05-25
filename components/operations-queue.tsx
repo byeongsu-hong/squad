@@ -560,9 +560,9 @@ export function OperationsQueue({
       ) : (
         <div className="space-y-4">
           {actionItems.length > 0 && (
-            <div>
-              <div className="mb-2 flex items-center gap-2">
-                <span className="bg-primary h-2 w-2 rounded-full" />
+            <div className="border-border bg-card overflow-hidden rounded-xl border">
+              <div className="border-b border-border/50 flex items-center gap-2 px-3 py-2">
+                <span className="bg-primary h-1.5 w-1.5 rounded-full" />
                 <p className="text-muted-foreground/60 text-[11px] font-medium">
                   Action needed
                 </p>
@@ -584,12 +584,12 @@ export function OperationsQueue({
                       size="xs"
                       disabled={isActionInProgress}
                       onClick={handleApproveAll}
-                      className="h-7 px-2.5 text-[11px] bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20 font-semibold"
+                      className="bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20 font-semibold"
                     >
                       {isActionInProgress ? (
-                        <Loader2 className="h-3 w-3 animate-spin" />
+                        <Loader2 className="animate-spin" />
                       ) : (
-                        <Check className="h-3 w-3" />
+                        <Check />
                       )}
                       Sign all ({approveAllItems.length})
                     </Button>
@@ -599,70 +599,68 @@ export function OperationsQueue({
                       size="xs"
                       disabled={isActionInProgress}
                       onClick={handleExecuteAll}
-                      className="h-7 px-2.5 text-[11px] bg-emerald-600 text-white hover:bg-emerald-500 border-emerald-700/30 font-semibold"
+                      className="bg-emerald-600 text-white hover:bg-emerald-500 border-emerald-700/30 font-semibold"
                     >
                       {isActionInProgress ? (
-                        <Loader2 className="h-3 w-3 animate-spin" />
+                        <Loader2 className="animate-spin" />
                       ) : (
-                        <Zap className="h-3 w-3" />
+                        <Zap />
                       )}
                       Execute all ({executeAllItems.length})
                     </Button>
                   )}
                 </div>
               </div>
-              <div className="border-border bg-card overflow-hidden rounded-xl border">
-                <div className="divide-border/50 divide-y">
-                  {actionItems.map((item) => (
-                    <QueueRow
-                      key={item.focusKey}
-                      item={item}
-                      isSelected={selected.has(item.focusKey)}
-                      isSelectable
-                      onToggle={() => toggleSelect(item.focusKey)}
-                      onClick={() => setSelectedItem(item)}
-                      compact={compact}
-                      hideChain={hideChain}
-                      onApprove={
-                        item.needsYourSignature && !item.currentUserApproved
-                          ? () =>
-                              approveByAddress(
-                                item.multisig.address,
-                                item.proposal.transactionIndex,
-                                item.multisig.chainId
-                              )
-                          : undefined
-                      }
-                      onExecute={
-                        item.readyToExecute
-                          ? () =>
-                              executeByAddress(
-                                item.multisig.address,
-                                item.proposal.transactionIndex,
-                                item.multisig.chainId
-                              )
-                          : undefined
-                      }
-                      isActioning={isActionInProgress}
-                    />
-                  ))}
-                </div>
+              <div className="divide-border/50 divide-y">
+                {actionItems.map((item) => (
+                  <QueueRow
+                    key={item.focusKey}
+                    item={item}
+                    isSelected={selected.has(item.focusKey)}
+                    isSelectable
+                    onToggle={() => toggleSelect(item.focusKey)}
+                    onClick={() => setSelectedItem(item)}
+                    compact={compact}
+                    hideChain={hideChain}
+                    onApprove={
+                      item.needsYourSignature && !item.currentUserApproved
+                        ? () =>
+                            approveByAddress(
+                              item.multisig.address,
+                              item.proposal.transactionIndex,
+                              item.multisig.chainId
+                            )
+                        : undefined
+                    }
+                    onExecute={
+                      item.readyToExecute
+                        ? () =>
+                            executeByAddress(
+                              item.multisig.address,
+                              item.proposal.transactionIndex,
+                              item.multisig.chainId
+                            )
+                        : undefined
+                    }
+                    isActioning={isActionInProgress}
+                  />
+                ))}
               </div>
             </div>
           )}
 
           {historyItems.length > 0 && (
             <div>
-              <div className="mb-2 flex items-center gap-2">
-                <span className="bg-muted-foreground/25 h-2 w-2 rounded-full" />
-                <p className="text-muted-foreground/60 text-[11px] font-medium">
-                  History
-                </p>
-                <span className="text-muted-foreground/40 font-mono text-[11px] tabular-nums">
-                  {historyItems.length}
-                </span>
-              </div>
               <div className="border-border bg-card overflow-hidden rounded-xl border">
+                <div className="border-b border-border/50 flex items-center gap-2 px-3 py-2">
+                  <span className="bg-muted-foreground/25 h-1.5 w-1.5 rounded-full" />
+                  <p className="text-muted-foreground/60 text-[11px] font-medium">
+                    History
+                  </p>
+                  <span className="text-muted-foreground/40 font-mono text-[11px] tabular-nums">
+                    {historyItems.length}
+                  </span>
+                </div>
                 <div className="divide-border/50 divide-y">
                   {paginatedHistory.map((item) => (
                     <QueueRow
@@ -740,7 +738,7 @@ export function OperationsQueue({
         )}
       >
         <div className="mx-auto max-w-3xl px-4 pb-6">
-          <div className="bg-foreground flex items-center justify-between rounded-2xl px-5 py-3 shadow-[0_8px_32px_rgba(0,0,0,0.24)]">
+          <div className="bg-card border-border/80 flex items-center justify-between rounded-2xl border px-5 py-3 shadow-[0_8px_40px_rgba(0,0,0,0.5),0_0_0_1px_rgba(245,158,11,0.12)]">
             <div className="flex items-center gap-3">
               <Checkbox
                 checked={selected.size > 0}
@@ -748,7 +746,7 @@ export function OperationsQueue({
                 className="size-3.5"
                 aria-label="Clear selection"
               />
-              <span className="text-background text-[13px]">
+              <span className="text-foreground/70 text-[13px]">
                 {selected.size} selected
               </span>
             </div>
@@ -787,7 +785,6 @@ export function OperationsQueue({
                 size="sm"
                 variant="ghost"
                 onClick={() => setSelected(new Set())}
-                className="text-background/70 hover:text-background hover:bg-background/10 border-background/20"
               >
                 Cancel
               </Button>
