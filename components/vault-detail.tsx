@@ -311,7 +311,13 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
         <div className="mt-2.5 pl-12 space-y-0.5">
           <AddressRow
             address={multisig.address}
-            label={isSquads && multisig.vaultAddress && multisig.vaultAddress !== multisig.address ? "multisig" : undefined}
+            label={
+              isSquads && multisig.vaultAddress && multisig.vaultAddress !== multisig.address
+                ? "multisig"
+                : isSquads
+                ? "address"
+                : "safe"
+            }
             labelClassName="text-muted-foreground/50"
             explorerUrl={explorerUrl}
           />

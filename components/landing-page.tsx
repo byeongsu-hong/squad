@@ -73,7 +73,7 @@ export function LandingPage() {
           {/* Vaults count — links to vault list */}
           <Link
             href="/vaults"
-            className="flex shrink-0 items-center gap-1.5 px-4 py-3 transition-opacity hover:opacity-70"
+            className="flex shrink-0 items-center gap-1.5 px-4 py-3 transition-colors hover:bg-muted/40"
           >
             <Shield className="text-muted-foreground/50 h-3.5 w-3.5 shrink-0" />
             <span className="text-foreground text-[13px] font-semibold tabular-nums">

@@ -727,7 +727,7 @@ export function OperationsQueue({
       )}
 
       {loading && items.length > 0 && (
-        <div className="text-muted-foreground/70 mt-2 flex items-center gap-2 py-1 text-[11px]">
+        <div className="text-muted-foreground/60 mt-2 flex items-center gap-2 py-1 text-[11px]">
           <Loader2 className="h-3.5 w-3.5 animate-spin" />
           Refreshing...
         </div>
