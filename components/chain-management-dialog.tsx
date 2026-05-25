@@ -19,12 +19,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -54,9 +48,6 @@ function stripProtocol(url: string) {
   return url.replace(/^https?:\/\//, "");
 }
 
-interface ChainManagementControllerProps {
-  embedded?: boolean;
-}
 
 const chainFormSchema = z
   .object({
@@ -82,9 +73,7 @@ const chainFormSchema = z
 
 type ChainFormValues = z.infer<typeof chainFormSchema>;
 
-export function ChainManagementController({
-  embedded = false,
-}: ChainManagementControllerProps) {
+export function ChainManagementController() {
   const { chains, addChain, updateChain, deleteChain, resetToDefaults } =
     useChainStore();
   const [editingChain, setEditingChain] = useState<ChainConfig | null>(null);
@@ -183,30 +172,9 @@ export function ChainManagementController({
     });
   };
 
-  useEffect(() => {
-    if (!embedded) {
-      setEditingChain(null);
-      form.reset({
-        name: "",
-        vmFamily: "svm",
-        multisigProvider: "squads",
-        rpcUrl: "",
-        squadsV4ProgramId: "",
-        explorerUrl: "",
-      });
-    }
-  }, [embedded, form]);
-
   return (
-    <div
-      className={
-        embedded
-          ? "grid gap-5 xl:grid-cols-[minmax(20rem,0.82fr)_minmax(0,1.18fr)]"
-          : "space-y-6"
-      }
-    >
+    <div className="grid gap-5 xl:grid-cols-[minmax(20rem,0.82fr)_minmax(0,1.18fr)]">
       <ChainEditor
-        embedded={embedded}
         form={form}
         editingChain={editingChain}
         onSubmit={handleSubmit}
@@ -214,7 +182,6 @@ export function ChainManagementController({
       />
 
       <ChainRegistry
-        embedded={embedded}
         chains={chains}
         editingChainId={editingChain?.id ?? null}
         onEdit={handleEdit}
@@ -266,7 +233,6 @@ export function ChainManagementController({
 }
 
 interface ChainEditorProps {
-  embedded: boolean;
   form: UseFormReturn<ChainFormValues>;
   editingChain: ChainConfig | null;
   onSubmit: React.FormEventHandler<HTMLFormElement>;
@@ -274,7 +240,6 @@ interface ChainEditorProps {
 }
 
 function ChainEditor({
-  embedded,
   form,
   editingChain,
   onSubmit,
@@ -283,18 +248,10 @@ function ChainEditor({
   const multisigProvider = form.watch("multisigProvider");
 
   return (
-    <div
-      className={
-        embedded
-          ? "border-border bg-card space-y-4 self-start rounded-xl border p-4"
-          : "space-y-6"
-      }
-    >
-      {embedded && (
-        <p className="text-muted-foreground/50 text-[11px] font-medium">
-          {editingChain ? "Edit Chain" : "New Chain"}
-        </p>
-      )}
+    <div className="border-border bg-card space-y-4 self-start rounded-xl border p-4">
+      <p className="text-muted-foreground/50 text-[11px] font-medium">
+        {editingChain ? "Edit Chain" : "New Chain"}
+      </p>
       <Form {...form}>
         <form onSubmit={onSubmit} className="space-y-4">
           <FormField
@@ -446,7 +403,6 @@ function ChainEditor({
 }
 
 interface ChainRegistryProps {
-  embedded: boolean;
   chains: ChainConfig[];
   editingChainId: string | null;
   onEdit: (chain: ChainConfig) => void;
@@ -455,7 +411,6 @@ interface ChainRegistryProps {
 }
 
 function ChainRegistry({
-  embedded,
   chains,
   editingChainId,
   onEdit,
@@ -463,124 +418,86 @@ function ChainRegistry({
   onResetToDefaults,
 }: ChainRegistryProps) {
   return (
-    <div
-      className={
-        embedded
-          ? "border-border bg-card overflow-hidden rounded-xl border"
-          : "space-y-2"
-      }
-    >
-      {embedded && (
-        <div className="border-border/50 flex items-center justify-between border-b px-4 py-3">
-          <p className="text-muted-foreground/50 text-[11px] font-medium">Configured Chains</p>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={onResetToDefaults}
-            className="text-muted-foreground/50 hover:text-foreground h-7 gap-1.5 px-2 text-[11px]"
-          >
-            <RotateCcw className="h-3 w-3" />
-            Reset to Defaults
-          </Button>
-        </div>
-      )}
-      {!embedded && (
-        <div className="flex items-center justify-between">
-          <p className="text-muted-foreground/50 text-[11px] font-medium">Configured Chains</p>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={onResetToDefaults}
-            className="text-muted-foreground/50 hover:text-foreground h-7 gap-1.5 px-2 text-[11px]"
-          >
-            <RotateCcw className="h-3 w-3" />
-            Reset to Defaults
-          </Button>
-        </div>
-      )}
-      <div
-        className={
-          embedded
-            ? "divide-border/30 divide-y"
-            : "space-y-2"
-        }
-      >
+    <div className="border-border bg-card overflow-hidden rounded-xl border">
+      <div className="border-border/50 flex items-center justify-between border-b px-4 py-3">
+        <p className="text-muted-foreground/50 text-[11px] font-medium">Configured Chains</p>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={onResetToDefaults}
+          className="text-muted-foreground/50 hover:text-foreground h-7 gap-1.5 px-2 text-[11px]"
+        >
+          <RotateCcw className="h-3 w-3" />
+          Reset to Defaults
+        </Button>
+      </div>
+      <div className="divide-border/30 divide-y">
         {chains.map((chain) => {
           const isEditing = chain.id === editingChainId;
           return (
-          <div
-            key={chain.id}
-            role="button"
-            tabIndex={0}
-            onClick={() => onEdit(chain)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                onEdit(chain);
-              }
-            }}
-            className={cn(
-              embedded
-                ? "group grid cursor-pointer gap-3 px-4 py-3 transition-colors focus-visible:ring-ring focus-visible:ring-1 focus-visible:outline-none xl:grid-cols-[minmax(12rem,0.58fr)_minmax(0,1.22fr)_auto] xl:items-center"
-                : "group hover:bg-muted border-border focus-visible:ring-ring flex cursor-pointer items-center justify-between rounded-xl border p-3 transition-colors focus-visible:ring-1 focus-visible:outline-none",
-              embedded && isEditing
-                ? "bg-primary/5 [box-shadow:inset_2px_0_0_rgba(217,119,6,0.5)]"
-                : embedded
-                  ? "hover:bg-muted/50"
-                  : ""
-            )}
-          >
-            <div className="min-w-0">
-              <p className="text-foreground text-sm font-medium">
-                {chain.name}
-              </p>
-              <div className="mt-0.5 flex items-center gap-1.5">
-                <span className={cn(
-                  "inline-block h-1.5 w-1.5 shrink-0 rounded-full",
-                  (chain.vmFamily ?? "svm") === "svm"
-                    ? "bg-primary/60"
-                    : "bg-blue-500/60 dark:bg-blue-400/60"
-                )} />
-                <span className="text-muted-foreground/50 text-[10px]">
-                  {chain.multisigProvider === "safe" ? "Safe" : "Squads"}
-                  {chain.isDefault ? " · default" : chain.id.startsWith("custom-") ? " · custom" : ""}
-                </span>
-              </div>
-              {!embedded ? (
-                <p className="text-muted-foreground/60 truncate font-mono text-xs">
-                  {stripProtocol(chain.rpcUrl)}
-                </p>
-              ) : null}
-            </div>
-            <div className="text-muted-foreground/70 min-w-0 space-y-0.5 text-xs">
-              <p className="truncate font-mono">{stripProtocol(chain.rpcUrl)}</p>
-              {chain.explorerUrl ? (
-                <p className="truncate font-mono text-muted-foreground/60">
-                  {stripProtocol(chain.explorerUrl)}
-                </p>
-              ) : null}
-            </div>
-            <div className="flex w-9 justify-self-start xl:justify-self-end">
-              {chain.id !== "solana-mainnet" ? (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  className="opacity-0 group-hover:opacity-100 transition-opacity hover:text-destructive"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    onDelete(chain.id);
-                  }}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              ) : (
-                <span className="h-9 w-9" aria-hidden="true" />
+            <div
+              key={chain.id}
+              role="button"
+              tabIndex={0}
+              onClick={() => onEdit(chain)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  onEdit(chain);
+                }
+              }}
+              className={cn(
+                "group grid cursor-pointer gap-3 px-4 py-3 transition-colors focus-visible:ring-ring focus-visible:ring-1 focus-visible:outline-none xl:grid-cols-[minmax(12rem,0.58fr)_minmax(0,1.22fr)_auto] xl:items-center",
+                isEditing
+                  ? "bg-primary/5 [box-shadow:inset_2px_0_0_rgba(217,119,6,0.5)]"
+                  : "hover:bg-muted/50"
               )}
+            >
+              <div className="min-w-0">
+                <p className="text-foreground text-sm font-medium">
+                  {chain.name}
+                </p>
+                <div className="mt-0.5 flex items-center gap-1.5">
+                  <span className={cn(
+                    "inline-block h-1.5 w-1.5 shrink-0 rounded-full",
+                    (chain.vmFamily ?? "svm") === "svm"
+                      ? "bg-primary/60"
+                      : "bg-blue-500/60 dark:bg-blue-400/60"
+                  )} />
+                  <span className="text-muted-foreground/50 text-[10px]">
+                    {chain.multisigProvider === "safe" ? "Safe" : "Squads"}
+                    {chain.isDefault ? " · default" : chain.id.startsWith("custom-") ? " · custom" : ""}
+                  </span>
+                </div>
+              </div>
+              <div className="text-muted-foreground/70 min-w-0 space-y-0.5 text-xs">
+                <p className="truncate font-mono">{stripProtocol(chain.rpcUrl)}</p>
+                {chain.explorerUrl ? (
+                  <p className="truncate font-mono text-muted-foreground/60">
+                    {stripProtocol(chain.explorerUrl)}
+                  </p>
+                ) : null}
+              </div>
+              <div className="flex w-9 justify-self-start xl:justify-self-end">
+                {chain.id !== "solana-mainnet" ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity hover:text-destructive"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onDelete(chain.id);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                ) : (
+                  <span className="h-9 w-9" aria-hidden="true" />
+                )}
+              </div>
             </div>
-          </div>
           );
         })}
         {chains.length === 0 ? (

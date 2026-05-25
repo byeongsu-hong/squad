@@ -94,7 +94,7 @@ function SettingsPageContent() {
 
       <div className="pt-6">
         {settingsActiveSection === "chains" ? (
-          <ChainManagementController embedded />
+          <ChainManagementController />
         ) : null}
         {settingsActiveSection === "adapters" ? (
           <ProviderAdaptersPanel />
