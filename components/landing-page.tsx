@@ -192,8 +192,25 @@ export function LandingPage() {
                 >
                   <div className="border-border bg-card hover:bg-primary/5 w-full rounded-xl border px-4 py-3 transition-colors [box-shadow:inset_2px_0_0_rgba(217,119,6,0.25)] group-hover:[box-shadow:inset_2px_0_0_rgba(217,119,6,0.55)]">
                     <div className="flex items-center gap-2.5">
-                      <div className="bg-primary/10 border-primary/20 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border">
-                        <Shield className="h-3.5 w-3.5 text-primary/60" />
+                      <div className={cn(
+                        "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border",
+                        workspaceMultisigs[0].provider === "squads"
+                          ? "bg-primary/10 border-primary/20"
+                          : "bg-blue-50 border-blue-200/60 dark:bg-blue-950/20 dark:border-blue-700/40"
+                      )}>
+                        {workspaceMultisigs[0].label ? (
+                          <span className={cn(
+                            "text-[13px] font-bold leading-none",
+                            workspaceMultisigs[0].provider === "squads" ? "text-primary/70" : "text-blue-600 dark:text-blue-400"
+                          )}>
+                            {workspaceMultisigs[0].label.slice(0, 1).toUpperCase()}
+                          </span>
+                        ) : (
+                          <Shield className={cn(
+                            "h-3.5 w-3.5",
+                            workspaceMultisigs[0].provider === "squads" ? "text-primary/60" : "text-blue-600/60 dark:text-blue-400/60"
+                          )} />
+                        )}
                       </div>
                       <div className="min-w-0 flex-1 text-left">
                         <p className="text-foreground truncate text-[13px] font-medium">

@@ -246,7 +246,16 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
               ? "bg-primary/10 border-primary/20"
               : "border-blue-300/50 bg-blue-50 dark:border-blue-700/50 dark:bg-blue-950/30"
           )}>
-            <Shield className={cn("h-4 w-4", isSquads ? "text-primary/70" : "text-blue-600 dark:text-blue-400")} />
+            {multisig.label ? (
+              <span className={cn(
+                "text-[14px] font-bold leading-none",
+                isSquads ? "text-primary/70" : "text-blue-600 dark:text-blue-400"
+              )}>
+                {multisig.label.slice(0, 1).toUpperCase()}
+              </span>
+            ) : (
+              <Shield className={cn("h-4 w-4", isSquads ? "text-primary/70" : "text-blue-600 dark:text-blue-400")} />
+            )}
           </div>
 
           <div className="min-w-0 flex-1">
@@ -321,11 +330,11 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
         <div className="order-1">
           {!loading && vaultItems.length === 0 ? (
             <div className="border-border bg-card overflow-hidden rounded-xl border">
-              <div className="flex flex-col items-center justify-center gap-2.5 py-10 text-center">
-                <div className="flex h-8 w-8 items-center justify-center rounded-xl border border-emerald-200/60 bg-emerald-50 dark:border-emerald-900/30 dark:bg-emerald-950/20">
-                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600/60 dark:text-emerald-500/60" />
+              <div className="flex items-center gap-2.5 px-3 py-3">
+                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border border-emerald-200/60 bg-emerald-50 dark:border-emerald-900/30 dark:bg-emerald-950/20">
+                  <CheckCircle2 className="h-3 w-3 text-emerald-600/60 dark:text-emerald-500/60" />
                 </div>
-                <p className="text-muted-foreground/60 text-[11px]">No proposals yet.</p>
+                <p className="text-muted-foreground/50 text-[12px]">No proposals yet.</p>
               </div>
             </div>
           ) : (

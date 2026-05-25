@@ -391,6 +391,28 @@ export function MultisigList({ selectedKey }: { selectedKey?: string }) {
                     />
                   </div>
 
+                  {/* Vault avatar */}
+                  <div className={cn(
+                    "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border",
+                    row.multisigProvider === "squads"
+                      ? "bg-primary/10 border-primary/20"
+                      : "bg-blue-50 border-blue-200/60 dark:bg-blue-950/20 dark:border-blue-700/40"
+                  )}>
+                    {row.label ? (
+                      <span className={cn(
+                        "text-[11px] font-semibold leading-none",
+                        row.multisigProvider === "squads" ? "text-primary/70" : "text-blue-600 dark:text-blue-400"
+                      )}>
+                        {row.label.slice(0, 1).toUpperCase()}
+                      </span>
+                    ) : (
+                      <Shield className={cn(
+                        "h-3 w-3",
+                        row.multisigProvider === "squads" ? "text-primary/70" : "text-blue-600 dark:text-blue-400"
+                      )} />
+                    )}
+                  </div>
+
                   {/* Main info */}
                   <div className="min-w-0 flex-1">
                     {isEditing ? (
