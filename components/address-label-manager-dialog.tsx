@@ -261,7 +261,7 @@ function AddressLabelEditor({
       }
     >
       <div className="mb-4 flex items-center justify-between">
-        <p className="text-muted-foreground/50 text-[11px] font-medium tracking-wide">
+        <p className="text-muted-foreground/50 text-[11px] font-medium">
           {isEditing ? "Edit Label" : "Add New Label"}
         </p>
         {isEditing && (
@@ -383,7 +383,7 @@ function AddressLabelRegistry({
             : "shrink-0 border-b px-4 py-3"
         }
       >
-        <p className="mb-3 text-muted-foreground/50 text-[11px] font-medium tracking-wide">Saved Labels</p>
+        <p className="mb-3 text-muted-foreground/50 text-[11px] font-medium">Saved Labels</p>
         <div className="relative">
           <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
           <Input

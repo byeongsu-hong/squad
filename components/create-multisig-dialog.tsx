@@ -309,7 +309,7 @@ export function CreateMultisigDialog({
             />
 
             <div className="bg-muted border-border rounded-xl border space-y-3 px-4 py-4">
-              <p className="text-muted-foreground/50 text-[11px] font-medium tracking-wide">Signers</p>
+              <p className="text-muted-foreground/50 text-[11px] font-medium">Signers</p>
 
               <FormField
                 control={form.control}

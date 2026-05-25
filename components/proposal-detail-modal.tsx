@@ -281,7 +281,7 @@ export function ProposalDetailView({
           {/* Section label */}
           <div className="mb-3 flex items-center gap-2">
             <Users className="text-muted-foreground/60 h-3.5 w-3.5" />
-            <span className="text-muted-foreground/50 text-[11px] font-medium tracking-wide">
+            <span className="text-muted-foreground/50 text-[11px] font-medium">
               Signers
             </span>
           </div>

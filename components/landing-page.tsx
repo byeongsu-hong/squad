@@ -1,6 +1,6 @@
 "use client";
 
-import { Shield } from "lucide-react";
+import { CheckCircle2, ChevronRight, Shield } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { useAccount } from "wagmi";
@@ -160,6 +160,13 @@ export function LandingPage() {
               </span>
             </div>
           </button>
+
+          {needsSigningCount === 0 && executableCount === 0 && watchingCount === 0 && !loading && (
+            <div className="ml-auto flex items-center gap-1.5 px-5">
+              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500/40" />
+              <span className="text-muted-foreground/25 text-[11px]">All clear</span>
+            </div>
+          )}
         </div>
 
         <OperationsQueue
@@ -169,22 +176,37 @@ export function LandingPage() {
           showFilters
           defaultStatusFilter={activeFilter}
           emptyStateCta={
-            <div className="flex flex-col items-center gap-3">
+            <div className="flex flex-col items-center gap-3 mt-1">
+              <p className="text-muted-foreground/30 text-[11px]">
+                Monitoring {workspaceMultisigs.length} vault{workspaceMultisigs.length !== 1 ? "s" : ""}
+              </p>
               {workspaceMultisigs.length === 1 ? (
                 <Link
                   href={`/vaults/${encodeURIComponent(workspaceMultisigs[0].key)}`}
-                  className="text-muted-foreground/40 text-xs transition-colors hover:text-muted-foreground/70"
+                  className="group"
                 >
-                  Monitoring {workspaceMultisigs[0].label ?? "1 vault"}
+                  <div className="border-border bg-card hover:bg-muted w-60 rounded-xl border px-4 py-3 transition-colors">
+                    <div className="flex items-center gap-2.5">
+                      <div className="bg-primary/10 border-primary/20 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border">
+                        <Shield className="h-3.5 w-3.5 text-primary/60" />
+                      </div>
+                      <div className="min-w-0 flex-1 text-left">
+                        <p className="text-foreground truncate text-sm font-medium">
+                          {workspaceMultisigs[0].label ?? "Unnamed Vault"}
+                        </p>
+                        <p className="text-muted-foreground/50 text-[11px]">
+                          {workspaceMultisigs[0].chainName} · {workspaceMultisigs[0].threshold}/{workspaceMultisigs[0].members.length}
+                        </p>
+                      </div>
+                      <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/30 transition-colors group-hover:text-muted-foreground/60" />
+                    </div>
+                  </div>
                 </Link>
               ) : (
-                <p className="text-muted-foreground/40 text-xs">
-                  Monitoring {workspaceMultisigs.length} vaults
-                </p>
+                <Button variant="outline" asChild size="sm">
+                  <Link href="/vaults">View {workspaceMultisigs.length} Vaults</Link>
+                </Button>
               )}
-              <Button variant="outline" asChild size="sm">
-                <Link href="/vaults">View Vaults</Link>
-              </Button>
             </div>
           }
         />

@@ -74,7 +74,7 @@ export function ProviderAdaptersPanel() {
       </div>
 
       <div className="space-y-3">
-        <p className="text-muted-foreground/50 text-[11px] font-medium tracking-wide">
+        <p className="text-muted-foreground/50 text-[11px] font-medium">
           Safe Adapter Configuration
         </p>
         <div className="grid gap-4 lg:grid-cols-3">

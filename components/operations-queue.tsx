@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Inbox, Loader2, Zap } from "lucide-react";
+import { Check, CheckCircle2, Loader2, SlidersHorizontal, Zap } from "lucide-react";
 import { type ReactNode, useMemo, useState } from "react";
 
 import { ProposalDetailView } from "@/components/proposal-detail-modal";
@@ -577,13 +577,24 @@ export function OperationsQueue({
       )}
 
       {filtered.length === 0 ? (
-        <div className={cn("flex flex-col items-center justify-center gap-3 text-center", compact ? "py-8" : "py-16")}>
-          <div className={cn(
-            "bg-card border-border flex items-center justify-center border",
-            compact ? "h-8 w-8 rounded-xl" : "h-12 w-12 rounded-2xl"
-          )}>
-            <Inbox className={cn("text-muted-foreground/50", compact ? "h-3.5 w-3.5" : "h-5 w-5")} />
-          </div>
+        <div className={cn("flex flex-col items-center justify-center gap-3 text-center", compact ? "py-8" : "py-20")}>
+          {items.length === 0 ? (
+            <div className={cn(
+              "flex items-center justify-center border",
+              compact
+                ? "h-8 w-8 rounded-xl bg-emerald-950/20 border-emerald-900/30"
+                : "h-14 w-14 rounded-2xl bg-emerald-950/20 border-emerald-900/30"
+            )}>
+              <CheckCircle2 className={cn("text-emerald-500/60", compact ? "h-3.5 w-3.5" : "h-6 w-6")} />
+            </div>
+          ) : (
+            <div className={cn(
+              "bg-card border-border flex items-center justify-center border",
+              compact ? "h-8 w-8 rounded-xl" : "h-14 w-14 rounded-2xl"
+            )}>
+              <SlidersHorizontal className={cn("text-muted-foreground/40", compact ? "h-3.5 w-3.5" : "h-6 w-6")} />
+            </div>
+          )}
           <p className={cn("text-muted-foreground", compact ? "text-xs" : "text-sm")}>
             {items.length === 0
               ? "No proposals yet."
@@ -611,7 +622,7 @@ export function OperationsQueue({
             <div>
               <div className="mb-2 flex items-center gap-2">
                 <span className="bg-primary h-2 w-2 rounded-full" />
-                <p className="text-muted-foreground/60 text-[11px] font-medium tracking-wide">
+                <p className="text-muted-foreground/60 text-[11px] font-medium">
                   Needs attention
                 </p>
                 <span className="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-[10px] font-bold tabular-nums">
@@ -699,7 +710,7 @@ export function OperationsQueue({
             <div>
               <div className="mb-2 flex items-center gap-2">
                 <span className="bg-muted-foreground/25 h-2 w-2 rounded-full" />
-                <p className="text-muted-foreground/60 text-[11px] font-medium tracking-wide">
+                <p className="text-muted-foreground/60 text-[11px] font-medium">
                   History
                 </p>
                 <span className="text-muted-foreground/40 font-mono text-[11px] tabular-nums">
