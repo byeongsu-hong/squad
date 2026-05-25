@@ -68,7 +68,7 @@ export function LandingPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl pt-1">
+    <div className="mx-auto max-w-3xl">
         <div className="bg-card border-border mb-5 flex items-stretch overflow-x-auto rounded-xl border">
           {/* Vaults count — links to vault list */}
           <Link

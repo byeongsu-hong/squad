@@ -224,7 +224,7 @@ export function ProposalDetailView({
   })();
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex flex-col flex-1 min-h-0">
       {/* ── Sticky header ──────────────────────────────────────────────── */}
       <div className="border-border bg-card shrink-0 border-b px-5 py-4">
         <div className="flex items-start justify-between gap-3">

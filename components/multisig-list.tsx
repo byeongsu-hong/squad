@@ -246,65 +246,74 @@ export function MultisigList({ selectedKey }: { selectedKey?: string }) {
       <div className="border-border bg-card overflow-hidden rounded-xl border">
 
         {/* Toolbar — card header */}
-        <div className="border-border flex flex-wrap items-center gap-2 border-b px-3 py-2.5">
-          <Input
-            placeholder="Search vaults..."
-            value={filterText}
-            onChange={(e) => setFilterText(e.target.value)}
-            className="h-8 min-w-0 flex-1 basis-40"
-            aria-label="Search vaults"
-          />
-          {allTags.length > 0 && allTags.map((tag) => {
-            const isActive = selectedFilterTags.includes(tag);
-            return (
+        <div className="border-border border-b">
+          {/* Row 1: search + actions */}
+          <div className="flex items-center gap-2 px-3 py-2.5">
+            <Input
+              placeholder="Search vaults..."
+              value={filterText}
+              onChange={(e) => setFilterText(e.target.value)}
+              className="h-8 min-w-0 flex-1"
+              aria-label="Search vaults"
+            />
+            {selectedForDeletion.size > 0 && (
               <Button
-                key={tag}
+                variant="destructive"
                 size="sm"
-                variant="ghost"
-                onClick={() => toggleFilterTag(tag)}
-                className={cn(
-                  "h-7 shrink-0 rounded-full border px-2.5 text-[11px] transition-colors",
-                  isActive
-                    ? "border-primary/20 bg-primary/15 text-primary hover:bg-primary/20 hover:text-primary font-medium"
-                    : "border-border text-muted-foreground/60 hover:text-foreground hover:bg-muted/50"
-                )}
+                onClick={handleDeleteSelected}
               >
-                {tag}
+                <Trash2 className="h-3.5 w-3.5" />
+                Remove ({selectedForDeletion.size})
               </Button>
-            );
-          })}
-          {selectedForDeletion.size > 0 && (
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={handleDeleteSelected}
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-              Remove ({selectedForDeletion.size})
-            </Button>
+            )}
+            {hasMultisigs && filteredRegistryRows.length < multisigs.length && (
+              <span className="text-muted-foreground/50 shrink-0 font-mono text-[11px] tabular-nums">
+                {filteredRegistryRows.length} / {multisigs.length}
+              </span>
+            )}
+            {publicKey && canSyncSelectedChain ? (
+              <Button
+                variant="outline"
+                size="icon-sm"
+                onClick={loadMultisigs}
+                disabled={loading}
+                aria-label="Refresh vaults"
+                title={`Creator sync on ${normalizedSelectedChain?.name ?? "selected chain"}`}
+              >
+                {loading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-4 w-4" />
+                )}
+              </Button>
+            ) : null}
+            <AddMultisigActions />
+          </div>
+
+          {/* Row 2: tag filters (only when tags exist) */}
+          {allTags.length > 0 && (
+            <div className="border-border flex items-center gap-1.5 overflow-x-auto border-t px-3 py-2 scrollbar-none">
+              {allTags.map((tag) => {
+                const isActive = selectedFilterTags.includes(tag);
+                return (
+                  <Button
+                    key={tag}
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => toggleFilterTag(tag)}
+                    className={cn(
+                      "h-6 shrink-0 rounded-full border px-2.5 text-[11px] transition-colors",
+                      isActive
+                        ? "border-primary/20 bg-primary/15 text-primary hover:bg-primary/20 hover:text-primary font-medium"
+                        : "border-border text-muted-foreground/60 hover:text-foreground hover:bg-muted/50"
+                    )}
+                  >
+                    {tag}
+                  </Button>
+                );
+              })}
+            </div>
           )}
-          {hasMultisigs && filteredRegistryRows.length < multisigs.length && (
-            <span className="text-muted-foreground/50 ml-auto font-mono text-[11px] tabular-nums">
-              {filteredRegistryRows.length} / {multisigs.length}
-            </span>
-          )}
-          {publicKey && canSyncSelectedChain ? (
-            <Button
-              variant="outline"
-              size="icon-sm"
-              onClick={loadMultisigs}
-              disabled={loading}
-              aria-label="Refresh vaults"
-              title={`Creator sync on ${normalizedSelectedChain?.name ?? "selected chain"}`}
-            >
-              {loading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <RefreshCw className="h-4 w-4" />
-              )}
-            </Button>
-          ) : null}
-          <AddMultisigActions />
         </div>
 
         {/* Body */}

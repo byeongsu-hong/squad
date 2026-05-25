@@ -36,7 +36,7 @@ export default function RootLayout({
       >
         <Providers>
           <Header />
-          <main className="min-h-[calc(100svh-4.5rem)] w-full px-4 py-4 sm:px-5 md:px-6">
+          <main className="min-h-[calc(100svh-4.5rem)] w-full px-4 py-6 sm:px-5 md:px-6">
             {children}
           </main>
         </Providers>
