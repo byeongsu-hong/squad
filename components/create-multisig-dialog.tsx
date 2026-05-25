@@ -296,7 +296,7 @@ export function CreateMultisigDialog({
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <FormLabel>Members</FormLabel>
+                  <span className="text-[11px] font-medium text-muted-foreground/50">Members</span>
                   <Button
                     type="button"
                     variant="ghost"
