@@ -127,7 +127,7 @@ export function ProposalDetailView({
   onActionSuccess?: () => Promise<void>;
 }) {
   const [payloadOpen, setPayloadOpen] = useState(true);
-  const [signersExpanded, setSignersExpanded] = useState(item.multisig.members.length <= 6);
+  const [signersExpanded, setSignersExpanded] = useState(false);
 
   const { chains } = useChainStore();
   const getViewerAddress = useViewerAddressForMultisig();
@@ -393,36 +393,27 @@ export function ProposalDetailView({
             </span>
           </div>
 
-          {/* Dot row + view signers toggle */}
-          <TooltipProvider>
-            <div className="flex flex-wrap items-center gap-1.5">
-              {multisig.members.map((m) => {
-                const approved = proposal.approvals.includes(m.address);
-                const rejected = proposal.rejections.includes(m.address);
-                return (
-                  <SignerDot
-                    key={m.address}
-                    address={m.address}
-                    approved={approved}
-                    rejected={rejected}
-                    isCurrentUser={m.address === currentUserAddress}
-                  />
-                );
-              })}
-              <button
-                type="button"
-                onClick={() => setSignersExpanded(!signersExpanded)}
-                className="ml-1 inline-flex items-center gap-0.5 text-[11px] text-muted-foreground/50 transition-colors hover:text-muted-foreground"
-              >
-                {signersExpanded ? "hide" : "view all"}
-                {signersExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-              </button>
-            </div>
-          </TooltipProvider>
-
-          {/* Member rows — revealed on toggle */}
-          {signersExpanded && (
-            <div className="mt-3 space-y-0.5">
+          {/* Dots (collapsed) or member list (expanded) — never both */}
+          {!signersExpanded ? (
+            <TooltipProvider>
+              <div className="flex flex-wrap items-center gap-1.5">
+                {multisig.members.map((m) => {
+                  const approved = proposal.approvals.includes(m.address);
+                  const rejected = proposal.rejections.includes(m.address);
+                  return (
+                    <SignerDot
+                      key={m.address}
+                      address={m.address}
+                      approved={approved}
+                      rejected={rejected}
+                      isCurrentUser={m.address === currentUserAddress}
+                    />
+                  );
+                })}
+              </div>
+            </TooltipProvider>
+          ) : (
+            <div className="space-y-0.5">
               {visibleMembers.map((member) => {
                 const isApproved = proposal.approvals.includes(member.address);
                 const isRejected = proposal.rejections.includes(member.address);
@@ -475,13 +466,26 @@ export function ProposalDetailView({
                           : "text-muted-foreground/30"
                       )}
                     >
-                      {isApproved ? "Signed" : isRejected ? "Rejected" : null}
+                      {isApproved ? "Signed" : isRejected ? "Rejected" : "—"}
                     </span>
                   </div>
                 );
               })}
             </div>
           )}
+
+          {/* Toggle */}
+          <button
+            type="button"
+            onClick={() => setSignersExpanded(!signersExpanded)}
+            className="mt-2 inline-flex items-center gap-0.5 text-[11px] text-muted-foreground/50 transition-colors hover:text-muted-foreground"
+          >
+            {signersExpanded ? (
+              <><ChevronUp className="h-3 w-3" /> Collapse</>
+            ) : (
+              <><ChevronDown className="h-3 w-3" /> {`View ${multisig.members.length} signers`}</>
+            )}
+          </button>
         </div>
 
         {/* ── Transaction data ─────────────────────────────────────────── */}

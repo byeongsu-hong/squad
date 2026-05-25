@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 
 import { AddMultisigActions } from "@/components/add-multisig-actions";
 import { OperationsQueue } from "@/components/operations-queue";
+import { WalletButton } from "@/components/wallet-button";
 import { useProposalsQuery } from "@/lib/hooks/use-proposals-query";
 import { useViewerAddressForMultisig } from "@/lib/hooks/use-viewer-address";
 import { useWorkspaceQueue } from "@/lib/hooks/use-workspace-queue";
@@ -62,7 +63,7 @@ export function LandingPage() {
               : "Connect a wallet to get started."}
           </p>
         </div>
-        {isConnected && <AddMultisigActions />}
+        {isConnected ? <AddMultisigActions /> : <WalletButton />}
       </div>
     );
   }
