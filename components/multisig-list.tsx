@@ -293,7 +293,7 @@ export function MultisigList({ selectedKey }: { selectedKey?: string }) {
 
           {/* Row 2: tag filters (only when tags exist) */}
           {allTags.length > 0 && (
-            <div className="border-border bg-muted/30 flex items-center gap-1.5 overflow-x-auto border-t px-3 py-2 scrollbar-none">
+            <div className="border-border bg-muted dark:bg-muted/40 flex items-center gap-1.5 overflow-x-auto border-t px-3 py-2 scrollbar-none">
               {allTags.map((tag) => {
                 const isActive = selectedFilterTags.includes(tag);
                 return (
