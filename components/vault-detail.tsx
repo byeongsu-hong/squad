@@ -252,7 +252,7 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
         <div className={cn(isPanel ? "py-4 border-b border-border/50" : "bg-card border-border rounded-2xl border px-4 py-3")}>
           <div className="mb-2 flex items-center gap-2">
             <Users className="text-muted-foreground/60 h-3.5 w-3.5" />
-            <span className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">
+            <span className="text-muted-foreground/50 text-[11px] font-medium tracking-wide">
               Signers
             </span>
             <span className="text-muted-foreground/40 font-mono text-[11px]">
@@ -275,7 +275,7 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
       <div className={cn(isPanel ? "pt-4" : "")}>
         <div className="mb-2 flex items-center gap-2">
           <ArrowLeftRight className="text-muted-foreground/60 h-3.5 w-3.5" />
-          <span className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">
+          <span className="text-muted-foreground/50 text-[11px] font-medium tracking-wide">
             Transactions
           </span>
           {!loading && vaultItems.length > 0 && (

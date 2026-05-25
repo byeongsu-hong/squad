@@ -119,8 +119,8 @@ function ColumnHeaders({
   compact?: boolean;
 }) {
   const cols = compact
-    ? ["TX", "Chain", "Status", "Progress", "Age", ""]
-    : ["Multisig", "TX", "Chain", "Status", "Progress", "Age", ""];
+    ? ["#", "Chain", "Status", "Progress", "Age", ""]
+    : ["Multisig", "#", "Chain", "Status", "Progress", "Age", ""];
   return (
     <div
       className="border-border bg-muted grid items-center border-b px-3 py-2"
@@ -139,7 +139,7 @@ function ColumnHeaders({
       {cols.map((h) => (
         <span
           key={h}
-          className="text-muted-foreground/60 text-[11px] font-semibold tracking-widest uppercase"
+          className="text-muted-foreground/40 text-[11px] font-medium"
         >
           {h}
         </span>
@@ -577,7 +577,7 @@ export function OperationsQueue({
             <div>
               <div className="mb-2 flex items-center gap-2">
                 <span className="bg-primary h-2 w-2 rounded-full" />
-                <p className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">
+                <p className="text-muted-foreground/60 text-[11px] font-semibold tracking-wide">
                   Needs attention
                 </p>
                 <span className="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-[10px] font-bold tabular-nums">
@@ -633,7 +633,7 @@ export function OperationsQueue({
             <div>
               <div className="mb-2 flex items-center gap-2">
                 <span className="bg-muted-foreground/25 h-2 w-2 rounded-full" />
-                <p className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">
+                <p className="text-muted-foreground/60 text-[11px] font-semibold tracking-wide">
                   History
                 </p>
                 <span className="text-muted-foreground/40 font-mono text-[11px] tabular-nums">
