@@ -14,8 +14,15 @@ import Link from "next/link";
 import { type ReactNode, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 import { AddressWithLabel, WELL_KNOWN_ADDRESSES } from "@/components/address-with-label";
+import { useAddressLabel } from "@/lib/hooks/use-address-label";
 import { useProposalActions } from "@/lib/hooks/use-proposal-actions";
 import { useViewerAddressForMultisig } from "@/lib/hooks/use-viewer-address";
 import { useWorkspacePayload } from "@/lib/hooks/use-workspace-payload";
@@ -30,6 +37,59 @@ import {
 } from "@/lib/workspace/provider-adapters";
 import { useChainStore } from "@/stores/chain-store";
 import type { WorkspaceQueueItem } from "@/types/workspace";
+
+function SignerDot({
+  address,
+  approved,
+  rejected,
+  isCurrentUser,
+}: {
+  address: string;
+  approved: boolean;
+  rejected: boolean;
+  isCurrentUser: boolean;
+}) {
+  const label = useAddressLabel(address);
+  const displayName = label?.label ?? `${address.slice(0, 6)}…${address.slice(-4)}`;
+  const status = approved ? "Signed" : rejected ? "Rejected" : "Pending";
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <div
+          className={cn(
+            "h-3 w-3 cursor-default rounded-full transition-transform hover:scale-125",
+            approved
+              ? "bg-emerald-500"
+              : rejected
+              ? "bg-destructive"
+              : "bg-muted-foreground/20",
+            isCurrentUser && "ring-1 ring-offset-1 ring-offset-background ring-primary/60"
+          )}
+        />
+      </TooltipTrigger>
+      <TooltipContent side="top" className="flex flex-col gap-0.5 px-2.5 py-2">
+        <div className="flex items-center gap-1.5">
+          <span className="text-foreground text-[12px] font-medium">{displayName}</span>
+          {isCurrentUser && (
+            <span className="rounded bg-primary/15 px-1 py-0.5 text-[9px] font-medium text-primary">
+              you
+            </span>
+          )}
+        </div>
+        <span className="font-mono text-[10px] text-muted-foreground/60">{address.slice(0, 8)}…{address.slice(-6)}</span>
+        <span
+          className={cn(
+            "text-[10px] font-medium",
+            approved ? "text-emerald-400" : rejected ? "text-destructive" : "text-muted-foreground/40"
+          )}
+        >
+          {status}
+        </span>
+      </TooltipContent>
+    </Tooltip>
+  );
+}
 
 function formatAge(createdAt?: string): string {
   if (!createdAt) return "";
@@ -105,9 +165,7 @@ export function ProposalDetailView({
       ? Math.min(100, Math.round((approvalCount / multisig.threshold) * 100))
       : 0;
 
-  const visibleMembers = signersExpanded
-    ? multisig.members
-    : multisig.members.slice(0, 8);
+  const visibleMembers = multisig.members;
 
   // Status pill config
   const statusConfig = (() => {
@@ -315,108 +373,93 @@ export function ProposalDetailView({
             </span>
           </div>
 
-          {/* Dot row */}
-          <div className="mb-2 flex flex-wrap items-center gap-1.5">
-            {multisig.members.map((m) => {
-              const approved = proposal.approvals.includes(m.address);
-              const rejected = proposal.rejections.includes(m.address);
-              return (
-                <div
-                  key={m.address}
-                  title={approved ? "Signed" : rejected ? "Rejected" : "Pending"}
-                  className={cn(
-                    "h-3 w-3 rounded-full",
-                    approved
-                      ? "bg-emerald-500"
-                      : rejected
-                      ? "bg-destructive"
-                      : "bg-muted-foreground/20"
-                  )}
-                />
-              );
-            })}
-          </div>
+          {/* Dot row + view signers toggle */}
+          <TooltipProvider>
+            <div className="flex flex-wrap items-center gap-1.5">
+              {multisig.members.map((m) => {
+                const approved = proposal.approvals.includes(m.address);
+                const rejected = proposal.rejections.includes(m.address);
+                return (
+                  <SignerDot
+                    key={m.address}
+                    address={m.address}
+                    approved={approved}
+                    rejected={rejected}
+                    isCurrentUser={m.address === currentUserAddress}
+                  />
+                );
+              })}
+              <button
+                type="button"
+                onClick={() => setSignersExpanded(!signersExpanded)}
+                className="text-muted-foreground/40 hover:text-muted-foreground/70 ml-1 text-[11px] transition-colors"
+              >
+                {signersExpanded ? "hide" : "view signers"}
+              </button>
+            </div>
+          </TooltipProvider>
 
-          {/* Member rows */}
-          <div className="space-y-0.5">
-            {visibleMembers.map((member) => {
-              const isApproved = proposal.approvals.includes(member.address);
-              const isRejected = proposal.rejections.includes(member.address);
-              const isCurrentUser = member.address === currentUserAddress;
-              const isProposer = member.address === proposal.creator;
-              return (
-                <div
-                  key={member.address}
-                  className={cn(
-                    "flex items-center justify-between rounded-md px-2 py-1.5",
-                    isCurrentUser && "bg-primary/5"
-                  )}
-                >
-                  <div className="flex min-w-0 items-center gap-2">
-                    <div
-                      className={cn(
-                        "h-1.5 w-1.5 shrink-0 rounded-full",
-                        isApproved
-                          ? "bg-emerald-500"
-                          : isRejected
-                          ? "bg-destructive"
-                          : "bg-muted-foreground/20"
-                      )}
-                    />
-                    {isCurrentUser && (
-                      <span className="shrink-0 rounded bg-primary/10 px-1 py-0.5 text-[9px] font-medium text-primary">
-                        you
-                      </span>
-                    )}
-                    {isProposer && !isCurrentUser && (
-                      <span className="shrink-0 rounded bg-muted px-1 py-0.5 text-[9px] font-medium text-muted-foreground/60">
-                        author
-                      </span>
-                    )}
-                    <AddressWithLabel
-                      address={member.address}
-                      showCopy={false}
-                      showLabelButton={false}
-                      plain
-                      className="min-w-0"
-                    />
-                  </div>
-                  <span
+          {/* Member rows — revealed on toggle */}
+          {signersExpanded && (
+            <div className="mt-3 space-y-0.5">
+              {visibleMembers.map((member) => {
+                const isApproved = proposal.approvals.includes(member.address);
+                const isRejected = proposal.rejections.includes(member.address);
+                const isCurrentUser = member.address === currentUserAddress;
+                const isProposer = member.address === proposal.creator;
+                return (
+                  <div
+                    key={member.address}
                     className={cn(
-                      "shrink-0 text-[11px] font-medium",
-                      isApproved
-                        ? "text-emerald-600 dark:text-emerald-400"
-                        : isRejected
-                        ? "text-destructive"
-                        : "text-muted-foreground/30"
+                      "flex items-center justify-between rounded-md px-2 py-1.5",
+                      isCurrentUser && "bg-primary/5"
                     )}
                   >
-                    {isApproved ? "Signed" : isRejected ? "Rejected" : null}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-
-          {multisig.members.length > 8 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSignersExpanded(!signersExpanded)}
-              className="mt-1 h-7 w-full gap-1 text-[11px]"
-            >
-              {signersExpanded ? (
-                <>
-                  <ChevronUp className="h-3 w-3" />
-                  Collapse
-                </>
-              ) : (
-                <>
-                  <ChevronDown className="h-3 w-3" />
-                  {multisig.members.length - 8} more
-                </>
-              )}
-            </Button>
+                    <div className="flex min-w-0 items-center gap-2">
+                      <div
+                        className={cn(
+                          "h-1.5 w-1.5 shrink-0 rounded-full",
+                          isApproved
+                            ? "bg-emerald-500"
+                            : isRejected
+                            ? "bg-destructive"
+                            : "bg-muted-foreground/20"
+                        )}
+                      />
+                      {isCurrentUser && (
+                        <span className="shrink-0 rounded bg-primary/10 px-1 py-0.5 text-[9px] font-medium text-primary">
+                          you
+                        </span>
+                      )}
+                      {isProposer && !isCurrentUser && (
+                        <span className="shrink-0 rounded bg-muted px-1 py-0.5 text-[9px] font-medium text-muted-foreground/60">
+                          author
+                        </span>
+                      )}
+                      <AddressWithLabel
+                        address={member.address}
+                        showCopy={false}
+                        showLabelButton={false}
+                        plain
+                        className="min-w-0"
+                      />
+                    </div>
+                    <span
+                      className={cn(
+                        "shrink-0 text-[11px] font-medium",
+                        isApproved
+                          ? "text-emerald-600 dark:text-emerald-400"
+                          : isRejected
+                          ? "text-destructive"
+                          : "text-muted-foreground/30"
+                      )}
+                    >
+                      {isApproved ? "Signed" : isRejected ? "Rejected" : null}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           )}
         </div>
 
