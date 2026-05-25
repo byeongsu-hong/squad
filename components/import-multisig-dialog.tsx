@@ -268,11 +268,11 @@ export function ImportMultisigDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    Multisig Address <span className="text-destructive">*</span>
+                    Vault Address <span className="text-destructive">*</span>
                   </FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Enter multisig address or Safe URL"
+                      placeholder="Enter vault address or Safe URL"
                       disabled={loading}
                       {...field}
                       onChange={(event) =>
@@ -282,7 +282,7 @@ export function ImportMultisigDialog({
                   </FormControl>
                   <FormMessage />
                   <FormDescription>
-                    Also accepts `eth:0x...` prefix or a full Safe app URL.
+                    Also accepts an <code className="font-mono text-[11px]">eth:0x…</code> prefix or a full Safe app URL.
                   </FormDescription>
                 </FormItem>
               )}
@@ -298,7 +298,7 @@ export function ImportMultisigDialog({
                   </FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="My Imported Multisig"
+                      placeholder="My Vault"
                       {...field}
                     />
                   </FormControl>
