@@ -230,47 +230,56 @@ export function ProposalDetailView({
                 Execute Transaction
               </Button>
             )}
-            {approveSupported && !currentUserApproved && needsYourSignature && (
-              <Button
-                onClick={() =>
-                  approveByAddress(
-                    multisig.address,
-                    proposal.transactionIndex,
-                    multisig.chainId
-                  )
-                }
-                disabled={isActionInProgress}
-                className="w-full bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20 font-bold"
-              >
-                {isApproveLoading ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <Check className="h-3.5 w-3.5" />
+            {needsYourSignature && (
+              <div className="flex gap-2">
+                {approveSupported && !currentUserApproved && (
+                  <Button
+                    onClick={() =>
+                      approveByAddress(
+                        multisig.address,
+                        proposal.transactionIndex,
+                        multisig.chainId
+                      )
+                    }
+                    disabled={isActionInProgress}
+                    className={cn(
+                      "bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20 font-bold",
+                      rejectSupported ? "flex-1" : "w-full"
+                    )}
+                  >
+                    {isApproveLoading ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Check className="h-3.5 w-3.5" />
+                    )}
+                    Sign
+                  </Button>
                 )}
-                Sign
-              </Button>
-            )}
-            {rejectSupported && needsYourSignature && (
-              <Button
-                variant="outline"
-                onClick={() =>
-                  rejectByAddress(
-                    multisig.address,
-                    proposal.transactionIndex,
-                    multisig.chainId
-                  )
-                }
-                disabled={isActionInProgress}
-                className="w-full"
-              >
-                {isRejectLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                Reject
-              </Button>
+                {rejectSupported && (
+                  <Button
+                    variant="outline"
+                    onClick={() =>
+                      rejectByAddress(
+                        multisig.address,
+                        proposal.transactionIndex,
+                        multisig.chainId
+                      )
+                    }
+                    disabled={isActionInProgress}
+                    className={cn(
+                      approveSupported && !currentUserApproved ? "w-24 shrink-0" : "w-full"
+                    )}
+                  >
+                    {isRejectLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                    Reject
+                  </Button>
+                )}
+              </div>
             )}
             {currentUserApproved && !readyToExecute && (
-              <div className="flex items-center justify-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50/60 px-4 py-2.5 text-sm text-emerald-700 dark:border-emerald-900/30 dark:bg-emerald-950/20 dark:text-emerald-400">
+              <div className="flex items-center justify-center gap-2 rounded-xl border border-emerald-900/30 bg-emerald-950/20 px-4 py-2.5 text-sm text-emerald-400">
                 <Check className="h-3.5 w-3.5 shrink-0" />
-                You signed · waiting for others
+                Signed — waiting on others
               </div>
             )}
           </div>

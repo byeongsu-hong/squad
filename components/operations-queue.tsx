@@ -186,6 +186,7 @@ function QueueRow({
         isSelected ? "bg-primary/8"
         : item.readyToExecute ? "hover:bg-emerald-50 dark:hover:bg-emerald-950/20 [box-shadow:inset_2px_0_0_rgba(5,150,105,0.4)]"
         : item.needsYourSignature && !item.currentUserApproved ? "hover:bg-primary/5 [box-shadow:inset_2px_0_0_rgba(217,119,6,0.4)]"
+        : item.currentUserApproved && item.proposal.status === "Active" ? "hover:bg-muted [box-shadow:inset_2px_0_0_rgba(5,150,105,0.2)]"
         : "hover:bg-muted"
       )}
       style={{ gridTemplateColumns: compact ? GRID_COLS_COMPACT : GRID_COLS_FULL }}
