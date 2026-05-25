@@ -258,10 +258,6 @@ export function ImportMultisigDialog({
                     </SelectContent>
                   </Select>
                   <FormMessage />
-                  <FormDescription>
-                    Safe-ready EVM chains and active SVM / Squads chains are
-                    available for import.
-                  </FormDescription>
                 </FormItem>
               )}
             />
