@@ -152,9 +152,16 @@ export function LandingPage() {
           showFilters
           defaultStatusFilter={activeFilter}
           emptyStateCta={
-            <Button variant="outline" asChild size="sm">
-              <Link href="/vaults">View Vaults</Link>
-            </Button>
+            <div className="flex flex-col items-center gap-3">
+              <p className="text-muted-foreground/40 text-xs">
+                {workspaceMultisigs.length === 1
+                  ? `Monitoring ${workspaceMultisigs[0].label ?? "1 vault"}`
+                  : `Monitoring ${workspaceMultisigs.length} vaults`}
+              </p>
+              <Button variant="outline" asChild size="sm">
+                <Link href="/vaults">View Vaults</Link>
+              </Button>
+            </div>
           }
         />
     </div>
