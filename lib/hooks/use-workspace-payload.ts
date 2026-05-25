@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 import {
   getUnsupportedProviderMessage,
@@ -7,7 +7,6 @@ import {
 import type { ChainConfig } from "@/types/chain";
 import type {
   WorkspaceMultisig,
-  WorkspacePayload,
   WorkspaceProposal,
 } from "@/types/workspace";
 
@@ -22,65 +21,34 @@ export function useWorkspacePayload({
   multisig,
   proposal,
 }: UseWorkspacePayloadOptions) {
-  const [loading, setLoading] = useState(false);
-  const [payload, setPayload] = useState<WorkspacePayload | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const { data: payload, isLoading: loading, error: rawError } = useQuery({
+    queryKey: [
+      "payload",
+      multisig?.provider ?? null,
+      multisig?.chainId ?? null,
+      multisig?.address ?? null,
+      proposal?.transactionIndex?.toString() ?? null,
+    ],
+    queryFn: async () => {
+      if (!multisig || !proposal) return null;
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadPayload() {
-      if (!multisig || !proposal) {
-        setPayload(null);
-        setError(null);
-        return;
+      const adapter = getWorkspaceProviderAdapter(multisig.provider);
+      if (!adapter.capabilities.payload) {
+        throw new Error(
+          getUnsupportedProviderMessage(multisig.provider, "payload")
+        );
       }
-
-      setLoading(true);
-      setPayload(null);
-      setError(null);
-
-      try {
-        const adapter = getWorkspaceProviderAdapter(multisig.provider);
-        if (!adapter.capabilities.payload) {
-          throw new Error(
-            getUnsupportedProviderMessage(multisig.provider, "payload")
-          );
-        }
-        const nextPayload = await adapter.loadPayload({
-          chains,
-          multisig,
-          proposal,
-        });
-
-        if (!cancelled) {
-          setPayload(nextPayload);
-        }
-      } catch (nextError) {
-        if (!cancelled) {
-          setError(
-            nextError instanceof Error
-              ? nextError.message
-              : "Transaction data not available."
-          );
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    }
-
-    void loadPayload();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [chains, multisig, proposal]);
+      return adapter.loadPayload({ chains, multisig, proposal });
+    },
+    enabled: Boolean(multisig && proposal),
+    staleTime: Infinity,
+    gcTime: 10 * 60_000,
+    retry: 1,
+  });
 
   return {
     loading,
-    payload,
-    error,
+    payload: payload ?? null,
+    error: rawError ? (rawError instanceof Error ? rawError.message : "Transaction data not available.") : null,
   };
 }
