@@ -1,8 +1,10 @@
 import { SAFE_PROPOSALS_TTL, cache, safeProposalsCacheKey } from "@/lib/cache";
+import { decodeSafeCalldataWithCustomAbis } from "@/lib/safe-custom-abi";
 import type {
   WorkspaceProposalLoaderOptions,
   WorkspaceProviderAdapter,
 } from "@/lib/workspace/provider-contract";
+import { useProviderAdapterStore } from "@/stores/provider-adapter-store";
 import type { WorkspacePayload, WorkspaceProposal } from "@/types/workspace";
 
 async function fetchSafeProposals(
@@ -122,7 +124,21 @@ async function loadSafeWorkspacePayload({
     throw new Error("Safe payload response was empty.");
   }
 
-  return payload.payload;
+  if (payload.payload.type !== "safe") {
+    return payload.payload;
+  }
+
+  const decoded = decodeSafeCalldataWithCustomAbis(
+    payload.payload.data,
+    useProviderAdapterStore.getState().settings.safeCustomAbis
+  );
+
+  return decoded
+    ? {
+        ...payload.payload,
+        dataDecoded: decoded,
+      }
+    : payload.payload;
 }
 
 export const safeWorkspaceAdapter: WorkspaceProviderAdapter = {

@@ -4,12 +4,14 @@ import {
   AlertTriangle,
   Check,
   Copy,
+  Download,
+  FileText,
   Link,
   Loader2,
   Upload,
   X,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import {
@@ -17,6 +19,13 @@ import {
   exportAll,
   importFromYaml,
 } from "@/lib/export-import";
+import {
+  buildRawYamlPreview,
+  buildWorkspacePackageSummary,
+  formatBytes,
+  type RawYamlPreview,
+  type WorkspacePackageSummary,
+} from "@/lib/export-import-package";
 import { useAddressLabels } from "@/lib/hooks/use-address-label";
 import { SquadService } from "@/lib/squad";
 import { cn } from "@/lib/utils";
@@ -52,6 +61,12 @@ interface ImportProgressState {
   label: string;
 }
 
+interface ImportReviewState {
+  data: ExportData;
+  summary: WorkspacePackageSummary;
+  rawPreview: RawYamlPreview;
+}
+
 export function ExportImportController() {
   const [mode, setMode] = useState<"export" | "import">("export");
   const [exportContent, setExportContent] = useState<string>("");
@@ -61,6 +76,9 @@ export function ExportImportController() {
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [importProgress, setImportProgress] =
     useState<ImportProgressState | null>(null);
+  const [importReview, setImportReview] = useState<ImportReviewState | null>(
+    null
+  );
 
   const { chains, addChain, resetToDefaults: resetChains } = useChainStore();
   const {
@@ -85,6 +103,24 @@ export function ExportImportController() {
   ).length;
   const multisigCount = multisigs.length;
   const labelCount = labels.length;
+  const exportPackage = useMemo(() => {
+    if (!exportContent) {
+      return null;
+    }
+
+    try {
+      const data = importFromYaml(exportContent);
+      const summary = buildWorkspacePackageSummary(data, exportContent);
+      return {
+        summary,
+        rawPreview: buildRawYamlPreview(exportContent, {
+          customAbiCount: summary.counts.customAbis,
+        }),
+      };
+    } catch {
+      return null;
+    }
+  }, [exportContent]);
 
   const generateExport = () => {
     try {
@@ -123,15 +159,63 @@ export function ExportImportController() {
     }
   };
 
-  const handleImport = async () => {
+  const handleSaveYaml = () => {
+    if (!exportContent) return;
+
+    const blob = new Blob([exportContent], {
+      type: "application/x-yaml;charset=utf-8",
+    });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `squad-workspace-${new Date().toISOString().slice(0, 10)}.yaml`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  const updateImportContent = (content: string) => {
+    setImportContent(content);
+    setImportReview(null);
+  };
+
+  const handleReviewImport = () => {
     try {
       if (!importContent.trim()) {
         toast.error("Paste YAML content first");
         return;
       }
 
-      const data: ExportData = importFromYaml(importContent);
+      const data = importFromYaml(importContent);
+      const summary = buildWorkspacePackageSummary(data, importContent);
+      setImportReview({
+        data,
+        summary,
+        rawPreview: buildRawYamlPreview(importContent, {
+          customAbiCount: summary.counts.customAbis,
+        }),
+      });
+    } catch (error) {
+      setImportReview(null);
+      toast.error("Import review failed", {
+        description:
+          error instanceof Error ? error.message : "Unknown error occurred",
+      });
+    }
+  };
+
+  const handleImport = async () => {
+    try {
+      if (!importReview) {
+        handleReviewImport();
+        return;
+      }
+
+      const data = importReview.data;
       const hasProviderAdapters = Boolean(data.providerAdapters?.evm?.safe);
+      const customAbiCount =
+        data.providerAdapters?.evm?.safe?.customAbis.length ?? 0;
       const totalSteps =
         (data.chains?.length ?? 0) +
         (data.multisigs?.length ?? 0) +
@@ -336,12 +420,15 @@ export function ExportImportController() {
       if (importedMultisigs > 0) messages.push(`${importedMultisigs} vault(s)`);
       if (importedLabels > 0) messages.push(`${importedLabels} label(s)`);
       if (importedProviderAdapters) messages.push("EVM adapter settings");
+      if (importedProviderAdapters && customAbiCount > 0) {
+        messages.push(`${customAbiCount} custom ABI(s)`);
+      }
 
       if (messages.length > 0) {
         toast.success("Import successful", {
           description: `Imported ${messages.join(" and ")}${failedMultisigs.length > 0 ? `. ${failedMultisigs.length} vault(s) failed.` : ""}`,
         });
-        setImportContent("");
+        updateImportContent("");
       } else if (failedMultisigs.length > 0) {
         toast.error("Import failed", {
           description: `Failed to import ${failedMultisigs.length} multisig(s)`,
@@ -369,7 +456,7 @@ export function ExportImportController() {
     resetLabels();
     resetProviderSettings();
     resetWorkspace();
-    setImportContent("");
+    updateImportContent("");
     setImportProgress(null);
     setIsImporting(false);
     setResetDialogOpen(false);
@@ -387,7 +474,7 @@ export function ExportImportController() {
   const handleModeChange = (newMode: "export" | "import") => {
     setMode(newMode);
     setExportContent("");
-    setImportContent("");
+    updateImportContent("");
     setCopied(false);
     if (newMode === "export") {
       generateExport();
@@ -411,21 +498,24 @@ export function ExportImportController() {
 
         {mode === "export" && exportContent && (
           <ExportImportExportPanel
-            chains={chains}
-            multisigs={multisigs}
             exportContent={exportContent}
+            packageSummary={exportPackage?.summary ?? null}
+            rawPreview={exportPackage?.rawPreview ?? null}
             copied={copied}
             onCopy={handleCopy}
+            onSave={handleSaveYaml}
           />
         )}
 
         {mode === "import" && (
           <ExportImportImportPanel
             importContent={importContent}
+            importReview={importReview}
             importProgress={importProgress}
             isImporting={isImporting}
-            onImportContentChange={setImportContent}
+            onImportContentChange={updateImportContent}
             onResetImportedState={handleOpenResetDialog}
+            onReview={handleReviewImport}
             onImport={handleImport}
           />
         )}
@@ -547,57 +637,38 @@ function ExportImportModePicker({
 }
 
 interface ExportImportExportPanelProps {
-  chains: ChainConfig[];
-  multisigs: MultisigAccount[];
   exportContent: string;
+  packageSummary: WorkspacePackageSummary | null;
+  rawPreview: RawYamlPreview | null;
   copied: boolean;
   onCopy: () => void;
+  onSave: () => void;
 }
 
 function ExportImportExportPanel({
-  chains,
-  multisigs,
   exportContent,
+  packageSummary,
+  rawPreview,
   copied,
   onCopy,
+  onSave,
 }: ExportImportExportPanelProps) {
-  const operationalSquadsChains = chains.filter(isOperationalSquadsChain);
-  const preparedSafeChains = chains.filter(
-    (chain) => chain.multisigProvider === "safe"
-  );
-
   return (
     <div className="border-border bg-card overflow-hidden rounded-xl border">
-      <div className="border-border flex items-center gap-1 border-b px-4 py-3">
-        <div className="flex items-center gap-5">
-          <div>
-            <p className="text-muted-foreground/50 text-[11px] font-medium">
-              SVM chains
-            </p>
-            <p className="text-foreground text-[15px] font-semibold tabular-nums">
-              {operationalSquadsChains.length}
-            </p>
-          </div>
-          <div className="bg-border h-7 w-px" />
-          <div>
-            <p className="text-muted-foreground/50 text-[11px] font-medium">
-              Vaults
-            </p>
-            <p className="text-foreground text-[15px] font-semibold tabular-nums">
-              {multisigs.length}
-            </p>
-          </div>
-          <div className="bg-border h-7 w-px" />
-          <div>
-            <p className="text-muted-foreground/50 text-[11px] font-medium">
-              Safe chains
-            </p>
-            <p className="text-foreground text-[15px] font-semibold tabular-nums">
-              {preparedSafeChains.length}
-            </p>
-          </div>
+      <div className="border-border flex items-center gap-3 border-b px-4 py-3">
+        <div className="min-w-0">
+          <p className="text-foreground text-[13px] font-semibold">
+            Workspace YAML package
+          </p>
+          <p className="text-muted-foreground/60 text-[11px]">
+            Copy or save exports the complete package.
+          </p>
         </div>
-        <div className="ml-auto">
+        <div className="ml-auto flex shrink-0 items-center gap-2">
+          <Button type="button" variant="outline" onClick={onSave}>
+            <Download className="h-4 w-4" />
+            Save YAML
+          </Button>
           <Button
             type="button"
             onClick={onCopy}
@@ -618,12 +689,126 @@ function ExportImportExportPanel({
           </Button>
         </div>
       </div>
-      <div className="bg-muted/30 max-h-[28rem] w-full overflow-auto">
+      {packageSummary ? (
+        <WorkspacePackageSummaryView summary={packageSummary} />
+      ) : null}
+      <RawYamlPreviewView
+        title="Raw YAML preview"
+        preview={
+          rawPreview ??
+          buildRawYamlPreview(exportContent, { customAbiCount: 0 })
+        }
+      />
+    </div>
+  );
+}
+
+function WorkspacePackageSummaryView({
+  summary,
+}: {
+  summary: WorkspacePackageSummary;
+}) {
+  const stats = [
+    ["Chains", summary.counts.chains.toString()],
+    ["Vaults", summary.counts.vaults.toString()],
+    ["Labels", summary.counts.labels.toString()],
+    ["Safe chains", summary.counts.safeChains.toString()],
+    ["Custom ABIs", summary.counts.customAbis.toString()],
+    ["Enabled ABIs", summary.counts.enabledCustomAbis.toString()],
+    ["YAML size", formatBytes(summary.yamlBytes)],
+    ["ABI source", formatBytes(summary.totalAbiSourceBytes)],
+  ];
+
+  return (
+    <div className="space-y-3 px-4 py-4">
+      <div className="grid gap-2 sm:grid-cols-4">
+        {stats.map(([label, value]) => (
+          <div key={label} className="bg-muted/50 rounded-lg px-3 py-2.5">
+            <p className="text-muted-foreground/50 text-[10px] font-medium">
+              {label}
+            </p>
+            <p className="text-foreground mt-1 text-[14px] font-semibold tabular-nums">
+              {value}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      {summary.abiRows.length > 0 ? (
+        <div className="border-border overflow-hidden rounded-lg border">
+          <div className="border-border grid grid-cols-[minmax(0,1fr)_5rem_5rem_6rem] gap-2 border-b bg-muted/30 px-3 py-2 text-[10px] font-medium text-muted-foreground/60">
+            <span>ABI</span>
+            <span>Status</span>
+            <span>Functions</span>
+            <span>Size</span>
+          </div>
+          <div className="divide-border divide-y">
+            {summary.abiRows.map((row, index) => (
+              <div
+                key={`${row.label}-${index}`}
+                className="grid grid-cols-[minmax(0,1fr)_5rem_5rem_6rem] items-center gap-2 px-3 py-2"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-[12px] font-medium text-foreground">
+                    {row.label}
+                  </p>
+                  <p className="text-muted-foreground/50 text-[10px]">
+                    {row.enabled ? "enabled" : "disabled"}
+                  </p>
+                </div>
+                <span
+                  className={cn(
+                    "w-fit rounded border px-1.5 py-px text-[10px]",
+                    row.parseStatus === "valid"
+                      ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                      : "border-destructive/25 bg-destructive/10 text-destructive"
+                  )}
+                  title={row.parseError ?? undefined}
+                >
+                  {row.parseStatus}
+                </span>
+                <span className="text-muted-foreground/70 text-[11px] tabular-nums">
+                  {row.functionCount}
+                </span>
+                <span className="text-muted-foreground/70 text-[11px] tabular-nums">
+                  {formatBytes(row.sourceBytes)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function RawYamlPreviewView({
+  title,
+  preview,
+}: {
+  title: string;
+  preview: RawYamlPreview;
+}) {
+  return (
+    <details
+      className="border-border border-t"
+      defaultOpen={!preview.defaultCollapsed}
+    >
+      <summary className="hover:bg-muted/40 flex cursor-pointer items-center justify-between gap-3 px-4 py-3 text-[12px] font-medium text-muted-foreground/70">
+        <span>{title}</span>
+        <span className="text-[11px] font-normal">
+          {formatBytes(preview.byteLength)}
+          {preview.isTruncated
+            ? ` · ${formatBytes(preview.omittedBytes)} omitted`
+            : ""}
+        </span>
+      </summary>
+      <div className="bg-muted/30 max-h-[22rem] w-full overflow-auto">
         <pre className="text-muted-foreground/60 p-4 font-mono text-[11px] whitespace-pre">
-          <code>{exportContent}</code>
+          <code>{preview.preview}</code>
         </pre>
       </div>
-    </div>
+    </details>
   );
 }
 
@@ -631,24 +816,30 @@ type UrlFetchState = "idle" | "loading" | "success" | "error";
 
 interface ExportImportImportPanelProps {
   importContent: string;
+  importReview: ImportReviewState | null;
   importProgress: ImportProgressState | null;
   isImporting: boolean;
   onImportContentChange: (value: string) => void;
   onResetImportedState: () => void;
+  onReview: () => void;
   onImport: () => void;
 }
 
 function ExportImportImportPanel({
   importContent,
+  importReview,
   importProgress,
   isImporting,
   onImportContentChange,
   onResetImportedState,
+  onReview,
   onImport,
 }: ExportImportImportPanelProps) {
   const [urlInput, setUrlInput] = useState("");
   const [urlFetchState, setUrlFetchState] = useState<UrlFetchState>("idle");
   const [urlError, setUrlError] = useState<string | null>(null);
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
 
   const progressValue = importProgress
     ? (importProgress.current / importProgress.total) * 100
@@ -675,6 +866,8 @@ function ExportImportImportPanel({
       const text = await response.text();
       importFromYaml(text);
       onImportContentChange(text);
+      setFileName(null);
+      setFileError(null);
       setUrlFetchState("success");
     } catch (error) {
       const msg = error instanceof Error ? error.message : "Fetch failed";
@@ -692,6 +885,28 @@ function ExportImportImportPanel({
     setUrlInput("");
     setUrlFetchState("idle");
     setUrlError(null);
+  };
+
+  const handleFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      importFromYaml(text);
+      onImportContentChange(text);
+      setFileName(file.name);
+      setFileError(null);
+    } catch (error) {
+      setFileName(null);
+      setFileError(
+        error instanceof Error ? error.message : "Failed to read YAML file"
+      );
+    }
   };
 
   return (
@@ -762,12 +977,52 @@ function ExportImportImportPanel({
           </div>
           {urlFetchState === "success" && (
             <p className="text-[11px] text-emerald-600 dark:text-emerald-400">
-              YAML loaded and validated — review below then click Import.
+              YAML loaded and validated — review the package before importing.
             </p>
           )}
           {urlFetchState === "error" && urlError && (
             <p className="text-destructive text-[11px]">{urlError}</p>
           )}
+        </div>
+      </div>
+
+      {/* Local file */}
+      <div className="border-border bg-card overflow-hidden rounded-xl border">
+        <div className="border-border flex items-center gap-2 border-b px-4 py-3">
+          <FileText className="text-muted-foreground/50 h-3.5 w-3.5 shrink-0" />
+          <p className="text-muted-foreground/50 text-[11px] font-medium">
+            Import from file
+          </p>
+        </div>
+        <div className="flex items-center justify-between gap-3 px-4 py-3">
+          <div className="min-w-0">
+            <p className="truncate text-[12px] text-foreground/80">
+              {fileName ?? "Choose a local YAML package"}
+            </p>
+            {fileError ? (
+              <p className="text-destructive mt-1 text-[11px]">{fileError}</p>
+            ) : (
+              <p className="text-muted-foreground/50 mt-1 text-[11px]">
+                Useful for ABI-heavy exports that are awkward to paste.
+              </p>
+            )}
+          </div>
+          <label
+            className={cn(
+              "border-input bg-background hover:bg-accent hover:text-accent-foreground inline-flex h-8 shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-md border px-3 text-[12px] font-medium",
+              isImporting && "pointer-events-none opacity-50"
+            )}
+          >
+            <Upload className="h-3.5 w-3.5" />
+            Choose file
+            <input
+              type="file"
+              accept=".yaml,.yml,text/yaml,application/x-yaml,text/plain"
+              className="sr-only"
+              disabled={isImporting}
+              onChange={(event) => void handleFileChange(event)}
+            />
+          </label>
         </div>
       </div>
 
@@ -809,15 +1064,41 @@ function ExportImportImportPanel({
         onChange={(e) => onImportContentChange(e.target.value)}
         disabled={isImporting}
         placeholder="Paste your YAML configuration here..."
-        className="min-h-[24rem] resize-y rounded-xl font-mono text-xs"
+        className="min-h-[12rem] resize-y rounded-xl font-mono text-xs"
       />
 
-      <div className="flex justify-end">
+      {importReview ? (
+        <div className="border-border bg-card overflow-hidden rounded-xl border">
+          <div className="border-border border-b px-4 py-3">
+            <p className="text-foreground text-[13px] font-semibold">
+              Import review
+            </p>
+            <p className="text-muted-foreground/60 text-[11px]">
+              Review the package contents before applying it to this workspace.
+            </p>
+          </div>
+          <WorkspacePackageSummaryView summary={importReview.summary} />
+          <RawYamlPreviewView
+            title="Import YAML preview"
+            preview={importReview.rawPreview}
+          />
+        </div>
+      ) : null}
+
+      <div className="flex justify-end gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onReview}
+          disabled={isImporting || !importContent.trim()}
+        >
+          Review package
+        </Button>
         <Button
           type="button"
           className="bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20"
           onClick={onImport}
-          disabled={isImporting || !importContent.trim()}
+          disabled={isImporting || !importReview}
         >
           {isImporting ? (
             <>

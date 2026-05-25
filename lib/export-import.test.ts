@@ -62,6 +62,13 @@ describe("export-import", () => {
     safeTransactionServiceUrl: "https://api.safe.global/tx-service",
     safeSingletonAddress: "0xd9Db270c1B5E3Bd161E8c8503c55ceABeE709552",
     safeProxyFactoryAddress: "0xa6B71E26C5e0845f74c812102Ca7114b6a896Ab2",
+    safeCustomAbis: [
+      {
+        label: "ERC20",
+        enabled: true,
+        source: "transfer(address to, uint256 amount)",
+      },
+    ],
   };
 
   describe("serializeMultisigAccount", () => {
@@ -136,6 +143,10 @@ describe("export-import", () => {
       expect(yaml).toContain(
         "proxyFactoryAddress: '0xa6B71E26C5e0845f74c812102Ca7114b6a896Ab2'"
       );
+      expect(yaml).toContain("customAbis:");
+      expect(yaml).toContain("label: ERC20");
+      expect(yaml).toContain("enabled: true");
+      expect(yaml).toContain("source: transfer(address to, uint256 amount)");
       expect(yaml).toContain("id: test-chain");
       expect(yaml).toContain(
         "publicKey: GjwcWFQYzemBtpUoN5fMAP2FZviTtMRWCmrppGuTthJS"
@@ -187,6 +198,13 @@ describe("export-import", () => {
         transactionServiceUrl: "https://api.safe.global/tx-service",
         singletonAddress: "0xd9Db270c1B5E3Bd161E8c8503c55ceABeE709552",
         proxyFactoryAddress: "0xa6B71E26C5e0845f74c812102Ca7114b6a896Ab2",
+        customAbis: [
+          {
+            label: "ERC20",
+            enabled: true,
+            source: "transfer(address to, uint256 amount)",
+          },
+        ],
       });
       expect(imported.addressLabels?.[0].label).toBe("Deployer");
     });
@@ -229,7 +247,39 @@ providerAdapters:
         transactionServiceUrl: "https://api.safe.global/tx-service",
         singletonAddress: "",
         proxyFactoryAddress: "",
+        customAbis: [],
       });
+    });
+
+    it("normalizes custom Safe ABI entries from provider adapter YAML", () => {
+      const yaml = `version: "1.0"
+exportedAt: "2026-05-25T08:14:31.450Z"
+providerAdapters:
+  evm:
+    safe:
+      customAbis:
+        - label: ERC20
+          enabled: true
+          source: |
+            transfer(address to, uint256 amount)
+        - label: Disabled Artifact
+          enabled: false
+          source: '{"abi":[]}'
+`;
+      const imported = importFromYaml(yaml);
+
+      expect(imported.providerAdapters?.evm?.safe?.customAbis).toEqual([
+        {
+          label: "ERC20",
+          enabled: true,
+          source: "transfer(address to, uint256 amount)\n",
+        },
+        {
+          label: "Disabled Artifact",
+          enabled: false,
+          source: '{"abi":[]}',
+        },
+      ]);
     });
   });
 
@@ -271,6 +321,13 @@ providerAdapters:
         transactionServiceUrl: "https://api.safe.global/tx-service",
         singletonAddress: "0xd9Db270c1B5E3Bd161E8c8503c55ceABeE709552",
         proxyFactoryAddress: "0xa6B71E26C5e0845f74c812102Ca7114b6a896Ab2",
+        customAbis: [
+          {
+            label: "ERC20",
+            enabled: true,
+            source: "transfer(address to, uint256 amount)",
+          },
+        ],
       });
       expect(imported.chains![0]).toEqual(mockChains[0]);
       expect(imported.multisigs![0].publicKey).toBe(
