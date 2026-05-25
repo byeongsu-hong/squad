@@ -197,7 +197,7 @@ export function ProposalDetailView({
     if (readyToExecute)
       return {
         label: "Ready",
-        pill: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400",
+        pill: "bg-emerald-500/15 text-emerald-400",
         bar: "bg-emerald-500",
         icon: <Zap className="h-2.5 w-2.5 fill-current" />,
       };
@@ -309,18 +309,18 @@ export function ProposalDetailView({
           <div className={cn(
             "border-b px-5 py-3 flex items-center gap-2",
             proposal.status === "Executed"
-              ? "border-emerald-100 bg-emerald-50/60 dark:border-emerald-900/30 dark:bg-emerald-950/20"
+              ? "border-emerald-900/30 bg-emerald-950/20"
               : "border-destructive/15 bg-destructive/5"
           )}>
             {proposal.status === "Executed" ? (
-              <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <Check className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
             ) : (
               <X className="h-3.5 w-3.5 text-destructive/70 shrink-0" />
             )}
             <span className={cn(
               "text-[12px] font-medium",
               proposal.status === "Executed"
-                ? "text-emerald-700 dark:text-emerald-400"
+                ? "text-emerald-400"
                 : "text-destructive/80"
             )}>
               {proposal.status === "Executed"
@@ -454,7 +454,7 @@ export function ProposalDetailView({
                       className={cn(
                         "shrink-0 text-[11px] font-medium",
                         isApproved
-                          ? "text-emerald-600 dark:text-emerald-400"
+                          ? "text-emerald-400"
                           : isRejected
                           ? "text-destructive"
                           : "text-muted-foreground/30"

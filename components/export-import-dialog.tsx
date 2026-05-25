@@ -525,7 +525,7 @@ function ExportImportModePicker({
   onModeChange,
 }: ExportImportModePickerProps) {
   return (
-    <div className="bg-muted dark:bg-background inline-flex self-start rounded-lg p-1">
+    <div className="bg-background inline-flex self-start rounded-lg p-1">
       {(["export", "import"] as const).map((m) => (
         <button
           key={m}

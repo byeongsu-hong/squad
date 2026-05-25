@@ -99,6 +99,7 @@ function QueueRow({
   item,
   isSelected,
   isSelectable,
+  isAnySelected = false,
   onToggle,
   onClick,
   compact = false,
@@ -110,6 +111,7 @@ function QueueRow({
   item: WorkspaceQueueItem;
   isSelected: boolean;
   isSelectable: boolean;
+  isAnySelected?: boolean;
   onToggle: () => void;
   onClick: () => void;
   compact?: boolean;
@@ -121,7 +123,7 @@ function QueueRow({
   return (
     <div
       className={cn(
-        "flex cursor-pointer items-center gap-2.5 px-3 py-2.5 transition-colors",
+        "group flex cursor-pointer items-center gap-2.5 px-3 py-2.5 transition-colors",
         isSelected
           ? "bg-primary/8"
           : item.readyToExecute
@@ -137,7 +139,12 @@ function QueueRow({
       {/* Checkbox */}
       {isSelectable && (
         <div
-          className="shrink-0"
+          className={cn(
+            "shrink-0 transition-opacity",
+            isAnySelected || isSelected
+              ? "opacity-100"
+              : "opacity-0 group-hover:opacity-100"
+          )}
           onClick={(e) => { e.stopPropagation(); onToggle(); }}
         >
           <Checkbox
@@ -623,6 +630,7 @@ export function OperationsQueue({
                     item={item}
                     isSelected={selected.has(item.focusKey)}
                     isSelectable
+                    isAnySelected={selected.size > 0}
                     onToggle={() => toggleSelect(item.focusKey)}
                     onClick={() => setSelectedItem(item)}
                     compact={compact}

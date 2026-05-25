@@ -57,7 +57,7 @@ export function ConnectWalletDialog({
           <div className="flex flex-col gap-3">
             <div
               role="tablist"
-              className="bg-muted dark:bg-background flex items-center gap-0.5 rounded-lg p-1"
+              className="bg-background flex items-center gap-0.5 rounded-lg p-1"
             >
               {(["solana", "ethereum"] as const).map((tab) => (
                 <Button
@@ -70,7 +70,7 @@ export function ConnectWalletDialog({
                   className={cn(
                     "h-auto flex-1 rounded-md py-1.5 text-[13px] font-medium transition-all",
                     activeTab === tab
-                      ? "bg-card dark:bg-muted text-foreground shadow-sm hover:bg-card dark:hover:bg-muted"
+                      ? "bg-card text-foreground shadow-sm hover:bg-card"
                       : "text-muted-foreground hover:text-foreground hover:bg-transparent"
                   )}
                 >

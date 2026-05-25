@@ -136,9 +136,11 @@ export function EvmConnectPanel({ onClose }: EvmConnectPanelProps) {
         {wcConnector && (
           <div className="flex flex-col gap-2">
             {inlineConnectors.length > 0 && (
-              <div className="bg-border h-px w-full" />
+              <>
+                <div className="bg-border h-px w-full" />
+                <SectionLabel>More options</SectionLabel>
+              </>
             )}
-            <SectionLabel>More options</SectionLabel>
             <WalletRow
               icon={<QrCode className="text-muted-foreground h-6 w-6" />}
               name="WalletConnect"

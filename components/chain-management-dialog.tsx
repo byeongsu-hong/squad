@@ -462,7 +462,7 @@ function ChainRegistry({
                     "inline-block h-1.5 w-1.5 shrink-0 rounded-full",
                     (chain.vmFamily ?? "svm") === "svm"
                       ? "bg-primary/60"
-                      : "bg-blue-500/60 dark:bg-blue-400/60"
+                      : "bg-blue-400/60"
                   )} />
                   <span className="text-muted-foreground/50 text-[10px]">
                     {chain.multisigProvider === "safe" ? "Safe" : "Squads"}
