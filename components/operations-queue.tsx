@@ -606,7 +606,7 @@ export function OperationsQueue({
               <SlidersHorizontal className={cn("text-muted-foreground/40", compact ? "h-3.5 w-3.5" : "h-6 w-6")} />
             </div>
           )}
-          <p className={cn("text-muted-foreground/60", compact ? "text-xs" : "text-sm")}>
+          <p className={cn("text-muted-foreground/60", compact ? "text-[11px]" : "text-sm")}>
             {items.length === 0
               ? "No proposals yet."
               : "No transactions match your filters."}
@@ -772,7 +772,7 @@ export function OperationsQueue({
       )}
 
       {loading && items.length > 0 && (
-        <div className="text-muted-foreground/70 mt-2 flex items-center gap-2 py-1 text-xs">
+        <div className="text-muted-foreground/70 mt-2 flex items-center gap-2 py-1 text-[11px]">
           <Loader2 className="h-3.5 w-3.5 animate-spin" />
           Refreshing...
         </div>
