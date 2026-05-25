@@ -426,6 +426,11 @@ function ChainEditor({
           />
 
           <div className="flex gap-2">
+            {editingChain && (
+              <Button type="button" variant="outline" onClick={onCancel} className="shrink-0">
+                Cancel
+              </Button>
+            )}
             <Button
               type="submit"
               className="bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20 flex-1"
@@ -435,13 +440,8 @@ function ChainEditor({
               ) : (
                 <Plus className="h-4 w-4" />
               )}
-              {editingChain ? "Update" : "Add Chain"}
+              {editingChain ? "Update" : "Add"}
             </Button>
-            {editingChain && (
-              <Button type="button" variant="outline" onClick={onCancel}>
-                Cancel
-              </Button>
-            )}
           </div>
         </form>
       </Form>
