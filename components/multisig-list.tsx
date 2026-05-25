@@ -475,9 +475,9 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
                   </div>
 
                   {/* Status / attention */}
-                  <div className="shrink-0">
-                    {row.attentionLine ? (
-                      row.waiting > 0 ? (
+                  {row.attentionLine && (
+                    <div className="shrink-0">
+                      {row.waiting > 0 ? (
                         <div className="flex items-center gap-1">
                           <AlertTriangle className="text-primary/70 h-3 w-3 shrink-0" />
                           <span className="text-primary text-[11px]">{row.attentionLine}</span>
@@ -489,11 +489,9 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
                         </div>
                       ) : (
                         <span className="text-muted-foreground/40 text-[11px]">{row.attentionLine}</span>
-                      )
-                    ) : (
-                      <span className="text-muted-foreground/25 text-[11px]">—</span>
-                    )}
-                  </div>
+                      )}
+                    </div>
+                  )}
 
                   {/* Row actions */}
                   <div
@@ -520,7 +518,7 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
                           ? "text-primary/70"
                           : row.executable > 0
                           ? "text-emerald-400"
-                          : "text-muted-foreground/30 opacity-0 group-hover:opacity-100"
+                          : "text-muted-foreground/15 group-hover:text-muted-foreground/50"
                       )}
                       onClick={() => handleOpenDesk(multisig)}
                       aria-label="Open vault"

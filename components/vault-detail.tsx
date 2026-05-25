@@ -2,8 +2,14 @@
 
 import { ArrowLeftRight, Copy, Check, X, Users, User, ExternalLink } from "lucide-react";
 import { useState } from "react";
-import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 import { OperationsQueue } from "@/components/operations-queue";
 import { Button } from "@/components/ui/button";
@@ -48,8 +54,8 @@ function CopyButton({ value }: { value: string }) {
 }
 
 function truncateAddress(address: string) {
-  if (address.length <= 12) return address;
-  return `${address.slice(0, 6)}…${address.slice(-4)}`;
+  if (address.length <= 16) return address;
+  return `${address.slice(0, 8)}…${address.slice(-6)}`;
 }
 
 function formatPermissions(mask: number): string {
@@ -70,11 +76,12 @@ type MemberEntry = WorkspaceMultisig["members"][number];
 function MemberRow({ member, isViewer }: { member: MemberEntry; isViewer: boolean }) {
   const addressLabel = useAddressLabel(member.address);
   const labelText = addressLabel?.label ?? null;
+  const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(member.address).then(
-      () => toast.success("Address copied"),
-      () => toast.error("Failed to copy")
+      () => { setCopied(true); setTimeout(() => setCopied(false), 1200); },
+      () => {}
     );
   };
 
@@ -86,49 +93,50 @@ function MemberRow({ member, isViewer }: { member: MemberEntry; isViewer: boolea
       })();
 
   return (
-    <div className="group -mx-1 flex items-center gap-2 rounded-md px-1 py-1.5 transition-colors hover:bg-muted/40">
-      <div
-        className={cn(
-          "flex h-6 w-6 shrink-0 items-center justify-center rounded-full",
-          isViewer ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground"
-        )}
-      >
-        {avatarInitial ? (
-          <span className="text-[10px] font-semibold">{avatarInitial}</span>
-        ) : (
-          <User className="h-3 w-3 opacity-60" />
-        )}
-      </div>
-      <div className="min-w-0 flex-1">
-        {labelText && (
-          <p className="truncate text-[12px] font-medium leading-tight">
-            {labelText}
-          </p>
-        )}
-        <p className={cn("font-mono text-[11px] text-muted-foreground/70", labelText && "leading-tight")}>
-          {truncateAddress(member.address)}
-        </p>
-      </div>
-      {isViewer && (
-        <span className="shrink-0 text-[9px] font-medium text-primary/60">
-          you
-        </span>
-      )}
-      {member.permissionsMask !== 7 && (
-        <span className="text-muted-foreground/40 shrink-0 rounded bg-muted px-1.5 py-0.5 font-mono text-[9px]">
-          {formatPermissions(member.permissionsMask)}
-        </span>
-      )}
-      <Button
-        type="button"
-        variant="ghost"
-        onClick={handleCopy}
-        className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground/50 hover:text-foreground h-5 w-5 shrink-0 p-0"
-        aria-label="Copy address"
-      >
-        <Copy className="h-3 w-3" />
-      </Button>
-    </div>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <div
+          className="group -mx-1 flex cursor-pointer items-center gap-2 rounded-md px-1 py-1.5 transition-colors hover:bg-muted/40"
+          onClick={handleCopy}
+        >
+          <div className={cn(
+            "flex h-6 w-6 shrink-0 items-center justify-center rounded-full",
+            isViewer ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground"
+          )}>
+            {avatarInitial ? (
+              <span className="text-[10px] font-semibold">{avatarInitial}</span>
+            ) : (
+              <User className="h-3 w-3 opacity-60" />
+            )}
+          </div>
+          <div className="min-w-0 flex-1">
+            {labelText && (
+              <p className="truncate text-[12px] font-medium leading-tight">{labelText}</p>
+            )}
+            <p className={cn("font-mono text-[11px] text-muted-foreground/70", labelText && "leading-tight")}>
+              {truncateAddress(member.address)}
+            </p>
+          </div>
+          {isViewer && (
+            <span className="shrink-0 text-[9px] font-medium text-primary/60">you</span>
+          )}
+          {member.permissionsMask !== 7 && (
+            <span className="text-muted-foreground/40 shrink-0 rounded bg-muted px-1.5 py-0.5 font-mono text-[9px]">
+              {formatPermissions(member.permissionsMask)}
+            </span>
+          )}
+          <div className={cn(
+            "shrink-0 transition-colors",
+            copied ? "text-primary" : "text-muted-foreground/20 group-hover:text-muted-foreground/60"
+          )}>
+            {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+          </div>
+        </div>
+      </TooltipTrigger>
+      <TooltipContent side="left" sideOffset={8}>
+        <p className="max-w-[240px] break-all font-mono text-[11px]">{member.address}</p>
+      </TooltipContent>
+    </Tooltip>
   );
 }
 
@@ -307,15 +315,17 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
               {multisig.threshold}/{multisig.members.length}
             </span>
           </div>
-          <div className="divide-border/60 divide-y">
-            {multisig.members.map((member) => (
-              <MemberRow
-                key={member.address}
-                member={member}
-                isViewer={viewerAddress === member.address}
-              />
-            ))}
-          </div>
+          <TooltipProvider delayDuration={0}>
+            <div className="divide-border/60 divide-y">
+              {multisig.members.map((member) => (
+                <MemberRow
+                  key={member.address}
+                  member={member}
+                  isViewer={viewerAddress === member.address}
+                />
+              ))}
+            </div>
+          </TooltipProvider>
         </div>
       )}
 
