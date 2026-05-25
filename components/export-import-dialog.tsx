@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, Check, Copy, Loader2, Upload } from "lucide-react";
+import { AlertTriangle, Check, Copy, Link, Loader2, Upload, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -34,6 +34,7 @@ import {
   DialogTitle,
 } from "./ui/dialog";
 import { Button } from "./ui/button";
+import { Input } from "./ui/input";
 import { Progress } from "./ui/progress";
 import { Textarea } from "./ui/textarea";
 
@@ -575,6 +576,8 @@ function ExportImportExportPanel({
   );
 }
 
+type UrlFetchState = "idle" | "loading" | "success" | "error";
+
 interface ExportImportImportPanelProps {
   importContent: string;
   importProgress: ImportProgressState | null;
@@ -592,12 +595,115 @@ function ExportImportImportPanel({
   onResetImportedState,
   onImport,
 }: ExportImportImportPanelProps) {
+  const [urlInput, setUrlInput] = useState("");
+  const [urlFetchState, setUrlFetchState] = useState<UrlFetchState>("idle");
+  const [urlError, setUrlError] = useState<string | null>(null);
+
   const progressValue = importProgress
     ? (importProgress.current / importProgress.total) * 100
     : 0;
 
+  const handleFetchUrl = async () => {
+    const trimmed = urlInput.trim();
+    if (!trimmed) return;
+
+    if (!/^https?:\/\//i.test(trimmed)) {
+      setUrlError("URL must start with https:// or http://");
+      setUrlFetchState("error");
+      return;
+    }
+
+    setUrlFetchState("loading");
+    setUrlError(null);
+
+    try {
+      const response = await fetch(trimmed);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      const text = await response.text();
+      importFromYaml(text);
+      onImportContentChange(text);
+      setUrlFetchState("success");
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : "Fetch failed";
+      const isCors = msg.toLowerCase().includes("failed to fetch") || msg.toLowerCase().includes("cors");
+      setUrlError(isCors ? "CORS blocked — paste the YAML directly instead" : msg);
+      setUrlFetchState("error");
+    }
+  };
+
+  const handleClearUrl = () => {
+    setUrlInput("");
+    setUrlFetchState("idle");
+    setUrlError(null);
+  };
+
   return (
     <div className="space-y-3">
+      {/* URL fetch */}
+      <div className="border-border bg-card overflow-hidden rounded-xl border">
+        <div className="border-border/50 flex items-center gap-2 border-b px-4 py-3">
+          <Link className="text-muted-foreground/40 h-3.5 w-3.5 shrink-0" />
+          <p className="text-muted-foreground/50 text-[11px] font-medium">Import from URL</p>
+        </div>
+        <div className="px-4 py-3 space-y-2">
+          <div className="flex gap-2">
+            <div className="relative flex-1 min-w-0">
+              <Input
+                type="url"
+                value={urlInput}
+                onChange={(e) => {
+                  setUrlInput(e.target.value);
+                  if (urlFetchState !== "idle") {
+                    setUrlFetchState("idle");
+                    setUrlError(null);
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") void handleFetchUrl();
+                }}
+                disabled={isImporting || urlFetchState === "loading"}
+                placeholder="https://raw.githubusercontent.com/…/config.yaml"
+                className={cn("font-mono text-[11px] pr-8", urlInput && "pr-8")}
+              />
+              {urlInput && urlFetchState !== "loading" && (
+                <button
+                  type="button"
+                  onClick={handleClearUrl}
+                  className="text-muted-foreground/40 hover:text-muted-foreground absolute top-1/2 right-2.5 -translate-y-1/2"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={!urlInput.trim() || isImporting || urlFetchState === "loading"}
+              onClick={() => void handleFetchUrl()}
+              className={urlFetchState === "success" ? "border-emerald-600/40 text-emerald-400" : ""}
+            >
+              {urlFetchState === "loading" ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : urlFetchState === "success" ? (
+                <><Check className="h-3.5 w-3.5" />Fetched</>
+              ) : (
+                "Fetch"
+              )}
+            </Button>
+          </div>
+          {urlFetchState === "success" && (
+            <p className="text-emerald-400 text-[11px]">YAML loaded and validated — review below then click Import.</p>
+          )}
+          {urlFetchState === "error" && urlError && (
+            <p className="text-destructive/80 text-[11px]">{urlError}</p>
+          )}
+        </div>
+      </div>
+
+      {/* Reset state */}
       <div className="border-border bg-card overflow-hidden rounded-xl border">
         <div className="border-border/50 flex items-center justify-between gap-3 border-b px-4 py-3">
           <p className="text-muted-foreground/50 text-[11px] font-medium">Reset state</p>
@@ -644,7 +750,7 @@ function ExportImportImportPanel({
           type="button"
           className="bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20"
           onClick={onImport}
-          disabled={isImporting}
+          disabled={isImporting || !importContent.trim()}
         >
           {isImporting ? (
             <><Loader2 className="h-4 w-4 animate-spin" />Importing...</>
