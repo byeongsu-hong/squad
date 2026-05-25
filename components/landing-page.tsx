@@ -213,7 +213,10 @@ export function LandingPage() {
                         )}
                       </div>
                       <div className="min-w-0 flex-1 text-left">
-                        <p className="text-foreground truncate text-[13px] font-medium">
+                        <p className={cn(
+                          "truncate text-[13px] font-medium",
+                          workspaceMultisigs[0].label ? "text-foreground" : "text-muted-foreground/45 italic"
+                        )}>
                           {workspaceMultisigs[0].label ?? "Unnamed Vault"}
                         </p>
                         <p className="text-muted-foreground/50 text-[11px]">

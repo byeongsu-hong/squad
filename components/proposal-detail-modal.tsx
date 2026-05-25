@@ -233,7 +233,10 @@ export function ProposalDetailView({
             <div className="flex flex-wrap items-center gap-2">
               <Link
                 href={`/vaults/${encodeURIComponent(multisig.key)}`}
-                className="text-foreground truncate font-semibold leading-snug hover:underline"
+                className={cn(
+                  "truncate font-semibold leading-snug hover:underline",
+                  multisig.label ? "text-foreground" : "text-muted-foreground/50 italic"
+                )}
                 onClick={onBack}
               >
                 {multisig.label || "Unnamed"}

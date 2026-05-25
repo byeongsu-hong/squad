@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  AlertTriangle,
   Check,
   CheckCircle2,
   ChevronRight,
@@ -428,7 +427,10 @@ export function MultisigList({ selectedKey }: { selectedKey?: string }) {
                       />
                     ) : (
                       <div className="mb-0.5 flex min-w-0 items-center gap-1.5">
-                        <p className="text-foreground truncate text-[13px] font-medium leading-tight">
+                        <p className={cn(
+                          "truncate text-[13px] font-medium leading-tight",
+                          multisig.label ? "text-foreground" : "text-muted-foreground/45 italic"
+                        )}>
                           {row.label}
                         </p>
                         <Button
@@ -489,20 +491,14 @@ export function MultisigList({ selectedKey }: { selectedKey?: string }) {
                   {row.attentionLine && (
                     <div className="shrink-0">
                       {row.waiting > 0 ? (
-                        <div className="flex items-center gap-1">
-                          <AlertTriangle className="text-primary/70 h-3 w-3 shrink-0" />
-                          <span className="text-primary text-[11px]">{row.attentionLine}</span>
-                        </div>
+                        <span className="text-primary text-[11px] font-medium">{row.attentionLine}</span>
                       ) : row.executable > 0 ? (
                         <div className="flex items-center gap-1">
                           <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-600 dark:text-emerald-500" />
                           <span className="text-[11px] text-emerald-600 dark:text-emerald-400">{row.attentionLine}</span>
                         </div>
                       ) : row.active > 0 ? (
-                        <div className="flex items-center gap-1">
-                          <Check className="h-3 w-3 shrink-0 text-emerald-600/60 dark:text-emerald-500/60" />
-                          <span className="text-[11px] text-emerald-600/60 dark:text-emerald-500/60">{row.attentionLine}</span>
-                        </div>
+                        <span className="text-[11px] text-emerald-600/60 dark:text-emerald-500/60">{row.attentionLine}</span>
                       ) : (
                         <span className="text-muted-foreground/40 text-[11px]">{row.attentionLine}</span>
                       )}

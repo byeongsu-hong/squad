@@ -260,7 +260,10 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
 
           <div className="min-w-0 flex-1">
             <div className="flex items-start justify-between gap-2">
-              <h1 className="text-foreground text-[17px] font-bold tracking-[-0.02em] leading-tight">
+              <h1 className={cn(
+                "text-[17px] font-bold tracking-[-0.02em] leading-tight",
+                multisig.label ? "text-foreground" : "text-muted-foreground/50 italic"
+              )}>
                 {multisig.label ?? "Unnamed Vault"}
               </h1>
               <div className="flex shrink-0 items-center gap-1.5">

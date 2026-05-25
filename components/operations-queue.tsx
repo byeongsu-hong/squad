@@ -80,14 +80,14 @@ function StatusBadge({ item }: { item: WorkspaceQueueItem }) {
   }
   if (item.proposal.status === "Executed") {
     return (
-      <span className="rounded border border-border px-1.5 py-0.5 text-[10px] text-muted-foreground/50">
+      <span className="inline-flex items-center gap-1 rounded border border-emerald-200/70 bg-emerald-50 px-1.5 py-0.5 text-[10px] text-emerald-600 dark:border-emerald-800/40 dark:bg-emerald-950/20 dark:text-emerald-500/70">
         Executed
       </span>
     );
   }
   if (item.proposal.status === "Cancelled") {
     return (
-      <span className="rounded border border-border px-1.5 py-0.5 text-[10px] text-muted-foreground/50">
+      <span className="rounded border border-border/80 bg-muted/60 px-1.5 py-0.5 text-[10px] text-muted-foreground/60">
         Cancelled
       </span>
     );
@@ -160,11 +160,14 @@ function QueueRow({
       {/* Left: vault/tx label + metadata */}
       <div className="min-w-0 flex-1">
         {!compact ? (
-          <p className="text-foreground mb-0.5 truncate text-[13px] font-medium leading-tight">
+          <p className={cn(
+            "mb-0.5 truncate text-[13px] font-medium leading-tight",
+            item.multisig.label ? "text-foreground" : "text-muted-foreground/45 italic"
+          )}>
             {item.multisig.label ?? "Unnamed"}
           </p>
         ) : (
-          <p className="text-foreground/70 mb-0.5 truncate text-[12px] font-medium leading-tight">
+          <p className="text-foreground/80 mb-0.5 truncate text-[12px] font-medium leading-tight">
             {item.lineLabel}
           </p>
         )}
