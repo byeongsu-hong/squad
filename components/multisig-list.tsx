@@ -11,6 +11,7 @@ import {
   Tag,
   Trash2,
   Shield,
+  Zap,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -292,7 +293,7 @@ export function MultisigList({ selectedKey }: { selectedKey?: string }) {
 
           {/* Row 2: tag filters (only when tags exist) */}
           {allTags.length > 0 && (
-            <div className="border-border flex items-center gap-1.5 overflow-x-auto border-t px-3 py-2 scrollbar-none">
+            <div className="border-border bg-muted/30 flex items-center gap-1.5 overflow-x-auto border-t px-3 py-2 scrollbar-none">
               {allTags.map((tag) => {
                 const isActive = selectedFilterTags.includes(tag);
                 return (
@@ -509,17 +510,19 @@ export function MultisigList({ selectedKey }: { selectedKey?: string }) {
                   {row.attentionLine && (
                     <div className="shrink-0">
                       {row.waiting > 0 ? (
-                        <span className="text-primary text-[11px] font-medium">{row.attentionLine}</span>
+                        <span className="rounded border border-primary/30 bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+                          {row.attentionLine}
+                        </span>
                       ) : row.executable > 0 ? (
-                        <div className="flex items-center gap-1">
-                          <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-600 dark:text-emerald-500" />
-                          <span className="text-[11px] text-emerald-600 dark:text-emerald-400">{row.attentionLine}</span>
-                        </div>
+                        <span className="inline-flex items-center gap-1 rounded border border-emerald-300/70 bg-emerald-50 px-1.5 py-0.5 text-[10px] text-emerald-600 dark:border-emerald-800/50 dark:bg-emerald-950/30 dark:text-emerald-400">
+                          <Zap className="h-2.5 w-2.5 fill-current" />
+                          {row.attentionLine}
+                        </span>
                       ) : row.active > 0 ? (
-                        <span className="text-[11px] text-emerald-600/60 dark:text-emerald-500/60">{row.attentionLine}</span>
-                      ) : (
-                        <span className="text-muted-foreground/50 text-[11px]">{row.attentionLine}</span>
-                      )}
+                        <span className="rounded border border-emerald-200/60 bg-emerald-50/60 px-1.5 py-0.5 text-[10px] text-emerald-600/70 dark:border-emerald-800/30 dark:bg-emerald-950/10 dark:text-emerald-500/60">
+                          {row.attentionLine}
+                        </span>
+                      ) : null}
                     </div>
                   )}
 

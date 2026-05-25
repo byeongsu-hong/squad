@@ -29,17 +29,17 @@ function buildAttentionLine(summary: RegistryAttentionSummary | null) {
   if (!summary) return "";
 
   if (summary.waiting > 0) {
-    const parts = [`${summary.waiting} waiting`];
+    const parts = [`${summary.waiting} to sign`];
     if (summary.executable > 0) parts.push(`${summary.executable} ready`);
     return parts.join(" · ");
   }
 
   if (summary.executable > 0) {
-    return `${summary.executable} ready to execute`;
+    return `${summary.executable} ready`;
   }
 
   if (summary.active > 0) {
-    return `${summary.active} active`;
+    return `${summary.active} pending`;
   }
 
   return "";
