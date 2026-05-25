@@ -197,7 +197,7 @@ export function ProposalDetailView({
     if (proposal.status === "Cancelled")
       return {
         label: "Cancelled",
-        pill: "bg-muted text-muted-foreground/70",
+        pill: "bg-muted text-muted-foreground/60",
         bar: "bg-muted-foreground/20",
         icon: null,
       };
@@ -327,7 +327,7 @@ export function ProposalDetailView({
             {proposal.status === "Executed" ? (
               <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
             ) : (
-              <X className={cn("h-3.5 w-3.5 shrink-0", proposal.status === "Cancelled" ? "text-muted-foreground/50" : "text-destructive/70")} />
+              <X className={cn("h-3.5 w-3.5 shrink-0", proposal.status === "Cancelled" ? "text-muted-foreground/50" : "text-destructive")} />
             )}
             <span className={cn(
               "text-[12px] font-medium",
@@ -522,7 +522,7 @@ export function ProposalDetailView({
 
               {payloadError && (
                 <div className="rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3">
-                  <p className="text-[11px] text-destructive/80">{payloadError}</p>
+                  <p className="text-[11px] text-destructive">{payloadError}</p>
                 </div>
               )}
 
@@ -561,7 +561,7 @@ export function ProposalDetailView({
                   {payload.dataDecoded != null && (
                     <div className="border-t border-border py-2">
                       <p className="text-muted-foreground/50 mb-1.5 text-[11px] font-medium">Decoded</p>
-                      <pre className="overflow-x-auto font-mono text-[11px] text-muted-foreground/70 leading-relaxed">
+                      <pre className="overflow-x-auto font-mono text-[11px] text-muted-foreground/60 leading-relaxed">
                         {JSON.stringify(payload.dataDecoded, null, 2)}
                       </pre>
                     </div>
@@ -651,7 +651,7 @@ export function ProposalDetailView({
                         <div className="border-border border-b px-3 py-2">
                           <p className="text-muted-foreground/50 text-[11px] font-medium">Data</p>
                         </div>
-                        <code className="block overflow-x-auto px-3 py-2.5 font-mono text-[11px] text-muted-foreground/70 break-all">
+                        <code className="block overflow-x-auto px-3 py-2.5 font-mono text-[11px] text-muted-foreground/60 break-all">
                           {instr.data}
                         </code>
                       </div>

@@ -439,7 +439,7 @@ export function ExportImportController() {
           <div className="border-destructive/15 border-b px-6 py-5">
             <div className="flex items-start gap-4">
               <div className="border-destructive/20 bg-destructive/10 flex h-11 w-11 shrink-0 items-center justify-center rounded-full border">
-                <AlertTriangle className="text-destructive/70 h-5 w-5" />
+                <AlertTriangle className="text-destructive h-5 w-5" />
               </div>
               <div className="space-y-2">
                 <DialogTitle>
@@ -766,7 +766,7 @@ function ExportImportImportPanel({
             </p>
           )}
           {urlFetchState === "error" && urlError && (
-            <p className="text-destructive/80 text-[11px]">{urlError}</p>
+            <p className="text-destructive text-[11px]">{urlError}</p>
           )}
         </div>
       </div>
@@ -783,7 +783,7 @@ function ExportImportImportPanel({
           size="sm"
           disabled={isImporting}
           onClick={onResetImportedState}
-          className="text-muted-foreground/50 hover:text-destructive/80 hover:bg-destructive/5 h-auto shrink-0 px-2 py-1 text-[11px]"
+          className="text-muted-foreground/50 hover:text-destructive hover:bg-destructive/5 h-auto shrink-0 px-2 py-1 text-[11px]"
         >
           Reset state
         </Button>
