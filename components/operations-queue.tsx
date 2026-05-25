@@ -215,7 +215,7 @@ function QueueRow({
           <p className="text-foreground truncate text-[13px] font-medium">
             {item.multisig.label ?? "Unnamed"}
           </p>
-          <p className="text-muted-foreground truncate text-[10px]">
+          <p className="text-muted-foreground/60 truncate text-[10px]">
             {item.multisig.provider === "safe" ? "Safe" : "Squads"}
           </p>
         </div>
