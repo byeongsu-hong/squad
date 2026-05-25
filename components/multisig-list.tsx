@@ -451,7 +451,7 @@ export function MultisigList({ selectedKey }: { selectedKey?: string }) {
                       <span className="text-muted-foreground/50 text-[10px]">
                         {formatProviderLabel(row.multisigProvider)} · {row.threshold}/{row.memberCount}
                       </span>
-                      <span className="text-muted-foreground/30 font-mono text-[10px]">
+                      <span className="text-muted-foreground/45 font-mono text-[10px]">
                         {formatAddress(multisig.publicKey.toString(), 5, 4)}
                       </span>
                       <Button

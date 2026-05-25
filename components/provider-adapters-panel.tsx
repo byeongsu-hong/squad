@@ -105,7 +105,7 @@ export function ProviderAdaptersPanel() {
                   "rounded border px-1.5 py-px text-[10px]",
                   safeAdapterFieldsConfigured === 3
                     ? "border-emerald-300/60 bg-emerald-50 text-emerald-600 dark:border-emerald-800/40 dark:bg-emerald-950/20 dark:text-emerald-400"
-                    : "border-border text-muted-foreground/40"
+                    : "border-border bg-muted/50 text-muted-foreground/60"
                 )}>
                   {safeAdapterFieldsConfigured === 3 ? "configured" : "needs setup"}
                 </span>
