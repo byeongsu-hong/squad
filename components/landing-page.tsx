@@ -99,13 +99,13 @@ export function LandingPage() {
           >
             <span className={cn(
               "text-[18px] font-bold tabular-nums leading-none",
-              loading ? "text-muted-foreground/20 animate-pulse" : needsSigningCount > 0 ? "text-primary" : "text-muted-foreground/50"
+              loading ? "text-muted-foreground/20 animate-pulse" : needsSigningCount > 0 ? "text-primary" : "text-muted-foreground/30"
             )}>
               {needsSigningCount}
             </span>
             <span className={cn(
               "text-[11px] whitespace-nowrap",
-              loading ? "text-muted-foreground/20" : needsSigningCount > 0 ? "text-muted-foreground/60" : "text-muted-foreground/50"
+              loading ? "text-muted-foreground/20" : needsSigningCount > 0 ? "text-muted-foreground/60" : "text-muted-foreground/30"
             )}>
               to sign
             </span>
@@ -127,13 +127,13 @@ export function LandingPage() {
           >
             <span className={cn(
               "text-[18px] font-bold tabular-nums leading-none",
-              loading ? "text-muted-foreground/20 animate-pulse" : executableCount > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground/50"
+              loading ? "text-muted-foreground/20 animate-pulse" : executableCount > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground/30"
             )}>
               {executableCount}
             </span>
             <span className={cn(
               "text-[11px] whitespace-nowrap",
-              loading ? "text-muted-foreground/20" : executableCount > 0 ? "text-muted-foreground/60" : "text-muted-foreground/50"
+              loading ? "text-muted-foreground/20" : executableCount > 0 ? "text-muted-foreground/60" : "text-muted-foreground/30"
             )}>
               ready
             </span>
@@ -155,13 +155,13 @@ export function LandingPage() {
           >
             <span className={cn(
               "text-[18px] font-bold tabular-nums leading-none",
-              loading ? "text-muted-foreground/20 animate-pulse" : watchingCount > 0 ? "text-foreground" : "text-muted-foreground/50"
+              loading ? "text-muted-foreground/20 animate-pulse" : watchingCount > 0 ? "text-foreground" : "text-muted-foreground/30"
             )}>
               {watchingCount}
             </span>
             <span className={cn(
               "text-[11px] whitespace-nowrap",
-              loading ? "text-muted-foreground/20" : watchingCount > 0 ? "text-muted-foreground/60" : "text-muted-foreground/50"
+              loading ? "text-muted-foreground/20" : watchingCount > 0 ? "text-muted-foreground/60" : "text-muted-foreground/30"
             )}>
               watching
             </span>
@@ -169,8 +169,8 @@ export function LandingPage() {
 
           {!loading && needsSigningCount === 0 && executableCount === 0 && watchingCount === 0 && (
             <div className="ml-auto flex items-center gap-1.5 px-4">
-              <CheckCircle2 className="h-3 w-3 text-emerald-500/60" />
-              <span className="text-muted-foreground/50 text-[11px]">All clear</span>
+              <CheckCircle2 className="h-3 w-3 text-emerald-500/70 dark:text-emerald-400/70" />
+              <span className="text-emerald-700/60 dark:text-emerald-400/60 text-[11px] font-medium">All clear</span>
             </div>
           )}
         </div>
@@ -183,9 +183,6 @@ export function LandingPage() {
           defaultStatusFilter={activeFilter}
           emptyStateCta={
             <div className="w-full max-w-sm space-y-2 mt-1">
-              <p className="text-muted-foreground/50 text-[11px] text-center">
-                Monitoring {workspaceMultisigs.length} vault{workspaceMultisigs.length !== 1 ? "s" : ""}
-              </p>
               {workspaceMultisigs.length === 1 ? (
                 <Link
                   href={`/vaults/${encodeURIComponent(workspaceMultisigs[0].key)}`}

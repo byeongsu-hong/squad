@@ -464,10 +464,10 @@ export function OperationsQueue({
                   resetPage();
                 }}
                 className={cn(
-                  "h-7 rounded-full border px-3 text-[11px] font-medium transition-colors",
+                  "h-7 rounded-full border px-3 text-[11px] transition-colors",
                   statusFilter === f
-                    ? "bg-card border-border text-foreground shadow-sm hover:bg-card"
-                    : "border-border text-muted-foreground/60 hover:bg-muted/50 hover:text-foreground"
+                    ? "bg-foreground/[0.07] border-foreground/[0.11] text-foreground font-semibold"
+                    : "border-transparent text-muted-foreground/40 font-normal hover:text-muted-foreground/70 hover:bg-muted/40 hover:border-border/50"
                 )}
               >
                 {f}
@@ -588,12 +588,12 @@ export function OperationsQueue({
         <div className="space-y-4">
           {actionItems.length > 0 && (
             <div className="border-border bg-card overflow-hidden rounded-xl border">
-              <div className="border-b border-border flex items-center gap-2 px-3 py-2">
-                <span className="bg-primary h-1.5 w-1.5 rounded-full" />
-                <p className="text-muted-foreground/50 text-[11px] font-medium">
+              <div className="border-b border-primary/15 dark:border-primary/10 bg-primary/[0.04] dark:bg-primary/[0.06] flex items-center gap-2 px-3 py-2">
+                <span className="bg-primary h-1.5 w-1.5 shrink-0 rounded-full" />
+                <p className="text-primary/70 text-[11px] font-semibold">
                   Action needed
                 </p>
-                <span className="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-[10px] font-semibold tabular-nums">
+                <span className="bg-primary/15 text-primary rounded-full px-2 py-0.5 text-[10px] font-bold tabular-nums">
                   {actionItems.length}
                 </span>
                 {selectableKeys.length > 1 && (

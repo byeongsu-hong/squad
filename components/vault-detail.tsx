@@ -156,8 +156,8 @@ function MemberRow({ member, isViewer }: { member: MemberEntry; isViewer: boolea
             </span>
           )}
           <div className={cn(
-            "shrink-0 transition-colors",
-            copied ? "text-primary" : "text-muted-foreground/30 group-hover:text-muted-foreground/60"
+            "shrink-0 transition-[opacity,color]",
+            copied ? "text-primary opacity-100" : "text-muted-foreground/50 opacity-0 group-hover:opacity-100"
           )}>
             {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
           </div>
@@ -351,12 +351,10 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
         {/* Transactions — shown first */}
         <div className="order-1">
           {!loading && vaultItems.length === 0 ? (
-            <div className="border-border bg-card overflow-hidden rounded-xl border">
+            <div className="border-emerald-200/40 dark:border-emerald-800/25 bg-emerald-50/40 dark:bg-emerald-950/10 overflow-hidden rounded-xl border">
               <div className="flex items-center gap-2.5 px-3 py-3">
-                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border border-emerald-200/60 bg-emerald-50 dark:border-emerald-900/30 dark:bg-emerald-950/20">
-                  <CheckCircle2 className="h-3 w-3 text-emerald-600/60 dark:text-emerald-500/60" />
-                </div>
-                <p className="text-muted-foreground/50 text-[12px]">No proposals yet.</p>
+                <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-500/60 dark:text-emerald-400/50" />
+                <p className="text-emerald-700/50 dark:text-emerald-400/50 text-[12px]">No proposals yet.</p>
               </div>
             </div>
           ) : (
