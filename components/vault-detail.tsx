@@ -1,20 +1,9 @@
 "use client";
 
-import { CheckCircle2, ChevronLeft, Copy, Check, X, Users, User, ExternalLink, Shield, Trash2 } from "lucide-react";
+import { CheckCircle2, ChevronLeft, Copy, Check, X, Users, User, ExternalLink, Shield } from "lucide-react";
 import { useState } from "react";
-import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import {
   Tooltip,
   TooltipContent,
@@ -31,7 +20,6 @@ import { useWorkspaceMultisigs } from "@/lib/hooks/use-workspace-multisigs";
 import { useWorkspaceQueue } from "@/lib/hooks/use-workspace-queue";
 import { useWalletStore } from "@/stores/wallet-store";
 import { useChainStore } from "@/stores/chain-store";
-import { useMultisigStore } from "@/stores/multisig-store";
 import { normalizeChainConfig } from "@/types/chain";
 import type { WorkspaceMultisig } from "@/types/workspace";
 
@@ -188,9 +176,6 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
   const { workspaceMultisigMap } = useWorkspaceMultisigs();
   const { proposals, loading, workspaceMultisigs } = useProposalsQuery();
   const { chains } = useChainStore();
-  const { deleteMultisig } = useMultisigStore();
-  const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
-
   const multisig = workspaceMultisigMap.get(vaultKey) ?? null;
 
   const allQueueItems = useWorkspaceQueue({
@@ -417,43 +402,6 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
 
       </div>
 
-      {/* Remove vault — de-emphasised, lives outside the flex/grid body */}
-      <div className="pt-3 flex justify-end">
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => setRemoveDialogOpen(true)}
-          className="text-muted-foreground/40 hover:text-destructive hover:bg-destructive/5 h-auto px-2 py-1 text-[11px] gap-1.5"
-        >
-          <Trash2 className="h-3 w-3" />
-          Remove vault
-        </Button>
-      </div>
-
-      <AlertDialog open={removeDialogOpen} onOpenChange={setRemoveDialogOpen}>
-        <AlertDialogContent className="max-w-[28rem]">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remove vault?</AlertDialogTitle>
-            <AlertDialogDescription>
-              <span className="font-medium text-foreground/80">{multisig.label ?? "This vault"}</span> will be removed from your registry. On-chain data is unaffected.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => {
-                deleteMultisig(multisig.address, multisig.chainId);
-                toast.success("Vault removed");
-                onBack();
-              }}
-            >
-              Remove
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

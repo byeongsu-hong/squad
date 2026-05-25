@@ -87,6 +87,7 @@ export function MultisigList({ selectedKey }: { selectedKey?: string }) {
   const [filterText, setFilterText] = useState("");
   const [selectedFilterTags, setSelectedFilterTags] = useState<string[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [singleDeleteKey, setSingleDeleteKey] = useState<string | null>(null);
 
   const { publicKey } = useWalletStore();
   const { getSelectedChain, chains } = useChainStore();
@@ -232,6 +233,14 @@ export function MultisigList({ selectedKey }: { selectedKey?: string }) {
     ? normalizeChainConfig(selectedChain)
     : null;
   const canSyncSelectedChain = canLoadFromChain(selectedChain?.id);
+
+  const handleSingleDelete = (key: string) => {
+    const multisig = multisigByKey.get(key);
+    if (!multisig) return;
+    deleteMultisig(multisig.publicKey.toString(), multisig.chainId);
+    setSingleDeleteKey(null);
+    toast.success("Vault removed");
+  };
 
   const handleOpenDesk = (multisig: MultisigAccount) => {
     const multisigKey = getMultisigAccountKey(multisig);
@@ -534,7 +543,16 @@ export function MultisigList({ selectedKey }: { selectedKey?: string }) {
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      className="h-7 w-7 opacity-0 transition-[opacity,color] group-hover:opacity-100 text-muted-foreground/50 hover:text-foreground"
+                      className="h-6 w-6 opacity-0 transition-[opacity,color] group-hover:opacity-100 text-muted-foreground/40 hover:text-destructive hover:bg-destructive/8"
+                      onClick={() => setSingleDeleteKey(row.key)}
+                      title="Remove vault"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      className="h-6 w-6 opacity-0 transition-[opacity,color] group-hover:opacity-100 text-muted-foreground/50 hover:text-foreground"
                       onClick={() => handleOpenTagDialog(multisig)}
                       title="Manage tags"
                     >
@@ -544,7 +562,7 @@ export function MultisigList({ selectedKey }: { selectedKey?: string }) {
                       variant="ghost"
                       size="icon-sm"
                       className={cn(
-                        "h-7 w-7 transition-all",
+                        "h-6 w-6 transition-all",
                         isActiveDesk
                           ? "text-primary"
                           : row.waiting > 0
@@ -588,6 +606,29 @@ export function MultisigList({ selectedKey }: { selectedKey?: string }) {
             <AlertDialogAction
               onClick={handleConfirmDelete}
               className="border-destructive/30 bg-destructive text-destructive-foreground hover:bg-destructive/80"
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={singleDeleteKey !== null} onOpenChange={(open) => { if (!open) setSingleDeleteKey(null); }}>
+        <AlertDialogContent className="max-w-[28rem]">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove vault?</AlertDialogTitle>
+            <AlertDialogDescription>
+              <span className="font-medium text-foreground/80">
+                {singleDeleteKey ? (multisigByKey.get(singleDeleteKey)?.label ?? "This vault") : "This vault"}
+              </span>{" "}
+              will be removed from your registry. On-chain data is unaffected.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="border-destructive/30 bg-destructive text-destructive-foreground hover:bg-destructive/80"
+              onClick={() => singleDeleteKey && handleSingleDelete(singleDeleteKey)}
             >
               Remove
             </AlertDialogAction>

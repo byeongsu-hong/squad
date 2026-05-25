@@ -101,8 +101,8 @@ export function AccountMenu({ onAddWallet }: AccountMenuProps) {
             className="flex cursor-default items-start gap-3 rounded-md p-3 focus:bg-transparent"
             onSelect={(e) => e.preventDefault()}
           >
-            <div className="bg-primary/10 mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg">
-              <Globe className="text-primary h-4 w-4" />
+            <div className="bg-primary/10 mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg">
+              <Globe className="text-primary h-3.5 w-3.5" />
             </div>
             <div className="min-w-0 flex-1 space-y-1">
               <div className="flex items-center gap-1.5">
@@ -150,8 +150,8 @@ export function AccountMenu({ onAddWallet }: AccountMenuProps) {
             className="flex cursor-default items-start gap-3 rounded-md p-3 focus:bg-transparent"
             onSelect={(e) => e.preventDefault()}
           >
-            <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-950/30">
-              <PlugZap className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-950/30">
+              <PlugZap className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
             </div>
             <div className="min-w-0 flex-1 space-y-1">
               <div className="flex items-center gap-1.5">
@@ -239,7 +239,7 @@ export function AccountMenu({ onAddWallet }: AccountMenuProps) {
           onClick={handleDisconnect}
           className="text-destructive focus:text-destructive focus:bg-destructive/10 flex cursor-pointer items-center gap-2 rounded-md px-3 py-2"
         >
-          <LogOut className="h-4 w-4" />
+          <LogOut className="h-3.5 w-3.5" />
           <span className="text-[13px]">Disconnect All</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
