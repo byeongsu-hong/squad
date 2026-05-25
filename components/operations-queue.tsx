@@ -259,7 +259,7 @@ function QueueRow({
             ) : (
               <Check />
             )}
-            {!compact && "Approve"}
+            {!compact && "Sign"}
           </Button>
         ) : null}
       </div>
@@ -630,7 +630,7 @@ export function OperationsQueue({
                       ) : (
                         <Check className="h-3 w-3" />
                       )}
-                      Approve{approveAllItems.length > 1 ? ` all (${approveAllItems.length})` : ""}
+                      Sign{approveAllItems.length > 1 ? ` all (${approveAllItems.length})` : ""}
                     </Button>
                   )}
                   {executeAllItems.length > 0 && (
