@@ -190,7 +190,7 @@ export function LandingPage() {
                   href={`/vaults/${encodeURIComponent(workspaceMultisigs[0].key)}`}
                   className="group"
                 >
-                  <div className="border-border bg-card hover:bg-muted w-60 rounded-xl border px-4 py-3 transition-colors">
+                  <div className="border-border bg-card hover:bg-primary/5 w-60 rounded-xl border px-4 py-3 transition-colors [box-shadow:inset_2px_0_0_rgba(217,119,6,0.25)] group-hover:[box-shadow:inset_2px_0_0_rgba(217,119,6,0.55)]">
                     <div className="flex items-center gap-2.5">
                       <div className="bg-primary/10 border-primary/20 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border">
                         <Shield className="h-3.5 w-3.5 text-primary/60" />

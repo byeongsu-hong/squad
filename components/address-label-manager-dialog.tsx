@@ -259,7 +259,7 @@ function AddressLabelEditor({
           : "w-[320px] shrink-0 overflow-y-auto border-r p-4"
       }
     >
-      <div className="mb-4 flex items-center justify-between">
+      <div className="flex items-center justify-between">
         <p className="text-muted-foreground/50 text-[11px] font-medium">
           {isEditing ? "Edit Label" : "Add Label"}
         </p>

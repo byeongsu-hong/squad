@@ -4,7 +4,6 @@ import { multisigStorage } from "@/lib/storage";
 import {
   type MultisigAccount,
   getMultisigAccountKey,
-  resolveMultisigSelectionKey,
 } from "@/types/multisig";
 
 interface MultisigStore {
@@ -40,14 +39,9 @@ export const useMultisigStore = create<MultisigStore>((set, get) => ({
 
   initializeMultisigs: () => {
     const storedMultisigs = multisigStorage.getMultisigs();
-    const selectedKey = resolveMultisigSelectionKey(
-      storedMultisigs,
-      multisigStorage.getSelectedMultisigKey()
-    );
-
     set({
       multisigs: storedMultisigs,
-      selectedMultisigKey: selectedKey,
+      selectedMultisigKey: null,
       initialized: true,
     });
   },
@@ -142,14 +136,6 @@ export const useMultisigStore = create<MultisigStore>((set, get) => ({
   },
 
   selectMultisig: (selectionKey) => {
-    const resolvedSelectionKey = selectionKey
-      ? (resolveMultisigSelectionKey(get().multisigs, selectionKey) ??
-        selectionKey)
-      : null;
-
-    if (resolvedSelectionKey) {
-      multisigStorage.setSelectedMultisigKey(resolvedSelectionKey);
-    }
-    set({ selectedMultisigKey: resolvedSelectionKey });
+    set({ selectedMultisigKey: selectionKey });
   },
 }));

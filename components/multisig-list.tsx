@@ -2,6 +2,7 @@
 
 import {
   AlertTriangle,
+  Check,
   CheckCircle2,
   ChevronRight,
   Copy,
@@ -379,13 +380,20 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
                       ? "hover:bg-primary/5 [box-shadow:inset_2px_0_0_rgba(217,119,6,0.25)]"
                       : row.executable > 0
                       ? "hover:bg-emerald-950/15 [box-shadow:inset_2px_0_0_rgba(5,150,105,0.25)]"
+                      : row.active > 0
+                      ? "hover:bg-emerald-950/10 [box-shadow:inset_2px_0_0_rgba(5,150,105,0.15)]"
                       : "hover:bg-muted"
                   )}
                   onClick={() => handleOpenDesk(multisig)}
                 >
-                  {/* Checkbox */}
+                  {/* Checkbox — hidden until hover or selection active */}
                   <div
-                    className="shrink-0"
+                    className={cn(
+                      "shrink-0 transition-opacity",
+                      selectedForDeletion.size > 0 || isSelected
+                        ? "opacity-100"
+                        : "opacity-0 group-hover:opacity-100"
+                    )}
                     onClick={(e) => { e.stopPropagation(); toggleSelect(row.key); }}
                   >
                     <Checkbox
@@ -487,6 +495,11 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
                           <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-500" />
                           <span className="text-[11px] text-emerald-400">{row.attentionLine}</span>
                         </div>
+                      ) : row.active > 0 ? (
+                        <div className="flex items-center gap-1">
+                          <Check className="h-3 w-3 shrink-0 text-emerald-500/60" />
+                          <span className="text-[11px] text-emerald-500/60">{row.attentionLine}</span>
+                        </div>
                       ) : (
                         <span className="text-muted-foreground/40 text-[11px]">{row.attentionLine}</span>
                       )}
@@ -518,6 +531,8 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
                           ? "text-primary/70"
                           : row.executable > 0
                           ? "text-emerald-400"
+                          : row.active > 0
+                          ? "text-emerald-500/50"
                           : "text-muted-foreground/15 group-hover:text-muted-foreground/50"
                       )}
                       onClick={() => handleOpenDesk(multisig)}
