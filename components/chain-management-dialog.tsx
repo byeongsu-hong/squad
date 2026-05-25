@@ -219,6 +219,7 @@ export function ChainManagementController({
       <ChainRegistry
         embedded={embedded}
         chains={chains}
+        editingChainId={editingChain?.id ?? null}
         onEdit={handleEdit}
         onDelete={handleDelete}
         onResetToDefaults={handleResetToDefaults}
@@ -450,6 +451,7 @@ function ChainEditor({
 interface ChainRegistryProps {
   embedded: boolean;
   chains: ChainConfig[];
+  editingChainId: string | null;
   onEdit: (chain: ChainConfig) => void;
   onDelete: (id: string) => void;
   onResetToDefaults: () => void;
@@ -458,6 +460,7 @@ interface ChainRegistryProps {
 function ChainRegistry({
   embedded,
   chains,
+  editingChainId,
   onEdit,
   onDelete,
   onResetToDefaults,
@@ -507,7 +510,9 @@ function ChainRegistry({
             : "space-y-2"
         }
       >
-        {chains.map((chain) => (
+        {chains.map((chain) => {
+          const isEditing = chain.id === editingChainId;
+          return (
           <div
             key={chain.id}
             role="button"
@@ -519,11 +524,16 @@ function ChainRegistry({
                 onEdit(chain);
               }
             }}
-            className={
+            className={cn(
               embedded
-                ? "group hover:bg-muted/50 focus-visible:ring-ring grid cursor-pointer gap-3 px-4 py-3 transition-colors focus-visible:ring-1 focus-visible:outline-none xl:grid-cols-[minmax(12rem,0.58fr)_minmax(0,1.22fr)_auto] xl:items-center"
-                : "group hover:bg-muted border-border focus-visible:ring-ring flex cursor-pointer items-center justify-between rounded-lg border p-3 transition-colors focus-visible:ring-1 focus-visible:outline-none"
-            }
+                ? "group grid cursor-pointer gap-3 px-4 py-3 transition-colors focus-visible:ring-ring focus-visible:ring-1 focus-visible:outline-none xl:grid-cols-[minmax(12rem,0.58fr)_minmax(0,1.22fr)_auto] xl:items-center"
+                : "group hover:bg-muted border-border focus-visible:ring-ring flex cursor-pointer items-center justify-between rounded-lg border p-3 transition-colors focus-visible:ring-1 focus-visible:outline-none",
+              embedded && isEditing
+                ? "bg-primary/5 [box-shadow:inset_2px_0_0_rgba(217,119,6,0.5)]"
+                : embedded
+                  ? "hover:bg-muted/50"
+                  : ""
+            )}
           >
             <div className="min-w-0">
               <p className="text-foreground text-sm font-medium">
@@ -574,7 +584,8 @@ function ChainRegistry({
               )}
             </div>
           </div>
-        ))}
+          );
+        })}
         {chains.length === 0 ? (
           <div className="text-muted-foreground/60 py-8 text-center text-sm">
             No chains configured.

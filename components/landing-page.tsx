@@ -62,13 +62,7 @@ export function LandingPage() {
               : "Connect a wallet to get started."}
           </p>
         </div>
-        {isConnected ? (
-          <AddMultisigActions />
-        ) : (
-          <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20">
-            <Link href="/vaults">Go to Vaults</Link>
-          </Button>
-        )}
+        {isConnected && <AddMultisigActions />}
       </div>
     );
   }
