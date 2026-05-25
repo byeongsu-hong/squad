@@ -105,7 +105,6 @@ export function MultisigList({ selectedKey }: { selectedKey?: string }) {
   });
 
   const attentionByMultisig = useMultisigAttention({
-    chains,
     multisigs,
     viewerAddress: publicKey?.toString() ?? null,
   });

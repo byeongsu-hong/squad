@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { getWorkspaceProviderAdapter } from "@/lib/workspace/provider-adapters";
@@ -99,28 +99,25 @@ export function useCreatorMultisigs({
     [chains, existingMultisigs, onLoaded]
   );
 
-  return {
-    loading,
-    loadForCreator,
-    canLoadFromChain: (chainId: string | null | undefined) => {
-      if (!chainId) {
-        return false;
-      }
-
+  const canLoadFromChain = useCallback(
+    (chainId: string | null | undefined) => {
+      if (!chainId) return false;
       const chain = chains.find((item) => item.id === chainId);
       const normalizedChain = chain ? normalizeChainConfig(chain) : null;
-      if (!normalizedChain) {
-        return false;
-      }
-
+      if (!normalizedChain) return false;
       const adapter = getWorkspaceProviderAdapter(
         normalizedChain.multisigProvider ?? "squads"
       );
-
       return (
         adapter.capabilities.creatorSync &&
         isOperationalSquadsChain(normalizedChain)
       );
     },
-  };
+    [chains]
+  );
+
+  return useMemo(
+    () => ({ loading, loadForCreator, canLoadFromChain }),
+    [loading, loadForCreator, canLoadFromChain]
+  );
 }

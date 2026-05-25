@@ -28,11 +28,16 @@ export function useWorkspaceMultisigs() {
     [workspaceMultisigs]
   );
 
+  const availableMultisigKeys = useMemo(
+    () => workspaceMultisigs.map((multisig) => multisig.key),
+    [workspaceMultisigs]
+  );
+
   return {
     chains,
     multisigs,
     workspaceMultisigs,
-    availableMultisigKeys: workspaceMultisigs.map((multisig) => multisig.key),
+    availableMultisigKeys,
     rawMultisigMap,
     workspaceMultisigMap,
   };
