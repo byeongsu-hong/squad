@@ -21,7 +21,7 @@ const dmMono = DM_Mono({
 
 export const metadata: Metadata = {
   title: "Squad²",
-  description: "Multisig wallet for Solana and SVM chains",
+  description: "Multisig wallet for Solana, SVM, and EVM chains",
 };
 
 export default function RootLayout({

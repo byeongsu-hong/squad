@@ -352,7 +352,8 @@ export function ProposalDetailView({
                       address={member.address}
                       showCopy={false}
                       showLabelButton={false}
-                      className="min-w-0 font-mono text-[11px] text-muted-foreground/70"
+                      plain
+                      className="min-w-0"
                     />
                   </div>
                   <span

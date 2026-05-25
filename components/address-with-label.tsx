@@ -15,6 +15,7 @@ interface AddressWithLabelProps {
   showCopy?: boolean;
   showLabelButton?: boolean;
   copyOnClick?: boolean;
+  plain?: boolean;
   className?: string;
   vaultAddress?: string | null;
 }
@@ -82,6 +83,7 @@ export function AddressWithLabel({
   showCopy = true,
   showLabelButton = true,
   copyOnClick = false,
+  plain = false,
   className,
   vaultAddress,
 }: AddressWithLabelProps) {
@@ -196,6 +198,13 @@ export function AddressWithLabel({
         >
           {displayAddress}
         </Button>
+      ) : plain ? (
+        <span
+          className="font-mono text-[11px] text-muted-foreground/60"
+          title={address}
+        >
+          {displayAddress}
+        </span>
       ) : (
         <code
           className="border-border bg-muted text-foreground/80 rounded-md border px-2 py-1 font-mono text-xs"
