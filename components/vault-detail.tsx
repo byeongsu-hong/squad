@@ -332,8 +332,8 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
         </div>
       </div>
 
-      {/* Body: Transactions + Signers stacked */}
-      <div className="pt-4 flex flex-col gap-5">
+      {/* Body: Transactions + Signers stacked; sidebar on 2xl */}
+      <div className="pt-4 flex flex-col gap-5 2xl:grid 2xl:grid-cols-[1fr_220px] 2xl:items-start 2xl:gap-6">
 
         {/* Transactions — shown first */}
         <div className="order-1">
