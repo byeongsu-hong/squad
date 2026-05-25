@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, Copy, Check, X, Users, User, ExternalLink, Shield } from "lucide-react";
+import { CheckCircle2, ChevronLeft, Copy, Check, X, Users, User, ExternalLink, Shield } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -201,16 +201,29 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
     : vaultItems.filter((i) => i.readyToExecute).length;
 
   const CloseButton = (
-    <Button
-      type="button"
-      variant="ghost"
-      size="icon-sm"
-      onClick={onBack}
-      className="text-muted-foreground/50 hover:text-foreground"
-      aria-label="Close"
-    >
-      <X className="h-4 w-4" />
-    </Button>
+    <>
+      {/* Mobile: show "← Back" text link */}
+      <Button
+        type="button"
+        variant="ghost"
+        onClick={onBack}
+        className="lg:hidden -ml-1 h-auto gap-1 px-1.5 py-1 text-[12px] text-muted-foreground/60 hover:text-foreground"
+      >
+        <ChevronLeft className="h-3.5 w-3.5" />
+        Back
+      </Button>
+      {/* Desktop: icon-only X (side panel close) */}
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon-sm"
+        onClick={onBack}
+        className="max-lg:hidden text-muted-foreground/50 hover:text-foreground"
+        aria-label="Close"
+      >
+        <X className="h-4 w-4" />
+      </Button>
+    </>
   );
 
   if (!multisig) {
