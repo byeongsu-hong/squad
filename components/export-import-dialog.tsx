@@ -703,26 +703,21 @@ function ExportImportImportPanel({
         </div>
       </div>
 
-      {/* Reset state */}
-      <div className="border-border bg-card overflow-hidden rounded-xl border">
-        <div className="border-border/50 flex items-center justify-between gap-3 border-b px-4 py-3">
-          <p className="text-muted-foreground/50 text-[11px] font-medium">Reset state</p>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={isImporting}
-            onClick={onResetImportedState}
-          >
-            Reset
-          </Button>
-        </div>
-        <div className="px-4 py-3">
-          <p className="text-muted-foreground/60 text-xs leading-5">
-            Clears saved vaults, custom chains, labels, and provider settings.
-            Use only if a previous import left local state broken.
-          </p>
-        </div>
+      {/* Reset state — intentionally de-emphasised, destructive action */}
+      <div className="flex items-center justify-between gap-3 px-1">
+        <p className="text-muted-foreground/40 text-[11px]">
+          Clears vaults, chains, labels &amp; settings — use only if a previous import left state broken.
+        </p>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          disabled={isImporting}
+          onClick={onResetImportedState}
+          className="h-auto shrink-0 px-2 py-1 text-[11px] text-muted-foreground/50 hover:text-destructive/80 hover:bg-destructive/5"
+        >
+          Reset state
+        </Button>
       </div>
 
       {isImporting && importProgress ? (
