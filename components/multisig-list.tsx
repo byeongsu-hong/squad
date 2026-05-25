@@ -363,7 +363,7 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
           </div>
           <div className="space-y-1.5">
             <p className="text-foreground text-base font-semibold">No vaults yet</p>
-            <p className="text-muted-foreground text-sm">
+            <p className="text-muted-foreground/60 text-sm">
               {publicKey ? "Import or create a vault to get started." : "Connect a wallet to get started."}
             </p>
           </div>
@@ -527,7 +527,7 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
                   </div>
 
                   {/* Chain */}
-                  <span className="text-muted-foreground font-mono text-[11px]">
+                  <span className="text-muted-foreground/60 font-mono text-[11px]">
                     {row.chainName}
                   </span>
 
