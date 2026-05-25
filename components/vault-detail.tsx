@@ -148,7 +148,7 @@ function MemberRow({ member, isViewer }: { member: MemberEntry; isViewer: boolea
             </p>
           </div>
           {isViewer && (
-            <span className="shrink-0 text-[9px] font-medium text-primary/60">you</span>
+            <span className="shrink-0 rounded bg-primary/10 px-1 py-px text-[9px] font-medium text-primary/80">you</span>
           )}
           {member.permissionsMask !== 7 && (
             <span className="text-muted-foreground/40 shrink-0 rounded bg-muted px-1.5 py-0.5 font-mono text-[9px]">
