@@ -207,7 +207,7 @@ export function AddressWithLabel({
         </span>
       ) : (
         <code
-          className="border-border bg-muted text-foreground/80 rounded-md border px-2 py-1 font-mono text-xs"
+          className="border-border bg-muted text-foreground rounded-md border px-2 py-1 font-mono text-xs"
           title={address}
         >
           {displayAddress}

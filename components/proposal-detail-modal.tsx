@@ -587,7 +587,7 @@ export function ProposalDetailView({
                             ) : /^[1-9A-HJ-NP-Za-km-z]{32,44}$|^0x[0-9a-fA-F]{40}$/.test(f.value) ? (
                               <AddressWithLabel address={f.value} showFull copyOnClick showCopy={false} />
                             ) : (
-                              <p className="break-all text-[12px] text-foreground/80">{f.value}</p>
+                              <p className="break-all text-[12px] text-foreground">{f.value}</p>
                             )}
                           </div>
                         ))}
@@ -682,7 +682,7 @@ function PayloadField({
     <div className="flex items-start justify-between gap-3 py-2">
       <span className="text-muted-foreground/50 mt-0.5 shrink-0 text-[11px] font-medium">{label}</span>
       <div className="flex min-w-0 items-start gap-1">
-        <p className={cn("break-all text-right text-[11px] text-foreground/70 leading-relaxed", mono && "font-mono")}>{value}</p>
+        <p className={cn("break-all text-right text-[11px] text-foreground leading-relaxed", mono && "font-mono")}>{value}</p>
         {copyable && <CopyBtn text={value} />}
       </div>
     </div>

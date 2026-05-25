@@ -56,7 +56,7 @@ function AddressRow({
       <button
         type="button"
         onClick={handleCopy}
-        className="font-mono text-muted-foreground/70 hover:text-muted-foreground/90 text-[11px] transition-colors"
+        className="font-mono text-muted-foreground/70 hover:text-muted-foreground/80 text-[11px] transition-colors"
         title={address}
       >
         {truncateAddress(address)}

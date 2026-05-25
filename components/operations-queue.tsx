@@ -774,7 +774,7 @@ export function OperationsQueue({
                 className="size-3.5"
                 aria-label="Clear selection"
               />
-              <span className="text-foreground/70 text-[13px]">
+              <span className="text-foreground text-[13px]">
                 {selected.size} selected
               </span>
             </div>

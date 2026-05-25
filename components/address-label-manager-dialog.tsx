@@ -467,7 +467,7 @@ function AddressLabelRegistry({
                       <code
                         className={cn(
                           embedded
-                            ? "text-foreground/80 truncate font-mono text-[11px]"
+                            ? "text-foreground truncate font-mono text-[11px]"
                             : "bg-muted ml-auto w-fit shrink-0 rounded px-1.5 py-0.5 font-mono text-[10px] leading-tight"
                         )}
                       >
