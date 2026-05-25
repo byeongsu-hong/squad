@@ -337,6 +337,7 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
           loading={loading}
           showFilters={false}
           compact
+          hideChain
         />
       </div>
     </div>

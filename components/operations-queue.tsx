@@ -25,12 +25,14 @@ import type { WorkspaceQueueItem } from "@/types/workspace";
 const PAGE_SIZE = 15;
 const GRID_COLS_FULL = "36px 1.4fr 54px 80px 1fr 80px 48px 80px";
 const GRID_COLS_COMPACT = "36px 54px 80px 1fr 80px 48px 60px";
+const GRID_COLS_COMPACT_NO_CHAIN = "36px 54px 1fr 80px 48px 60px";
 
 interface OperationsQueueProps {
   items: WorkspaceQueueItem[];
   loading?: boolean;
   showFilters?: boolean;
   compact?: boolean;
+  hideChain?: boolean;
   emptyStateCta?: ReactNode;
   defaultStatusFilter?: StatusFilter;
 }
@@ -123,19 +125,24 @@ function ColumnHeaders({
   allSelected,
   onToggleAll,
   compact = false,
+  hideChain = false,
 }: {
   selectable: boolean;
   allSelected: boolean;
   onToggleAll: () => void;
   compact?: boolean;
+  hideChain?: boolean;
 }) {
   const cols = compact
-    ? ["#", "Chain", "Status", "Progress", "Age", ""]
+    ? hideChain ? ["#", "Status", "Progress", "Age", ""] : ["#", "Chain", "Status", "Progress", "Age", ""]
     : ["Vault", "#", "Chain", "Status", "Progress", "Age", ""];
+  const gridCols = compact
+    ? hideChain ? GRID_COLS_COMPACT_NO_CHAIN : GRID_COLS_COMPACT
+    : GRID_COLS_FULL;
   return (
     <div
       className="border-border bg-muted grid items-center border-b px-3 py-2"
-      style={{ gridTemplateColumns: compact ? GRID_COLS_COMPACT : GRID_COLS_FULL }}
+      style={{ gridTemplateColumns: gridCols }}
     >
       <div className="flex items-center justify-center">
         {selectable && (
@@ -166,6 +173,7 @@ function QueueRow({
   onToggle,
   onClick,
   compact = false,
+  hideChain = false,
   onApprove,
   onExecute,
   isActioning = false,
@@ -176,10 +184,14 @@ function QueueRow({
   onToggle: () => void;
   onClick: () => void;
   compact?: boolean;
+  hideChain?: boolean;
   onApprove?: () => void;
   onExecute?: () => void;
   isActioning?: boolean;
 }) {
+  const gridCols = compact
+    ? hideChain ? GRID_COLS_COMPACT_NO_CHAIN : GRID_COLS_COMPACT
+    : GRID_COLS_FULL;
   return (
     <div
       className={cn(
@@ -190,7 +202,7 @@ function QueueRow({
         : item.currentUserApproved && item.proposal.status === "Active" ? "hover:bg-muted [box-shadow:inset_2px_0_0_rgba(5,150,105,0.2)]"
         : "hover:bg-muted"
       )}
-      style={{ gridTemplateColumns: compact ? GRID_COLS_COMPACT : GRID_COLS_FULL }}
+      style={{ gridTemplateColumns: gridCols }}
       onClick={onClick}
     >
       <div
@@ -224,9 +236,11 @@ function QueueRow({
       <span className="text-muted-foreground/60 font-mono text-[11px]">
         #{item.proposal.transactionIndex.toString()}
       </span>
-      <span className="text-muted-foreground/60 font-mono text-[11px]">
-        {item.multisig.chainName}
-      </span>
+      {(!compact || !hideChain) && (
+        <span className="text-muted-foreground/60 font-mono text-[11px]">
+          {item.multisig.chainName}
+        </span>
+      )}
       <div>
         <StatusBadge item={item} />
       </div>
@@ -278,11 +292,14 @@ function QueueRow({
   );
 }
 
-function RowSkeleton({ compact = false }: { compact?: boolean }) {
+function RowSkeleton({ compact = false, hideChain = false }: { compact?: boolean; hideChain?: boolean }) {
+  const gridCols = compact
+    ? hideChain ? GRID_COLS_COMPACT_NO_CHAIN : GRID_COLS_COMPACT
+    : GRID_COLS_FULL;
   return (
     <div
       className="grid items-center px-3 py-2.5"
-      style={{ gridTemplateColumns: compact ? GRID_COLS_COMPACT : GRID_COLS_FULL }}
+      style={{ gridTemplateColumns: gridCols }}
     >
       <div />
       {!compact && (
@@ -292,7 +309,7 @@ function RowSkeleton({ compact = false }: { compact?: boolean }) {
         </div>
       )}
       <Skeleton className="h-3 w-8 rounded-sm" />
-      <Skeleton className="h-3 w-16 rounded-sm" />
+      {(!compact || !hideChain) && <Skeleton className="h-3 w-16 rounded-sm" />}
       <Skeleton className="h-4 w-20 rounded-full" />
       <Skeleton className="h-1.5 w-10 rounded-full" />
       <Skeleton className="h-3 w-6 rounded-sm" />
@@ -316,6 +333,7 @@ export function OperationsQueue({
   loading = false,
   showFilters = false,
   compact = false,
+  hideChain = false,
   emptyStateCta,
   defaultStatusFilter = "All",
 }: OperationsQueueProps) {
@@ -481,10 +499,11 @@ export function OperationsQueue({
           allSelected={false}
           onToggleAll={() => {}}
           compact={compact}
+          hideChain={hideChain}
         />
         <div className="divide-border/50 divide-y">
           {Array.from({ length: 6 }).map((_, i) => (
-            <RowSkeleton key={i} compact={compact} />
+            <RowSkeleton key={i} compact={compact} hideChain={hideChain} />
           ))}
         </div>
       </div>
@@ -678,6 +697,7 @@ export function OperationsQueue({
                   allSelected={allSelected}
                   onToggleAll={toggleSelectAll}
                   compact={compact}
+                  hideChain={hideChain}
                 />
                 <div className="divide-border/50 divide-y">
                   {actionItems.map((item) => (
@@ -689,6 +709,7 @@ export function OperationsQueue({
                       onToggle={() => toggleSelect(item.focusKey)}
                       onClick={() => setSelectedItem(item)}
                       compact={compact}
+                      hideChain={hideChain}
                       onApprove={
                         item.needsYourSignature && !item.currentUserApproved
                           ? () =>
@@ -734,6 +755,7 @@ export function OperationsQueue({
                   allSelected={false}
                   onToggleAll={() => {}}
                   compact={compact}
+                  hideChain={hideChain}
                 />
                 <div className="divide-border/50 divide-y">
                   {paginatedHistory.map((item) => (
@@ -745,6 +767,7 @@ export function OperationsQueue({
                       onToggle={() => {}}
                       onClick={() => setSelectedItem(item)}
                       compact={compact}
+                      hideChain={hideChain}
                     />
                   ))}
                 </div>
