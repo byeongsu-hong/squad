@@ -34,7 +34,6 @@ import {
   DialogTitle,
 } from "./ui/dialog";
 import { Button } from "./ui/button";
-import { Label } from "./ui/label";
 import { Progress } from "./ui/progress";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import { Textarea } from "./ui/textarea";
@@ -560,20 +559,20 @@ function ExportImportModePicker({
   return (
     <RadioGroup value={mode} onValueChange={onModeChange} disabled={disabled}>
       <div className="space-y-2">
-        <Label
+        <label
           htmlFor="export"
-          className="flex cursor-pointer items-center space-x-2 text-xs font-medium font-normal text-foreground/80"
+          className="flex cursor-pointer items-center gap-2 text-xs text-foreground/80"
         >
           <RadioGroupItem value="export" id="export" />
           <span>Export to YAML</span>
-        </Label>
-        <Label
+        </label>
+        <label
           htmlFor="import"
-          className="flex cursor-pointer items-center space-x-2 text-xs font-medium font-normal text-foreground/80"
+          className="flex cursor-pointer items-center gap-2 text-xs text-foreground/80"
         >
           <RadioGroupItem value="import" id="import" />
           <span>Import from YAML</span>
-        </Label>
+        </label>
       </div>
     </RadioGroup>
   );

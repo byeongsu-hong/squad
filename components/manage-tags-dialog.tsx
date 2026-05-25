@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+
 import { useMultisigStore } from "@/stores/multisig-store";
 import type { MultisigAccount } from "@/types/multisig";
 
@@ -95,9 +95,9 @@ export function ManageTagsDialog({
 
         <div className="space-y-4 py-4">
           <div className="space-y-1.5">
-            <Label htmlFor="new-tag" className="text-muted-foreground/50 text-[11px] font-medium">
+            <label htmlFor="new-tag" className="text-[11px] font-medium text-muted-foreground/50">
               Add Tag
-            </Label>
+            </label>
             <div className="flex gap-2">
               <Input
                 id="new-tag"

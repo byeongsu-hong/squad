@@ -4,7 +4,6 @@ import { Network } from "lucide-react";
 import { useMemo } from "react";
 
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 
 import { cn } from "@/lib/utils";
 import { useChainStore } from "@/stores/chain-store";
@@ -78,7 +77,7 @@ export function ProviderAdaptersPanel() {
 
         <div className="grid gap-0 lg:divide-x lg:divide-border/50 lg:grid-cols-3">
           <div className="space-y-1.5 border-border/50 border-b px-4 py-3 lg:border-b-0">
-            <Label htmlFor="safe-tx-service" className="text-xs">Transaction Service URL</Label>
+            <label htmlFor="safe-tx-service" className="text-[11px] font-medium text-muted-foreground/50">Transaction Service URL</label>
             <Input
               id="safe-tx-service"
               value={settings.safeTransactionServiceUrl}
@@ -91,7 +90,7 @@ export function ProviderAdaptersPanel() {
           </div>
 
           <div className="space-y-1.5 border-border/50 border-b px-4 py-3 lg:border-b-0">
-            <Label htmlFor="safe-singleton" className="text-xs">Singleton Address</Label>
+            <label htmlFor="safe-singleton" className="text-[11px] font-medium text-muted-foreground/50">Singleton Address</label>
             <Input
               id="safe-singleton"
               value={settings.safeSingletonAddress}
@@ -104,7 +103,7 @@ export function ProviderAdaptersPanel() {
           </div>
 
           <div className="space-y-1.5 px-4 py-3">
-            <Label htmlFor="safe-proxy-factory" className="text-xs">Proxy Factory</Label>
+            <label htmlFor="safe-proxy-factory" className="text-[11px] font-medium text-muted-foreground/50">Proxy Factory</label>
             <Input
               id="safe-proxy-factory"
               value={settings.safeProxyFactoryAddress}
