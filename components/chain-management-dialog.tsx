@@ -484,7 +484,7 @@ function ChainRegistry({
                     type="button"
                     variant="ghost"
                     size="icon-sm"
-                    className="opacity-0 group-hover:opacity-100 transition-opacity hover:text-destructive"
+                    className="opacity-0 group-hover:opacity-100 transition-[opacity,color] hover:text-destructive"
                     onClick={(event) => {
                       event.stopPropagation();
                       onDelete(chain.id);

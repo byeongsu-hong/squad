@@ -435,7 +435,7 @@ export function MultisigList({ selectedKey }: { selectedKey?: string }) {
                         </p>
                         <Button
                           variant="ghost"
-                          className="h-5 w-5 shrink-0 p-0 opacity-0 transition-opacity group-hover:opacity-100 text-muted-foreground hover:text-foreground hover:bg-transparent"
+                          className="h-5 w-5 shrink-0 p-0 opacity-0 transition-[opacity,color] group-hover:opacity-100 text-muted-foreground hover:text-foreground hover:bg-transparent"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleStartEditLabel(getMultisigAccountKey(multisig), multisig.label);
@@ -458,7 +458,7 @@ export function MultisigList({ selectedKey }: { selectedKey?: string }) {
                       </span>
                       <Button
                         variant="ghost"
-                        className="h-4 w-4 shrink-0 p-0 opacity-0 transition-opacity group-hover:opacity-100 text-muted-foreground/50 hover:text-muted-foreground hover:bg-transparent"
+                        className="h-4 w-4 shrink-0 p-0 opacity-0 transition-[opacity,color] group-hover:opacity-100 text-muted-foreground/50 hover:text-muted-foreground hover:bg-transparent"
                         onClick={(e) => {
                           e.stopPropagation();
                           navigator.clipboard.writeText(multisig.publicKey.toString());
@@ -513,7 +513,7 @@ export function MultisigList({ selectedKey }: { selectedKey?: string }) {
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      className="h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100 text-muted-foreground/50"
+                      className="h-7 w-7 opacity-0 transition-[opacity,color] group-hover:opacity-100 text-muted-foreground/50 hover:text-foreground"
                       onClick={() => handleOpenTagDialog(multisig)}
                       title="Manage tags"
                     >

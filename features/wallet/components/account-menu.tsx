@@ -82,7 +82,7 @@ export function AccountMenu({ onAddWallet }: AccountMenuProps) {
           variant="outline"
           className={cn(
             "rounded-full px-3.5 py-1.5 h-auto font-mono text-[12px]",
-            "text-muted-foreground shadow-sm hover:shadow-none"
+            "text-foreground shadow-sm hover:shadow-none"
           )}
         >
           <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-500" />

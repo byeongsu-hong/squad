@@ -335,7 +335,7 @@ export function ProposalDetailView({
                 ? "text-emerald-700 dark:text-emerald-400"
                 : proposal.status === "Cancelled"
                 ? "text-muted-foreground/60"
-                : "text-destructive/80"
+                : "text-destructive"
             )}>
               {proposal.status === "Executed"
                 ? "Transaction executed"
