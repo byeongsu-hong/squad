@@ -172,7 +172,7 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
             <div className="flex w-full justify-end px-2">{BackLink}</div>
           )}
           <p className="text-foreground text-sm font-semibold">Vault not found</p>
-          <p className="text-muted-foreground text-xs">
+          <p className="text-muted-foreground/60 text-xs">
             It may have been removed from your registry.
           </p>
         </div>

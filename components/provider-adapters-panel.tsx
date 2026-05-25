@@ -47,7 +47,7 @@ export function ProviderAdaptersPanel() {
               <p className="text-foreground text-sm font-medium">
                 SVM / Squads
               </p>
-              <p className="text-muted-foreground mt-1 text-xs">
+              <p className="text-muted-foreground/70 mt-1 text-xs">
                 Active runtime used by the current workspace.
               </p>
             </div>
@@ -61,7 +61,7 @@ export function ProviderAdaptersPanel() {
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-foreground text-sm font-medium">EVM / Safe</p>
-              <p className="text-muted-foreground mt-1 text-xs">
+              <p className="text-muted-foreground/70 mt-1 text-xs">
                 Stored locally for upcoming adapter work.
               </p>
             </div>

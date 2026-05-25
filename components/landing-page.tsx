@@ -56,9 +56,9 @@ export function LandingPage() {
           <p className="text-foreground text-base font-semibold">
             {isConnected ? "No vaults yet" : "Get started"}
           </p>
-          <p className="text-muted-foreground max-w-xs text-sm">
+          <p className="text-muted-foreground/60 max-w-xs text-sm">
             {isConnected
-              ? "Add a multisig vault to start monitoring and signing transactions."
+              ? "Import or create a vault to start signing."
               : "Connect a wallet to get started."}
           </p>
         </div>

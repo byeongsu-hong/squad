@@ -605,7 +605,7 @@ export function OperationsQueue({
               <SlidersHorizontal className={cn("text-muted-foreground/40", compact ? "h-3.5 w-3.5" : "h-6 w-6")} />
             </div>
           )}
-          <p className={cn("text-muted-foreground", compact ? "text-xs" : "text-sm")}>
+          <p className={cn("text-muted-foreground/60", compact ? "text-xs" : "text-sm")}>
             {items.length === 0
               ? "No proposals yet."
               : "No transactions match your filters."}
