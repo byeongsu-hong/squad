@@ -358,7 +358,7 @@ function ChainEditor({
               )}
             />
           ) : (
-            <div className="border-border/50 bg-muted/50 text-muted-foreground/60 rounded-xl border px-3 py-2.5 text-[11px]">
+            <div className="border-border bg-muted/50 text-muted-foreground/60 rounded-xl border px-3 py-2.5 text-[11px]">
               Safe adapter addresses are configured in the Adapters tab.
             </div>
           )}
@@ -431,7 +431,7 @@ function ChainRegistry({
           Reset to Defaults
         </Button>
       </div>
-      <div className="divide-border/50 divide-y">
+      <div className="divide-border divide-y">
         {chains.map((chain) => {
           const isEditing = chain.id === editingChainId;
           return (

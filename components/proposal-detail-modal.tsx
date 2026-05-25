@@ -321,7 +321,7 @@ export function ProposalDetailView({
             proposal.status === "Executed"
               ? "border-emerald-100 bg-emerald-50/60 dark:border-emerald-900/30 dark:bg-emerald-950/20"
               : proposal.status === "Cancelled"
-              ? "border-border/60 bg-muted/30"
+              ? "border-border bg-muted/30"
               : "border-destructive/15 bg-destructive/5"
           )}>
             {proposal.status === "Executed" ? (
@@ -389,7 +389,7 @@ export function ProposalDetailView({
             </div>
             <span className="text-foreground shrink-0 font-mono text-[15px] font-bold tabular-nums">
               {approvalCount}
-              <span className="text-muted-foreground/40">/{multisig.threshold}</span>
+              <span className="text-muted-foreground/50">/{multisig.threshold}</span>
             </span>
           </div>
 
@@ -527,7 +527,7 @@ export function ProposalDetailView({
               )}
 
               {!payload && !payloadLoading && !payloadError && (
-                <p className="text-muted-foreground/40 py-2 text-[11px]">No data available.</p>
+                <p className="text-muted-foreground/50 py-2 text-[11px]">No data available.</p>
               )}
 
               {(payload && "transactionPda" in payload && payload.transactionPda) || (payload?.type === "vault" && payload.vaultAddress) ? (
@@ -560,7 +560,7 @@ export function ProposalDetailView({
                   )}
                   {payload.dataDecoded != null && (
                     <div className="border-t border-border py-2">
-                      <p className="text-muted-foreground/40 mb-1.5 text-[11px] font-medium">Decoded</p>
+                      <p className="text-muted-foreground/50 mb-1.5 text-[11px] font-medium">Decoded</p>
                       <pre className="overflow-x-auto font-mono text-[11px] text-muted-foreground/70 leading-relaxed">
                         {JSON.stringify(payload.dataDecoded, null, 2)}
                       </pre>
@@ -575,13 +575,13 @@ export function ProposalDetailView({
                   return (
                     <div key={i} className="border-border rounded-xl border overflow-hidden">
                       <div className="border-border bg-muted/50 flex items-center gap-2 border-b px-3 py-2.5">
-                        <span className="text-muted-foreground/40 font-mono text-[10px]">#{i + 1}</span>
+                        <span className="text-muted-foreground/50 font-mono text-[10px]">#{i + 1}</span>
                         <span className="text-foreground text-[13px] font-semibold">{fmt.type}</span>
                       </div>
                       <div className="divide-border divide-y">
                         {fmt.fields.map((f, j) => (
                           <div key={j} className="px-3 py-2.5">
-                            <p className="text-muted-foreground/40 mb-1 text-[11px] font-medium">{f.label}</p>
+                            <p className="text-muted-foreground/50 mb-1 text-[11px] font-medium">{f.label}</p>
                             {typeof f.value !== "string" ? (
                               (f.value as ReactNode)
                             ) : /^[1-9A-HJ-NP-Za-km-z]{32,44}$|^0x[0-9a-fA-F]{40}$/.test(f.value) ? (
@@ -602,8 +602,8 @@ export function ProposalDetailView({
                   return (
                   <div key={i} className="border-border rounded-xl border overflow-hidden">
                     {/* Instruction header */}
-                    <div className="border-border/50 bg-muted/50 flex items-center gap-2 border-b px-3 py-2.5">
-                      <span className="text-muted-foreground/40 font-mono text-[10px]">#{i + 1}</span>
+                    <div className="border-border bg-muted/50 flex items-center gap-2 border-b px-3 py-2.5">
+                      <span className="text-muted-foreground/50 font-mono text-[10px]">#{i + 1}</span>
                       {wellKnown ? (
                         <span className="text-[13px] font-semibold text-foreground/80">{wellKnown.label}</span>
                       ) : (
@@ -624,14 +624,14 @@ export function ProposalDetailView({
                     {instr.accountAddresses.length > 0 && (
                       <div className="border-border border-b">
                         <div className="border-border border-b px-3 py-2">
-                          <p className="text-muted-foreground/40 text-[11px] font-medium">
+                          <p className="text-muted-foreground/50 text-[11px] font-medium">
                             Accounts ({instr.accountAddresses.length})
                           </p>
                         </div>
-                        <div className="divide-border/50 divide-y">
+                        <div className="divide-border divide-y">
                           {instr.accountAddresses.map((address, j) => (
                             <div key={j} className="flex items-center gap-3 px-3 py-2">
-                              <span className="text-muted-foreground/40 w-5 shrink-0 text-right font-mono text-[10px]">
+                              <span className="text-muted-foreground/50 w-5 shrink-0 text-right font-mono text-[10px]">
                                 {instr.accountIndexes[j]}
                               </span>
                               <AddressWithLabel
@@ -649,7 +649,7 @@ export function ProposalDetailView({
                     {instr.data && instr.data !== "1" && (
                       <div>
                         <div className="border-border border-b px-3 py-2">
-                          <p className="text-muted-foreground/40 text-[11px] font-medium">Data</p>
+                          <p className="text-muted-foreground/50 text-[11px] font-medium">Data</p>
                         </div>
                         <code className="block overflow-x-auto px-3 py-2.5 font-mono text-[11px] text-muted-foreground/70 break-all">
                           {instr.data}
@@ -680,7 +680,7 @@ function PayloadField({
 }) {
   return (
     <div className="flex items-start justify-between gap-3 py-2">
-      <span className="text-muted-foreground/40 mt-0.5 shrink-0 text-[11px] font-medium">{label}</span>
+      <span className="text-muted-foreground/50 mt-0.5 shrink-0 text-[11px] font-medium">{label}</span>
       <div className="flex min-w-0 items-start gap-1">
         <p className={cn("break-all text-right text-[11px] text-foreground/70 leading-relaxed", mono && "font-mono")}>{value}</p>
         {copyable && <CopyBtn text={value} />}
@@ -692,7 +692,7 @@ function PayloadField({
 function PayloadAddressField({ label, address }: { label: string; address: string }) {
   return (
     <div className="flex items-start justify-between gap-3 py-2">
-      <span className="text-muted-foreground/40 mt-0.5 shrink-0 text-[11px] font-medium">{label}</span>
+      <span className="text-muted-foreground/50 mt-0.5 shrink-0 text-[11px] font-medium">{label}</span>
       <AddressWithLabel address={address} showFull copyOnClick showCopy={false} className="min-w-0" />
     </div>
   );

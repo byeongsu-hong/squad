@@ -266,7 +266,7 @@ export function MultisigList({ selectedKey }: { selectedKey?: string }) {
                   "h-7 shrink-0 rounded-full border px-2.5 text-[11px] transition-colors",
                   isActive
                     ? "border-primary/20 bg-primary/15 text-primary hover:bg-primary/20 hover:text-primary font-medium"
-                    : "border-border/50 text-muted-foreground/60 hover:text-foreground hover:border-border hover:bg-muted/30"
+                    : "border-border text-muted-foreground/60 hover:text-foreground hover:bg-muted/30"
                 )}
               >
                 {tag}
@@ -429,7 +429,7 @@ export function MultisigList({ selectedKey }: { selectedKey?: string }) {
                       <div className="mb-0.5 flex min-w-0 items-center gap-1.5">
                         <p className={cn(
                           "truncate text-[13px] font-medium leading-tight",
-                          multisig.label ? "text-foreground" : "text-muted-foreground/45 italic"
+                          multisig.label ? "text-foreground" : "text-muted-foreground/50 italic"
                         )}>
                           {row.label}
                         </p>
@@ -447,13 +447,13 @@ export function MultisigList({ selectedKey }: { selectedKey?: string }) {
                       </div>
                     )}
                     <div className="flex flex-wrap items-center gap-1.5">
-                      <span className="border-border/60 bg-muted/60 text-muted-foreground/55 rounded px-1 py-px text-[10px]">
+                      <span className="border-border bg-muted/60 text-muted-foreground/55 rounded px-1 py-px text-[10px]">
                         {row.chainName}
                       </span>
                       <span className="text-muted-foreground/50 text-[10px]">
                         {formatProviderLabel(row.multisigProvider)} · {row.threshold}/{row.memberCount}
                       </span>
-                      <span className="text-muted-foreground/45 font-mono text-[10px]">
+                      <span className="text-muted-foreground/50 font-mono text-[10px]">
                         {formatAddress(multisig.publicKey.toString(), 5, 4)}
                       </span>
                       <Button
@@ -475,14 +475,14 @@ export function MultisigList({ selectedKey }: { selectedKey?: string }) {
                             "shrink-0 rounded-full border px-1.5 py-px text-[10px]",
                             selectedFilterTags.includes(tag)
                               ? "border-primary/30 bg-primary/10 text-primary font-medium"
-                              : "border-border/60 bg-muted/60 text-muted-foreground/50"
+                              : "border-border bg-muted/60 text-muted-foreground/50"
                           )}
                         >
                           {tag}
                         </span>
                       ))}
                       {row.tags.length > 2 && (
-                        <span className="text-muted-foreground/40 shrink-0 text-[10px]">+{row.tags.length - 2}</span>
+                        <span className="text-muted-foreground/50 shrink-0 text-[10px]">+{row.tags.length - 2}</span>
                       )}
                     </div>
                   </div>
@@ -500,7 +500,7 @@ export function MultisigList({ selectedKey }: { selectedKey?: string }) {
                       ) : row.active > 0 ? (
                         <span className="text-[11px] text-emerald-600/60 dark:text-emerald-500/60">{row.attentionLine}</span>
                       ) : (
-                        <span className="text-muted-foreground/40 text-[11px]">{row.attentionLine}</span>
+                        <span className="text-muted-foreground/50 text-[11px]">{row.attentionLine}</span>
                       )}
                     </div>
                   )}

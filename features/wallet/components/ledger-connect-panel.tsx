@@ -241,7 +241,7 @@ export function LedgerConnectPanel({
                     key={account.derivationPath}
                     variant="outline"
                     onClick={() => handleSelectAccount(account)}
-                    className="group hover:border-primary/30 hover:bg-muted/50 h-auto w-full items-center justify-between rounded-xl px-4 py-3.5 text-left"
+                    className="group hover:border-primary/30 hover:bg-muted h-auto w-full items-center justify-between rounded-xl px-4 py-3.5 text-left"
                   >
                     <div className="flex flex-col gap-1">
                       <div className="flex items-center gap-2">

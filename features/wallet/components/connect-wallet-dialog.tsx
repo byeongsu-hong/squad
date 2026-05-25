@@ -73,7 +73,7 @@ export function ConnectWalletDialog({
                       ? tab === "solana"
                         ? "bg-primary/10 dark:bg-primary/15 text-primary shadow-sm hover:bg-primary/15 dark:hover:bg-primary/20"
                         : "bg-blue-50 dark:bg-blue-950/25 text-blue-700 dark:text-blue-400 shadow-sm hover:bg-blue-50/80 dark:hover:bg-blue-950/40"
-                      : "text-muted-foreground hover:text-foreground hover:bg-transparent"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
                   )}
                 >
                   {tab === "solana" ? "Solana" : "Ethereum"}

@@ -162,7 +162,7 @@ function QueueRow({
         {!compact ? (
           <p className={cn(
             "mb-0.5 truncate text-[13px] font-medium leading-tight",
-            item.multisig.label ? "text-foreground" : "text-muted-foreground/45 italic"
+            item.multisig.label ? "text-foreground" : "text-muted-foreground/50 italic"
           )}>
             {item.multisig.label ?? "Unnamed"}
           </p>
@@ -179,7 +179,7 @@ function QueueRow({
                 ? "text-emerald-600/70 dark:text-emerald-500/70"
                 : item.needsYourSignature && !item.currentUserApproved
                 ? "text-primary/60"
-                : "text-muted-foreground/45"
+                : "text-muted-foreground/50"
             )}>
               {item.lineLabel}
             </span>
@@ -188,11 +188,11 @@ function QueueRow({
             #{item.proposal.transactionIndex.toString()}
           </span>
           {!hideChain && (
-            <span className="border-border/60 bg-muted/60 text-muted-foreground/55 rounded px-1 py-px text-[10px]">
+            <span className="border-border bg-muted/60 text-muted-foreground/55 rounded px-1 py-px text-[10px]">
               {item.multisig.chainName}
             </span>
           )}
-          <span className="text-muted-foreground/45 font-mono text-[10px] tabular-nums">
+          <span className="text-muted-foreground/50 font-mono text-[10px] tabular-nums">
             {formatAge(item.proposal.createdAt)}
           </span>
         </div>
@@ -467,7 +467,7 @@ export function OperationsQueue({
                   "h-7 rounded-full border px-3 text-[11px] font-medium transition-colors",
                   statusFilter === f
                     ? "bg-card border-border text-foreground shadow-sm hover:bg-card"
-                    : "border-border/50 text-muted-foreground/60 hover:bg-muted/30 hover:text-foreground hover:border-border"
+                    : "border-border text-muted-foreground/60 hover:bg-muted/30 hover:text-foreground"
                 )}
               >
                 {f}
@@ -685,7 +685,7 @@ export function OperationsQueue({
                   <p className="text-muted-foreground/50 text-[11px] font-medium">
                     History
                   </p>
-                  <span className="text-muted-foreground/40 font-mono text-[11px] tabular-nums">
+                  <span className="text-muted-foreground/50 font-mono text-[11px] tabular-nums">
                     {historyItems.length}
                   </span>
                 </div>
@@ -766,7 +766,7 @@ export function OperationsQueue({
         )}
       >
         <div className="mx-auto max-w-3xl px-4 pb-6">
-          <div className="bg-card border-border/80 flex items-center justify-between rounded-2xl border px-5 py-3 shadow-[0_8px_40px_rgba(0,0,0,0.5),0_0_0_1px_rgba(245,158,11,0.12)]">
+          <div className="bg-card border-border flex items-center justify-between rounded-2xl border px-5 py-3 shadow-[0_8px_40px_rgba(0,0,0,0.5),0_0_0_1px_rgba(245,158,11,0.12)]">
             <div className="flex items-center gap-3">
               <Checkbox
                 checked={selected.size > 0}

@@ -63,7 +63,7 @@ function AddressRow({
       </button>
       <div className={cn(
         "shrink-0 transition-colors",
-        copied ? "text-primary" : "text-muted-foreground/20 group-hover:text-muted-foreground/60"
+        copied ? "text-primary" : "text-muted-foreground/30 group-hover:text-muted-foreground/60"
       )}>
         {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
       </div>
@@ -71,7 +71,7 @@ function AddressRow({
         <Button
           variant="ghost"
           asChild
-          className="text-muted-foreground/20 hover:text-muted-foreground/60 ml-0.5 h-5 w-5 shrink-0 p-0 transition-colors"
+          className="text-muted-foreground/30 hover:text-muted-foreground/60 ml-0.5 h-5 w-5 shrink-0 p-0 transition-colors"
           aria-label="View on explorer"
         >
           <a href={`${explorerUrl}/address/${address}`} target="_blank" rel="noopener noreferrer">
@@ -131,7 +131,7 @@ function MemberRow({ member, isViewer }: { member: MemberEntry; isViewer: boolea
         >
           <div className={cn(
             "flex h-6 w-6 shrink-0 items-center justify-center rounded-full ring-1",
-            isViewer ? "bg-primary/15 text-primary ring-primary/25" : "bg-muted dark:bg-white/[0.07] text-muted-foreground ring-border/60"
+            isViewer ? "bg-primary/15 text-primary ring-primary/25" : "bg-muted dark:bg-white/[0.07] text-muted-foreground ring-border"
           )}>
             {avatarInitial ? (
               <span className="text-[10px] font-semibold">{avatarInitial}</span>
@@ -151,13 +151,13 @@ function MemberRow({ member, isViewer }: { member: MemberEntry; isViewer: boolea
             <span className="shrink-0 rounded bg-primary/10 px-1 py-px text-[9px] font-medium text-primary/80">you</span>
           )}
           {member.permissionsMask !== 7 && (
-            <span className="text-muted-foreground/60 shrink-0 rounded border border-border/60 bg-muted-foreground/10 px-1.5 py-0.5 font-mono text-[9px]">
+            <span className="text-muted-foreground/60 shrink-0 rounded border border-border bg-muted/60 px-1.5 py-0.5 font-mono text-[9px]">
               {formatPermissions(member.permissionsMask)}
             </span>
           )}
           <div className={cn(
             "shrink-0 transition-colors",
-            copied ? "text-primary" : "text-muted-foreground/20 group-hover:text-muted-foreground/60"
+            copied ? "text-primary" : "text-muted-foreground/30 group-hover:text-muted-foreground/60"
           )}>
             {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
           </div>

@@ -68,7 +68,7 @@ export function WalletRow({
       variant="outline"
       onClick={onClick}
       disabled={disabled}
-      className="group hover:border-primary/30 hover:bg-muted/50 h-auto w-full justify-start gap-3 rounded-xl px-4 py-3.5 transition-all"
+      className="group hover:border-primary/30 hover:bg-muted h-auto w-full justify-start gap-3 rounded-xl px-4 py-3.5 transition-all"
     >
       <div className="bg-muted flex h-10 w-10 shrink-0 items-center justify-center rounded-xl">
         {icon}
