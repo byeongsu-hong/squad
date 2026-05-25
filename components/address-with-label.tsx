@@ -96,7 +96,7 @@ export function AddressWithLabel({
     ? {
         label: "Vault",
         color: "#10b981",
-        description: "Multisig vault account",
+        description: "Program-derived vault address",
       }
     : null;
 

@@ -365,7 +365,7 @@ export function ProposalDetailView({
                       </span>
                     )}
                     {isProposer && !isCurrentUser && (
-                      <span className="shrink-0 rounded bg-muted px-1 py-0.5 text-[9px] font-medium text-muted-foreground">
+                      <span className="shrink-0 rounded bg-muted px-1 py-0.5 text-[9px] font-medium text-muted-foreground/60">
                         author
                       </span>
                     )}

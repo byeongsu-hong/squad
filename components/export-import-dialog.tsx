@@ -355,7 +355,7 @@ export function ExportImportController({
 
     toast.success("Workspace reset complete", {
       description:
-        "Saved multisigs, labels, custom chains, and provider settings were cleared.",
+        "Saved vaults, labels, custom chains, and provider settings were cleared.",
     });
   };
 
@@ -483,7 +483,7 @@ export function ExportImportController({
                 What gets cleared
               </p>
               <p className="text-foreground/80 text-sm">
-                Saved multisigs, custom chains, address labels, provider
+                Saved vaults, custom chains, address labels, provider
                 settings, and current workspace selections.
               </p>
             </div>
