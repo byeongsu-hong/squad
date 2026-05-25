@@ -181,7 +181,7 @@ export function ProposalDetailView({
       </div>
 
       {/* ── Scrollable body ────────────────────────────────────────────── */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="min-h-0 flex-1 overflow-y-auto">
 
         {/* ── Completion banner ────────────────────────────────────────── */}
         {isComplete && (
@@ -447,9 +447,9 @@ export function ProposalDetailView({
           </button>
 
           {payloadOpen && (
-            <div className="space-y-1.5 px-5 pb-5">
+            <div className="space-y-2 px-4 pb-5">
               {payloadError && (
-                <div className="rounded-lg border border-destructive/20 bg-destructive/5 px-4 py-3">
+                <div className="rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3">
                   <p className="text-sm text-destructive/80">{payloadError}</p>
                 </div>
               )}
@@ -480,9 +480,11 @@ export function ProposalDetailView({
                     <PayloadField label="Calldata" value={payload.data} mono />
                   )}
                   {payload.dataDecoded != null && (
-                    <div className="rounded-lg bg-muted px-3 py-2.5">
-                      <p className="text-muted-foreground/40 mb-1.5 text-[11px] font-medium">Decoded</p>
-                      <pre className="overflow-x-auto rounded-md bg-background px-3 py-2 font-mono text-[11px] text-muted-foreground/70">
+                    <div className="border-border rounded-xl border bg-card overflow-hidden">
+                      <div className="border-border/50 border-b px-3 py-2">
+                        <p className="text-muted-foreground/50 text-[11px] font-medium">Decoded</p>
+                      </div>
+                      <pre className="overflow-x-auto p-3 font-mono text-[11px] text-muted-foreground/70 leading-relaxed">
                         {JSON.stringify(payload.dataDecoded, null, 2)}
                       </pre>
                     </div>
@@ -494,19 +496,17 @@ export function ProposalDetailView({
                 payload.actions.map((action, i) => {
                   const fmt = formatConfigAction(action as ConfigAction);
                   return (
-                    <div key={i} className="rounded-lg bg-muted px-3 py-2.5">
-                      <div className="mb-2 flex items-center gap-2">
-                        <span className="text-muted-foreground/40 font-mono text-[10px]">
-                          #{i + 1}
-                        </span>
+                    <div key={i} className="border-border rounded-xl border overflow-hidden">
+                      <div className="border-border/50 bg-muted/50 flex items-center gap-2 border-b px-3 py-2.5">
+                        <span className="text-muted-foreground/40 font-mono text-[10px]">#{i + 1}</span>
                         <span className="text-foreground text-sm font-semibold">{fmt.type}</span>
                       </div>
-                      <div className="space-y-2">
+                      <div className="divide-border/50 divide-y">
                         {fmt.fields.map((f, j) => (
-                          <div key={j}>
-                            <p className="text-muted-foreground/40 text-[11px] font-medium">{f.label}</p>
+                          <div key={j} className="px-3 py-2.5">
+                            <p className="text-muted-foreground/40 mb-1 text-[11px] font-medium">{f.label}</p>
                             {typeof f.value === "string" ? (
-                              <p className="mt-0.5 break-all text-sm text-foreground/80">{f.value}</p>
+                              <p className="break-all text-sm text-foreground/80">{f.value}</p>
                             ) : (
                               (f.value as ReactNode)
                             )}
@@ -519,28 +519,32 @@ export function ProposalDetailView({
 
               {payload?.type === "vault" &&
                 payload.instructions.map((instr, i) => (
-                  <div key={i} className="rounded-lg bg-muted px-3 py-2.5">
-                    <div className="mb-2 flex items-center gap-2">
+                  <div key={i} className="border-border rounded-xl border overflow-hidden">
+                    {/* Instruction header */}
+                    <div className="border-border/50 bg-muted/50 flex items-center gap-2 border-b px-3 py-2.5">
                       <span className="text-muted-foreground/40 font-mono text-[10px]">#{i + 1}</span>
                       <span className="text-muted-foreground/50 text-[11px] font-medium">Program</span>
                     </div>
-                    <AddressWithLabel
-                      address={instr.programAddress}
-                      showFull
-                      vaultAddress={payload.vaultAddress ?? undefined}
-                    />
+                    {/* Program address */}
+                    <div className="border-border/50 border-b px-3 py-2.5">
+                      <AddressWithLabel
+                        address={instr.programAddress}
+                        showFull
+                        vaultAddress={payload.vaultAddress ?? undefined}
+                      />
+                    </div>
+                    {/* Accounts */}
                     {instr.accountAddresses.length > 0 && (
-                      <div className="mt-2.5">
-                        <p className="text-muted-foreground/40 mb-1.5 text-[11px] font-medium">
-                          Accounts ({instr.accountAddresses.length})
-                        </p>
-                        <div className="space-y-1">
+                      <div className="border-border/50 border-b">
+                        <div className="border-border/30 border-b px-3 py-2">
+                          <p className="text-muted-foreground/40 text-[11px] font-medium">
+                            Accounts ({instr.accountAddresses.length})
+                          </p>
+                        </div>
+                        <div className="divide-border/30 divide-y">
                           {instr.accountAddresses.map((address, j) => (
-                            <div
-                              key={j}
-                              className="flex items-center gap-2 rounded bg-background px-2 py-1"
-                            >
-                              <span className="w-5 shrink-0 text-right font-mono text-[10px] text-muted-foreground/40">
+                            <div key={j} className="flex items-center gap-3 px-3 py-2">
+                              <span className="text-muted-foreground/30 w-5 shrink-0 text-right font-mono text-[10px]">
                                 {instr.accountIndexes[j]}
                               </span>
                               <AddressWithLabel
@@ -552,10 +556,13 @@ export function ProposalDetailView({
                         </div>
                       </div>
                     )}
+                    {/* Data */}
                     {instr.data && instr.data !== "1" && (
-                      <div className="mt-2.5">
-                        <p className="text-muted-foreground/40 mb-1 text-[11px] font-medium">Data</p>
-                        <code className="block break-all rounded-md bg-background px-3 py-2 font-mono text-[11px] text-muted-foreground/70">
+                      <div>
+                        <div className="border-border/30 border-b px-3 py-2">
+                          <p className="text-muted-foreground/40 text-[11px] font-medium">Data</p>
+                        </div>
+                        <code className="block overflow-x-auto px-3 py-2.5 font-mono text-[11px] text-muted-foreground/70 break-all">
                           {instr.data}
                         </code>
                       </div>
@@ -582,21 +589,27 @@ function PayloadField({
   mono?: boolean;
 }) {
   return (
-    <div className="rounded-lg bg-muted px-3 py-2.5">
-      <div className="mb-1 flex items-center justify-between">
-        <p className="text-muted-foreground/40 text-[11px] font-medium">{label}</p>
+    <div className="border-border rounded-xl border overflow-hidden">
+      <div className="border-border/50 bg-muted/50 flex items-center justify-between border-b px-3 py-2">
+        <p className="text-muted-foreground/50 text-[11px] font-medium">{label}</p>
         {copyable && <CopyBtn text={value} />}
       </div>
-      <p className={cn("break-all text-[11px] text-foreground/70", mono && "font-mono")}>{value}</p>
+      <div className="px-3 py-2.5">
+        <p className={cn("break-all text-[11px] text-foreground/70 leading-relaxed", mono && "font-mono")}>{value}</p>
+      </div>
     </div>
   );
 }
 
 function PayloadAddressField({ label, address }: { label: string; address: string }) {
   return (
-    <div className="rounded-lg bg-muted px-3 py-2.5">
-      <p className="text-muted-foreground/40 mb-1 text-[11px] font-medium">{label}</p>
-      <AddressWithLabel address={address} showFull />
+    <div className="border-border rounded-xl border overflow-hidden">
+      <div className="border-border/50 bg-muted/50 border-b px-3 py-2">
+        <p className="text-muted-foreground/50 text-[11px] font-medium">{label}</p>
+      </div>
+      <div className="px-3 py-2.5">
+        <AddressWithLabel address={address} showFull />
+      </div>
     </div>
   );
 }
