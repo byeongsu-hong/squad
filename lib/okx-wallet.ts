@@ -32,6 +32,11 @@ declare global {
   interface Window {
     okxwallet?: {
       solana?: OkxSolanaProvider;
+      // EVM EIP-1193 provider — window.okxwallet itself is the EVM provider
+      request?: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
+      on?: (event: string, handler: (...args: unknown[]) => void) => void;
+      off?: (event: string, handler: (...args: unknown[]) => void) => void;
+      isOKExWallet?: boolean;
     };
   }
 }
