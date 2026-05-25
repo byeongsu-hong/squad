@@ -68,7 +68,7 @@ export function WalletRow({
       variant="outline"
       onClick={onClick}
       disabled={disabled}
-      className="group hover:border-primary/30 hover:bg-accent/50 h-auto w-full justify-start gap-3 rounded-xl px-4 py-3.5 transition-all"
+      className="group hover:border-primary/30 hover:bg-muted/50 h-auto w-full justify-start gap-3 rounded-xl px-4 py-3.5 transition-all"
     >
       <div className="bg-muted flex h-10 w-10 shrink-0 items-center justify-center rounded-xl">
         {icon}
@@ -76,7 +76,7 @@ export function WalletRow({
       <div className="min-w-0 flex-1 text-left">
         <p className="truncate text-sm font-medium">{name}</p>
         {subtitle && (
-          <p className="text-muted-foreground/60 text-xs font-normal">{subtitle}</p>
+          <p className="text-muted-foreground/60 text-[11px] font-normal">{subtitle}</p>
         )}
       </div>
       <div className="shrink-0">

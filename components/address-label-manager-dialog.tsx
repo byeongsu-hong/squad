@@ -394,7 +394,7 @@ function AddressLabelRegistry({
             placeholder="Search..."
             value={searchQuery}
             onChange={(e) => onSearchQueryChange(e.target.value)}
-            className="pl-8 h-7 text-xs"
+            className="pl-8 h-7 text-[11px]"
           />
         </div>
       </div>
@@ -473,14 +473,14 @@ function AddressLabelRegistry({
                       <code
                         className={cn(
                           embedded
-                            ? "text-foreground/80 truncate font-mono text-[0.72rem]"
+                            ? "text-foreground/80 truncate font-mono text-[11px]"
                             : "bg-muted ml-auto w-fit shrink-0 rounded px-1.5 py-0.5 font-mono text-[10px] leading-tight"
                         )}
                       >
                         {label.address}
                       </code>
                       {embedded ? (
-                        <div className="text-muted-foreground/70 text-[0.72rem]">
+                        <div className="text-muted-foreground/70 text-[11px]">
                           {formatUpdatedAt(label.updatedAt)}
                         </div>
                       ) : null}

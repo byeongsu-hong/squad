@@ -131,7 +131,7 @@ export function ManageTagsDialog({
                         type="button"
                         variant="outline"
                         onClick={() => handleAddTag(tag)}
-                        className="h-auto rounded-full px-3 py-1 text-xs"
+                        className="h-auto rounded-full px-3 py-1 text-[11px]"
                       >
                         {tag}
                       </Button>
@@ -147,7 +147,7 @@ export function ManageTagsDialog({
                 {tags.map((tag) => (
                   <span
                     key={tag}
-                    className="bg-primary/10 text-primary inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium"
+                    className="bg-primary/10 text-primary inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium"
                   >
                     {tag}
                     <Button

@@ -352,7 +352,7 @@ export function ProposalDetailView({
                       address={member.address}
                       showCopy={false}
                       showLabelButton={false}
-                      className="min-w-0 font-mono text-xs text-muted-foreground/70"
+                      className="min-w-0 font-mono text-[11px] text-muted-foreground/70"
                     />
                   </div>
                   <span
@@ -434,7 +434,7 @@ export function ProposalDetailView({
               )}
 
               {!payload && !payloadLoading && !payloadError && (
-                <p className="text-muted-foreground/40 py-2 text-xs">No data available.</p>
+                <p className="text-muted-foreground/40 py-2 text-[11px]">No data available.</p>
               )}
 
               {payload && "transactionPda" in payload && (
