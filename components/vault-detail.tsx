@@ -203,7 +203,7 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
                 "rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide",
                 isSquads
                   ? "border-primary/30 bg-primary/10 text-primary"
-                  : "border-blue-300/50 bg-blue-50 text-blue-700 dark:border-blue-700/30 dark:bg-blue-950/30 dark:text-blue-400"
+                  : "border-blue-300/50 bg-blue-50 text-blue-700 dark:border-blue-700/50 dark:bg-blue-950/30 dark:text-blue-400"
               )}>
                 {isSquads ? "Squads" : "Safe"}
               </span>

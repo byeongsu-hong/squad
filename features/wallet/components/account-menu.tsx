@@ -158,7 +158,7 @@ export function AccountMenu({ onAddWallet }: AccountMenuProps) {
                 <p className="truncate text-sm font-medium">
                   {connector?.name ?? "Ethereum Wallet"}
                 </p>
-                <span className="border-blue-300/50 bg-blue-50 text-blue-700 dark:border-blue-700/30 dark:bg-blue-950/30 dark:text-blue-400 shrink-0 rounded px-1.5 py-0.5 font-sans text-[10px]">
+                <span className="border-blue-300/50 bg-blue-50 text-blue-700 dark:border-blue-700/50 dark:bg-blue-950/30 dark:text-blue-400 shrink-0 rounded px-1.5 py-0.5 font-sans text-[10px]">
                   EVM
                 </span>
               </div>
