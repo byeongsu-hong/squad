@@ -1,7 +1,6 @@
 "use client";
 
-import { ArrowLeftRight, ChevronLeft, Copy, Check, X, Users, User } from "lucide-react";
-import Link from "next/link";
+import { ArrowLeftRight, Copy, Check, X, Users, User } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -18,7 +17,7 @@ import type { WorkspaceMultisig } from "@/types/workspace";
 
 interface VaultDetailProps {
   vaultKey: string;
-  onBack?: () => void;
+  onBack: () => void;
 }
 
 function CopyButton({ value }: { value: string }) {
@@ -142,7 +141,7 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
     ? null
     : vaultItems.filter((i) => i.readyToExecute).length;
 
-  const BackLink = onBack ? (
+  const CloseButton = (
     <Button
       type="button"
       variant="ghost"
@@ -153,24 +152,13 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
     >
       <X className="h-4 w-4" />
     </Button>
-  ) : (
-    <Link
-      href="/vaults"
-      className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm transition-colors"
-    >
-      <ChevronLeft className="h-4 w-4" />
-      Back to Vaults
-    </Link>
   );
 
   if (!multisig) {
     return (
       <div className="mx-auto max-w-[1200px]">
-        {!onBack && <div className="mb-6">{BackLink}</div>}
         <div className="flex flex-col items-center gap-3 py-20 text-center">
-          {onBack && (
-            <div className="flex w-full justify-end px-2">{BackLink}</div>
-          )}
+          <div className="flex w-full justify-end px-2">{CloseButton}</div>
           <p className="text-foreground text-sm font-semibold">Vault not found</p>
           <p className="text-muted-foreground/60 text-xs">
             It may have been removed from your registry.
@@ -183,14 +171,11 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
   const isSquads = multisig.provider === "squads";
   const viewerAddress = getViewerAddress(multisig.provider);
 
-  const isPanel = !!onBack;
-
   return (
-    <div className={cn("max-w-[1200px]", isPanel ? "" : "mx-auto space-y-4")}>
-      {!onBack && BackLink}
+    <div className="max-w-[1200px]">
 
       {/* Vault header */}
-      <div className={cn(isPanel ? "pb-4 border-b border-border/50" : "bg-card border-border rounded-2xl border p-5")}>
+      <div className="pb-4 border-b border-border/50">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <h1 className="text-foreground text-xl font-bold tracking-[-0.02em]">
@@ -237,7 +222,7 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
                 {pendingCount} pending
               </span>
             )}
-            {onBack && BackLink}
+            {CloseButton}
           </div>
         </div>
         <div className="mt-2 flex items-center gap-1">
@@ -250,7 +235,7 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
 
       {/* Members */}
       {multisig.members.length > 0 && (
-        <div className={cn(isPanel ? "py-4 border-b border-border/50" : "bg-card border-border rounded-2xl border px-4 py-3")}>
+        <div className="py-4 border-b border-border/50">
           <div className="mb-2 flex items-center gap-2">
             <Users className="text-muted-foreground/60 h-3.5 w-3.5" />
             <span className="text-muted-foreground/50 text-[11px] font-medium">
@@ -273,7 +258,7 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
       )}
 
       {/* Transactions */}
-      <div className={cn(isPanel ? "pt-4" : "")}>
+      <div className="pt-4">
         <div className="mb-2 flex items-center gap-2">
           <ArrowLeftRight className="text-muted-foreground/60 h-3.5 w-3.5" />
           <span className="text-muted-foreground/50 text-[11px] font-medium">

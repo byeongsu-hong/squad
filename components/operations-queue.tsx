@@ -6,7 +6,8 @@ import { type ReactNode, useMemo, useState } from "react";
 import { ProposalDetailView } from "@/components/proposal-detail-modal";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Input } from "@/components/ui/input";
 import { Pagination } from "@/components/ui/pagination";
 import {
@@ -791,6 +792,7 @@ export function OperationsQueue({
           showCloseButton={false}
           className="flex flex-col gap-0 p-0 h-[88vh] sm:max-w-2xl overflow-hidden"
         >
+          <VisuallyHidden><DialogTitle>Proposal Detail</DialogTitle></VisuallyHidden>
           {selectedItem && (
             <ProposalDetailView
               item={selectedItem}
