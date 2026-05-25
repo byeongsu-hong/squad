@@ -336,9 +336,7 @@ export function ProposalDetailView({
                   key={member.address}
                   className={cn(
                     "flex items-center justify-between rounded-md px-2 py-1.5",
-                    isCurrentUser
-                      ? "bg-primary/5 hover:bg-primary/8"
-                      : "hover:bg-muted"
+                    isCurrentUser && "bg-primary/5"
                   )}
                 >
                   <div className="flex min-w-0 items-center gap-2">
