@@ -127,7 +127,7 @@ export function ProposalDetailView({
   onActionSuccess?: () => Promise<void>;
 }) {
   const [payloadOpen, setPayloadOpen] = useState(true);
-  const [signersExpanded, setSignersExpanded] = useState(false);
+  const [signersExpanded, setSignersExpanded] = useState(item.multisig.members.length <= 6);
 
   const { chains } = useChainStore();
   const getViewerAddress = useViewerAddressForMultisig();
@@ -310,17 +310,21 @@ export function ProposalDetailView({
             "border-b px-5 py-3 flex items-center gap-2",
             proposal.status === "Executed"
               ? "border-emerald-100 bg-emerald-50/60 dark:border-emerald-900/30 dark:bg-emerald-950/20"
+              : proposal.status === "Cancelled"
+              ? "border-border/60 bg-muted/30"
               : "border-destructive/15 bg-destructive/5"
           )}>
             {proposal.status === "Executed" ? (
               <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
             ) : (
-              <X className="h-3.5 w-3.5 text-destructive/70 shrink-0" />
+              <X className={cn("h-3.5 w-3.5 shrink-0", proposal.status === "Cancelled" ? "text-muted-foreground/50" : "text-destructive/70")} />
             )}
             <span className={cn(
               "text-[12px] font-medium",
               proposal.status === "Executed"
                 ? "text-emerald-700 dark:text-emerald-400"
+                : proposal.status === "Cancelled"
+                ? "text-muted-foreground/60"
                 : "text-destructive/80"
             )}>
               {proposal.status === "Executed"
@@ -398,9 +402,10 @@ export function ProposalDetailView({
               <button
                 type="button"
                 onClick={() => setSignersExpanded(!signersExpanded)}
-                className="text-muted-foreground/40 hover:text-muted-foreground/70 ml-1 text-[11px] transition-colors"
+                className="ml-1 inline-flex items-center gap-0.5 text-[11px] text-muted-foreground/40 transition-colors hover:text-muted-foreground/70"
               >
-                {signersExpanded ? "hide" : "view signers"}
+                {signersExpanded ? "hide" : "view all"}
+                {signersExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
               </button>
             </div>
           </TooltipProvider>
