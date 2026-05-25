@@ -2,15 +2,21 @@ import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import * as multisig from "@sqds/multisig";
 
 import { cache } from "./cache";
-import {
-  CACHE_CONFIG,
-  ERROR_MESSAGES,
-  RPC_CONFIG,
-  TRANSACTION_DISCRIMINATORS,
-} from "./config";
+import { CACHE_CONFIG, ERROR_MESSAGES, RPC_CONFIG } from "./config";
 
 async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+const connectionPool = new Map<string, Connection>();
+
+function getConnection(rpcUrl: string): Connection {
+  let conn = connectionPool.get(rpcUrl);
+  if (!conn) {
+    conn = new Connection(rpcUrl, RPC_CONFIG.COMMITMENT);
+    connectionPool.set(rpcUrl, conn);
+  }
+  return conn;
 }
 
 export class SquadService {
@@ -18,7 +24,7 @@ export class SquadService {
   private programId: PublicKey;
 
   constructor(rpcUrl: string, programId: string) {
-    this.connection = new Connection(rpcUrl, RPC_CONFIG.COMMITMENT);
+    this.connection = getConnection(rpcUrl);
     this.programId = new PublicKey(programId);
   }
 
@@ -158,8 +164,18 @@ export class SquadService {
     return result;
   }
 
-  async getMultisigsByCreator(creator: PublicKey) {
-    const multisigs = await this.retryWithBackoff(
+  async getMultisigsByCreator(creator: PublicKey, useCache = true) {
+    const cacheKey = `creatorMultisigs:${creator.toBase58()}:${this.programId.toString()}`;
+    const CREATOR_MULTISIGS_TTL = 5 * 60_000;
+
+    if (useCache) {
+      const cached = cache.get<
+        { publicKey: PublicKey; account: ReturnType<typeof multisig.accounts.Multisig.fromAccountInfo>[0] }[]
+      >(cacheKey);
+      if (cached) return cached;
+    }
+
+    const accounts = await this.retryWithBackoff(
       () =>
         this.connection.getProgramAccounts(this.programId, {
           filters: [
@@ -174,10 +190,16 @@ export class SquadService {
       "Get multisigs by creator"
     );
 
-    return multisigs.map((account) => ({
+    const result = accounts.map((account) => ({
       publicKey: account.pubkey,
       account: multisig.accounts.Multisig.fromAccountInfo(account.account)[0],
     }));
+
+    if (useCache) {
+      cache.set(cacheKey, result, CREATOR_MULTISIGS_TTL);
+    }
+
+    return result;
   }
 
   async approveProposal(params: {
@@ -206,36 +228,65 @@ export class SquadService {
     });
   }
 
-  async getTransactionType(
+  async getBatchedTransactionCreators(
     multisigPda: PublicKey,
-    transactionIndex: bigint
-  ): Promise<"config" | "vault"> {
-    const [transactionPda] = multisig.getTransactionPda({
-      multisigPda,
-      index: transactionIndex,
-      programId: this.programId,
+    transactionIndices: bigint[]
+  ): Promise<Map<string, PublicKey | undefined>> {
+    if (transactionIndices.length === 0) return new Map();
+
+    const pdas = transactionIndices.map((index) => {
+      const [pda] = multisig.getTransactionPda({
+        multisigPda,
+        index,
+        programId: this.programId,
+      });
+      return pda;
     });
 
-    const accountInfo = await this.connection.getAccountInfo(transactionPda);
+    const BATCH_SIZE = 100;
+    const creatorMap = new Map<string, PublicKey | undefined>();
 
-    if (!accountInfo) {
-      throw new Error("Transaction account not found");
-    }
+    for (let i = 0; i < pdas.length; i += BATCH_SIZE) {
+      const batchPdas = pdas.slice(i, i + BATCH_SIZE);
+      const batchIndices = transactionIndices.slice(i, i + BATCH_SIZE);
 
-    // Check discriminator to determine transaction type
-    // Account discriminator is the first 8 bytes of the account data
-    const discriminator = accountInfo.data.subarray(0, 8);
-
-    // Compare with config transaction discriminator
-    const isConfigTransaction =
-      discriminator.length ===
-        TRANSACTION_DISCRIMINATORS.CONFIG_TRANSACTION.length &&
-      discriminator.every(
-        (byte, index) =>
-          byte === TRANSACTION_DISCRIMINATORS.CONFIG_TRANSACTION[index]
+      const accountInfos = await this.retryWithBackoff(
+        () => this.connection.getMultipleAccountsInfo(batchPdas),
+        "Get batched transactions"
       );
 
-    return isConfigTransaction ? "config" : "vault";
+      for (let j = 0; j < batchIndices.length; j++) {
+        const index = batchIndices[j]!;
+        const accountInfo = accountInfos[j];
+
+        if (!accountInfo) {
+          creatorMap.set(index.toString(), undefined);
+          continue;
+        }
+
+        try {
+          const discriminator = accountInfo.data.subarray(0, 8);
+          const isConfig = discriminator.every(
+            (byte, k) =>
+              byte === multisig.accounts.configTransactionDiscriminator[k]
+          );
+
+          if (isConfig) {
+            const [configTx] =
+              multisig.accounts.ConfigTransaction.fromAccountInfo(accountInfo);
+            creatorMap.set(index.toString(), configTx.creator);
+          } else {
+            const [vaultTx] =
+              multisig.accounts.VaultTransaction.fromAccountInfo(accountInfo);
+            creatorMap.set(index.toString(), vaultTx.creator);
+          }
+        } catch {
+          creatorMap.set(index.toString(), undefined);
+        }
+      }
+    }
+
+    return creatorMap;
   }
 
   async executeProposal(params: {
@@ -245,13 +296,20 @@ export class SquadService {
   }) {
     return await this.retryWithBackoff(async () => {
       try {
-        const txType = await this.getTransactionType(
-          params.multisigPda,
-          params.transactionIndex
+        const [transactionPda] = multisig.getTransactionPda({
+          multisigPda: params.multisigPda,
+          index: params.transactionIndex,
+          programId: this.programId,
+        });
+        const accountInfo = await this.connection.getAccountInfo(transactionPda);
+        if (!accountInfo) throw new Error("Transaction account not found");
+        const discriminator = accountInfo.data.subarray(0, 8);
+        const isConfig = discriminator.every(
+          (byte, k) =>
+            byte === multisig.accounts.configTransactionDiscriminator[k]
         );
 
-        if (txType === "config") {
-          // Execute as ConfigTransaction
+        if (isConfig) {
           return await multisig.instructions.configTransactionExecute({
             multisigPda: params.multisigPda,
             transactionIndex: params.transactionIndex,
@@ -259,7 +317,6 @@ export class SquadService {
             programId: this.programId,
           });
         } else {
-          // Execute as VaultTransaction
           return await multisig.instructions.vaultTransactionExecute({
             connection: this.connection,
             multisigPda: params.multisigPda,

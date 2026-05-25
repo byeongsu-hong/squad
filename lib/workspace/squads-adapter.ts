@@ -45,7 +45,6 @@ function getOperationalSquadsChain(chains: ChainConfig[], chainId: string) {
 }
 
 const SQUADS_MULTISIG_LOAD_CONCURRENCY = 3;
-const SQUADS_PROPOSAL_ENRICH_CONCURRENCY = 8;
 
 export async function loadSquadsWorkspaceProposals(
   multisigs: MultisigAccount[],
@@ -72,17 +71,25 @@ export async function loadSquadsWorkspaceProposals(
         multisig.publicKey
       );
 
-      return mapWithConcurrency(
-        proposalAccounts,
-        SQUADS_PROPOSAL_ENRICH_CONCURRENCY,
-        (account) =>
-          toWorkspaceProposal(
-            account.account.multisig,
-            account,
-            chain,
-            squadService
-          )
+      const transactionIndices = proposalAccounts.map((a) =>
+        BigInt(a.account.transactionIndex.toString())
       );
+      const creatorMap = await squadService.getBatchedTransactionCreators(
+        multisig.publicKey,
+        transactionIndices
+      );
+
+      return proposalAccounts.map((account) => {
+        const transactionIndex = BigInt(
+          account.account.transactionIndex.toString()
+        );
+        return toWorkspaceProposal(
+          account.account.multisig,
+          account,
+          chain,
+          creatorMap.get(transactionIndex.toString())
+        );
+      });
     }
   );
 
@@ -160,26 +167,33 @@ export async function loadSquadsWorkspaceProposalsForMultisig(
     multisig.publicKey
   );
 
-  const proposals = await mapWithConcurrency(
-    proposalAccounts,
-    SQUADS_PROPOSAL_ENRICH_CONCURRENCY,
-    (account) =>
-      toWorkspaceProposal(
+  const transactionIndices = proposalAccounts.map((a) =>
+    BigInt(a.account.transactionIndex.toString())
+  );
+  const creatorMap = await squadService.getBatchedTransactionCreators(
+    multisig.publicKey,
+    transactionIndices
+  );
+
+  return proposalAccounts
+    .map((account) => {
+      const transactionIndex = BigInt(
+        account.account.transactionIndex.toString()
+      );
+      return toWorkspaceProposal(
         account.account.multisig,
         account,
         chain,
-        squadService
-      )
-  );
-
-  return proposals
+        creatorMap.get(transactionIndex.toString())
+      );
+    })
     .filter((proposal): proposal is WorkspaceProposal => proposal !== null)
     .sort((left, right) =>
       Number(right.transactionIndex - left.transactionIndex)
     );
 }
 
-async function toWorkspaceProposal(
+function toWorkspaceProposal(
   multisigKey: PublicKey,
   proposalAccount: {
     publicKey: PublicKey;
@@ -192,40 +206,12 @@ async function toWorkspaceProposal(
     };
   },
   chain: ChainConfig,
-  squadService: SquadService
-): Promise<WorkspaceProposal | null> {
+  creator: PublicKey | undefined
+): WorkspaceProposal | null {
   const status = toProposalStatus(proposalAccount.account.status.__kind);
   const transactionIndex = BigInt(
     proposalAccount.account.transactionIndex.toString()
   );
-
-  let creator: PublicKey | undefined;
-
-  try {
-    const txType = await squadService.getTransactionType(
-      multisigKey,
-      transactionIndex
-    );
-
-    if (txType === "vault") {
-      const vaultTx = await squadService.getVaultTransaction(
-        multisigKey,
-        transactionIndex
-      );
-      creator = vaultTx.creator;
-    } else {
-      const configTx = await squadService.getConfigTransaction(
-        multisigKey,
-        transactionIndex
-      );
-      creator = configTx.creator;
-    }
-  } catch (error) {
-    console.warn(
-      `Failed to load creator for proposal ${transactionIndex.toString()} on ${chain.id}:`,
-      error
-    );
-  }
 
   return {
     provider: "squads",
@@ -359,18 +345,23 @@ async function loadSquadsWorkspacePayload(
       })[0]
       .toString();
 
-  const squadService = new SquadService(chain.rpcUrl, programIdString);
-  const txType = await squadService.getTransactionType(
-    multisigPda,
-    proposal.transactionIndex
+  const connection = new SquadService(chain.rpcUrl, programIdString).getConnection();
+
+  const accountInfo = await connection.getAccountInfo(transactionPda);
+  if (!accountInfo) {
+    throw new Error("Transaction account not found. Please ensure the proposal was fully created on-chain.");
+  }
+  if (!accountInfo.owner.equals(new PublicKey(programIdString))) {
+    throw new Error("Invalid transaction account owner");
+  }
+
+  const discriminator = accountInfo.data.subarray(0, 8);
+  const isConfig = discriminator.every(
+    (byte, k) => byte === multisigSdk.accounts.configTransactionDiscriminator[k]
   );
 
-  if (txType === "config") {
-    const configTx = await squadService.getConfigTransaction(
-      multisigPda,
-      proposal.transactionIndex
-    );
-
+  if (isConfig) {
+    const [configTx] = multisigSdk.accounts.ConfigTransaction.fromAccountInfo(accountInfo);
     return {
       type: "config",
       transactionPda: transactionPda.toString(),
@@ -379,11 +370,7 @@ async function loadSquadsWorkspacePayload(
     };
   }
 
-  const vaultTx = await squadService.getVaultTransaction(
-    multisigPda,
-    proposal.transactionIndex
-  );
-
+  const [vaultTx] = multisigSdk.accounts.VaultTransaction.fromAccountInfo(accountInfo);
   return {
     type: "vault",
     transactionPda: transactionPda.toString(),

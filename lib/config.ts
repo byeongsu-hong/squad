@@ -1,6 +1,6 @@
 // Cache configuration
 export const CACHE_CONFIG = {
-  TTL: 30000,
+  TTL: 150_000,
 } as const;
 
 // RPC configuration
