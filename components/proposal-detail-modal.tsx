@@ -347,7 +347,7 @@ export function ProposalDetailView({
         <div className="border-border/60 border-b px-5 py-4">
           {/* Section label row */}
           <div className="mb-3 flex items-center gap-2">
-            <Users className="text-muted-foreground/60 h-3.5 w-3.5 shrink-0" />
+            <Users className="text-muted-foreground/40 h-3.5 w-3.5 shrink-0" />
             <span className="text-muted-foreground/50 text-[11px] font-medium">
               Signers
             </span>
