@@ -82,7 +82,7 @@ function SettingsPageContent() {
                 <Icon className="h-3.5 w-3.5 shrink-0" />
                 {tab.label}
                 {sectionCounts[tab.id] > 0 && (
-                  <span className="font-mono text-xs tabular-nums opacity-60">
+                  <span className="bg-muted text-muted-foreground/50 rounded px-1.5 py-px font-mono text-[10px] tabular-nums">
                     {sectionCounts[tab.id]}
                   </span>
                 )}

@@ -37,7 +37,7 @@ export function Header() {
 
   return (
     <header className="border-border bg-card/90 sticky top-0 z-30 border-b backdrop-blur-md">
-      <div className="flex h-[54px] w-full items-center justify-between gap-4 px-7">
+      <div className="flex h-[54px] w-full items-center justify-between gap-4 px-4 sm:px-5 md:px-6">
         <div className="flex items-center gap-8">
           <Link
             href="/"
