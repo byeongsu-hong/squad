@@ -154,7 +154,7 @@ export function AddressWithLabel({
             )}
             title={`${label.label}${label.description ? `\n${label.description}` : ""}\n${address}`}
           >
-            <div className="border-border bg-muted text-foreground hover:bg-muted/70 inline-flex max-w-full items-center gap-2 rounded-full border px-2.5 py-1 text-xs transition-colors">
+            <div className="border-border bg-muted text-foreground inline-flex max-w-full items-center gap-2 rounded-full border px-2.5 py-1 text-xs">
               <span
                 className="h-1.5 w-1.5 shrink-0 rounded-full"
                 style={{ backgroundColor: label.color }}
@@ -162,7 +162,7 @@ export function AddressWithLabel({
               <span className="truncate">{label.label}</span>
             </div>
             {showFull ? (
-              <code className="text-muted-foreground hover:text-foreground max-w-full truncate font-mono text-xs tabular-nums transition-colors">
+              <code className="text-muted-foreground max-w-full truncate font-mono text-xs tabular-nums">
                 {address}
               </code>
             ) : null}
