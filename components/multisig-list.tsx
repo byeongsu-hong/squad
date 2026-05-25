@@ -476,7 +476,7 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
                         </p>
                         <Button
                           variant="ghost"
-                          className="h-6 w-6 shrink-0 p-0 text-muted-foreground/30 hover:text-foreground hover:bg-transparent"
+                          className="h-6 w-6 shrink-0 p-0 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground hover:bg-transparent"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleStartEditLabel(
@@ -500,7 +500,7 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
                       </span>
                       <Button
                         variant="ghost"
-                        className="h-4 w-4 shrink-0 p-0 text-muted-foreground/20 hover:text-muted-foreground hover:bg-transparent"
+                        className="h-4 w-4 shrink-0 p-0 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground/40 hover:text-muted-foreground hover:bg-transparent"
                         onClick={(e) => {
                           e.stopPropagation();
                           navigator.clipboard.writeText(multisig.publicKey.toString());

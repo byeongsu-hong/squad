@@ -6,6 +6,7 @@ import {
   ChevronUp,
   Copy,
   Loader2,
+  Users,
   X,
   Zap,
 } from "lucide-react";
@@ -277,6 +278,13 @@ export function ProposalDetailView({
 
         {/* ── Signatures ───────────────────────────────────────────────── */}
         <div className="border-border/60 border-b px-5 py-4">
+          {/* Section label */}
+          <div className="mb-3 flex items-center gap-2">
+            <Users className="text-muted-foreground/60 h-3.5 w-3.5" />
+            <span className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">
+              Signers
+            </span>
+          </div>
           {/* Progress bar + count */}
           <div className="mb-3 flex items-center gap-3">
             <div className="flex-1 h-1.5 overflow-hidden rounded-full bg-muted">

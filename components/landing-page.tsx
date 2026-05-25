@@ -90,7 +90,7 @@ export function LandingPage() {
             className={cn(
               "flex items-center gap-2 rounded-lg px-1 py-0.5 transition-opacity",
               needsSigningCount > 0 ? "hover:opacity-70 cursor-pointer" : "cursor-default",
-              activeFilter === "Action needed" && "ring-primary/30 ring-2"
+              activeFilter === "Action needed" && "bg-primary/10"
             )}
           >
             <PenLine className={needsSigningCount > 0 ? "text-primary/60 h-4 w-4 shrink-0" : "text-muted-foreground/30 h-4 w-4 shrink-0"} />
@@ -110,7 +110,7 @@ export function LandingPage() {
             className={cn(
               "flex items-center gap-2 rounded-lg px-1 py-0.5 transition-opacity",
               executableCount > 0 ? "hover:opacity-70 cursor-pointer" : "cursor-default",
-              activeFilter === "Executable" && "ring-emerald-500/30 ring-2"
+              activeFilter === "Executable" && "bg-emerald-50 dark:bg-emerald-950/20"
             )}
           >
             <Zap className={executableCount > 0 ? "text-emerald-600/60 dark:text-emerald-400/60 h-4 w-4 shrink-0" : "text-muted-foreground/30 h-4 w-4 shrink-0"} />
@@ -130,7 +130,7 @@ export function LandingPage() {
             className={cn(
               "flex items-center gap-2 rounded-lg px-1 py-0.5 transition-opacity",
               watchingCount > 0 ? "hover:opacity-70 cursor-pointer" : "cursor-default",
-              activeFilter === "Pending" && "ring-border ring-2"
+              activeFilter === "Pending" && "bg-muted"
             )}
           >
             <Clock className={watchingCount > 0 ? "text-muted-foreground/60 h-4 w-4 shrink-0" : "text-muted-foreground/30 h-4 w-4 shrink-0"} />

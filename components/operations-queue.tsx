@@ -547,7 +547,7 @@ export function OperationsQueue({
 
       {filtered.length === 0 ? (
         <div className={cn("flex flex-col items-center justify-center gap-4 text-center", compact ? "py-10" : "py-16")}>
-          <div className="bg-muted border-border flex h-12 w-12 items-center justify-center rounded-2xl border">
+          <div className="bg-card border-border flex h-12 w-12 items-center justify-center rounded-2xl border">
             <Inbox className="text-muted-foreground/60 h-5 w-5" />
           </div>
           <p className="text-muted-foreground text-sm">
