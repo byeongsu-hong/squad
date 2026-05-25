@@ -50,8 +50,7 @@ function SettingsPageContent() {
   const sectionCounts = useMemo<Record<WorkspaceSettingsSection, number>>(
     () => ({
       chains: chains.length,
-      adapters: chains.filter((chain) => chain.multisigProvider === "safe")
-        .length,
+      adapters: chains.length,
       multisigs: multisigs.length,
       registry: 0,
       labels: labels.length,

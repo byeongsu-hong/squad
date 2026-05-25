@@ -6,6 +6,7 @@ import { useMemo } from "react";
 import { Input } from "@/components/ui/input";
 
 import { cn } from "@/lib/utils";
+import { normalizeChainConfig } from "@/types/chain";
 import { useChainStore } from "@/stores/chain-store";
 import { useProviderAdapterStore } from "@/stores/provider-adapter-store";
 
@@ -16,12 +17,12 @@ export function ProviderAdaptersPanel() {
     (state) => state.updateSettings
   );
 
-  const liveSquadsChains = useMemo(
-    () => chains.filter((chain) => chain.multisigProvider === "squads").length,
+  const squadsChains = useMemo(
+    () => chains.map(normalizeChainConfig).filter((c) => c.multisigProvider === "squads"),
     [chains]
   );
-  const safePreparedChains = useMemo(
-    () => chains.filter((chain) => chain.multisigProvider === "safe").length,
+  const safeChains = useMemo(
+    () => chains.map(normalizeChainConfig).filter((c) => c.multisigProvider === "safe"),
     [chains]
   );
   const safeAdapterFieldsConfigured = useMemo(
@@ -40,9 +41,9 @@ export function ProviderAdaptersPanel() {
 
   return (
     <div className="space-y-4">
-      {/* SVM / Squads — status only */}
+      {/* SVM / Squads */}
       <div className="border-border bg-card overflow-hidden rounded-xl border">
-        <div className="flex items-center justify-between gap-3 px-4 py-4">
+        <div className="border-border/50 flex items-center justify-between gap-3 border-b px-4 py-4">
           <div className="space-y-0.5">
             <p className="text-foreground text-sm font-semibold">SVM / Squads</p>
             <p className="text-muted-foreground/60 text-[11px]">
@@ -50,12 +51,32 @@ export function ProviderAdaptersPanel() {
             </p>
           </div>
           <span className="border-primary/30 bg-primary/10 text-primary shrink-0 rounded-full border px-2.5 py-0.5 text-[11px] font-medium">
-            {liveSquadsChains} live
+            {squadsChains.length} active
           </span>
         </div>
+        {squadsChains.length > 0 && (
+          <div className="divide-border/40 divide-y px-4 py-1">
+            {squadsChains.map((chain) => (
+              <div key={chain.id} className="flex items-center justify-between py-2.5">
+                <span className="text-foreground/80 text-[13px] font-medium">{chain.name}</span>
+                <div className="flex items-center gap-2">
+                  {chain.squadsV4ProgramId ? (
+                    <span className="border-emerald-800/40 bg-emerald-950/20 text-emerald-400 rounded border px-1.5 py-px font-mono text-[10px]">
+                      ready
+                    </span>
+                  ) : (
+                    <span className="border-border text-muted-foreground/50 rounded border px-1.5 py-px text-[10px]">
+                      no program
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* EVM / Safe — status + config combined */}
+      {/* EVM / Safe */}
       <div className="border-border bg-card overflow-hidden rounded-xl border">
         <div className="border-border/50 flex items-center justify-between gap-3 border-b px-4 py-4">
           <div className="space-y-0.5">
@@ -70,10 +91,28 @@ export function ProviderAdaptersPanel() {
               ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
               : "border-border text-muted-foreground/60"
           )}>
-            {safePreparedChains} chain{safePreparedChains !== 1 ? "s" : ""}
+            {safeChains.length} chain{safeChains.length !== 1 ? "s" : ""}
             {safeAdapterFieldsConfigured > 0 && ` · ${safeAdapterFieldsConfigured}/3`}
           </span>
         </div>
+
+        {safeChains.length > 0 && (
+          <div className="border-border/50 divide-border/40 divide-y border-b px-4 py-1">
+            {safeChains.map((chain) => (
+              <div key={chain.id} className="flex items-center justify-between py-2.5">
+                <span className="text-foreground/80 text-[13px] font-medium">{chain.name}</span>
+                <span className={cn(
+                  "rounded border px-1.5 py-px text-[10px]",
+                  safeAdapterFieldsConfigured === 3
+                    ? "border-emerald-800/40 bg-emerald-950/20 text-emerald-400"
+                    : "border-border text-muted-foreground/40"
+                )}>
+                  {safeAdapterFieldsConfigured === 3 ? "configured" : "needs setup"}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
 
         <div className="grid gap-0 lg:divide-x lg:divide-border/50 lg:grid-cols-3">
           <div className="space-y-1.5 border-border/50 border-b px-4 py-3 lg:border-b-0">

@@ -23,9 +23,6 @@ import { cn } from "@/lib/utils";
 import type { WorkspaceQueueItem } from "@/types/workspace";
 
 const PAGE_SIZE = 15;
-const GRID_COLS_FULL = "36px 1.4fr 54px 80px 1fr 80px 48px 80px";
-const GRID_COLS_COMPACT = "36px 54px 80px 1fr 80px 48px 60px";
-const GRID_COLS_COMPACT_NO_CHAIN = "36px 54px 1fr 80px 48px 60px";
 
 interface OperationsQueueProps {
   items: WorkspaceQueueItem[];
@@ -120,52 +117,6 @@ function ProgressBar({ item }: { item: WorkspaceQueueItem }) {
   );
 }
 
-function ColumnHeaders({
-  selectable,
-  allSelected,
-  onToggleAll,
-  compact = false,
-  hideChain = false,
-}: {
-  selectable: boolean;
-  allSelected: boolean;
-  onToggleAll: () => void;
-  compact?: boolean;
-  hideChain?: boolean;
-}) {
-  const cols = compact
-    ? hideChain ? ["#", "Status", "Progress", "Age", ""] : ["#", "Chain", "Status", "Progress", "Age", ""]
-    : ["Vault", "#", "Chain", "Status", "Progress", "Age", ""];
-  const gridCols = compact
-    ? hideChain ? GRID_COLS_COMPACT_NO_CHAIN : GRID_COLS_COMPACT
-    : GRID_COLS_FULL;
-  return (
-    <div
-      className="border-border bg-muted grid items-center border-b px-3 py-2"
-      style={{ gridTemplateColumns: gridCols }}
-    >
-      <div className="flex items-center justify-center">
-        {selectable && (
-          <Checkbox
-            checked={allSelected}
-            onCheckedChange={onToggleAll}
-            className="size-3.5"
-            aria-label="Select all"
-          />
-        )}
-      </div>
-      {cols.map((h) => (
-        <span
-          key={h}
-          className="text-muted-foreground/40 text-[11px] font-medium"
-        >
-          {h}
-        </span>
-      ))}
-    </div>
-  );
-}
-
 function QueueRow({
   item,
   isSelected,
@@ -189,31 +140,28 @@ function QueueRow({
   onExecute?: () => void;
   isActioning?: boolean;
 }) {
-  const gridCols = compact
-    ? hideChain ? GRID_COLS_COMPACT_NO_CHAIN : GRID_COLS_COMPACT
-    : GRID_COLS_FULL;
   return (
     <div
       className={cn(
-        "grid cursor-pointer items-center px-3 py-2.5 transition-colors",
-        isSelected ? "bg-primary/8"
-        : item.readyToExecute ? "hover:bg-emerald-50 dark:hover:bg-emerald-950/20 [box-shadow:inset_2px_0_0_rgba(5,150,105,0.4)]"
-        : item.needsYourSignature && !item.currentUserApproved ? "hover:bg-primary/5 [box-shadow:inset_2px_0_0_rgba(217,119,6,0.4)]"
-        : item.currentUserApproved && item.proposal.status === "Active" ? "hover:bg-muted [box-shadow:inset_2px_0_0_rgba(5,150,105,0.2)]"
-        : "hover:bg-muted"
+        "flex cursor-pointer items-center gap-2.5 px-3 py-2.5 transition-colors",
+        isSelected
+          ? "bg-primary/8"
+          : item.readyToExecute
+          ? "hover:bg-emerald-950/15 [box-shadow:inset_2px_0_0_rgba(5,150,105,0.4)]"
+          : item.needsYourSignature && !item.currentUserApproved
+          ? "hover:bg-primary/5 [box-shadow:inset_2px_0_0_rgba(217,119,6,0.4)]"
+          : item.currentUserApproved && item.proposal.status === "Active"
+          ? "hover:bg-muted [box-shadow:inset_2px_0_0_rgba(5,150,105,0.2)]"
+          : "hover:bg-muted"
       )}
-      style={{ gridTemplateColumns: gridCols }}
       onClick={onClick}
     >
-      <div
-        className="flex items-center justify-center"
-        onClick={(e) => {
-          if (!isSelectable) return;
-          e.stopPropagation();
-          onToggle();
-        }}
-      >
-        {isSelectable && (
+      {/* Checkbox */}
+      {isSelectable && (
+        <div
+          className="shrink-0"
+          onClick={(e) => { e.stopPropagation(); onToggle(); }}
+        >
           <Checkbox
             checked={isSelected}
             onCheckedChange={onToggle}
@@ -221,70 +169,59 @@ function QueueRow({
             className="size-3.5"
             aria-label={`Select ${item.multisig.label ?? "proposal"}`}
           />
-        )}
-      </div>
-      {!compact && (
-        <div className="min-w-0 pr-2">
-          <p className="text-foreground truncate text-[13px] font-medium">
-            {item.multisig.label ?? "Unnamed"}
-          </p>
-          <p className="text-muted-foreground/60 truncate text-[10px]">
-            {item.multisig.provider === "safe" ? "Safe" : "Squads"}
-          </p>
         </div>
       )}
-      <span className="text-muted-foreground/60 font-mono text-[11px]">
-        #{item.proposal.transactionIndex.toString()}
-      </span>
-      {(!compact || !hideChain) && (
-        <span className="text-muted-foreground/60 font-mono text-[11px]">
-          {item.multisig.chainName}
-        </span>
-      )}
-      <div>
-        <StatusBadge item={item} />
+
+      {/* Left: vault name + metadata */}
+      <div className="min-w-0 flex-1">
+        {!compact && (
+          <p className="text-foreground mb-0.5 truncate text-[13px] font-medium leading-tight">
+            {item.multisig.label ?? "Unnamed"}
+          </p>
+        )}
+        <div className="flex items-center gap-1.5">
+          <span className="text-muted-foreground/50 font-mono text-[11px] tabular-nums">
+            #{item.proposal.transactionIndex.toString()}
+          </span>
+          {!hideChain && (
+            <span className="border-border/60 bg-muted/60 text-muted-foreground/40 rounded px-1 py-px text-[10px]">
+              {item.multisig.chainName}
+            </span>
+          )}
+          <span className="text-muted-foreground/30 font-mono text-[10px] tabular-nums">
+            {formatAge(item.proposal.createdAt)}
+          </span>
+        </div>
       </div>
-      <ProgressBar item={item} />
-      <span className="text-muted-foreground/70 font-mono text-[11px]">
-        {formatAge(item.proposal.createdAt)}
-      </span>
+
+      {/* Right: progress count + status + action */}
       <div
-        className="flex items-center justify-end"
+        className="flex shrink-0 items-center gap-2"
         onClick={(e) => e.stopPropagation()}
       >
+        <span className="text-muted-foreground/40 font-mono text-[10px] tabular-nums">
+          {item.approvalCount}/{item.multisig.threshold}
+        </span>
+        <StatusBadge item={item} />
         {onExecute && item.readyToExecute ? (
           <Button
             size="xs"
             disabled={isActioning}
             onClick={onExecute}
-            className={cn(
-              "bg-emerald-600 text-white hover:bg-emerald-500 border-emerald-700/30 font-semibold",
-              compact && "h-6 w-6 p-0"
-            )}
+            className="bg-emerald-600 text-white hover:bg-emerald-500 border-emerald-700/30 font-semibold"
           >
-            {isActioning ? (
-              <Loader2 className="animate-spin" />
-            ) : (
-              <Zap />
-            )}
-            {!compact && "Execute"}
+            {isActioning ? <Loader2 className="animate-spin" /> : <Zap />}
+            Execute
           </Button>
         ) : onApprove && item.needsYourSignature && !item.currentUserApproved ? (
           <Button
             size="xs"
             disabled={isActioning}
             onClick={onApprove}
-            className={cn(
-              "bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20 font-semibold",
-              compact && "h-6 w-6 p-0"
-            )}
+            className="bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20 font-semibold"
           >
-            {isActioning ? (
-              <Loader2 className="animate-spin" />
-            ) : (
-              <Check />
-            )}
-            {!compact && "Sign"}
+            {isActioning ? <Loader2 className="animate-spin" /> : <Check />}
+            Sign
           </Button>
         ) : null}
       </div>
@@ -292,28 +229,21 @@ function QueueRow({
   );
 }
 
-function RowSkeleton({ compact = false, hideChain = false }: { compact?: boolean; hideChain?: boolean }) {
-  const gridCols = compact
-    ? hideChain ? GRID_COLS_COMPACT_NO_CHAIN : GRID_COLS_COMPACT
-    : GRID_COLS_FULL;
+function RowSkeleton({ compact = false }: { compact?: boolean }) {
   return (
-    <div
-      className="grid items-center px-3 py-2.5"
-      style={{ gridTemplateColumns: gridCols }}
-    >
-      <div />
-      {!compact && (
-        <div className="space-y-1 pr-2">
-          <Skeleton className="h-3 w-24 rounded-sm" />
-          <Skeleton className="h-2.5 w-10 rounded-sm" />
+    <div className="flex items-center gap-2.5 px-3 py-2.5">
+      <div className="min-w-0 flex-1 space-y-1.5">
+        {!compact && <Skeleton className="h-3 w-28 rounded-sm" />}
+        <div className="flex items-center gap-1.5">
+          <Skeleton className="h-2.5 w-8 rounded-sm" />
+          <Skeleton className="h-3.5 w-16 rounded" />
+          <Skeleton className="h-2.5 w-5 rounded-sm" />
         </div>
-      )}
-      <Skeleton className="h-3 w-8 rounded-sm" />
-      {(!compact || !hideChain) && <Skeleton className="h-3 w-16 rounded-sm" />}
-      <Skeleton className="h-4 w-20 rounded-full" />
-      <Skeleton className="h-1.5 w-10 rounded-full" />
-      <Skeleton className="h-3 w-6 rounded-sm" />
-      <div />
+      </div>
+      <div className="flex shrink-0 items-center gap-2">
+        <Skeleton className="h-2.5 w-6 rounded-sm" />
+        <Skeleton className="h-5 w-14 rounded" />
+      </div>
     </div>
   );
 }
@@ -497,16 +427,9 @@ export function OperationsQueue({
   if (loading && items.length === 0) {
     return (
       <div className="border-border bg-card overflow-hidden rounded-xl border">
-        <ColumnHeaders
-          selectable={false}
-          allSelected={false}
-          onToggleAll={() => {}}
-          compact={compact}
-          hideChain={hideChain}
-        />
         <div className="divide-border/50 divide-y">
           {Array.from({ length: 6 }).map((_, i) => (
-            <RowSkeleton key={i} compact={compact} hideChain={hideChain} />
+            <RowSkeleton key={i} compact={compact} />
           ))}
         </div>
       </div>
@@ -661,6 +584,15 @@ export function OperationsQueue({
                 <span className="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-[10px] font-semibold tabular-nums">
                   {actionItems.length}
                 </span>
+                {selectableKeys.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={toggleSelectAll}
+                    className="text-muted-foreground/40 hover:text-muted-foreground/70 text-[11px] transition-colors"
+                  >
+                    {allSelected ? "deselect all" : "select all"}
+                  </button>
+                )}
                 <div className="ml-auto flex items-center gap-1.5">
                   {approveAllItems.length > 0 && (
                     <Button
@@ -695,13 +627,6 @@ export function OperationsQueue({
                 </div>
               </div>
               <div className="border-border bg-card overflow-hidden rounded-xl border">
-                <ColumnHeaders
-                  selectable
-                  allSelected={allSelected}
-                  onToggleAll={toggleSelectAll}
-                  compact={compact}
-                  hideChain={hideChain}
-                />
                 <div className="divide-border/50 divide-y">
                   {actionItems.map((item) => (
                     <QueueRow
@@ -753,13 +678,6 @@ export function OperationsQueue({
                 </span>
               </div>
               <div className="border-border bg-card overflow-hidden rounded-xl border">
-                <ColumnHeaders
-                  selectable={false}
-                  allSelected={false}
-                  onToggleAll={() => {}}
-                  compact={compact}
-                  hideChain={hideChain}
-                />
                 <div className="divide-border/50 divide-y">
                   {paginatedHistory.map((item) => (
                     <QueueRow

@@ -563,7 +563,7 @@ export function ProposalDetailView({
                             {typeof f.value !== "string" ? (
                               (f.value as ReactNode)
                             ) : /^[1-9A-HJ-NP-Za-km-z]{32,44}$|^0x[0-9a-fA-F]{40}$/.test(f.value) ? (
-                              <AddressWithLabel address={f.value} showFull />
+                              <AddressWithLabel address={f.value} showFull copyOnClick showCopy={false} />
                             ) : (
                               <p className="break-all text-[12px] text-foreground/80">{f.value}</p>
                             )}
@@ -593,6 +593,8 @@ export function ProposalDetailView({
                       <AddressWithLabel
                         address={instr.programAddress}
                         showFull
+                        copyOnClick
+                        showCopy={false}
                         vaultAddress={payload.vaultAddress ?? undefined}
                       />
                     </div>
@@ -612,6 +614,8 @@ export function ProposalDetailView({
                               </span>
                               <AddressWithLabel
                                 address={address}
+                                copyOnClick
+                                showCopy={false}
                                 vaultAddress={payload.vaultAddress ?? undefined}
                               />
                             </div>

@@ -219,7 +219,7 @@ export function AddressWithLabel({
           <Button
             type="button"
             variant="ghost"
-            className="text-muted-foreground hover:text-foreground h-6 w-6 shrink-0 p-0"
+            className="text-muted-foreground hover:text-foreground h-5 w-5 shrink-0 p-0"
             onClick={handleCopy}
             aria-label="Copy address"
             title="Copy address"
@@ -233,7 +233,7 @@ export function AddressWithLabel({
             <Button
               type="button"
               variant="ghost"
-              className="text-muted-foreground hover:text-foreground h-6 w-6 shrink-0 p-0"
+              className="text-muted-foreground hover:text-foreground h-5 w-5 shrink-0 p-0"
               aria-label="Label address"
               title="Label address"
             >
