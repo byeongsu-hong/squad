@@ -133,12 +133,19 @@ export function AddressWithLabel({
               interactiveDisplayClass
             )}
           >
-            <div className="border-border bg-muted text-foreground inline-flex max-w-full items-center gap-2 rounded-full border px-2.5 py-1 text-xs">
+            <div
+              className="inline-flex max-w-full shrink-0 items-center rounded px-1.5 py-0.5"
+              style={{
+                backgroundColor: `${label.color}15`,
+                borderLeft: `2px solid ${label.color}55`,
+              }}
+            >
               <span
-                className="h-1.5 w-1.5 shrink-0 rounded-full"
-                style={{ backgroundColor: label.color }}
-              />
-              <span className="truncate">{label.label}</span>
+                className="truncate text-[11px] font-medium"
+                style={{ color: label.color }}
+              >
+                {label.label}
+              </span>
             </div>
             {showFull ? (
               <code className="text-muted-foreground hover:text-foreground max-w-full truncate font-mono text-xs tabular-nums transition-colors">
@@ -154,12 +161,19 @@ export function AddressWithLabel({
             )}
             title={`${label.label}${label.description ? `\n${label.description}` : ""}\n${address}`}
           >
-            <div className="border-border bg-muted text-foreground inline-flex max-w-full items-center gap-2 rounded-full border px-2.5 py-1 text-xs">
+            <div
+              className="inline-flex max-w-full shrink-0 items-center rounded px-1.5 py-0.5"
+              style={{
+                backgroundColor: `${label.color}15`,
+                borderLeft: `2px solid ${label.color}55`,
+              }}
+            >
               <span
-                className="h-1.5 w-1.5 shrink-0 rounded-full"
-                style={{ backgroundColor: label.color }}
-              />
-              <span className="truncate">{label.label}</span>
+                className="truncate text-[11px] font-medium"
+                style={{ color: label.color }}
+              >
+                {label.label}
+              </span>
             </div>
             {showFull ? (
               <code className="text-muted-foreground/60 max-w-full truncate font-mono text-xs tabular-nums">

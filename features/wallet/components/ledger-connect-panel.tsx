@@ -218,7 +218,7 @@ export function LedgerConnectPanel({
           </div>
 
           {error && (
-            <div className="border-destructive/30 bg-destructive/10 text-destructive flex items-center gap-2 rounded-lg border px-3 py-2 text-sm">
+            <div className="border-destructive/30 bg-destructive/10 text-destructive flex items-center gap-2 rounded-xl border px-3 py-2 text-sm">
               <AlertCircle className="h-4 w-4 shrink-0" />
               {error}
             </div>

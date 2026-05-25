@@ -527,7 +527,7 @@ function ChainRegistry({
             className={cn(
               embedded
                 ? "group grid cursor-pointer gap-3 px-4 py-3 transition-colors focus-visible:ring-ring focus-visible:ring-1 focus-visible:outline-none xl:grid-cols-[minmax(12rem,0.58fr)_minmax(0,1.22fr)_auto] xl:items-center"
-                : "group hover:bg-muted border-border focus-visible:ring-ring flex cursor-pointer items-center justify-between rounded-lg border p-3 transition-colors focus-visible:ring-1 focus-visible:outline-none",
+                : "group hover:bg-muted border-border focus-visible:ring-ring flex cursor-pointer items-center justify-between rounded-xl border p-3 transition-colors focus-visible:ring-1 focus-visible:outline-none",
               embedded && isEditing
                 ? "bg-primary/5 [box-shadow:inset_2px_0_0_rgba(217,119,6,0.5)]"
                 : embedded
