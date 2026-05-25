@@ -292,7 +292,7 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
           placeholder="Search vaults..."
           value={filterText}
           onChange={(e) => setFilterText(e.target.value)}
-          className="h-9 flex-1 sm:flex-none sm:w-[220px]"
+          className="h-9 flex-1"
           aria-label="Search vaults"
         />
         {publicKey && canSyncSelectedChain ? (
@@ -311,9 +311,7 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
             )}
           </Button>
         ) : null}
-        <div className="ml-auto">
-          <AddMultisigActions />
-        </div>
+        <AddMultisigActions />
       </div>
 
       {/* Secondary toolbar: bulk actions + tag filters (only when data exists) */}
