@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, Copy, Check, X, Users, User, ExternalLink } from "lucide-react";
+import { CheckCircle2, Copy, Check, X, Users, User, ExternalLink, Shield } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -238,12 +238,42 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
 
       {/* Vault header */}
       <div className="pb-4 border-b border-border/50">
-        <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-3">
+          {/* Vault avatar */}
+          <div className={cn(
+            "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border",
+            isSquads
+              ? "bg-primary/10 border-primary/20"
+              : "border-blue-300/50 bg-blue-50 dark:border-blue-700/50 dark:bg-blue-950/30"
+          )}>
+            <Shield className={cn("h-4 w-4", isSquads ? "text-primary/70" : "text-blue-600 dark:text-blue-400")} />
+          </div>
+
           <div className="min-w-0 flex-1">
-            <h1 className="text-foreground text-xl font-bold tracking-[-0.02em]">
-              {multisig.label ?? "Unnamed Vault"}
-            </h1>
-            <div className="mt-2 flex flex-wrap items-center gap-1.5">
+            <div className="flex items-start justify-between gap-2">
+              <h1 className="text-foreground text-[17px] font-bold tracking-[-0.02em] leading-tight">
+                {multisig.label ?? "Unnamed Vault"}
+              </h1>
+              <div className="flex shrink-0 items-center gap-1.5">
+                {needsSigningCount !== null && needsSigningCount > 0 && (
+                  <span className="border-primary/20 bg-primary/10 text-primary rounded-full border px-2 py-0.5 text-[10px] font-medium">
+                    {needsSigningCount} to sign
+                  </span>
+                )}
+                {executableCount !== null && executableCount > 0 && (
+                  <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700 dark:border-emerald-800/40 dark:bg-emerald-950/20 dark:text-emerald-400">
+                    {executableCount} ready
+                  </span>
+                )}
+                {pendingCount !== null && pendingCount > 0 && !needsSigningCount && !executableCount && (
+                  <span className="bg-muted text-muted-foreground/60 rounded-full px-2 py-0.5 text-[10px] font-medium">
+                    {pendingCount} pending
+                  </span>
+                )}
+                {CloseButton}
+              </div>
+            </div>
+            <div className="mt-1.5 flex flex-wrap items-center gap-1">
               <span className="border-border bg-muted text-muted-foreground/60 rounded-full border px-2 py-0.5 text-[10px] font-medium">
                 {multisig.chainName}
               </span>
@@ -265,26 +295,8 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
               ))}
             </div>
           </div>
-          <div className="flex shrink-0 items-center gap-2">
-            {needsSigningCount !== null && needsSigningCount > 0 && (
-              <span className="border-primary/20 bg-primary/10 text-primary rounded-full border px-2 py-0.5 text-[10px] font-medium">
-                {needsSigningCount} to sign
-              </span>
-            )}
-            {executableCount !== null && executableCount > 0 && (
-              <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700 dark:border-emerald-800/40 dark:bg-emerald-950/20 dark:text-emerald-400">
-                {executableCount} ready
-              </span>
-            )}
-            {pendingCount !== null && pendingCount > 0 && !needsSigningCount && !executableCount && (
-              <span className="bg-muted text-muted-foreground/60 rounded-full px-2 py-0.5 text-[10px] font-medium">
-                {pendingCount} pending
-              </span>
-            )}
-            {CloseButton}
-          </div>
         </div>
-        <div className="mt-2 space-y-0.5">
+        <div className="mt-2.5 pl-12 space-y-0.5">
           <AddressRow
             address={multisig.address}
             label={isSquads && multisig.vaultAddress && multisig.vaultAddress !== multisig.address ? "multisig" : undefined}

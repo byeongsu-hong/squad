@@ -243,14 +243,49 @@ export function MultisigList({ selectedKey }: { selectedKey?: string }) {
 
   return (
     <div className="space-y-3">
-      <div className="border-border flex items-center gap-2 border-b pb-4">
+      {/* Unified toolbar: search + tag filters + actions */}
+      <div className="border-border flex flex-wrap items-center gap-2 border-b pb-4">
         <Input
           placeholder="Search vaults..."
           value={filterText}
           onChange={(e) => setFilterText(e.target.value)}
-          className="h-9 flex-1"
+          className="h-9 min-w-0 flex-1 basis-40"
           aria-label="Search vaults"
         />
+        {allTags.length > 0 && allTags.map((tag) => {
+          const isActive = selectedFilterTags.includes(tag);
+          return (
+            <Button
+              key={tag}
+              size="sm"
+              variant="ghost"
+              onClick={() => toggleFilterTag(tag)}
+              className={cn(
+                "h-7 shrink-0 rounded-full border px-2.5 text-[11px] transition-colors",
+                isActive
+                  ? "border-primary/20 bg-primary/15 text-primary hover:bg-primary/20 hover:text-primary font-medium"
+                  : "border-border/30 text-muted-foreground/60 hover:text-foreground hover:border-border hover:bg-muted/30"
+              )}
+            >
+              {tag}
+            </Button>
+          );
+        })}
+        {selectedForDeletion.size > 0 && (
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={handleDeleteSelected}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            Remove ({selectedForDeletion.size})
+          </Button>
+        )}
+        {hasMultisigs && filteredRegistryRows.length < multisigs.length && (
+          <span className="text-muted-foreground/50 ml-auto font-mono text-[11px] tabular-nums">
+            {filteredRegistryRows.length} / {multisigs.length}
+          </span>
+        )}
         {publicKey && canSyncSelectedChain ? (
           <Button
             variant="outline"
@@ -269,50 +304,6 @@ export function MultisigList({ selectedKey }: { selectedKey?: string }) {
         ) : null}
         <AddMultisigActions />
       </div>
-
-      {/* Secondary toolbar: bulk actions + tag filters (only when data exists) */}
-      {(selectedForDeletion.size > 0 || allTags.length > 0) && (
-        <div className="flex flex-wrap items-center gap-2">
-          {selectedForDeletion.size > 0 && (
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={handleDeleteSelected}
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-              Remove ({selectedForDeletion.size})
-            </Button>
-          )}
-          {allTags.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {allTags.map((tag) => {
-                const isActive = selectedFilterTags.includes(tag);
-                return (
-                  <Button
-                    key={tag}
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => toggleFilterTag(tag)}
-                    className={cn(
-                      "h-6 rounded-full border px-2.5 text-[11px] transition-colors",
-                      isActive
-                        ? "border-primary/20 bg-primary/15 text-primary hover:bg-primary/20 hover:text-primary font-medium"
-                        : "border-border/30 text-muted-foreground/60 hover:text-foreground hover:border-border hover:bg-muted/30"
-                    )}
-                  >
-                    {tag}
-                  </Button>
-                );
-              })}
-            </div>
-          )}
-          {hasMultisigs && filteredRegistryRows.length < multisigs.length && (
-            <span className="text-muted-foreground/50 ml-auto font-mono text-[11px] tabular-nums">
-              {filteredRegistryRows.length} / {multisigs.length}
-            </span>
-          )}
-        </div>
-      )}
 
       {!hasMultisigs && !loading && (
         <div className="flex flex-col items-center justify-center gap-5 py-20 text-center">
