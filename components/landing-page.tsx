@@ -177,7 +177,7 @@ export function LandingPage() {
           defaultStatusFilter={activeFilter}
           emptyStateCta={
             <div className="flex flex-col items-center gap-3 mt-1">
-              <p className="text-muted-foreground/30 text-[11px]">
+              <p className="text-muted-foreground/40 text-[11px]">
                 Monitoring {workspaceMultisigs.length} vault{workspaceMultisigs.length !== 1 ? "s" : ""}
               </p>
               {workspaceMultisigs.length === 1 ? (

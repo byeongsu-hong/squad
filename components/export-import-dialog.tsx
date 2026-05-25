@@ -571,7 +571,7 @@ function ExportImportModePicker({
               Export to YAML
             </span>
             {embedded ? (
-              <span className="text-muted-foreground block text-xs">
+              <span className="text-muted-foreground/60 block text-xs">
                 Generate the complete portable workspace snapshot.
               </span>
             ) : null}
@@ -595,7 +595,7 @@ function ExportImportModePicker({
               Import from YAML
             </span>
             {embedded ? (
-              <span className="text-muted-foreground block text-xs">
+              <span className="text-muted-foreground/60 block text-xs">
                 Merge chains and multisigs from another environment.
               </span>
             ) : null}

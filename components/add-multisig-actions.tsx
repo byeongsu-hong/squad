@@ -57,7 +57,7 @@ export function AddMultisigActions() {
             className="bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20"
           >
             <Plus className="h-4 w-4" />
-            Add Multisig
+            Add Vault
             <ChevronDown className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
@@ -70,7 +70,7 @@ export function AddMultisigActions() {
             disabled={!hasOperationalSquadsChains}
           >
             <Plus className="h-4 w-4" />
-            New Squads Multisig
+            New Squads Vault
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => setImportDialogOpen(true)}

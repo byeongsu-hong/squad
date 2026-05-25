@@ -549,7 +549,7 @@ export function OperationsQueue({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="All">All multisigs</SelectItem>
+                <SelectItem value="All">All vaults</SelectItem>
                 {multisigOptions.map((m) => (
                   <SelectItem key={m} value={m}>
                     {m}
