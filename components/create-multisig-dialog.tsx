@@ -277,7 +277,7 @@ export function CreateMultisigDialog({
                 name="threshold"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
+                    <FormLabel className="text-[11px] font-medium text-muted-foreground/50">
                       Threshold <span className="text-destructive">*</span>
                     </FormLabel>
                     <FormControl>

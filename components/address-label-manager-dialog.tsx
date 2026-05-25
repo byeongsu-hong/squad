@@ -350,7 +350,11 @@ function AddressLabelEditor({
           type="submit"
           className="bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20 w-full"
         >
-          {isEditing ? "Update" : "Add"}
+          {isEditing ? (
+            <><Check className="h-4 w-4" />Update</>
+          ) : (
+            <><Plus className="h-4 w-4" />Add</>
+          )}
         </Button>
       </form>
     </div>
