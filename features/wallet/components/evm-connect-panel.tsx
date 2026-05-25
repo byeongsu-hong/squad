@@ -77,7 +77,7 @@ export function EvmConnectPanel({ onClose }: EvmConnectPanelProps) {
             <p className="text-sm font-medium">
               {activeConnector?.name ?? "EVM Wallet"}
             </p>
-            <p className="text-muted-foreground font-mono text-xs">
+            <p className="text-muted-foreground/60 font-mono text-xs">
               {formatAddress(address, 6, 4)}
             </p>
           </div>

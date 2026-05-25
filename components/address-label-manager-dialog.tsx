@@ -461,7 +461,7 @@ function AddressLabelRegistry({
                       </div>
                       {embedded ? (
                         <div className="min-w-0 text-sm">
-                          <p className={cn("truncate", label.description ? "text-muted-foreground" : "text-muted-foreground/30")}>
+                          <p className={cn("truncate", label.description ? "text-muted-foreground/60" : "text-muted-foreground/30")}>
                             {label.description || "—"}
                           </p>
                         </div>

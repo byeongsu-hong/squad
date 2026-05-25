@@ -147,7 +147,7 @@ export function ProposalDetailView({
               >
                 {multisig.label || "Unnamed"}
               </Link>
-              <span className="text-muted-foreground shrink-0 font-mono text-sm">
+              <span className="text-muted-foreground/60 shrink-0 font-mono text-sm">
                 #{proposal.transactionIndex.toString()}
               </span>
               <span
@@ -373,7 +373,7 @@ export function ProposalDetailView({
                       address={member.address}
                       showCopy={false}
                       showLabelButton={false}
-                      className="min-w-0 font-mono text-xs text-muted-foreground"
+                      className="min-w-0 font-mono text-xs text-muted-foreground/70"
                     />
                   </div>
                   <span

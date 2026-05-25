@@ -124,7 +124,7 @@ export function LedgerConnectPanel({
             <h3 className="text-base font-semibold">
               {error ? "Connection Failed" : "Connect Ledger Device"}
             </h3>
-            <p className="text-muted-foreground text-sm">
+            <p className="text-muted-foreground/60 text-sm">
               {error
                 ? error
                 : "Connect your Ledger device and open the Solana app, then click connect."}
@@ -161,7 +161,7 @@ export function LedgerConnectPanel({
                       <span className="text-sm leading-none font-medium">
                         {pattern.name}
                       </span>
-                      <span className="text-muted-foreground font-mono text-xs">
+                      <span className="text-muted-foreground/60 font-mono text-xs">
                         {pattern.description}
                       </span>
                     </Label>
@@ -191,7 +191,7 @@ export function LedgerConnectPanel({
           <div className="flex items-center justify-between">
             <h3 className="text-base font-semibold">Select Account</h3>
             <div className="flex items-center gap-2">
-              <span className="text-muted-foreground text-xs">
+              <span className="text-muted-foreground/60 text-xs">
                 Page {currentPage + 1}
               </span>
               <div className="flex items-center gap-1">
@@ -227,7 +227,7 @@ export function LedgerConnectPanel({
           {loading ? (
             <div className="flex flex-col items-center justify-center gap-3 py-10">
               <Loader2 className="text-primary h-6 w-6 animate-spin" />
-              <p className="text-muted-foreground text-sm">
+              <p className="text-muted-foreground/60 text-sm">
                 Loading accounts...
               </p>
             </div>
@@ -256,7 +256,7 @@ export function LedgerConnectPanel({
                           {formatAddress(address, 6, 6)}
                         </span>
                       </div>
-                      <span className="text-muted-foreground pl-0.5 font-mono text-xs">
+                      <span className="text-muted-foreground/60 pl-0.5 font-mono text-xs">
                         {account.derivationPath}
                       </span>
                     </div>

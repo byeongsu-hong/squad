@@ -113,7 +113,7 @@ export function AccountMenu({ onAddWallet }: AccountMenuProps) {
                   SVM
                 </span>
               </div>
-              <p className="text-muted-foreground truncate font-mono text-xs">
+              <p className="text-muted-foreground/60 truncate font-mono text-xs">
                 {formatAddress(publicKey.toString(), 8, 6)}
               </p>
               <div className="mt-1.5 flex items-center gap-2">
@@ -162,7 +162,7 @@ export function AccountMenu({ onAddWallet }: AccountMenuProps) {
                   EVM
                 </span>
               </div>
-              <p className="text-muted-foreground truncate font-mono text-xs">
+              <p className="text-muted-foreground/60 truncate font-mono text-xs">
                 {formatAddress(evmAddress, 8, 6)}
               </p>
               <div className="mt-1.5 flex items-center gap-2">

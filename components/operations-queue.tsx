@@ -86,7 +86,7 @@ function StatusBadge({ item }: { item: WorkspaceQueueItem }) {
     );
   }
   return (
-    <span className="rounded border border-border px-1.5 py-0.5 font-mono text-[10px] tabular-nums text-muted-foreground">
+    <span className="rounded border border-border px-1.5 py-0.5 font-mono text-[10px] tabular-nums text-muted-foreground/60">
       {item.approvalCount}/{item.multisig.threshold}
     </span>
   );
