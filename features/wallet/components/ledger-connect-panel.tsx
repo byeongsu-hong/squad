@@ -196,7 +196,7 @@ export function LedgerConnectPanel({
               <div className="flex items-center gap-1">
                 <Button
                   variant="outline"
-                  size="icon"
+                  size="icon-sm"
                   className="h-7 w-7"
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 0 || loading}
@@ -205,7 +205,7 @@ export function LedgerConnectPanel({
                 </Button>
                 <Button
                   variant="outline"
-                  size="icon"
+                  size="icon-sm"
                   className="h-7 w-7"
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={loading}
