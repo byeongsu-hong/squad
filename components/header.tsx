@@ -6,16 +6,19 @@ import { useMemo } from "react";
 
 import { ThemeToggle } from "@/components/theme-toggle";
 import { WalletButton } from "@/components/wallet-button";
-import { useProposalsQuery } from "@/lib/hooks/use-proposals-query";
 import { useViewerAddressForMultisig } from "@/lib/hooks/use-viewer-address";
 import { useWorkspaceQueue } from "@/lib/hooks/use-workspace-queue";
 import { cn } from "@/lib/utils";
+import { useProposalsStore } from "@/stores/proposals-store";
 import { useWalletStore } from "@/stores/wallet-store";
 
 function useNavCounts() {
   const { publicKey } = useWalletStore();
   const getViewerAddress = useViewerAddressForMultisig();
-  const { proposals, workspaceMultisigs } = useProposalsQuery();
+  const proposals = useProposalsStore((state) => state.proposals);
+  const workspaceMultisigs = useProposalsStore(
+    (state) => state.workspaceMultisigs
+  );
 
   const queueItems = useWorkspaceQueue({
     workspaceProposals: proposals,

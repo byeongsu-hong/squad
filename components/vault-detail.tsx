@@ -14,10 +14,10 @@ import {
 import { OperationsQueue } from "@/components/operations-queue";
 import { Button } from "@/components/ui/button";
 import { useAddressLabel } from "@/lib/hooks/use-address-label";
-import { useProposalsQuery } from "@/lib/hooks/use-proposals-query";
 import { useViewerAddressForMultisig } from "@/lib/hooks/use-viewer-address";
 import { useWorkspaceMultisigs } from "@/lib/hooks/use-workspace-multisigs";
 import { useWorkspaceQueue } from "@/lib/hooks/use-workspace-queue";
+import { useProposalsStore } from "@/stores/proposals-store";
 import { useWalletStore } from "@/stores/wallet-store";
 import { useChainStore } from "@/stores/chain-store";
 import { normalizeChainConfig } from "@/types/chain";
@@ -174,7 +174,11 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
   const { publicKey } = useWalletStore();
   const getViewerAddress = useViewerAddressForMultisig();
   const { workspaceMultisigMap } = useWorkspaceMultisigs();
-  const { proposals, loading, workspaceMultisigs } = useProposalsQuery();
+  const proposals = useProposalsStore((state) => state.proposals);
+  const loading = useProposalsStore((state) => state.loading);
+  const workspaceMultisigs = useProposalsStore(
+    (state) => state.workspaceMultisigs
+  );
   const { chains } = useChainStore();
   const multisig = workspaceMultisigMap.get(vaultKey) ?? null;
 

@@ -12,15 +12,17 @@ import { useChainStore } from "@/stores/chain-store";
 import { useMultisigStore } from "@/stores/multisig-store";
 import { useProviderAdapterStore } from "@/stores/provider-adapter-store";
 
+import { ProposalsSync } from "./proposals-sync";
 import { WalletAdapterProvider } from "./wallet-adapter-provider";
 import { WalletSync } from "./wallet-sync";
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 15_000,
-      gcTime: 300_000,
-      refetchOnWindowFocus: true,
+      staleTime: 60_000,
+      gcTime: 600_000,
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
       retry: 1,
     },
   },
@@ -85,6 +87,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         >
           <WalletAdapterProvider>
             <WalletSync />
+            <ProposalsSync />
             {children}
             <Toaster />
           </WalletAdapterProvider>

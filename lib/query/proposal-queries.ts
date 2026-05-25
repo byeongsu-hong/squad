@@ -50,7 +50,7 @@ export function proposalsQueryOptions(
         chains
       );
     },
-    staleTime: 60_000,
-    refetchInterval: 60_000,
+    staleTime: 120_000,
+    refetchInterval: 120_000,
   };
 }

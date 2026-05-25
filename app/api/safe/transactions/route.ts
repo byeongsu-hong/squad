@@ -5,7 +5,7 @@ import {
   toWorkspaceProposalFromSafeTransaction,
 } from "@/lib/safe";
 
-const SAFE_TRANSACTIONS_CACHE_TTL_MS = 15_000;
+const SAFE_TRANSACTIONS_CACHE_TTL_MS = 120_000;
 const safeTransactionsCache = new Map<
   string,
   {
