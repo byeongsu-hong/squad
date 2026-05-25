@@ -167,16 +167,45 @@ export function ProposalDetailView({
               {multisig.provider === "safe" ? "Safe" : "Squads"}
             </p>
           </div>
-          {/* X close button */}
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={onBack}
-            className="text-muted-foreground/50 hover:text-foreground shrink-0"
-            aria-label="Close"
-          >
-            <X className="h-4 w-4" />
-          </Button>
+          <div className="flex shrink-0 items-center gap-2">
+            {/* Quick-action: always visible regardless of scroll position */}
+            {!isComplete && actionsSupported && (
+              <>
+                {executeSupported && readyToExecute && (
+                  <Button
+                    size="sm"
+                    disabled={isActionInProgress}
+                    onClick={() => executeByAddress(multisig.address, proposal.transactionIndex, multisig.chainId)}
+                    className="bg-emerald-600 text-white hover:bg-emerald-500 border-emerald-700/30 font-semibold"
+                  >
+                    {isExecuteLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Zap className="h-3.5 w-3.5" />}
+                    Execute
+                  </Button>
+                )}
+                {approveSupported && needsYourSignature && !currentUserApproved && !readyToExecute && (
+                  <Button
+                    size="sm"
+                    disabled={isActionInProgress}
+                    onClick={() => approveByAddress(multisig.address, proposal.transactionIndex, multisig.chainId)}
+                    className="bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20 font-semibold"
+                  >
+                    {isApproveLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+                    Sign
+                  </Button>
+                )}
+              </>
+            )}
+            {/* X close button */}
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={onBack}
+              className="text-muted-foreground/50 hover:text-foreground"
+              aria-label="Close"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -211,70 +240,20 @@ export function ProposalDetailView({
           </div>
         )}
 
-        {/* ── Actions ──────────────────────────────────────────────────── */}
-        {!isComplete && actionsSupported && (
-          <div className="border-border/60 space-y-2 border-b px-5 py-4">
-            {executeSupported && readyToExecute && (
+        {/* ── Secondary actions (Reject + waiting banner) ──────────────── */}
+        {!isComplete && actionsSupported && (rejectSupported && needsYourSignature && !readyToExecute || currentUserApproved && !readyToExecute) && (
+          <div className="border-border/60 border-b px-5 py-3">
+            {rejectSupported && needsYourSignature && !readyToExecute && (
               <Button
-                onClick={() =>
-                  executeByAddress(
-                    multisig.address,
-                    proposal.transactionIndex,
-                    multisig.chainId
-                  )
-                }
+                variant="outline"
+                size="sm"
+                onClick={() => rejectByAddress(multisig.address, proposal.transactionIndex, multisig.chainId)}
                 disabled={isActionInProgress}
-                className="w-full bg-emerald-600 text-white hover:bg-emerald-500 border-emerald-700/30 font-bold"
+                className="w-full"
               >
-                {isExecuteLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                Execute
+                {isRejectLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                Reject
               </Button>
-            )}
-            {needsYourSignature && (
-              <div className="flex gap-2">
-                {approveSupported && !currentUserApproved && (
-                  <Button
-                    onClick={() =>
-                      approveByAddress(
-                        multisig.address,
-                        proposal.transactionIndex,
-                        multisig.chainId
-                      )
-                    }
-                    disabled={isActionInProgress}
-                    className={cn(
-                      "bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20 font-bold",
-                      rejectSupported ? "flex-1" : "w-full"
-                    )}
-                  >
-                    {isApproveLoading ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      <Check className="h-3.5 w-3.5" />
-                    )}
-                    Sign
-                  </Button>
-                )}
-                {rejectSupported && (
-                  <Button
-                    variant="outline"
-                    onClick={() =>
-                      rejectByAddress(
-                        multisig.address,
-                        proposal.transactionIndex,
-                        multisig.chainId
-                      )
-                    }
-                    disabled={isActionInProgress}
-                    className={cn(
-                      approveSupported && !currentUserApproved ? "w-24 shrink-0" : "w-full"
-                    )}
-                  >
-                    {isRejectLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                    Reject
-                  </Button>
-                )}
-              </div>
             )}
             {currentUserApproved && !readyToExecute && (
               <div className="flex items-center justify-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50/60 px-4 py-2.5 text-sm text-emerald-700 dark:border-emerald-900/30 dark:bg-emerald-950/20 dark:text-emerald-400">
