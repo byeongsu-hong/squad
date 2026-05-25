@@ -83,7 +83,6 @@ export function SolanaConnectPanel({
 
   const hasInstalled = installedWallets.length > 0;
   const hasAvailable = availableWallets.length > 0;
-  const hasNoExtensions = !hasInstalled && !isOkxInstalled;
 
   return (
     <div className="flex flex-col gap-4">
@@ -102,12 +101,6 @@ export function SolanaConnectPanel({
             <X className="h-4 w-4" />
           </Button>
         </div>
-      )}
-
-      {hasNoExtensions && (
-        <p className="text-muted-foreground/60 text-xs">
-          No browser extensions detected.
-        </p>
       )}
 
       {hasInstalled && (
@@ -133,7 +126,7 @@ export function SolanaConnectPanel({
       )}
 
       <div className="flex flex-col gap-2">
-        {!hasInstalled && <SectionLabel>Wallets</SectionLabel>}
+        {hasInstalled && <SectionLabel>Other</SectionLabel>}
         <WalletRow
           icon={
             <Image
