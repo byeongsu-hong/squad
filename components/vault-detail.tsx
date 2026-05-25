@@ -237,7 +237,7 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
     <div>
 
       {/* Vault header */}
-      <div className="pb-4 border-b border-border/50">
+      <div className="pb-4 border-b border-border">
         <div className="flex items-start gap-3">
           {/* Vault avatar */}
           <div className={cn(
@@ -355,7 +355,7 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
         {multisig.members.length > 0 && (
           <div className="order-2">
             <div className="border-border bg-card overflow-hidden rounded-xl border">
-              <div className="border-b border-border/50 flex items-center gap-2 px-3 py-2">
+              <div className="border-b border-border flex items-center gap-2 px-3 py-2">
                 <Users className="text-muted-foreground/40 h-3.5 w-3.5" />
                 <span className="text-muted-foreground/50 text-[11px] font-medium">
                   Signers
@@ -370,7 +370,7 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
                 </span>
               </div>
               <TooltipProvider delayDuration={0}>
-                <div className="divide-border/60 divide-y px-2 py-1">
+                <div className="divide-border divide-y px-2 py-1">
                   {multisig.members.map((member) => (
                     <MemberRow
                       key={member.address}

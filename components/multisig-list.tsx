@@ -332,7 +332,7 @@ export function MultisigList({ selectedKey }: { selectedKey?: string }) {
 
         {/* Loading skeleton */}
         {loading && (
-          <div className="divide-border/50 divide-y">
+          <div className="divide-border divide-y">
             {Array.from({ length: 4 }).map((_, i) => (
               <VaultRowSkeleton key={i} />
             ))}
@@ -341,7 +341,7 @@ export function MultisigList({ selectedKey }: { selectedKey?: string }) {
 
         {/* Vault rows */}
         {!loading && hasMultisigs && filteredRegistryRows.length > 0 && (
-          <div className="divide-border/50 divide-y">
+          <div className="divide-border divide-y">
             {filteredRegistryRows.map((row) => {
               const multisig = getMultisigForRow(row);
               if (!multisig) return null;

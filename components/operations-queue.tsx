@@ -434,12 +434,12 @@ export function OperationsQueue({
   if (loading && items.length === 0) {
     return (
       <div className="border-border bg-card overflow-hidden rounded-xl border">
-        <div className="border-b border-border/50 flex items-center gap-2 px-3 py-2">
+        <div className="border-b border-border flex items-center gap-2 px-3 py-2">
           <Skeleton className="h-1.5 w-1.5 rounded-full" />
           <Skeleton className="h-2.5 w-20 rounded-sm" />
           <Skeleton className="h-4 w-6 rounded-full" />
         </div>
-        <div className="divide-border/50 divide-y">
+        <div className="divide-border divide-y">
           {Array.from({ length: 5 }).map((_, i) => (
             <RowSkeleton key={i} compact={compact} />
           ))}
@@ -588,7 +588,7 @@ export function OperationsQueue({
         <div className="space-y-4">
           {actionItems.length > 0 && (
             <div className="border-border bg-card overflow-hidden rounded-xl border">
-              <div className="border-b border-border/50 flex items-center gap-2 px-3 py-2">
+              <div className="border-b border-border flex items-center gap-2 px-3 py-2">
                 <span className="bg-primary h-1.5 w-1.5 rounded-full" />
                 <p className="text-muted-foreground/50 text-[11px] font-medium">
                   Action needed
@@ -638,7 +638,7 @@ export function OperationsQueue({
                   )}
                 </div>
               </div>
-              <div className="divide-border/50 divide-y">
+              <div className="divide-border divide-y">
                 {actionItems.map((item) => (
                   <QueueRow
                     key={item.focusKey}
@@ -680,7 +680,7 @@ export function OperationsQueue({
           {historyItems.length > 0 && (
             <div>
               <div className="border-border bg-card overflow-hidden rounded-xl border">
-                <div className="border-b border-border/50 flex items-center gap-2 px-3 py-2">
+                <div className="border-b border-border flex items-center gap-2 px-3 py-2">
                   <span className="bg-muted-foreground/25 h-1.5 w-1.5 rounded-full" />
                   <p className="text-muted-foreground/50 text-[11px] font-medium">
                     History
@@ -689,7 +689,7 @@ export function OperationsQueue({
                     {historyItems.length}
                   </span>
                 </div>
-                <div className="divide-border/50 divide-y">
+                <div className="divide-border divide-y">
                   {paginatedHistory.map((item) => (
                     <QueueRow
                       key={item.focusKey}

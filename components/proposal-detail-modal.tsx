@@ -226,7 +226,7 @@ export function ProposalDetailView({
   return (
     <div className="flex h-full flex-col">
       {/* ── Sticky header ──────────────────────────────────────────────── */}
-      <div className="border-border/60 bg-card shrink-0 border-b px-5 py-4">
+      <div className="border-border bg-card shrink-0 border-b px-5 py-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             {/* Vault label + tx index + status pill */}
@@ -347,7 +347,7 @@ export function ProposalDetailView({
         )}
 
         {/* ── Signatures ───────────────────────────────────────────────── */}
-        <div className="border-border/60 border-b px-5 py-4">
+        <div className="border-border border-b px-5 py-4">
           {/* Section label row */}
           <div className="mb-3 flex items-center gap-2">
             <Users className="text-muted-foreground/40 h-3.5 w-3.5 shrink-0" />
@@ -485,7 +485,7 @@ export function ProposalDetailView({
         </div>
 
         {/* ── Transaction data ─────────────────────────────────────────── */}
-        <div className="border-border/60 border-b">
+        <div className="border-border border-b">
           <button
             type="button"
             onClick={() => setPayloadOpen(!payloadOpen)}
@@ -531,7 +531,7 @@ export function ProposalDetailView({
               )}
 
               {(payload && "transactionPda" in payload && payload.transactionPda) || (payload?.type === "vault" && payload.vaultAddress) ? (
-                <div className="border-border divide-border/50 divide-y rounded-xl border overflow-hidden px-3">
+                <div className="border-border divide-border divide-y rounded-xl border overflow-hidden px-3">
                   {payload && "transactionPda" in payload && payload.transactionPda && (
                     <PayloadField label="Transaction PDA" value={payload.transactionPda} copyable />
                   )}
@@ -542,7 +542,7 @@ export function ProposalDetailView({
               ) : null}
 
               {payload?.type === "safe" && (
-                <div className="border-border divide-border/50 divide-y rounded-xl border overflow-hidden px-3">
+                <div className="border-border divide-border divide-y rounded-xl border overflow-hidden px-3">
                   {payload.safeTxHash && (
                     <PayloadField label="Safe tx hash" value={payload.safeTxHash} copyable />
                   )}
@@ -559,7 +559,7 @@ export function ProposalDetailView({
                     <PayloadField label="Calldata" value={payload.data} mono />
                   )}
                   {payload.dataDecoded != null && (
-                    <div className="border-t border-border/50 py-2">
+                    <div className="border-t border-border py-2">
                       <p className="text-muted-foreground/40 mb-1.5 text-[11px] font-medium">Decoded</p>
                       <pre className="overflow-x-auto font-mono text-[11px] text-muted-foreground/70 leading-relaxed">
                         {JSON.stringify(payload.dataDecoded, null, 2)}
@@ -574,11 +574,11 @@ export function ProposalDetailView({
                   const fmt = formatConfigAction(action as ConfigAction);
                   return (
                     <div key={i} className="border-border rounded-xl border overflow-hidden">
-                      <div className="border-border/50 bg-muted/50 flex items-center gap-2 border-b px-3 py-2.5">
+                      <div className="border-border bg-muted/50 flex items-center gap-2 border-b px-3 py-2.5">
                         <span className="text-muted-foreground/40 font-mono text-[10px]">#{i + 1}</span>
                         <span className="text-foreground text-[13px] font-semibold">{fmt.type}</span>
                       </div>
-                      <div className="divide-border/50 divide-y">
+                      <div className="divide-border divide-y">
                         {fmt.fields.map((f, j) => (
                           <div key={j} className="px-3 py-2.5">
                             <p className="text-muted-foreground/40 mb-1 text-[11px] font-medium">{f.label}</p>
@@ -611,7 +611,7 @@ export function ProposalDetailView({
                       )}
                     </div>
                     {/* Program address */}
-                    <div className="border-border/50 border-b px-3 py-2.5">
+                    <div className="border-border border-b px-3 py-2.5">
                       <AddressWithLabel
                         address={instr.programAddress}
                         showFull
@@ -622,13 +622,13 @@ export function ProposalDetailView({
                     </div>
                     {/* Accounts */}
                     {instr.accountAddresses.length > 0 && (
-                      <div className="border-border/50 border-b">
-                        <div className="border-border/30 border-b px-3 py-2">
+                      <div className="border-border border-b">
+                        <div className="border-border border-b px-3 py-2">
                           <p className="text-muted-foreground/40 text-[11px] font-medium">
                             Accounts ({instr.accountAddresses.length})
                           </p>
                         </div>
-                        <div className="divide-border/30 divide-y">
+                        <div className="divide-border/50 divide-y">
                           {instr.accountAddresses.map((address, j) => (
                             <div key={j} className="flex items-center gap-3 px-3 py-2">
                               <span className="text-muted-foreground/40 w-5 shrink-0 text-right font-mono text-[10px]">
@@ -648,7 +648,7 @@ export function ProposalDetailView({
                     {/* Data */}
                     {instr.data && instr.data !== "1" && (
                       <div>
-                        <div className="border-border/30 border-b px-3 py-2">
+                        <div className="border-border border-b px-3 py-2">
                           <p className="text-muted-foreground/40 text-[11px] font-medium">Data</p>
                         </div>
                         <code className="block overflow-x-auto px-3 py-2.5 font-mono text-[11px] text-muted-foreground/70 break-all">

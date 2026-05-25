@@ -55,7 +55,7 @@ export function ProviderAdaptersPanel() {
           </span>
         </div>
         {squadsChains.length > 0 && (
-          <div className="divide-border/40 divide-y px-4 py-1">
+          <div className="divide-border/50 divide-y px-4 py-1">
             {squadsChains.map((chain) => (
               <div key={chain.id} className="flex items-center justify-between py-2.5">
                 <span className="text-foreground/80 text-[13px] font-medium">{chain.name}</span>
