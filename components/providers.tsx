@@ -11,7 +11,6 @@ import { resolveInitialMultisigs } from "@/lib/initial-config";
 import { useChainStore } from "@/stores/chain-store";
 import { useMultisigStore } from "@/stores/multisig-store";
 import { useProviderAdapterStore } from "@/stores/provider-adapter-store";
-import { getMultisigAccountKey } from "@/types/multisig";
 
 import { WalletAdapterProvider } from "./wallet-adapter-provider";
 import { WalletSync } from "./wallet-sync";
@@ -37,7 +36,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
     (state) => state.initializeSettings
   );
   const setMultisigs = useMultisigStore((state) => state.setMultisigs);
-  const selectMultisig = useMultisigStore((state) => state.selectMultisig);
 
   useEffect(() => {
     if (didInitRef.current) return;
@@ -48,7 +46,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       initializeMultisigs();
       initializeProviderAdapterSettings();
 
-      const { multisigs, selectedMultisigKey } = useMultisigStore.getState();
+      const { multisigs } = useMultisigStore.getState();
       const seededMultisigs = await resolveInitialMultisigs();
       if (seededMultisigs.length === 0) return;
 
@@ -67,10 +65,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
       if (missingSeeds.length === 0) return;
 
       setMultisigs([...multisigs, ...missingSeeds]);
-
-      if (!selectedMultisigKey) {
-        selectMultisig(getMultisigAccountKey(multisigs[0] ?? missingSeeds[0]));
-      }
     };
 
     void run();
@@ -78,7 +72,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
     initializeChains,
     initializeMultisigs,
     initializeProviderAdapterSettings,
-    selectMultisig,
     setMultisigs,
   ]);
 

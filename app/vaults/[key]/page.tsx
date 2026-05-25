@@ -1,9 +1,10 @@
 "use client";
 
-import { use, useEffect } from "react";
+import { use } from "react";
 import { useRouter } from "next/navigation";
 
-import { useMultisigStore } from "@/stores/multisig-store";
+import { MultisigList } from "@/components/multisig-list";
+import { VaultDetail } from "@/components/vault-detail";
 
 export default function VaultDetailPage({
   params,
@@ -13,12 +14,23 @@ export default function VaultDetailPage({
   const { key } = use(params);
   const vaultKey = decodeURIComponent(key);
   const router = useRouter();
-  const selectMultisig = useMultisigStore((s) => s.selectMultisig);
 
-  useEffect(() => {
-    selectMultisig(vaultKey);
-    router.replace("/vaults");
-  }, [vaultKey, selectMultisig, router]);
+  return (
+    <div className="flex items-start gap-0">
+      {/* List pane — hidden on mobile */}
+      <div className="min-w-0 flex-1 max-lg:hidden lg:pr-5">
+        <div className="mx-auto max-w-3xl">
+          <MultisigList selectedKey={vaultKey} />
+        </div>
+      </div>
 
-  return null;
+      {/* Detail panel — full-screen on mobile, sticky side panel on desktop */}
+      <div className="bg-background border-border flex-1 px-4 py-6 lg:flex-none lg:w-[44%] lg:min-w-[400px] lg:border-l lg:sticky lg:top-[54px] lg:max-h-[calc(100svh-54px)] lg:overflow-y-auto">
+        <VaultDetail
+          vaultKey={vaultKey}
+          onBack={() => router.push("/vaults")}
+        />
+      </div>
+    </div>
+  );
 }

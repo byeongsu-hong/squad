@@ -1,14 +1,10 @@
 import { create } from "zustand";
 
 import { multisigStorage } from "@/lib/storage";
-import {
-  type MultisigAccount,
-  getMultisigAccountKey,
-} from "@/types/multisig";
+import type { MultisigAccount } from "@/types/multisig";
 
 interface MultisigStore {
   multisigs: MultisigAccount[];
-  selectedMultisigKey: string | null;
   initialized: boolean;
   initializeMultisigs: () => void;
   setMultisigs: (
@@ -29,19 +25,16 @@ interface MultisigStore {
     chainId?: string
   ) => void;
   resetAll: () => void;
-  selectMultisig: (publicKey: string | null) => void;
 }
 
-export const useMultisigStore = create<MultisigStore>((set, get) => ({
+export const useMultisigStore = create<MultisigStore>((set) => ({
   multisigs: [],
-  selectedMultisigKey: null,
   initialized: false,
 
   initializeMultisigs: () => {
     const storedMultisigs = multisigStorage.getMultisigs();
     set({
       multisigs: storedMultisigs,
-      selectedMultisigKey: null,
       initialized: true,
     });
   },
@@ -80,22 +73,7 @@ export const useMultisigStore = create<MultisigStore>((set, get) => ({
             (chainId ? m.chainId === chainId : true)
           )
       );
-      const deletedSelectionKey = chainId
-        ? `${chainId}:${publicKey}`
-        : publicKey;
-      const selectedMultisigKey =
-        state.selectedMultisigKey === deletedSelectionKey ||
-        state.selectedMultisigKey === publicKey
-          ? multisigs[0]
-            ? getMultisigAccountKey(multisigs[0])
-            : null
-          : state.selectedMultisigKey;
-
-      if (selectedMultisigKey) {
-        multisigStorage.setSelectedMultisigKey(selectedMultisigKey);
-      }
-
-      return { multisigs, selectedMultisigKey };
+      return { multisigs };
     });
   },
 
@@ -127,15 +105,9 @@ export const useMultisigStore = create<MultisigStore>((set, get) => ({
 
   resetAll: () => {
     multisigStorage.saveMultisigs([]);
-    multisigStorage.clearSelectedMultisigKey();
     set({
       multisigs: [],
-      selectedMultisigKey: null,
       initialized: true,
     });
-  },
-
-  selectMultisig: (selectionKey) => {
-    set({ selectedMultisigKey: selectionKey });
   },
 }));

@@ -74,7 +74,7 @@ function VaultRowSkeleton() {
   );
 }
 
-export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
+export function MultisigList({ selectedKey }: { selectedKey?: string }) {
   const router = useRouter();
   const [selectedForDeletion, setSelectedForDeletion] = useState<Set<string>>(
     new Set()
@@ -95,8 +95,6 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
     setMultisigs,
     deleteMultisig,
     updateMultisigLabel,
-    selectMultisig,
-    selectedMultisigKey,
   } = useMultisigStore();
 
   const { loading, loadForCreator, canLoadFromChain } = useCreatorMultisigs({
@@ -237,10 +235,7 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
 
   const handleOpenDesk = (multisig: MultisigAccount) => {
     const multisigKey = getMultisigAccountKey(multisig);
-    selectMultisig(multisigKey);
-    if (!splitPane) {
-      router.push(`/vaults/${encodeURIComponent(multisigKey)}`);
-    }
+    router.push(`/vaults/${encodeURIComponent(multisigKey)}`);
   };
 
   const getMultisigForRow = (row: RegistrySummaryRow) =>
@@ -364,7 +359,7 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
               if (!multisig) return null;
 
               const isSelected = selectedForDeletion.has(row.key);
-              const isActiveDesk = matchesMultisigSelectionKey(multisig, selectedMultisigKey);
+              const isActiveDesk = selectedKey != null && matchesMultisigSelectionKey(multisig, selectedKey);
               const isEditing = editingLabel === row.key;
 
               return (
