@@ -480,7 +480,7 @@ export function ExportImportController({
 
           <div className="space-y-4 px-6 py-5">
             <div className="bg-muted rounded-xl p-4 grid gap-2">
-              <p className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">
+              <p className="text-muted-foreground/50 text-[11px] font-medium tracking-wide">
                 What gets cleared
               </p>
               <p className="text-foreground/80 text-sm">
@@ -490,7 +490,7 @@ export function ExportImportController({
             </div>
             <div className="grid gap-2 sm:grid-cols-3">
               <div className="bg-muted rounded-xl px-3 py-3">
-                <p className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">
+                <p className="text-muted-foreground/50 text-[11px] font-medium tracking-wide">
                   Multisigs
                 </p>
                 <p className="text-foreground mt-1 text-lg font-medium">
@@ -498,7 +498,7 @@ export function ExportImportController({
                 </p>
               </div>
               <div className="bg-muted rounded-xl px-3 py-3">
-                <p className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">
+                <p className="text-muted-foreground/50 text-[11px] font-medium tracking-wide">
                   Custom chains
                 </p>
                 <p className="text-foreground mt-1 text-lg font-medium">
@@ -506,7 +506,7 @@ export function ExportImportController({
                 </p>
               </div>
               <div className="bg-muted rounded-xl px-3 py-3">
-                <p className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">
+                <p className="text-muted-foreground/50 text-[11px] font-medium tracking-wide">
                   Labels
                 </p>
                 <p className="text-foreground mt-1 text-lg font-medium">
@@ -646,7 +646,7 @@ function ExportImportExportPanel({
           <>
             <div className="grid gap-2">
               <div className="bg-muted rounded-xl px-3 py-2">
-                <p className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">
+                <p className="text-muted-foreground/50 text-[11px] font-medium tracking-wide">
                   Squads chains
                 </p>
                 <p className="text-foreground mt-1 text-sm font-medium">
@@ -654,7 +654,7 @@ function ExportImportExportPanel({
                 </p>
               </div>
               <div className="bg-muted rounded-xl px-3 py-2">
-                <p className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">
+                <p className="text-muted-foreground/50 text-[11px] font-medium tracking-wide">
                   Multisigs
                 </p>
                 <p className="text-foreground mt-1 text-sm font-medium">
@@ -662,7 +662,7 @@ function ExportImportExportPanel({
                 </p>
               </div>
               <div className="bg-muted rounded-xl px-3 py-2">
-                <p className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">
+                <p className="text-muted-foreground/50 text-[11px] font-medium tracking-wide">
                   Safe-ready chains
                 </p>
                 <p className="text-foreground mt-1 text-sm font-medium">

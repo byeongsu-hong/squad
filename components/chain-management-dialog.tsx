@@ -293,7 +293,7 @@ function ChainEditor({
       }
     >
       {embedded && (
-        <p className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">
+        <p className="text-muted-foreground/50 text-[11px] font-medium tracking-wide">
           {editingChain ? "Edit Chain" : "New Chain"}
         </p>
       )}
@@ -469,7 +469,7 @@ function ChainRegistry({
       }
     >
       <div className="flex items-center justify-between">
-        <p className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">Configured Chains</p>
+        <p className="text-muted-foreground/50 text-[11px] font-medium tracking-wide">Configured Chains</p>
         <Button type="button" variant="outline" onClick={onResetToDefaults}>
           <RotateCcw className="h-3 w-3" />
           Reset to Defaults

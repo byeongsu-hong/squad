@@ -96,7 +96,7 @@ export function ManageTagsDialog({
 
         <div className="space-y-4 py-4">
           <div className="space-y-1.5">
-            <Label htmlFor="new-tag" className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">
+            <Label htmlFor="new-tag" className="text-muted-foreground/50 text-[11px] font-medium tracking-wide">
               Add Tag
             </Label>
             <div className="flex gap-2">
@@ -122,7 +122,7 @@ export function ManageTagsDialog({
           {allGlobalTags.length > 0 &&
             allGlobalTags.some((tag) => !tags.includes(tag)) && (
               <div className="space-y-1.5">
-                <p className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">Available</p>
+                <p className="text-muted-foreground/50 text-[11px] font-medium tracking-wide">Available</p>
                 <div className="flex flex-wrap gap-1.5">
                   {allGlobalTags
                     .filter((tag) => !tags.includes(tag))
@@ -143,7 +143,7 @@ export function ManageTagsDialog({
 
           {tags.length > 0 && (
             <div className="space-y-1.5">
-              <p className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">Current</p>
+              <p className="text-muted-foreground/50 text-[11px] font-medium tracking-wide">Current</p>
               <div className="flex flex-wrap gap-2">
                 {tags.map((tag) => (
                   <span
