@@ -215,7 +215,7 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
 
   if (!multisig) {
     return (
-      <div className="mx-auto max-w-[1200px]">
+      <div>
         <div className="flex flex-col items-center gap-3 py-20 text-center">
           <div className="flex w-full justify-end px-2">{CloseButton}</div>
           <p className="text-foreground text-[13px] font-semibold">Vault not found</p>
@@ -234,7 +234,7 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
   const explorerUrl = chainConfig ? normalizeChainConfig(chainConfig).explorerUrl : null;
 
   return (
-    <div className="max-w-[1200px]">
+    <div>
 
       {/* Vault header */}
       <div className="pb-4 border-b border-border/50">

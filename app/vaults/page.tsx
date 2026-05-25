@@ -14,7 +14,7 @@ function VaultsContent() {
     <div className="flex items-start gap-0">
       {/* List pane — hidden on mobile when detail is open */}
       <div className={cn("min-w-0 flex-1", selectedMultisigKey ? "max-lg:hidden lg:pr-5" : "")}>
-        <div className="mx-auto max-w-[1200px]">
+        <div className="mx-auto max-w-3xl">
           <MultisigList splitPane />
         </div>
       </div>

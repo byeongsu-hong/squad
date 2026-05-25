@@ -59,7 +59,7 @@ function SettingsPageContent() {
   );
 
   return (
-    <div className="mx-auto max-w-[1200px] space-y-0">
+    <div className="mx-auto max-w-5xl space-y-0">
       <div className="border-border -mb-px border-b">
         <nav className="flex gap-1 overflow-x-auto">
           {TABS.map((tab) => {

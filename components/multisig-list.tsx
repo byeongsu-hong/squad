@@ -406,10 +406,7 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
                   </div>
 
                   {/* Main info */}
-                  <div
-                    className="min-w-0 flex-1"
-                    onClick={(e) => e.stopPropagation()}
-                  >
+                  <div className="min-w-0 flex-1">
                     {isEditing ? (
                       <Input
                         value={labelInput}
