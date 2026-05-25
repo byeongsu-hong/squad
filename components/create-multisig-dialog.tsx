@@ -234,7 +234,7 @@ export function CreateMultisigDialog({
         className="max-h-[80vh] overflow-y-auto sm:max-w-[600px]"
       >
         <DialogHeader>
-          <DialogTitle>Create Multisig</DialogTitle>
+          <DialogTitle>Create Vault</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>

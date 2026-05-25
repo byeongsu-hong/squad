@@ -130,7 +130,7 @@ function ColumnHeaders({
 }) {
   const cols = compact
     ? ["#", "Chain", "Status", "Progress", "Age", ""]
-    : ["Multisig", "#", "Chain", "Status", "Progress", "Age", ""];
+    : ["Vault", "#", "Chain", "Status", "Progress", "Age", ""];
   return (
     <div
       className="border-border bg-muted grid items-center border-b px-3 py-2"

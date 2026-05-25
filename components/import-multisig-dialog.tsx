@@ -227,7 +227,7 @@ export function ImportMultisigDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent key={`import-dialog-${open}`} className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Import Multisig</DialogTitle>
+          <DialogTitle>Import Vault</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
