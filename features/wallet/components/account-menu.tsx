@@ -7,7 +7,6 @@ import {
   Globe,
   LogOut,
   PlugZap,
-  Plus,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAccount } from "wagmi";
@@ -207,12 +206,9 @@ export function AccountMenu({ onAddWallet }: AccountMenuProps) {
                 className="flex cursor-pointer items-center gap-2.5 rounded-md px-3 py-2"
               >
                 <div className="bg-muted flex h-6 w-6 shrink-0 items-center justify-center rounded-md">
-                  <Plus className="text-muted-foreground h-3.5 w-3.5" />
+                  <Globe className="text-muted-foreground h-3.5 w-3.5" />
                 </div>
-                <div className="flex min-w-0 flex-1 items-center gap-2">
-                  <Globe className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
-                  <span className="text-[13px]">Solana Wallet</span>
-                </div>
+                <span className="min-w-0 flex-1 text-[13px]">Solana Wallet</span>
               </DropdownMenuItem>
             )}
 
@@ -222,12 +218,9 @@ export function AccountMenu({ onAddWallet }: AccountMenuProps) {
                 className="flex cursor-pointer items-center gap-2.5 rounded-md px-3 py-2"
               >
                 <div className="bg-muted flex h-6 w-6 shrink-0 items-center justify-center rounded-md">
-                  <Plus className="text-muted-foreground h-3.5 w-3.5" />
+                  <PlugZap className="text-muted-foreground h-3.5 w-3.5" />
                 </div>
-                <div className="flex min-w-0 flex-1 items-center gap-2">
-                  <PlugZap className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
-                  <span className="text-[13px]">Ethereum Wallet</span>
-                </div>
+                <span className="min-w-0 flex-1 text-[13px]">Ethereum Wallet</span>
               </DropdownMenuItem>
             )}
           </>

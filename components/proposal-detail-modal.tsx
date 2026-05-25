@@ -617,7 +617,9 @@ export function ProposalDetailView({
                       {wellKnown ? (
                         <span className="text-[13px] font-semibold text-foreground">{wellKnown.label}</span>
                       ) : (
-                        <span className="text-muted-foreground/50 text-[11px] font-medium">Program</span>
+                        <span className="font-mono text-muted-foreground/60 text-[11px]">
+                          {instr.programAddress.slice(0, 8)}…{instr.programAddress.slice(-4)}
+                        </span>
                       )}
                     </div>
                     {/* Program address */}
