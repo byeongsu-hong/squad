@@ -12,7 +12,6 @@ import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ledgerService } from "@/lib/ledger";
 import { cn } from "@/lib/utils";
@@ -151,7 +150,7 @@ export function LedgerConnectPanel({
                       id={`path-${type}`}
                       className="mt-0.5"
                     />
-                    <Label
+                    <label
                       htmlFor={`path-${type}`}
                       className={cn(
                         "flex cursor-pointer flex-col gap-0.5",
@@ -164,7 +163,7 @@ export function LedgerConnectPanel({
                       <span className="text-muted-foreground/60 font-mono text-xs">
                         {pattern.description}
                       </span>
-                    </Label>
+                    </label>
                   </div>
                 )
               )}
