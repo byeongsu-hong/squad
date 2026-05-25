@@ -3,12 +3,13 @@
 import { Suspense } from "react";
 
 import { MultisigList } from "@/components/multisig-list";
+import { PageStage } from "@/components/page-stage";
 
 function VaultsContent() {
   return (
-    <div className="mx-auto w-full max-w-3xl">
+    <PageStage>
       <MultisigList />
-    </div>
+    </PageStage>
   );
 }
 

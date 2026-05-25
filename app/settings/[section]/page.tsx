@@ -4,12 +4,12 @@ import { Database, Layers3, Network, Tag } from "lucide-react";
 import Link from "next/link";
 import { use, useMemo } from "react";
 
-import { Button } from "@/components/ui/button";
-
 import { AddressLabelManagerController } from "@/components/address-label-manager-dialog";
 import { ChainManagementController } from "@/components/chain-management-dialog";
 import { ExportImportController } from "@/components/export-import-dialog";
+import { PageStage } from "@/components/page-stage";
 import { ProviderAdaptersPanel } from "@/components/provider-adapters-panel";
+import { Button } from "@/components/ui/button";
 import { useAddressLabels } from "@/lib/hooks/use-address-label";
 import { cn } from "@/lib/utils";
 import { useChainStore } from "@/stores/chain-store";
@@ -27,7 +27,9 @@ const TABS: {
 ];
 
 function isValidSection(s: string): s is WorkspaceSettingsSection {
-  return s === "chains" || s === "adapters" || s === "registry" || s === "labels";
+  return (
+    s === "chains" || s === "adapters" || s === "registry" || s === "labels"
+  );
 }
 
 export default function SettingsSectionPage({
@@ -54,7 +56,7 @@ export default function SettingsSectionPage({
   );
 
   return (
-    <div className="mx-auto max-w-5xl">
+    <PageStage width="settings">
       <div className="border-border -mb-px border-b">
         <nav className="flex gap-1 overflow-x-auto">
           {TABS.map((tab) => {
@@ -69,7 +71,7 @@ export default function SettingsSectionPage({
                 className={cn(
                   "h-auto gap-1.5 rounded-none border-b-2 px-4 py-3 text-[13px] whitespace-nowrap transition-colors",
                   active
-                    ? "border-transparent border-b-primary text-foreground -mb-px font-semibold hover:bg-transparent"
+                    ? "border-b-primary text-foreground -mb-px border-transparent font-semibold hover:bg-transparent"
                     : "text-muted-foreground/60 hover:text-foreground border-transparent hover:bg-transparent"
                 )}
               >
@@ -96,6 +98,6 @@ export default function SettingsSectionPage({
           <AddressLabelManagerController embedded />
         ) : null}
       </div>
-    </div>
+    </PageStage>
   );
 }
