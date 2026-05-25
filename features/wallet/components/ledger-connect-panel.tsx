@@ -98,7 +98,7 @@ export function LedgerConnectPanel({
       <Button
         variant="ghost"
         onClick={onBack}
-        className="text-muted-foreground hover:text-foreground mb-6 -ml-1.5 h-auto justify-start gap-1.5 px-1.5 py-1 text-sm"
+        className="text-muted-foreground hover:text-foreground mb-6 -ml-1.5 h-auto justify-start gap-1.5 px-1.5 py-1 text-[13px]"
       >
         <ChevronLeft className="h-4 w-4" />
         Back to wallets
@@ -120,10 +120,10 @@ export function LedgerConnectPanel({
           </div>
 
           <div className="space-y-1.5 text-center">
-            <h3 className="text-base font-semibold">
+            <h3 className="text-[15px] font-semibold">
               {error ? "Connection Failed" : "Connect Ledger Device"}
             </h3>
-            <p className="text-muted-foreground/60 text-sm">
+            <p className="text-muted-foreground/60 text-[13px]">
               {error
                 ? error
                 : "Connect your Ledger device and open the Solana app, then click connect."}
@@ -188,7 +188,7 @@ export function LedgerConnectPanel({
       {step === "select" && (
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-base font-semibold">Select Account</h3>
+            <h3 className="text-[15px] font-semibold">Select Account</h3>
             <div className="flex items-center gap-2">
               <span className="text-muted-foreground/60 text-[11px]">
                 Page {currentPage + 1}
@@ -251,7 +251,7 @@ export function LedgerConnectPanel({
                         >
                           {accountNumber}
                         </Badge>
-                        <span className="font-mono text-sm font-medium">
+                        <span className="font-mono text-[13px] font-medium">
                           {formatAddress(address, 6, 6)}
                         </span>
                       </div>

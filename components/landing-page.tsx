@@ -53,10 +53,10 @@ export function LandingPage() {
           <Shield className="text-muted-foreground/40 h-8 w-8" />
         </div>
         <div className="space-y-1.5">
-          <p className="text-foreground text-base font-semibold">
+          <p className="text-foreground text-[15px] font-semibold">
             {isConnected ? "No vaults yet" : "Get started"}
           </p>
-          <p className="text-muted-foreground/60 max-w-xs text-sm">
+          <p className="text-muted-foreground/60 max-w-xs text-[13px]">
             {isConnected
               ? "Import a vault to start signing."
               : "Connect a wallet to get started."}

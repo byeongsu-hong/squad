@@ -325,8 +325,8 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
             <Shield className="text-muted-foreground/60 h-7 w-7" />
           </div>
           <div className="space-y-1.5">
-            <p className="text-foreground text-base font-semibold">No vaults yet</p>
-            <p className="text-muted-foreground/60 text-sm">
+            <p className="text-foreground text-[15px] font-semibold">No vaults yet</p>
+            <p className="text-muted-foreground/60 text-[13px]">
               Add a vault to start monitoring.
             </p>
           </div>
@@ -338,7 +338,7 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
         multisigs.length > 0 &&
         !loading && (
           <div className="py-12 text-center">
-            <p className="text-muted-foreground/60 text-sm">
+            <p className="text-muted-foreground/60 text-[13px]">
               No vaults match the current filters.
             </p>
           </div>

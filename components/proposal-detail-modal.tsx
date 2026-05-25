@@ -373,7 +373,7 @@ export function ProposalDetailView({
                 style={{ width: `${approvalPct}%` }}
               />
             </div>
-            <span className="text-foreground shrink-0 font-mono text-sm font-bold tabular-nums">
+            <span className="text-foreground shrink-0 font-mono text-[15px] font-bold tabular-nums">
               {approvalCount}
               <span className="text-muted-foreground/40">/{multisig.threshold}</span>
             </span>

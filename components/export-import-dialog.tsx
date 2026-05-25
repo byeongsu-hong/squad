@@ -434,7 +434,7 @@ export function ExportImportController() {
       <Dialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
         <DialogContent
           showCloseButton={false}
-          className="border-destructive/20 max-w-[30rem] gap-0 overflow-hidden bg-[linear-gradient(180deg,rgba(35,20,20,0.98),rgba(20,15,18,0.99))] p-0"
+          className="border-destructive/20 max-w-[30rem] gap-0 overflow-hidden bg-card p-0"
         >
           <div className="border-destructive/15 border-b px-6 py-5">
             <div className="flex items-start gap-4">
@@ -442,10 +442,10 @@ export function ExportImportController() {
                 <AlertTriangle className="text-destructive/70 h-5 w-5" />
               </div>
               <div className="space-y-2">
-                <DialogTitle className="text-[1.1rem]">
+                <DialogTitle>
                   Reset imported workspace state?
                 </DialogTitle>
-                <DialogDescription className="max-w-md">
+                <DialogDescription className="max-w-md text-[13px] leading-5">
                   Use this only when a YAML import left the local workspace in a
                   broken state. This action cannot be undone.
                 </DialogDescription>
@@ -458,7 +458,7 @@ export function ExportImportController() {
               <p className="text-muted-foreground/50 text-[11px] font-medium">
                 What gets cleared
               </p>
-              <p className="text-foreground/80 text-sm">
+              <p className="text-foreground/80 text-[13px]">
                 Saved vaults, custom chains, address labels, provider settings,
                 and current workspace selections.
               </p>
@@ -468,7 +468,7 @@ export function ExportImportController() {
                 <p className="text-muted-foreground/50 text-[11px] font-medium">
                   Vaults
                 </p>
-                <p className="text-foreground mt-1 text-lg font-medium">
+                <p className="text-foreground mt-1 text-[15px] font-semibold tabular-nums">
                   {multisigCount}
                 </p>
               </div>
@@ -476,7 +476,7 @@ export function ExportImportController() {
                 <p className="text-muted-foreground/50 text-[11px] font-medium">
                   Custom chains
                 </p>
-                <p className="text-foreground mt-1 text-lg font-medium">
+                <p className="text-foreground mt-1 text-[15px] font-semibold tabular-nums">
                   {customChainCount}
                 </p>
               </div>
@@ -484,14 +484,14 @@ export function ExportImportController() {
                 <p className="text-muted-foreground/50 text-[11px] font-medium">
                   Labels
                 </p>
-                <p className="text-foreground mt-1 text-lg font-medium">
+                <p className="text-foreground mt-1 text-[15px] font-semibold tabular-nums">
                   {labelCount}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="border-border flex items-center justify-between border-t px-6 py-5">
+          <div className="flex items-center justify-between px-6 pb-5 pt-2">
             <Button
               type="button"
               variant="outline"
@@ -574,7 +574,7 @@ function ExportImportExportPanel({
             <p className="text-muted-foreground/50 text-[11px] font-medium">
               Squads
             </p>
-            <p className="text-foreground text-sm font-semibold tabular-nums">
+            <p className="text-foreground text-[15px] font-semibold tabular-nums">
               {operationalSquadsChains.length}
             </p>
           </div>
@@ -583,7 +583,7 @@ function ExportImportExportPanel({
             <p className="text-muted-foreground/50 text-[11px] font-medium">
               Vaults
             </p>
-            <p className="text-foreground text-sm font-semibold tabular-nums">
+            <p className="text-foreground text-[15px] font-semibold tabular-nums">
               {multisigs.length}
             </p>
           </div>
@@ -592,7 +592,7 @@ function ExportImportExportPanel({
             <p className="text-muted-foreground/50 text-[11px] font-medium">
               Safe chains
             </p>
-            <p className="text-foreground text-sm font-semibold tabular-nums">
+            <p className="text-foreground text-[15px] font-semibold tabular-nums">
               {preparedSafeChains.length}
             </p>
           </div>

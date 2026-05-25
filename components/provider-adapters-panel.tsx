@@ -45,7 +45,7 @@ export function ProviderAdaptersPanel() {
       <div className="border-border bg-card overflow-hidden rounded-xl border">
         <div className="border-border/50 flex items-center justify-between gap-3 border-b px-4 py-3">
           <div className="space-y-0.5">
-            <p className="text-foreground text-sm font-semibold">SVM / Squads</p>
+            <p className="text-foreground text-[13px] font-semibold">SVM / Squads</p>
             <p className="text-muted-foreground/60 text-[11px]">
               Native Squads multisig runtime — active and ready.
             </p>
@@ -80,7 +80,7 @@ export function ProviderAdaptersPanel() {
       <div className="border-border bg-card overflow-hidden rounded-xl border">
         <div className="border-border/50 flex items-center justify-between gap-3 border-b px-4 py-3">
           <div className="space-y-0.5">
-            <p className="text-foreground text-sm font-semibold">EVM / Safe</p>
+            <p className="text-foreground text-[13px] font-semibold">EVM / Safe</p>
             <p className="text-muted-foreground/60 text-[11px]">
               Configure the Safe adapter for EVM multisig support.
             </p>
