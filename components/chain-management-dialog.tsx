@@ -472,7 +472,13 @@ function ChainRegistry({
     >
       <div className="flex items-center justify-between">
         <p className="text-muted-foreground/50 text-[11px] font-medium">Configured Chains</p>
-        <Button type="button" variant="outline" onClick={onResetToDefaults}>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={onResetToDefaults}
+          className="text-muted-foreground/50 hover:text-foreground h-7 gap-1.5 px-2 text-[11px]"
+        >
           <RotateCcw className="h-3 w-3" />
           Reset to Defaults
         </Button>
@@ -553,7 +559,7 @@ function ChainRegistry({
           </div>
         ))}
         {chains.length === 0 ? (
-          <div className="text-muted-foreground py-8 text-center text-sm">
+          <div className="text-muted-foreground/60 py-8 text-center text-sm">
             No chains configured.
           </div>
         ) : null}
