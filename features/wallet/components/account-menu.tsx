@@ -150,15 +150,15 @@ export function AccountMenu({ onAddWallet }: AccountMenuProps) {
             className="flex cursor-default items-start gap-3 rounded-md p-3 focus:bg-transparent"
             onSelect={(e) => e.preventDefault()}
           >
-            <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-950/30">
-              <PlugZap className="h-4 w-4 text-blue-400" />
+            <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-950/30">
+              <PlugZap className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             </div>
             <div className="min-w-0 flex-1 space-y-1">
               <div className="flex items-center gap-1.5">
                 <p className="truncate text-[13px] font-medium">
                   {connector?.name ?? "Ethereum Wallet"}
                 </p>
-                <span className="border-blue-700/50 bg-blue-950/30 text-blue-400 shrink-0 rounded px-1.5 py-0.5 font-sans text-[10px]">
+                <span className="border-blue-300/50 bg-blue-50 text-blue-700 dark:border-blue-700/50 dark:bg-blue-950/30 dark:text-blue-400 shrink-0 rounded px-1.5 py-0.5 font-sans text-[10px]">
                   EVM
                 </span>
               </div>

@@ -251,7 +251,7 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
                 "rounded-full border px-2 py-0.5 text-[10px] font-medium",
                 isSquads
                   ? "border-primary/30 bg-primary/10 text-primary"
-                  : "border-blue-700/50 bg-blue-950/30 text-blue-400"
+                  : "border-blue-300/50 bg-blue-50 text-blue-700 dark:border-blue-700/50 dark:bg-blue-950/30 dark:text-blue-400"
               )}>
                 {isSquads ? "Squads" : "Safe"}
               </span>
@@ -272,7 +272,7 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
               </span>
             )}
             {executableCount !== null && executableCount > 0 && (
-              <span className="rounded-full border border-emerald-800/40 bg-emerald-950/20 px-2 py-0.5 text-[10px] font-medium text-emerald-400">
+              <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700 dark:border-emerald-800/40 dark:bg-emerald-950/20 dark:text-emerald-400">
                 {executableCount} ready
               </span>
             )}
