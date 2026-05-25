@@ -1,12 +1,13 @@
 "use client";
 
-import { Inbox, Shield } from "lucide-react";
+import { Shield } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { useAccount } from "wagmi";
 
 import { Button } from "@/components/ui/button";
 
+import { AddMultisigActions } from "@/components/add-multisig-actions";
 import { OperationsQueue } from "@/components/operations-queue";
 import { useProposalsQuery } from "@/lib/hooks/use-proposals-query";
 import { useViewerAddressForMultisig } from "@/lib/hooks/use-viewer-address";
@@ -43,25 +44,31 @@ export function LandingPage() {
     setActiveFilter((prev) => (prev === filter ? "All" : filter));
   };
 
+  const isConnected = connected || evmConnected;
+
   if (workspaceMultisigs.length === 0) {
     return (
       <div className="flex min-h-[calc(100svh-4.5rem)] flex-col items-center justify-center gap-6 text-center">
         <div className="bg-card border-border flex h-16 w-16 items-center justify-center rounded-2xl border shadow-sm">
-          <Inbox className="text-muted-foreground/60 h-8 w-8" />
+          <Shield className="text-muted-foreground/40 h-8 w-8" />
         </div>
         <div className="space-y-1.5">
           <p className="text-foreground text-base font-semibold">
-            {connected || evmConnected ? "No operations yet" : "Get started"}
+            {isConnected ? "No vaults yet" : "Get started"}
           </p>
           <p className="text-muted-foreground max-w-xs text-sm">
-            {connected || evmConnected
-              ? "Add multisigs in Vaults to see your workspace."
-              : "Connect a wallet and add multisigs to get started."}
+            {isConnected
+              ? "Add a multisig vault to start monitoring and signing transactions."
+              : "Connect a wallet to get started."}
           </p>
         </div>
-        <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20">
-          <Link href="/vaults">Go to Vaults</Link>
-        </Button>
+        {isConnected ? (
+          <AddMultisigActions />
+        ) : (
+          <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20">
+            <Link href="/vaults">Go to Vaults</Link>
+          </Button>
+        )}
       </div>
     );
   }
