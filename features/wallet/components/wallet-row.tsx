@@ -14,7 +14,7 @@ export function DetectedBadge() {
 
 export function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-muted-foreground/50 text-[11px] font-medium tracking-wide">
+    <p className="text-muted-foreground/50 text-[11px] font-medium">
       {children}
     </p>
   );

@@ -132,7 +132,7 @@ export function LedgerConnectPanel({
           </div>
 
           <div className="border-border bg-muted w-full space-y-3 rounded-xl border p-4">
-            <p className="text-muted-foreground/50 text-[11px] font-medium tracking-wide">
+            <p className="text-muted-foreground/50 text-[11px] font-medium">
               Derivation Path
             </p>
             <RadioGroup

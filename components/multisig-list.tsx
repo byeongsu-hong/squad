@@ -558,7 +558,12 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
                           </span>
                         </div>
                       )
-                    ) : null}
+                    ) : (
+                      <div className="flex items-center gap-1.5">
+                        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500/30" />
+                        <span className="text-muted-foreground/30 text-xs">Watching</span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Actions */}
