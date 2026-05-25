@@ -241,40 +241,6 @@ export function CreateMultisigDialog({
           <form onSubmit={handleSubmit} className="space-y-4">
             <FormField
               control={form.control}
-              name="label"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Label (Optional)</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="My Multisig Wallet"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="tags"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tags (Optional)</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="treasury, dao, mainnet"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
               name="chainId"
               render={({ field }) => (
                 <FormItem>
@@ -405,6 +371,42 @@ export function CreateMultisigDialog({
                   ))}
                 </div>
               </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <FormField
+                control={form.control}
+                name="label"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Label (Optional)</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="My Multisig Wallet"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="tags"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tags (Optional)</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="treasury, dao, mainnet"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
             <div className="flex gap-3 pt-1">
