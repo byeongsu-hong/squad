@@ -74,7 +74,7 @@ export function WalletRow({
         {icon}
       </div>
       <div className="min-w-0 flex-1 text-left">
-        <p className="truncate text-sm font-medium">{name}</p>
+        <p className="truncate text-[13px] font-medium">{name}</p>
         {subtitle && (
           <p className="text-muted-foreground/60 text-[11px] font-normal">{subtitle}</p>
         )}

@@ -106,7 +106,7 @@ export function AccountMenu({ onAddWallet }: AccountMenuProps) {
             </div>
             <div className="min-w-0 flex-1 space-y-1">
               <div className="flex items-center gap-1.5">
-                <p className="truncate text-sm font-medium">
+                <p className="truncate text-[13px] font-medium">
                   {walletName ?? "Solana Wallet"}
                 </p>
                 <span className="border-primary/30 bg-primary/10 text-primary shrink-0 rounded px-1.5 py-0.5 font-sans text-[10px]">
@@ -155,7 +155,7 @@ export function AccountMenu({ onAddWallet }: AccountMenuProps) {
             </div>
             <div className="min-w-0 flex-1 space-y-1">
               <div className="flex items-center gap-1.5">
-                <p className="truncate text-sm font-medium">
+                <p className="truncate text-[13px] font-medium">
                   {connector?.name ?? "Ethereum Wallet"}
                 </p>
                 <span className="border-blue-300/50 bg-blue-50 text-blue-700 dark:border-blue-700/50 dark:bg-blue-950/30 dark:text-blue-400 shrink-0 rounded px-1.5 py-0.5 font-sans text-[10px]">
@@ -211,7 +211,7 @@ export function AccountMenu({ onAddWallet }: AccountMenuProps) {
                 </div>
                 <div className="flex min-w-0 flex-1 items-center gap-2">
                   <Globe className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
-                  <span className="text-sm">Solana Wallet</span>
+                  <span className="text-[13px]">Solana Wallet</span>
                 </div>
               </DropdownMenuItem>
             )}
@@ -226,7 +226,7 @@ export function AccountMenu({ onAddWallet }: AccountMenuProps) {
                 </div>
                 <div className="flex min-w-0 flex-1 items-center gap-2">
                   <PlugZap className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
-                  <span className="text-sm">Ethereum Wallet</span>
+                  <span className="text-[13px]">Ethereum Wallet</span>
                 </div>
               </DropdownMenuItem>
             )}
@@ -240,7 +240,7 @@ export function AccountMenu({ onAddWallet }: AccountMenuProps) {
           className="text-destructive focus:text-destructive focus:bg-destructive/10 flex cursor-pointer items-center gap-2 rounded-md px-3 py-2"
         >
           <LogOut className="h-4 w-4" />
-          <span className="text-sm">Disconnect All</span>
+          <span className="text-[13px]">Disconnect All</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
