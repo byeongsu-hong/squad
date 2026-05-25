@@ -20,7 +20,6 @@ import { Input } from "@/components/ui/input";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -300,10 +299,6 @@ export function CreateMultisigDialog({
                     </SelectContent>
                   </Select>
                   <FormMessage />
-                  <FormDescription>
-                    Only chains with active SVM / Squads support are available
-                    for creation.
-                  </FormDescription>
                 </FormItem>
               )}
             />

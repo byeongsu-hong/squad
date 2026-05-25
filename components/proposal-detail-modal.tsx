@@ -227,7 +227,7 @@ export function ProposalDetailView({
                 className="w-full bg-emerald-600 text-white hover:bg-emerald-500 border-emerald-700/30 font-bold"
               >
                 {isExecuteLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                Execute Transaction
+                Execute
               </Button>
             )}
             {needsYourSignature && (

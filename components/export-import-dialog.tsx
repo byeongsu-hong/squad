@@ -30,7 +30,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "./ui/dialog";
@@ -418,14 +417,14 @@ export function ExportImportController({
       </div>
 
       {!embedded ? (
-        <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => onClose?.()}>
+        <div className="flex gap-3 pt-2">
+          <Button type="button" variant="outline" onClick={() => onClose?.()} className="shrink-0">
             Close
           </Button>
           {mode === "import" && (
             <Button
               type="button"
-              className="bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20"
+              className="flex-1 bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20"
               onClick={handleImport}
               disabled={isImporting}
             >
@@ -437,7 +436,7 @@ export function ExportImportController({
               {isImporting ? "Importing..." : "Import"}
             </Button>
           )}
-        </DialogFooter>
+        </div>
       ) : mode === "import" ? (
         <div className="flex justify-end pt-4">
           <Button
@@ -516,7 +515,7 @@ export function ExportImportController({
             </div>
           </div>
 
-          <DialogFooter className="border-border border-t px-6 py-5 sm:justify-between">
+          <div className="border-border flex items-center justify-between border-t px-6 py-5">
             <Button
               type="button"
               variant="outline"
@@ -529,9 +528,9 @@ export function ExportImportController({
               variant="destructive"
               onClick={handleResetImportedState}
             >
-              Reset Workspace State
+              Reset
             </Button>
-          </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
     </>
