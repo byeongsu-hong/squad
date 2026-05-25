@@ -506,9 +506,9 @@ export function ProposalDetailView({
               )}
             </div>
             {payloadOpen ? (
-              <ChevronUp className="h-3.5 w-3.5 text-muted-foreground/40" />
+              <ChevronUp className="h-3.5 w-3.5 text-muted-foreground/50" />
             ) : (
-              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground/40" />
+              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground/50" />
             )}
           </button>
 
@@ -516,7 +516,7 @@ export function ProposalDetailView({
             <div className="space-y-2 px-4 pb-5">
               {payloadLoading && (
                 <div className="flex items-center justify-center py-6">
-                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground/30" />
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground/50" />
                 </div>
               )}
 

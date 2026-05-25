@@ -92,7 +92,7 @@ export function AccountMenu({ onAddWallet }: AccountMenuProps) {
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end" className="w-72 p-1.5">
-        <DropdownMenuLabel className="text-muted-foreground/40 px-2 py-1.5 text-[11px] font-medium">
+        <DropdownMenuLabel className="text-muted-foreground/50 px-2 py-1.5 text-[11px] font-medium">
           Wallets
         </DropdownMenuLabel>
 
@@ -197,7 +197,7 @@ export function AccountMenu({ onAddWallet }: AccountMenuProps) {
         {!allWalletsConnected && (
           <>
             <DropdownMenuSeparator className="my-1" />
-            <DropdownMenuLabel className="text-muted-foreground/40 px-2 py-1.5 text-[11px] font-medium">
+            <DropdownMenuLabel className="text-muted-foreground/50 px-2 py-1.5 text-[11px] font-medium">
               Add another
             </DropdownMenuLabel>
 
