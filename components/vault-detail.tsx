@@ -66,9 +66,10 @@ function MemberRow({ member, isViewer }: { member: MemberEntry; isViewer: boolea
 
   const avatarInitial = labelText
     ? labelText.slice(0, 1).toUpperCase()
-    : /[a-zA-Z]/.test(member.address[0])
-      ? member.address[0].toUpperCase()
-      : null;
+    : (() => {
+        const firstLetter = member.address.split("").find((c) => /[a-zA-Z]/.test(c));
+        return firstLetter ? firstLetter.toUpperCase() : null;
+      })();
 
   return (
     <div className="group flex items-center gap-2 py-1.5">
