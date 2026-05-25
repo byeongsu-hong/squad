@@ -404,10 +404,8 @@ function ChainEditor({
               )}
             />
           ) : (
-            <div className="border-border bg-muted text-muted-foreground rounded-md border px-3 py-3 text-sm">
-              Safe-specific runtime addresses live in the adapter settings
-              panel. Chain creation here stores the network identity and RPC /
-              explorer endpoints.
+            <div className="border-border bg-muted text-muted-foreground/70 rounded-md border px-3 py-2.5 text-xs">
+              Safe adapter addresses are configured in the Adapters tab.
             </div>
           )}
 
