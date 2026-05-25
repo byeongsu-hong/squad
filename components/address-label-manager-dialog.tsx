@@ -414,7 +414,7 @@ function AddressLabelRegistry({
       >
         {filteredLabels.length === 0 ? (
           <div className="flex h-full min-h-[12rem] flex-col items-center justify-center gap-3 text-center">
-            <div className="bg-muted border-border flex h-10 w-10 items-center justify-center rounded-2xl border">
+            <div className="bg-card border-border flex h-10 w-10 items-center justify-center rounded-2xl border">
               <Tag className="text-muted-foreground/60 h-5 w-5" />
             </div>
             <p className="text-muted-foreground/60 text-sm">
@@ -429,7 +429,7 @@ function AddressLabelRegistry({
               <div
                 key={label.address}
                 className={cn(
-                  "group hover:bg-accent flex cursor-pointer items-center gap-2 transition-colors",
+                  "group hover:bg-muted flex cursor-pointer items-center gap-2 transition-colors",
                   embedded
                     ? "grid grid-cols-[minmax(0,0.95fr)_minmax(0,1.15fr)_minmax(0,1.3fr)_8rem_4.5rem] gap-3 px-3 py-3"
                     : "rounded-md border px-2.5 py-1.5"
@@ -481,12 +481,7 @@ function AddressLabelRegistry({
                         </div>
                       ) : null}
                       <div
-                        className={cn(
-                          "flex shrink-0 gap-0.5",
-                          embedded
-                            ? "justify-end opacity-100"
-                            : "opacity-0 transition-opacity group-hover:opacity-100"
-                        )}
+                        className="flex shrink-0 justify-end gap-0.5 opacity-0 transition-opacity group-hover:opacity-100"
                       >
                         <Button
                           type="button"
