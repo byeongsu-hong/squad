@@ -288,7 +288,7 @@ function ChainEditor({
     <div
       className={
         embedded
-          ? "border-border bg-card space-y-4 rounded-xl border p-4"
+          ? "border-border bg-card space-y-4 self-start rounded-xl border p-4"
           : "space-y-6"
       }
     >
@@ -466,27 +466,44 @@ function ChainRegistry({
     <div
       className={
         embedded
-          ? "border-border bg-card space-y-3 rounded-xl border p-4"
+          ? "border-border bg-card overflow-hidden rounded-xl border"
           : "space-y-2"
       }
     >
-      <div className="flex items-center justify-between">
-        <p className="text-muted-foreground/50 text-[11px] font-medium">Configured Chains</p>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={onResetToDefaults}
-          className="text-muted-foreground/50 hover:text-foreground h-7 gap-1.5 px-2 text-[11px]"
-        >
-          <RotateCcw className="h-3 w-3" />
-          Reset to Defaults
-        </Button>
-      </div>
+      {embedded && (
+        <div className="border-border/50 flex items-center justify-between border-b px-4 py-3">
+          <p className="text-muted-foreground/50 text-[11px] font-medium">Configured Chains</p>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={onResetToDefaults}
+            className="text-muted-foreground/50 hover:text-foreground h-7 gap-1.5 px-2 text-[11px]"
+          >
+            <RotateCcw className="h-3 w-3" />
+            Reset to Defaults
+          </Button>
+        </div>
+      )}
+      {!embedded && (
+        <div className="flex items-center justify-between">
+          <p className="text-muted-foreground/50 text-[11px] font-medium">Configured Chains</p>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={onResetToDefaults}
+            className="text-muted-foreground/50 hover:text-foreground h-7 gap-1.5 px-2 text-[11px]"
+          >
+            <RotateCcw className="h-3 w-3" />
+            Reset to Defaults
+          </Button>
+        </div>
+      )}
       <div
         className={
           embedded
-            ? "border-border/50 divide-border/30 overflow-hidden rounded-xl border divide-y"
+            ? "divide-border/30 divide-y"
             : "space-y-2"
         }
       >
