@@ -56,7 +56,7 @@ function AddressRow({
       <button
         type="button"
         onClick={handleCopy}
-        className="font-mono text-muted-foreground/60 hover:text-muted-foreground/90 text-[11px] transition-colors"
+        className="font-mono text-muted-foreground/70 hover:text-muted-foreground/90 text-[11px] transition-colors"
         title={address}
       >
         {truncateAddress(address)}
@@ -130,8 +130,8 @@ function MemberRow({ member, isViewer }: { member: MemberEntry; isViewer: boolea
           onClick={handleCopy}
         >
           <div className={cn(
-            "flex h-6 w-6 shrink-0 items-center justify-center rounded-full",
-            isViewer ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground"
+            "flex h-6 w-6 shrink-0 items-center justify-center rounded-full ring-1",
+            isViewer ? "bg-primary/15 text-primary ring-primary/25" : "bg-muted dark:bg-white/[0.07] text-muted-foreground ring-border/60"
           )}>
             {avatarInitial ? (
               <span className="text-[10px] font-semibold">{avatarInitial}</span>
@@ -283,7 +283,7 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
               </div>
             </div>
             <div className="mt-1.5 flex flex-wrap items-center gap-1">
-              <span className="border-border bg-muted text-muted-foreground/60 rounded-full border px-2 py-0.5 text-[10px] font-medium">
+              <span className="border-border bg-muted text-muted-foreground/70 rounded-full border px-2 py-0.5 text-[10px] font-medium">
                 {multisig.chainName}
               </span>
               <span className={cn(

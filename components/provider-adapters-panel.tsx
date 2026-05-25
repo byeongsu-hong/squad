@@ -89,7 +89,7 @@ export function ProviderAdaptersPanel() {
             "shrink-0 rounded-full border px-2.5 py-0.5 text-[11px] font-medium",
             safeAdapterFieldsConfigured === 3
               ? "border-emerald-300/60 bg-emerald-50 text-emerald-600 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-400"
-              : "border-border text-muted-foreground/60"
+              : "border-amber-300/50 bg-amber-50/80 text-amber-700 dark:border-amber-500/25 dark:bg-amber-500/10 dark:text-amber-400/80"
           )}>
             {safeChains.length} chain{safeChains.length !== 1 ? "s" : ""}
             {safeAdapterFieldsConfigured > 0 && ` · ${safeAdapterFieldsConfigured}/3`}
@@ -105,7 +105,7 @@ export function ProviderAdaptersPanel() {
                   "rounded border px-1.5 py-px text-[10px]",
                   safeAdapterFieldsConfigured === 3
                     ? "border-emerald-300/60 bg-emerald-50 text-emerald-600 dark:border-emerald-800/40 dark:bg-emerald-950/20 dark:text-emerald-400"
-                    : "border-border bg-muted/50 text-muted-foreground/60"
+                    : "border-amber-300/50 bg-amber-50/80 text-amber-700 dark:border-amber-500/25 dark:bg-amber-500/10 dark:text-amber-400/80"
                 )}>
                   {safeAdapterFieldsConfigured === 3 ? "configured" : "needs setup"}
                 </span>
