@@ -92,7 +92,7 @@ export function AccountMenu({ onAddWallet }: AccountMenuProps) {
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end" className="w-72 p-1.5">
-        <DropdownMenuLabel className="text-foreground px-2 py-1.5 text-xs font-semibold">
+        <DropdownMenuLabel className="text-muted-foreground/40 px-2 py-1.5 text-[11px] font-medium">
           Wallets
         </DropdownMenuLabel>
 

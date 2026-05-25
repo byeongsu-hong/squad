@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, CheckCircle2, QrCode, Wallet, X } from "lucide-react";
+import { AlertCircle, CheckCircle2, QrCode, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useAccount, useConnect } from "wagmi";
@@ -88,17 +88,9 @@ export function EvmConnectPanel({ onClose }: EvmConnectPanelProps) {
 
   if (connectors.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-4 py-8 text-center">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-          <Wallet className="h-8 w-8 text-primary" />
-        </div>
-        <div className="space-y-1">
-          <p className="text-sm font-semibold">No Wallets Found</p>
-          <p className="text-muted-foreground max-w-[240px] text-xs">
-            Install an Ethereum wallet extension to get started
-          </p>
-        </div>
-      </div>
+      <p className="text-muted-foreground/60 text-xs">
+        No Ethereum wallets detected.
+      </p>
     );
   }
 
