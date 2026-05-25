@@ -70,7 +70,7 @@ export function Header() {
                 >
                   {item.label}
                   {"badge" in item && item.badge > 0 && (
-                    <span className="bg-primary text-primary-foreground rounded-full px-1.5 py-px text-[9px] font-bold tabular-nums leading-none">
+                    <span className="bg-primary text-primary-foreground rounded-full px-1.5 py-px text-[9px] font-semibold tabular-nums leading-none">
                       {item.badge}
                     </span>
                   )}

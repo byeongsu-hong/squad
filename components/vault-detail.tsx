@@ -80,7 +80,7 @@ function MemberRow({ member, isViewer }: { member: MemberEntry; isViewer: boolea
         )}
       >
         {avatarInitial ? (
-          <span className="text-[10px] font-bold">{avatarInitial}</span>
+          <span className="text-[10px] font-semibold">{avatarInitial}</span>
         ) : (
           <User className="h-3 w-3 opacity-60" />
         )}
@@ -208,8 +208,8 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
               )}>
                 {isSquads ? "Squads" : "Safe"}
               </span>
-              <span className="text-muted-foreground/70 text-xs">
-                {multisig.threshold}/{multisig.members.length} required
+              <span className="border-border bg-muted text-muted-foreground/60 rounded-full border px-2 py-0.5 text-[10px] font-medium">
+                {multisig.threshold}/{multisig.members.length}
               </span>
               {multisig.tags.map((tag) => (
                 <span
@@ -223,17 +223,17 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
           </div>
           <div className="flex shrink-0 items-center gap-2">
             {needsSigningCount !== null && needsSigningCount > 0 && (
-              <span className="border-primary/20 bg-primary/10 text-primary rounded-full border px-2.5 py-1 text-xs font-semibold">
-                {needsSigningCount} need signing
+              <span className="border-primary/20 bg-primary/10 text-primary rounded-full border px-2 py-0.5 text-[10px] font-medium">
+                {needsSigningCount} to sign
               </span>
             )}
             {executableCount !== null && executableCount > 0 && (
-              <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:border-emerald-800/40 dark:bg-emerald-950/20 dark:text-emerald-400">
-                {executableCount} executable
+              <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700 dark:border-emerald-800/40 dark:bg-emerald-950/20 dark:text-emerald-400">
+                {executableCount} ready
               </span>
             )}
             {pendingCount !== null && pendingCount > 0 && !needsSigningCount && !executableCount && (
-              <span className="bg-muted text-muted-foreground rounded-full px-2.5 py-1 text-xs font-semibold">
+              <span className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-[10px] font-medium">
                 {pendingCount} pending
               </span>
             )}

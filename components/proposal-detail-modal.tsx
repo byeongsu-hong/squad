@@ -277,7 +277,7 @@ export function ProposalDetailView({
               </div>
             )}
             {currentUserApproved && !readyToExecute && (
-              <div className="flex items-center justify-center gap-2 rounded-xl border border-emerald-900/30 bg-emerald-950/20 px-4 py-2.5 text-sm text-emerald-400">
+              <div className="flex items-center justify-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50/60 px-4 py-2.5 text-sm text-emerald-700 dark:border-emerald-900/30 dark:bg-emerald-950/20 dark:text-emerald-400">
                 <Check className="h-3.5 w-3.5 shrink-0" />
                 Signed — waiting on others
               </div>
