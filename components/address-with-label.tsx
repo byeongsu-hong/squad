@@ -133,7 +133,7 @@ export function AddressWithLabel({
               interactiveDisplayClass
             )}
           >
-            <div className="border-border bg-muted text-foreground hover:bg-muted/70 inline-flex max-w-full items-center gap-2 rounded-full border px-2.5 py-1 text-xs transition-colors">
+            <div className="border-border bg-muted text-foreground inline-flex max-w-full items-center gap-2 rounded-full border px-2.5 py-1 text-xs">
               <span
                 className="h-1.5 w-1.5 shrink-0 rounded-full"
                 style={{ backgroundColor: label.color }}
@@ -184,7 +184,7 @@ export function AddressWithLabel({
         </Button>
       ) : (
         <code
-          className="border-border bg-muted text-foreground/80 hover:bg-muted/70 hover:text-foreground rounded-md border px-2 py-1 font-mono text-xs transition-colors"
+          className="border-border bg-muted text-foreground/80 rounded-md border px-2 py-1 font-mono text-xs"
           title={address}
         >
           {displayAddress}

@@ -51,7 +51,7 @@ import {
   matchesMultisigSelectionKey,
 } from "@/types/multisig";
 
-const GRID_COLS = "36px minmax(0,2fr) 96px minmax(0,1fr) 90px";
+const GRID_COLS = "36px minmax(0,2fr) 96px minmax(0,1fr) 56px";
 
 function formatProviderLabel(provider: RegistrySummaryRow["multisigProvider"]) {
   return provider === "safe" ? "Safe" : "Squads";
@@ -106,9 +106,8 @@ function VaultRowSkeleton() {
       </div>
       <Skeleton className="h-3 w-14 rounded-sm" />
       <Skeleton className="h-3 w-20 rounded-sm" />
-      <div className="flex justify-end gap-1">
+      <div className="flex justify-end">
         <Skeleton className="h-7 w-7 rounded-md" />
-        <Skeleton className="h-7 w-14 rounded-md" />
       </div>
     </div>
   );
@@ -564,7 +563,7 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
 
                   {/* Actions */}
                   <div
-                    className="flex items-center justify-end gap-1"
+                    className="flex items-center justify-end gap-0.5"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <Button
@@ -577,20 +576,22 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
                       <Tag className="h-3 w-3" />
                     </Button>
                     <Button
-                      size="sm"
+                      variant="ghost"
+                      size="icon-sm"
                       className={cn(
-                        "h-7 px-2.5 text-xs",
-                        row.waiting > 0
-                          ? "bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20"
-                          : row.executable > 0
-                            ? "bg-emerald-600 text-white hover:bg-emerald-500 border-emerald-700/30"
-                            : ""
+                        "h-7 w-7 transition-all",
+                        isActiveDesk
+                          ? "text-primary"
+                          : row.waiting > 0
+                            ? "text-primary/70"
+                            : row.executable > 0
+                              ? "text-emerald-600 dark:text-emerald-400"
+                              : "text-muted-foreground/30 opacity-0 group-hover:opacity-100"
                       )}
-                      variant={row.waiting > 0 || row.executable > 0 ? undefined : "outline"}
                       onClick={() => handleOpenDesk(multisig)}
+                      aria-label="Open vault"
                     >
-                      Open
-                      <ChevronRight className="h-3 w-3" />
+                      <ChevronRight className="h-3.5 w-3.5" />
                     </Button>
                   </div>
                 </div>
