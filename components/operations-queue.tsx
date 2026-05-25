@@ -412,8 +412,13 @@ export function OperationsQueue({
   if (loading && items.length === 0) {
     return (
       <div className="border-border bg-card overflow-hidden rounded-xl border">
+        <div className="border-b border-border/50 flex items-center gap-2 px-3 py-2">
+          <Skeleton className="h-1.5 w-1.5 rounded-full" />
+          <Skeleton className="h-2.5 w-20 rounded-sm" />
+          <Skeleton className="h-4 w-6 rounded-full" />
+        </div>
         <div className="divide-border/50 divide-y">
-          {Array.from({ length: 6 }).map((_, i) => (
+          {Array.from({ length: 5 }).map((_, i) => (
             <RowSkeleton key={i} compact={compact} />
           ))}
         </div>
