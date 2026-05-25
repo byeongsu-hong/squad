@@ -84,7 +84,7 @@ function MemberRow({ member, isViewer }: { member: MemberEntry; isViewer: boolea
       })();
 
   return (
-    <div className="group flex items-center gap-2 py-1.5">
+    <div className="group -mx-1 flex items-center gap-2 rounded-md px-1 py-1.5 transition-colors hover:bg-muted/40">
       <div
         className={cn(
           "flex h-6 w-6 shrink-0 items-center justify-center rounded-full",

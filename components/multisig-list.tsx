@@ -341,7 +341,7 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
                       "h-6 rounded-full border px-2.5 text-[11px] transition-colors",
                       isActive
                         ? "border-primary/20 bg-primary/15 text-primary hover:bg-primary/20 hover:text-primary font-medium"
-                        : "border-transparent text-muted-foreground/60 hover:text-foreground hover:border-border/40"
+                        : "border-border/30 text-muted-foreground/60 hover:text-foreground hover:border-border hover:bg-muted/30"
                     )}
                   >
                     {tag}

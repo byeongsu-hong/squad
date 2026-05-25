@@ -510,7 +510,7 @@ export function OperationsQueue({
                   "h-7 rounded-full border px-3 text-[11px] font-medium transition-colors",
                   statusFilter === f
                     ? "bg-card border-border text-foreground shadow-sm hover:bg-card"
-                    : "border-transparent text-muted-foreground/60 hover:bg-transparent hover:text-foreground hover:border-border/40"
+                    : "border-border/30 text-muted-foreground/60 hover:bg-muted/30 hover:text-foreground hover:border-border"
                 )}
               >
                 {f}
