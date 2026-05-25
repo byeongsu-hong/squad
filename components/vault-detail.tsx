@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeftRight, Copy, Check, X, Users, User, ExternalLink } from "lucide-react";
+import { CheckCircle2, Copy, Check, X, Users, User, ExternalLink } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -307,39 +307,39 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
 
         {/* Transactions — shown first */}
         <div className="order-1">
-          <div className="mb-3 flex items-center gap-2">
-            <ArrowLeftRight className="text-muted-foreground/40 h-3.5 w-3.5" />
-            <span className="text-muted-foreground/50 text-[11px] font-medium">
-              Transactions
-            </span>
-            {!loading && vaultItems.length > 0 && (
-              <span className="text-muted-foreground/40 font-mono text-[11px] tabular-nums">
-                {vaultItems.length}
-              </span>
-            )}
-          </div>
-          <OperationsQueue
-            items={vaultItems}
-            loading={loading}
-            showFilters={false}
-            compact
-            hideChain
-          />
+          {!loading && vaultItems.length === 0 ? (
+            <div className="border-border bg-card overflow-hidden rounded-xl border">
+              <div className="flex flex-col items-center justify-center gap-2.5 py-10 text-center">
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl border border-emerald-900/30 bg-emerald-950/20">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500/60" />
+                </div>
+                <p className="text-muted-foreground/60 text-[11px]">No proposals yet.</p>
+              </div>
+            </div>
+          ) : (
+            <OperationsQueue
+              items={vaultItems}
+              loading={loading}
+              showFilters={false}
+              compact
+              hideChain
+            />
+          )}
         </div>
 
         {/* Signers — sidebar on desktop, below transactions on mobile */}
         {multisig.members.length > 0 && (
           <div className="order-2">
-            <div className="mb-3 flex items-center gap-2">
-              <Users className="text-muted-foreground/40 h-3.5 w-3.5" />
-              <span className="text-muted-foreground/50 text-[11px] font-medium">
-                Signers
-              </span>
-              <span className="text-muted-foreground/40 font-mono text-[11px]">
-                {multisig.threshold}/{multisig.members.length}
-              </span>
-            </div>
             <div className="border-border bg-card overflow-hidden rounded-xl border">
+              <div className="border-b border-border/50 flex items-center gap-2 px-3 py-2">
+                <Users className="text-muted-foreground/40 h-3.5 w-3.5" />
+                <span className="text-muted-foreground/50 text-[11px] font-medium">
+                  Signers
+                </span>
+                <span className="text-muted-foreground/40 font-mono text-[11px]">
+                  {multisig.threshold}/{multisig.members.length}
+                </span>
+              </div>
               <TooltipProvider delayDuration={0}>
                 <div className="divide-border/60 divide-y px-2 py-1">
                   {multisig.members.map((member) => (
