@@ -89,7 +89,7 @@ export function SolanaConnectPanel({
       {error && (
         <div className="border-destructive/20 bg-destructive/5 flex items-start gap-3 rounded-xl border px-4 py-3">
           <AlertCircle className="text-destructive mt-0.5 h-4 w-4 shrink-0" />
-          <p className="text-destructive flex-1 text-sm">{error}</p>
+          <p className="text-destructive flex-1 text-[12px]">{error}</p>
           <Button
             type="button"
             variant="ghost"

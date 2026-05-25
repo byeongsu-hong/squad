@@ -455,7 +455,7 @@ function ChainRegistry({
               )}
             >
               <div className="min-w-0">
-                <p className="text-foreground text-sm font-medium">
+                <p className="text-foreground text-[13px] font-medium">
                   {chain.name}
                 </p>
                 <div className="mt-0.5 flex items-center gap-1.5">

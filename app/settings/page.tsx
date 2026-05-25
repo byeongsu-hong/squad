@@ -73,7 +73,7 @@ function SettingsPageContent() {
                 variant="ghost"
                 onClick={() => setSettingsActiveSection(tab.id)}
                 className={cn(
-                  "h-auto gap-1.5 rounded-none border-b-2 px-4 py-3 text-sm whitespace-nowrap transition-colors",
+                  "h-auto gap-1.5 rounded-none border-b-2 px-4 py-3 text-[13px] whitespace-nowrap transition-colors",
                   active
                     ? "border-transparent border-b-primary text-foreground -mb-px font-semibold hover:bg-transparent"
                     : "text-muted-foreground/70 hover:text-foreground border-transparent hover:bg-transparent"

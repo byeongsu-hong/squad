@@ -74,7 +74,7 @@ export function EvmConnectPanel({ onClose }: EvmConnectPanelProps) {
             <CheckCircle2 className="h-5 w-5 text-emerald-500" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium">
+            <p className="text-[13px] font-medium">
               {activeConnector?.name ?? "EVM Wallet"}
             </p>
             <p className="text-muted-foreground/60 font-mono text-xs">
@@ -88,7 +88,7 @@ export function EvmConnectPanel({ onClose }: EvmConnectPanelProps) {
 
   if (connectors.length === 0) {
     return (
-      <p className="text-muted-foreground/60 text-xs">
+      <p className="text-muted-foreground/60 text-[11px]">
         No Ethereum wallets detected.
       </p>
     );
@@ -102,7 +102,7 @@ export function EvmConnectPanel({ onClose }: EvmConnectPanelProps) {
         {error && (
           <div className="border-destructive/20 bg-destructive/5 flex items-start gap-3 rounded-xl border px-4 py-3">
             <AlertCircle className="text-destructive mt-0.5 h-4 w-4 shrink-0" />
-            <p className="text-destructive flex-1 text-sm">{error}</p>
+            <p className="text-destructive flex-1 text-[12px]">{error}</p>
             <Button
               type="button"
               variant="ghost"

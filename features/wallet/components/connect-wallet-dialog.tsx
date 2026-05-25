@@ -68,7 +68,7 @@ export function ConnectWalletDialog({
                   aria-selected={activeTab === tab}
                   onClick={() => setActiveTab(tab)}
                   className={cn(
-                    "h-auto flex-1 rounded-md py-1.5 text-sm font-medium transition-all",
+                    "h-auto flex-1 rounded-md py-1.5 text-[13px] font-medium transition-all",
                     activeTab === tab
                       ? "bg-card dark:bg-muted text-foreground shadow-sm hover:bg-card dark:hover:bg-muted"
                       : "text-muted-foreground hover:text-foreground hover:bg-transparent"

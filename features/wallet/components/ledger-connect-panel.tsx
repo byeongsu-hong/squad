@@ -157,7 +157,7 @@ export function LedgerConnectPanel({
                         loading && "cursor-not-allowed opacity-50"
                       )}
                     >
-                      <span className="text-sm leading-none font-medium">
+                      <span className="text-[13px] leading-none font-medium">
                         {pattern.name}
                       </span>
                       <span className="text-muted-foreground/60 font-mono text-xs">
@@ -190,7 +190,7 @@ export function LedgerConnectPanel({
           <div className="flex items-center justify-between">
             <h3 className="text-base font-semibold">Select Account</h3>
             <div className="flex items-center gap-2">
-              <span className="text-muted-foreground/60 text-xs">
+              <span className="text-muted-foreground/60 text-[11px]">
                 Page {currentPage + 1}
               </span>
               <div className="flex items-center gap-1">
@@ -217,7 +217,7 @@ export function LedgerConnectPanel({
           </div>
 
           {error && (
-            <div className="border-destructive/30 bg-destructive/10 text-destructive flex items-center gap-2 rounded-xl border px-3 py-2 text-sm">
+            <div className="border-destructive/30 bg-destructive/10 text-destructive flex items-center gap-2 rounded-xl border px-3 py-2 text-[12px]">
               <AlertCircle className="h-4 w-4 shrink-0" />
               {error}
             </div>
@@ -226,7 +226,7 @@ export function LedgerConnectPanel({
           {loading ? (
             <div className="flex flex-col items-center justify-center gap-3 py-10">
               <Loader2 className="text-primary h-6 w-6 animate-spin" />
-              <p className="text-muted-foreground/60 text-sm">
+              <p className="text-muted-foreground/60 text-[11px]">
                 Loading accounts...
               </p>
             </div>
@@ -241,7 +241,7 @@ export function LedgerConnectPanel({
                     key={account.derivationPath}
                     variant="outline"
                     onClick={() => handleSelectAccount(account)}
-                    className="group hover:border-primary/30 hover:bg-accent/50 h-auto w-full items-center justify-between rounded-xl px-4 py-3.5 text-left"
+                    className="group hover:border-primary/30 hover:bg-muted/50 h-auto w-full items-center justify-between rounded-xl px-4 py-3.5 text-left"
                   >
                     <div className="flex flex-col gap-1">
                       <div className="flex items-center gap-2">
@@ -261,7 +261,7 @@ export function LedgerConnectPanel({
                     </div>
                     <div className="ml-4 flex shrink-0 items-center gap-2">
                       {account.balance !== undefined && (
-                        <span className="text-sm font-semibold tabular-nums">
+                        <span className="text-[13px] font-semibold tabular-nums">
                           {account.balance.toFixed(4)} SOL
                         </span>
                       )}
