@@ -447,7 +447,7 @@ export function MultisigList({ selectedKey }: { selectedKey?: string }) {
                       </div>
                     )}
                     <div className="flex flex-wrap items-center gap-1.5">
-                      <span className="border-border bg-muted/60 text-muted-foreground/55 rounded px-1 py-px text-[10px]">
+                      <span className="border-border bg-muted/60 text-muted-foreground/60 rounded px-1 py-px text-[10px]">
                         {row.chainName}
                       </span>
                       <span className="text-muted-foreground/50 text-[10px]">

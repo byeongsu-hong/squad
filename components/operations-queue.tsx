@@ -188,7 +188,7 @@ function QueueRow({
             #{item.proposal.transactionIndex.toString()}
           </span>
           {!hideChain && (
-            <span className="border-border bg-muted/60 text-muted-foreground/55 rounded px-1 py-px text-[10px]">
+            <span className="border-border bg-muted/60 text-muted-foreground/60 rounded px-1 py-px text-[10px]">
               {item.multisig.chainName}
             </span>
           )}
@@ -203,7 +203,7 @@ function QueueRow({
         className="flex shrink-0 items-center gap-2"
         onClick={(e) => e.stopPropagation()}
       >
-        <span className="text-muted-foreground/55 font-mono text-[10px] tabular-nums">
+        <span className="text-muted-foreground/60 font-mono text-[10px] tabular-nums">
           {item.approvalCount}/{item.multisig.threshold}
         </span>
         {/* Skip badge when an action button is already shown — it's redundant */}
@@ -600,7 +600,7 @@ export function OperationsQueue({
                   <button
                     type="button"
                     onClick={toggleSelectAll}
-                    className="text-muted-foreground/55 hover:text-muted-foreground/80 text-[11px] transition-colors"
+                    className="text-muted-foreground/60 hover:text-muted-foreground/80 text-[11px] transition-colors"
                   >
                     {allSelected ? "deselect all" : "select all"}
                   </button>
