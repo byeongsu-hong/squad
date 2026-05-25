@@ -17,7 +17,10 @@ export function useProposalsQuery() {
     [results]
   );
 
-  const loading = results.some((r) => r.isLoading);
+  // Only show loading during initial load (no data yet).
+  // Avoids flashing loading state when adding/importing new vaults into an existing registry.
+  const hasAnyData = results.some((r) => r.data !== undefined);
+  const loading = !hasAnyData && results.some((r) => r.isLoading);
 
   return { proposals, loading, workspaceMultisigs };
 }

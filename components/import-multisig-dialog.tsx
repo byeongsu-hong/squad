@@ -34,7 +34,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { RPC_ERROR_PATTERNS, getErrorMessage } from "@/lib/error-handler";
-import { matchesSafeChainAlias, parseSafeReference } from "@/lib/safe";
+import {
+  loadSafeMultisig,
+  matchesSafeChainAlias,
+  parseSafeReference,
+} from "@/lib/safe";
 import { SquadService } from "@/lib/squad";
 import { chainIdSchema, labelSchema } from "@/lib/validation";
 import { useChainStore } from "@/stores/chain-store";
@@ -125,37 +129,12 @@ export function ImportMultisigDialog({
     setLoading(true);
     try {
       if (normalizedChain.multisigProvider === "safe") {
-        const response = await fetch("/api/safe/import", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            chain: normalizedChain,
-            addressInput: data.multisigAddress,
-            label: data.label,
-            tags,
-          }),
-        });
-
-        const payload = (await response.json()) as {
-          error?: string;
-          multisig?: Omit<
-            Parameters<typeof addMultisig>[0],
-            "transactionIndex"
-          > & {
-            transactionIndex: string;
-          };
-        };
-
-        if (!response.ok || !payload.multisig) {
-          throw new Error(payload.error ?? "Failed to import Safe multisig");
-        }
-
-        const safeMultisig = {
-          ...payload.multisig,
-          transactionIndex: BigInt(payload.multisig.transactionIndex),
-        };
+        const safeMultisig = await loadSafeMultisig(
+          chain,
+          data.multisigAddress,
+          data.label,
+          tags
+        );
         addMultisig(safeMultisig);
       } else {
         const multisigPubkey = new PublicKey(data.multisigAddress);

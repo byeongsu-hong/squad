@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { getWorkspaceProviderAdapter } from "@/lib/workspace/provider-adapters";
@@ -26,6 +26,9 @@ export function useCreatorMultisigs({
   onLoaded,
 }: UseCreatorMultisigsOptions) {
   const [loading, setLoading] = useState(false);
+
+  const existingMultisigsRef = useRef(existingMultisigs);
+  existingMultisigsRef.current = existingMultisigs;
 
   const loadForCreator = useCallback(
     async (
@@ -57,7 +60,7 @@ export function useCreatorMultisigs({
           chainId,
           creatorAddress,
           chains,
-          existingMultisigs
+          existingMultisigsRef.current
         );
 
         onLoaded((currentMultisigs) => {
@@ -96,7 +99,7 @@ export function useCreatorMultisigs({
         setLoading(false);
       }
     },
-    [chains, existingMultisigs, onLoaded]
+    [chains, onLoaded]
   );
 
   const canLoadFromChain = useCallback(
