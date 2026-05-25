@@ -37,12 +37,12 @@ export function AddMultisigActions() {
 
   const handleCreateClick = () => {
     if (!hasOperationalSquadsChains) {
-      toast.error("Add a live SVM / Squads chain before creating a multisig");
+      toast.error("Add a live SVM / Squads chain before creating a vault");
       return;
     }
 
     if (!publicKey) {
-      toast.error("Connect a wallet to create a multisig");
+      toast.error("Connect a wallet to create a vault");
       return;
     }
     setCreateDialogOpen(true);
@@ -77,7 +77,7 @@ export function AddMultisigActions() {
             disabled={!hasImportableChains}
           >
             <FileDown className="h-4 w-4" />
-            Import Safe or Squads
+            Import Existing Vault
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

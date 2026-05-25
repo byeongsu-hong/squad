@@ -310,12 +310,12 @@ export function ExportImportController({
       const messages = [];
       if (importedChains > 0) messages.push(`${importedChains} chain(s)`);
       if (importedMultisigs > 0)
-        messages.push(`${importedMultisigs} multisig(s)`);
+        messages.push(`${importedMultisigs} vault(s)`);
       if (importedLabels > 0) messages.push(`${importedLabels} label(s)`);
 
       if (messages.length > 0) {
         toast.success("Import successful", {
-          description: `Imported ${messages.join(" and ")}${failedMultisigs.length > 0 ? `. ${failedMultisigs.length} multisig(s) failed.` : ""}`,
+          description: `Imported ${messages.join(" and ")}${failedMultisigs.length > 0 ? `. ${failedMultisigs.length} vault(s) failed.` : ""}`,
         });
         setImportContent("");
         if (!embedded) {
@@ -654,7 +654,7 @@ function ExportImportExportPanel({
               </div>
               <div className="bg-muted rounded-xl px-3 py-2">
                 <p className="text-muted-foreground/50 text-[11px] font-medium">
-                  Multisigs
+                  Vaults
                 </p>
                 <p className="text-foreground mt-1 text-sm font-medium">
                   {multisigs.length}

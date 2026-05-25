@@ -189,7 +189,7 @@ export function ImportMultisigDialog({
         });
       }
 
-      toast.success("Multisig imported");
+      toast.success("Vault imported");
       onOpenChange(false);
       form.reset();
     } catch (error) {

@@ -203,7 +203,7 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
     });
     setSelectedForDeletion(new Set());
     setDeleteDialogOpen(false);
-    toast.success(`${count} multisig${count !== 1 ? "s" : ""} removed`);
+    toast.success(`${count} vault${count !== 1 ? "s" : ""} removed`);
   };
 
   const handleStartEditLabel = (key: string, currentLabel?: string) => {

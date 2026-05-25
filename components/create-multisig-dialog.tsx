@@ -193,7 +193,7 @@ export function CreateMultisigDialog({
         vaultPda,
       });
 
-      toast.success("Multisig created");
+      toast.success("Vault created");
       onOpenChange(false);
       form.reset();
     } catch (error) {

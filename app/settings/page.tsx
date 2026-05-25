@@ -53,7 +53,7 @@ function SettingsPageContent() {
       adapters: chains.filter((chain) => chain.multisigProvider === "safe")
         .length,
       multisigs: multisigs.length,
-      registry: multisigs.length,
+      registry: 0,
       labels: labels.length,
     }),
     [chains, labels.length, multisigs.length]
