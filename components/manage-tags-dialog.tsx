@@ -154,7 +154,7 @@ export function ManageTagsDialog({
                       type="button"
                       variant="ghost"
                       onClick={() => handleRemoveTag(tag)}
-                      className="text-primary/60 hover:text-destructive hover:bg-destructive/10 ml-0.5 h-5 w-5 rounded-full p-0"
+                      className="text-primary/60 hover:text-destructive hover:bg-destructive/10 ml-0.5 h-5 w-5 rounded-full p-0 transition-colors"
                     >
                       <X className="h-3 w-3" />
                     </Button>
