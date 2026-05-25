@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, ExternalLink, Usb, Wallet, X } from "lucide-react";
+import { AlertCircle, ExternalLink, Usb, X } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -83,7 +83,7 @@ export function SolanaConnectPanel({
 
   const hasInstalled = installedWallets.length > 0;
   const hasAvailable = availableWallets.length > 0;
-  const hasNoWallets = !hasInstalled && !hasAvailable && !isOkxInstalled;
+  const hasNoExtensions = !hasInstalled && !isOkxInstalled;
 
   return (
     <div className="flex flex-col gap-4">
@@ -104,18 +104,10 @@ export function SolanaConnectPanel({
         </div>
       )}
 
-      {hasNoWallets && (
-        <div className="flex flex-col items-center gap-4 py-8 text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-            <Wallet className="h-8 w-8 text-primary" />
-          </div>
-          <div className="space-y-1">
-            <p className="text-sm font-semibold">No Wallets Found</p>
-            <p className="text-muted-foreground max-w-[240px] text-xs">
-              Install a Solana wallet extension to get started
-            </p>
-          </div>
-        </div>
+      {hasNoExtensions && (
+        <p className="text-muted-foreground/60 text-xs">
+          No browser extensions detected.
+        </p>
       )}
 
       {hasInstalled && (
