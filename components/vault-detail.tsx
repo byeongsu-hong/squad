@@ -357,7 +357,12 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
                 <span className="text-muted-foreground/50 text-[11px] font-medium">
                   Signers
                 </span>
-                <span className="bg-muted rounded px-1.5 py-px font-mono text-[10px] font-semibold text-muted-foreground/70">
+                <span className={cn(
+                  "rounded px-1.5 py-px font-mono text-[10px] font-semibold",
+                  isSquads
+                    ? "bg-primary/10 text-primary"
+                    : "bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-400"
+                )}>
                   {multisig.threshold}/{multisig.members.length}
                 </span>
               </div>
