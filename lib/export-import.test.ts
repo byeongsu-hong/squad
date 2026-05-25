@@ -11,6 +11,7 @@ import {
 import type { AddressLabel } from "@/types/address-label";
 import type { ChainConfig } from "@/types/chain";
 import type { MultisigAccount } from "@/types/multisig";
+import type { ProviderAdapterSettings } from "@/types/provider-adapter";
 
 describe("export-import", () => {
   const mockChains: ChainConfig[] = [
@@ -56,6 +57,12 @@ describe("export-import", () => {
       updatedAt: 1700000000000,
     },
   ];
+
+  const mockProviderAdapterSettings: ProviderAdapterSettings = {
+    safeTransactionServiceUrl: "https://api.safe.global/tx-service",
+    safeSingletonAddress: "0xd9Db270c1B5E3Bd161E8c8503c55ceABeE709552",
+    safeProxyFactoryAddress: "0xa6B71E26C5e0845f74c812102Ca7114b6a896Ab2",
+  };
 
   describe("serializeMultisigAccount", () => {
     it("should serialize a multisig account with minimal data", () => {
@@ -106,12 +113,29 @@ describe("export-import", () => {
 
   describe("exportAll", () => {
     it("should export both chains and multisigs", () => {
-      const yaml = exportAll(mockChains, mockMultisigs, mockAddressLabels);
+      const yaml = exportAll(
+        mockChains,
+        mockMultisigs,
+        mockAddressLabels,
+        mockProviderAdapterSettings
+      );
 
       expect(yaml).toContain("version:");
       expect(yaml).toContain("chains:");
       expect(yaml).toContain("multisigs:");
       expect(yaml).toContain("addressLabels:");
+      expect(yaml).toContain("providerAdapters:");
+      expect(yaml).toContain("evm:");
+      expect(yaml).toContain("safe:");
+      expect(yaml).toContain(
+        "transactionServiceUrl: https://api.safe.global/tx-service"
+      );
+      expect(yaml).toContain(
+        "singletonAddress: '0xd9Db270c1B5E3Bd161E8c8503c55ceABeE709552'"
+      );
+      expect(yaml).toContain(
+        "proxyFactoryAddress: '0xa6B71E26C5e0845f74c812102Ca7114b6a896Ab2'"
+      );
       expect(yaml).toContain("id: test-chain");
       expect(yaml).toContain(
         "publicKey: GjwcWFQYzemBtpUoN5fMAP2FZviTtMRWCmrppGuTthJS"
@@ -147,13 +171,23 @@ describe("export-import", () => {
     });
 
     it("should import both chains and multisigs from YAML", () => {
-      const yaml = exportAll(mockChains, mockMultisigs, mockAddressLabels);
+      const yaml = exportAll(
+        mockChains,
+        mockMultisigs,
+        mockAddressLabels,
+        mockProviderAdapterSettings
+      );
       const imported = importFromYaml(yaml);
 
       expect(imported.version).toBe("1.0");
       expect(imported.chains).toHaveLength(1);
       expect(imported.multisigs).toHaveLength(1);
       expect(imported.addressLabels).toHaveLength(1);
+      expect(imported.providerAdapters?.evm?.safe).toEqual({
+        transactionServiceUrl: "https://api.safe.global/tx-service",
+        singletonAddress: "0xd9Db270c1B5E3Bd161E8c8503c55ceABeE709552",
+        proxyFactoryAddress: "0xa6B71E26C5e0845f74c812102Ca7114b6a896Ab2",
+      });
       expect(imported.addressLabels?.[0].label).toBe("Deployer");
     });
 
@@ -180,6 +214,23 @@ chains:
       expect(imported.chains?.[0].vmFamily).toBe("svm");
       expect(imported.chains?.[0].multisigProvider).toBe("squads");
     });
+
+    it("should normalize partial provider adapter settings", () => {
+      const yaml = `version: "1.0"
+exportedAt: "2026-05-25T08:14:31.450Z"
+providerAdapters:
+  evm:
+    safe:
+      transactionServiceUrl: https://api.safe.global/tx-service
+`;
+      const imported = importFromYaml(yaml);
+
+      expect(imported.providerAdapters?.evm?.safe).toEqual({
+        transactionServiceUrl: "https://api.safe.global/tx-service",
+        singletonAddress: "",
+        proxyFactoryAddress: "",
+      });
+    });
   });
 
   describe("round-trip conversion", () => {
@@ -205,12 +256,22 @@ chains:
     });
 
     it("should handle export/import of all data", () => {
-      const exported = exportAll(mockChains, mockMultisigs, mockAddressLabels);
+      const exported = exportAll(
+        mockChains,
+        mockMultisigs,
+        mockAddressLabels,
+        mockProviderAdapterSettings
+      );
       const imported = importFromYaml(exported);
 
       expect(imported.chains).toHaveLength(1);
       expect(imported.multisigs).toHaveLength(1);
       expect(imported.addressLabels).toHaveLength(1);
+      expect(imported.providerAdapters?.evm?.safe).toEqual({
+        transactionServiceUrl: "https://api.safe.global/tx-service",
+        singletonAddress: "0xd9Db270c1B5E3Bd161E8c8503c55ceABeE709552",
+        proxyFactoryAddress: "0xa6B71E26C5e0845f74c812102Ca7114b6a896Ab2",
+      });
       expect(imported.chains![0]).toEqual(mockChains[0]);
       expect(imported.multisigs![0].publicKey).toBe(
         mockMultisigs[0].publicKey.toString()

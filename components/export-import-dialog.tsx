@@ -1,6 +1,14 @@
 "use client";
 
-import { AlertTriangle, Check, Copy, Link, Loader2, Upload, X } from "lucide-react";
+import {
+  AlertTriangle,
+  Check,
+  Copy,
+  Link,
+  Loader2,
+  Upload,
+  X,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -11,6 +19,7 @@ import {
 } from "@/lib/export-import";
 import { useAddressLabels } from "@/lib/hooks/use-address-label";
 import { SquadService } from "@/lib/squad";
+import { cn } from "@/lib/utils";
 import { useAddressLabelStore } from "@/stores/address-label-store";
 import { useChainStore } from "@/stores/chain-store";
 import { useMultisigStore } from "@/stores/multisig-store";
@@ -23,9 +32,9 @@ import {
   normalizeChainConfig,
 } from "@/types/chain";
 import type { MultisigAccount } from "@/types/multisig";
+import { providerAdaptersToSettings } from "@/types/provider-adapter";
 
-import { cn } from "@/lib/utils";
-
+import { Button } from "./ui/button";
 import {
   Dialog,
   DialogContent,
@@ -33,7 +42,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "./ui/dialog";
-import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Progress } from "./ui/progress";
 import { Textarea } from "./ui/textarea";
@@ -65,6 +73,12 @@ export function ExportImportController() {
   const resetProviderSettings = useProviderAdapterStore(
     (state) => state.resetSettings
   );
+  const updateProviderSettings = useProviderAdapterStore(
+    (state) => state.updateSettings
+  );
+  const providerAdapterSettings = useProviderAdapterStore(
+    (state) => state.settings
+  );
   const resetWorkspace = useWorkspaceStore((state) => state.resetAll);
   const customChainCount = chains.filter((chain) =>
     chain.id.startsWith("custom-")
@@ -79,8 +93,15 @@ export function ExportImportController() {
       const currentLabels = Array.from(
         useAddressLabelStore.getState().labels.values()
       ).sort((a, b) => b.updatedAt - a.updatedAt);
+      const currentProviderAdapterSettings =
+        useProviderAdapterStore.getState().settings;
 
-      const content = exportAll(currentChains, currentMultisigs, currentLabels);
+      const content = exportAll(
+        currentChains,
+        currentMultisigs,
+        currentLabels,
+        currentProviderAdapterSettings
+      );
       setExportContent(content);
     } catch (error) {
       console.error("Export failed:", error);
@@ -110,10 +131,12 @@ export function ExportImportController() {
       }
 
       const data: ExportData = importFromYaml(importContent);
+      const hasProviderAdapters = Boolean(data.providerAdapters?.evm?.safe);
       const totalSteps =
         (data.chains?.length ?? 0) +
         (data.multisigs?.length ?? 0) +
-        ((data.addressLabels?.length ?? 0) > 0 ? 1 : 0);
+        ((data.addressLabels?.length ?? 0) > 0 ? 1 : 0) +
+        (hasProviderAdapters ? 1 : 0);
       let completedSteps = 0;
 
       const updateImportProgress = (label: string) => {
@@ -135,6 +158,7 @@ export function ExportImportController() {
       let importedChains = 0;
       let importedMultisigs = 0;
       let importedLabels = 0;
+      let importedProviderAdapters = false;
       const failedMultisigs: string[] = [];
 
       const newChains: typeof chains = [...chains];
@@ -298,11 +322,20 @@ export function ExportImportController() {
         completeImportStep("Merged address labels");
       }
 
+      if (hasProviderAdapters) {
+        updateImportProgress("Configuring EVM Safe adapter...");
+        updateProviderSettings(
+          providerAdaptersToSettings(data.providerAdapters)
+        );
+        importedProviderAdapters = true;
+        completeImportStep("Configured EVM Safe adapter");
+      }
+
       const messages = [];
       if (importedChains > 0) messages.push(`${importedChains} chain(s)`);
-      if (importedMultisigs > 0)
-        messages.push(`${importedMultisigs} vault(s)`);
+      if (importedMultisigs > 0) messages.push(`${importedMultisigs} vault(s)`);
       if (importedLabels > 0) messages.push(`${importedLabels} label(s)`);
+      if (importedProviderAdapters) messages.push("EVM adapter settings");
 
       if (messages.length > 0) {
         toast.success("Import successful", {
@@ -365,7 +398,7 @@ export function ExportImportController() {
     if (mode === "export") {
       generateExport();
     }
-  }, [chains, labels, mode, multisigs]);
+  }, [chains, labels, mode, multisigs, providerAdapterSettings]);
 
   return (
     <>
@@ -401,11 +434,11 @@ export function ExportImportController() {
       <Dialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
         <DialogContent
           showCloseButton={false}
-          className="max-w-[30rem] gap-0 overflow-hidden border-destructive/20 bg-[linear-gradient(180deg,rgba(35,20,20,0.98),rgba(20,15,18,0.99))] p-0"
+          className="border-destructive/20 max-w-[30rem] gap-0 overflow-hidden bg-[linear-gradient(180deg,rgba(35,20,20,0.98),rgba(20,15,18,0.99))] p-0"
         >
-          <div className="border-b border-destructive/15 px-6 py-5">
+          <div className="border-destructive/15 border-b px-6 py-5">
             <div className="flex items-start gap-4">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-destructive/20 bg-destructive/10">
+              <div className="border-destructive/20 bg-destructive/10 flex h-11 w-11 shrink-0 items-center justify-center rounded-full border">
                 <AlertTriangle className="text-destructive/70 h-5 w-5" />
               </div>
               <div className="space-y-2">
@@ -421,13 +454,13 @@ export function ExportImportController() {
           </div>
 
           <div className="space-y-4 px-6 py-5">
-            <div className="bg-muted rounded-xl p-4 grid gap-2">
+            <div className="bg-muted grid gap-2 rounded-xl p-4">
               <p className="text-muted-foreground/50 text-[11px] font-medium">
                 What gets cleared
               </p>
               <p className="text-foreground/80 text-sm">
-                Saved vaults, custom chains, address labels, provider
-                settings, and current workspace selections.
+                Saved vaults, custom chains, address labels, provider settings,
+                and current workspace selections.
               </p>
             </div>
             <div className="grid gap-2 sm:grid-cols-3">
@@ -538,18 +571,30 @@ function ExportImportExportPanel({
       <div className="border-border/50 flex items-center gap-1 border-b px-4 py-3">
         <div className="flex items-center gap-5">
           <div>
-            <p className="text-muted-foreground/50 text-[11px] font-medium">Squads</p>
-            <p className="text-foreground text-sm font-semibold tabular-nums">{operationalSquadsChains.length}</p>
+            <p className="text-muted-foreground/50 text-[11px] font-medium">
+              Squads
+            </p>
+            <p className="text-foreground text-sm font-semibold tabular-nums">
+              {operationalSquadsChains.length}
+            </p>
           </div>
           <div className="bg-border/50 h-7 w-px" />
           <div>
-            <p className="text-muted-foreground/50 text-[11px] font-medium">Vaults</p>
-            <p className="text-foreground text-sm font-semibold tabular-nums">{multisigs.length}</p>
+            <p className="text-muted-foreground/50 text-[11px] font-medium">
+              Vaults
+            </p>
+            <p className="text-foreground text-sm font-semibold tabular-nums">
+              {multisigs.length}
+            </p>
           </div>
           <div className="bg-border/50 h-7 w-px" />
           <div>
-            <p className="text-muted-foreground/50 text-[11px] font-medium">Safe chains</p>
-            <p className="text-foreground text-sm font-semibold tabular-nums">{preparedSafeChains.length}</p>
+            <p className="text-muted-foreground/50 text-[11px] font-medium">
+              Safe chains
+            </p>
+            <p className="text-foreground text-sm font-semibold tabular-nums">
+              {preparedSafeChains.length}
+            </p>
           </div>
         </div>
         <div className="ml-auto">
@@ -560,15 +605,21 @@ function ExportImportExportPanel({
             className="bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20"
           >
             {copied ? (
-              <><Check className="h-4 w-4" />Copied</>
+              <>
+                <Check className="h-4 w-4" />
+                Copied
+              </>
             ) : (
-              <><Copy className="h-4 w-4" />Copy YAML</>
+              <>
+                <Copy className="h-4 w-4" />
+                Copy YAML
+              </>
             )}
           </Button>
         </div>
       </div>
       <div className="bg-muted/30 min-h-[28rem] w-full overflow-auto">
-        <pre className="p-4 font-mono text-[11px] whitespace-pre text-muted-foreground/70">
+        <pre className="text-muted-foreground/70 p-4 font-mono text-[11px] whitespace-pre">
           <code>{exportContent}</code>
         </pre>
       </div>
@@ -627,8 +678,12 @@ function ExportImportImportPanel({
       setUrlFetchState("success");
     } catch (error) {
       const msg = error instanceof Error ? error.message : "Fetch failed";
-      const isCors = msg.toLowerCase().includes("failed to fetch") || msg.toLowerCase().includes("cors");
-      setUrlError(isCors ? "CORS blocked — paste the YAML directly instead" : msg);
+      const isCors =
+        msg.toLowerCase().includes("failed to fetch") ||
+        msg.toLowerCase().includes("cors");
+      setUrlError(
+        isCors ? "CORS blocked — paste the YAML directly instead" : msg
+      );
       setUrlFetchState("error");
     }
   };
@@ -645,11 +700,13 @@ function ExportImportImportPanel({
       <div className="border-border bg-card overflow-hidden rounded-xl border">
         <div className="border-border/50 flex items-center gap-2 border-b px-4 py-3">
           <Link className="text-muted-foreground/40 h-3.5 w-3.5 shrink-0" />
-          <p className="text-muted-foreground/50 text-[11px] font-medium">Import from URL</p>
+          <p className="text-muted-foreground/50 text-[11px] font-medium">
+            Import from URL
+          </p>
         </div>
-        <div className="px-4 py-3 space-y-2">
+        <div className="space-y-2 px-4 py-3">
           <div className="flex gap-2">
-            <div className="relative flex-1 min-w-0">
+            <div className="relative min-w-0 flex-1">
               <Input
                 type="url"
                 value={urlInput}
@@ -665,7 +722,7 @@ function ExportImportImportPanel({
                 }}
                 disabled={isImporting || urlFetchState === "loading"}
                 placeholder="https://raw.githubusercontent.com/…/config.yaml"
-                className={cn("font-mono text-[11px] pr-8", urlInput && "pr-8")}
+                className={cn("pr-8 font-mono text-[11px]", urlInput && "pr-8")}
               />
               {urlInput && urlFetchState !== "loading" && (
                 <button
@@ -681,21 +738,32 @@ function ExportImportImportPanel({
               type="button"
               variant="outline"
               size="sm"
-              disabled={!urlInput.trim() || isImporting || urlFetchState === "loading"}
+              disabled={
+                !urlInput.trim() || isImporting || urlFetchState === "loading"
+              }
               onClick={() => void handleFetchUrl()}
-              className={urlFetchState === "success" ? "border-emerald-600/40 text-emerald-400" : ""}
+              className={
+                urlFetchState === "success"
+                  ? "border-emerald-600/40 text-emerald-400"
+                  : ""
+              }
             >
               {urlFetchState === "loading" ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
               ) : urlFetchState === "success" ? (
-                <><Check className="h-3.5 w-3.5" />Fetched</>
+                <>
+                  <Check className="h-3.5 w-3.5" />
+                  Fetched
+                </>
               ) : (
                 "Fetch"
               )}
             </Button>
           </div>
           {urlFetchState === "success" && (
-            <p className="text-emerald-400 text-[11px]">YAML loaded and validated — review below then click Import.</p>
+            <p className="text-[11px] text-emerald-400">
+              YAML loaded and validated — review below then click Import.
+            </p>
           )}
           {urlFetchState === "error" && urlError && (
             <p className="text-destructive/80 text-[11px]">{urlError}</p>
@@ -706,7 +774,8 @@ function ExportImportImportPanel({
       {/* Reset state — intentionally de-emphasised, destructive action */}
       <div className="flex items-center justify-between gap-3 px-1">
         <p className="text-muted-foreground/40 text-[11px]">
-          Clears vaults, chains, labels &amp; settings — use only if a previous import left state broken.
+          Clears vaults, chains, labels &amp; settings — use only if a previous
+          import left state broken.
         </p>
         <Button
           type="button"
@@ -714,7 +783,7 @@ function ExportImportImportPanel({
           size="sm"
           disabled={isImporting}
           onClick={onResetImportedState}
-          className="h-auto shrink-0 px-2 py-1 text-[11px] text-muted-foreground/50 hover:text-destructive/80 hover:bg-destructive/5"
+          className="text-muted-foreground/50 hover:text-destructive/80 hover:bg-destructive/5 h-auto shrink-0 px-2 py-1 text-[11px]"
         >
           Reset state
         </Button>
@@ -723,9 +792,12 @@ function ExportImportImportPanel({
       {isImporting && importProgress ? (
         <div className="border-border bg-card overflow-hidden rounded-xl border">
           <div className="flex items-center justify-between gap-3 px-4 py-3">
-            <p className="text-foreground/80 text-[12px]">{importProgress.label}</p>
+            <p className="text-foreground/80 text-[12px]">
+              {importProgress.label}
+            </p>
             <p className="text-muted-foreground/60 text-[11px] tabular-nums">
-              {Math.min(importProgress.current, importProgress.total)} / {importProgress.total}
+              {Math.min(importProgress.current, importProgress.total)} /{" "}
+              {importProgress.total}
             </p>
           </div>
           <Progress value={progressValue} className="h-1 rounded-none" />
@@ -737,7 +809,7 @@ function ExportImportImportPanel({
         onChange={(e) => onImportContentChange(e.target.value)}
         disabled={isImporting}
         placeholder="Paste your YAML configuration here..."
-        className="font-mono text-xs min-h-[24rem] resize-y rounded-xl"
+        className="min-h-[24rem] resize-y rounded-xl font-mono text-xs"
       />
 
       <div className="flex justify-end">
@@ -748,9 +820,15 @@ function ExportImportImportPanel({
           disabled={isImporting || !importContent.trim()}
         >
           {isImporting ? (
-            <><Loader2 className="h-4 w-4 animate-spin" />Importing...</>
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Importing...
+            </>
           ) : (
-            <><Upload className="h-4 w-4" />Import</>
+            <>
+              <Upload className="h-4 w-4" />
+              Import
+            </>
           )}
         </Button>
       </div>

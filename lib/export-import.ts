@@ -3,11 +3,20 @@ import yaml from "js-yaml";
 import type { AddressLabel } from "@/types/address-label";
 import { type ChainConfig, normalizeChainConfig } from "@/types/chain";
 import type { MultisigAccount } from "@/types/multisig";
+import type {
+  ProviderAdapterSettings,
+  ProviderAdaptersConfig,
+} from "@/types/provider-adapter";
+import {
+  normalizeProviderAdapters,
+  serializeProviderAdapters,
+} from "@/types/provider-adapter";
 
 export interface ExportData {
   version: string;
   exportedAt: string;
   chains?: ChainConfig[];
+  providerAdapters?: ProviderAdaptersConfig;
   multisigs?: SerializedMultisigAccount[];
   addressLabels?: AddressLabel[];
 }
@@ -66,6 +75,8 @@ export function importFromYaml(yamlContent: string): ExportData {
     data.chains = data.chains.map(normalizeChainConfig);
   }
 
+  data.providerAdapters = normalizeProviderAdapters(data.providerAdapters);
+
   return data;
 }
 
@@ -94,14 +105,17 @@ export function exportMultisigs(multisigs: MultisigAccount[]): string {
 export function exportAll(
   chains: ChainConfig[],
   multisigs: MultisigAccount[],
-  addressLabels: AddressLabel[]
+  addressLabels: AddressLabel[],
+  providerAdapterSettings?: ProviderAdapterSettings
 ): string {
   const serializedMultisigs = multisigs.map(serializeMultisigAccount);
+  const providerAdapters = serializeProviderAdapters(providerAdapterSettings);
 
   const exportData: ExportData = {
     version: "1.0",
     exportedAt: new Date().toISOString(),
     chains,
+    ...(providerAdapters ? { providerAdapters } : {}),
     multisigs: serializedMultisigs,
     addressLabels,
   };
