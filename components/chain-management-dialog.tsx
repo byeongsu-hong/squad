@@ -42,7 +42,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 import {
   chainNameSchema,
   programIdSchema,
@@ -213,8 +212,6 @@ export function ChainManagementController({
         onSubmit={handleSubmit}
         onCancel={resetForm}
       />
-
-      {embedded ? null : <Separator />}
 
       <ChainRegistry
         embedded={embedded}
