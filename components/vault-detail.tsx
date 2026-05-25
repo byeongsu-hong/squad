@@ -143,7 +143,7 @@ function MemberRow({ member, isViewer }: { member: MemberEntry; isViewer: boolea
             {labelText && (
               <p className="truncate text-[12px] font-medium leading-tight">{labelText}</p>
             )}
-            <p className={cn("font-mono text-[11px] text-muted-foreground/70", labelText && "leading-tight")}>
+            <p className={cn("font-mono text-[11px]", labelText ? "text-muted-foreground/60 leading-tight" : "text-muted-foreground/80")}>
               {truncateAddress(member.address)}
             </p>
           </div>
