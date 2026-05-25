@@ -259,7 +259,7 @@ function ChainEditor({
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>
+                <FormLabel className="text-[11px] font-medium text-muted-foreground/50">
                   Chain Name <span className="text-destructive">*</span>
                 </FormLabel>
                 <FormControl>
@@ -276,7 +276,7 @@ function ChainEditor({
               name="vmFamily"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>VM Family</FormLabel>
+                  <FormLabel className="text-[11px] font-medium text-muted-foreground/50">VM Family</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     value={field.value || "svm"}
@@ -301,7 +301,7 @@ function ChainEditor({
               name="multisigProvider"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Multisig Provider</FormLabel>
+                  <FormLabel className="text-[11px] font-medium text-muted-foreground/50">Multisig Provider</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     value={field.value || "squads"}
@@ -327,7 +327,7 @@ function ChainEditor({
             name="rpcUrl"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>
+                <FormLabel className="text-[11px] font-medium text-muted-foreground/50">
                   RPC URL <span className="text-destructive">*</span>
                 </FormLabel>
                 <FormControl>
@@ -344,7 +344,7 @@ function ChainEditor({
               name="squadsV4ProgramId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
+                  <FormLabel className="text-[11px] font-medium text-muted-foreground/50">
                     Squads Program ID{" "}
                     <span className="text-destructive">*</span>
                   </FormLabel>
@@ -369,7 +369,7 @@ function ChainEditor({
             name="explorerUrl"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Explorer URL (Optional)</FormLabel>
+                <FormLabel className="text-[11px] font-medium text-muted-foreground/50">Explorer URL (Optional)</FormLabel>
                 <FormControl>
                   <Input placeholder="https://explorer.solana.com" {...field} />
                 </FormControl>
