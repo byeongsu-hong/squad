@@ -96,7 +96,7 @@ function MemberRow({ member, isViewer }: { member: MemberEntry; isViewer: boolea
         </p>
       </div>
       {isViewer && (
-        <span className="shrink-0 text-[9px] font-medium text-primary/70 uppercase tracking-wide">
+        <span className="shrink-0 text-[9px] font-medium text-primary/60">
           you
         </span>
       )}
@@ -197,7 +197,7 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
               {multisig.label ?? "Unnamed Vault"}
             </h1>
             <div className="mt-2 flex flex-wrap items-center gap-1.5">
-              <span className="border-border bg-muted text-muted-foreground rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide">
+              <span className="border-border bg-muted text-muted-foreground rounded-full border px-2 py-0.5 text-[10px] font-medium">
                 {multisig.chainName}
               </span>
               <span className={cn(
