@@ -323,23 +323,23 @@ function AddressLabelEditor({
 
         <div className="space-y-1.5">
           <p className="text-[11px] font-medium text-muted-foreground/50">Color</p>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-1">
             {DEFAULT_COLORS.map((color) => (
               <button
                 key={color}
                 type="button"
                 className={cn(
-                  "relative h-7 w-7 rounded-full border-2 transition-all hover:scale-110",
+                  "relative h-5 w-5 rounded transition-all",
                   formData.color === color
-                    ? "border-foreground/60 scale-110"
-                    : "border-transparent hover:border-foreground/20"
+                    ? "ring-2 ring-offset-1 ring-foreground/50 ring-offset-card"
+                    : "opacity-70 hover:opacity-100 hover:ring-1 hover:ring-offset-1 hover:ring-foreground/20 hover:ring-offset-card"
                 )}
                 style={{ backgroundColor: color }}
                 onClick={() => onFormDataChange({ ...formData, color })}
                 aria-label={`Select color ${color}`}
               >
                 {formData.color === color && (
-                  <Check className="absolute inset-0 m-auto h-3.5 w-3.5 text-white drop-shadow-sm" />
+                  <Check className="absolute inset-0 m-auto h-2.5 w-2.5 text-white drop-shadow-sm" />
                 )}
               </button>
             ))}
