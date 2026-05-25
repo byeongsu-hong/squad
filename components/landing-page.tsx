@@ -182,53 +182,65 @@ export function LandingPage() {
           showFilters
           defaultStatusFilter={activeFilter}
           emptyStateCta={
-            <div className="w-full max-w-sm space-y-2 mt-1">
+            <div className="w-full max-w-sm mt-1">
               {workspaceMultisigs.length === 1 ? (
                 <Link
                   href={`/vaults/${encodeURIComponent(workspaceMultisigs[0].key)}`}
                   className="group block"
                 >
-                  <div className="border-border bg-card hover:bg-primary/5 w-full rounded-xl border px-4 py-3 transition-colors [box-shadow:inset_2px_0_0_rgba(217,119,6,0.25)] group-hover:[box-shadow:inset_2px_0_0_rgba(217,119,6,0.55)]">
-                    <div className="flex items-center gap-2.5">
+                  <div className="border-border bg-card hover:bg-primary/[0.03] w-full rounded-xl border px-4 py-3.5 transition-colors [box-shadow:inset_2px_0_0_rgba(217,119,6,0.3)] group-hover:[box-shadow:inset_2px_0_0_rgba(217,119,6,0.6)]">
+                    <div className="flex items-center gap-3">
                       <div className={cn(
-                        "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border",
+                        "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border",
                         workspaceMultisigs[0].provider === "squads"
                           ? "bg-primary/10 border-primary/20"
                           : "bg-blue-50 border-blue-200/60 dark:bg-blue-950/20 dark:border-blue-700/40"
                       )}>
                         {workspaceMultisigs[0].label ? (
                           <span className={cn(
-                            "text-[13px] font-bold leading-none",
+                            "text-[14px] font-bold leading-none",
                             workspaceMultisigs[0].provider === "squads" ? "text-primary/70" : "text-blue-600 dark:text-blue-400"
                           )}>
                             {workspaceMultisigs[0].label.slice(0, 1).toUpperCase()}
                           </span>
                         ) : (
                           <Shield className={cn(
-                            "h-3.5 w-3.5",
+                            "h-4 w-4",
                             workspaceMultisigs[0].provider === "squads" ? "text-primary/60" : "text-blue-600/60 dark:text-blue-400/60"
                           )} />
                         )}
                       </div>
                       <div className="min-w-0 flex-1 text-left">
                         <p className={cn(
-                          "truncate text-[13px] font-medium",
+                          "truncate text-[13px] font-semibold",
                           workspaceMultisigs[0].label ? "text-foreground" : "text-muted-foreground/50 italic"
                         )}>
                           {workspaceMultisigs[0].label ?? "Unnamed Vault"}
                         </p>
-                        <p className="text-muted-foreground/50 text-[11px]">
+                        <p className="text-muted-foreground/50 text-[11px] mt-px">
                           {workspaceMultisigs[0].chainName} · {workspaceMultisigs[0].threshold}/{workspaceMultisigs[0].members.length}
                         </p>
                       </div>
-                      <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50 transition-colors group-hover:text-muted-foreground/80" />
+                      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/40 transition-[color,transform] group-hover:translate-x-0.5 group-hover:text-primary/60" />
                     </div>
                   </div>
                 </Link>
               ) : (
-                <Button variant="outline" asChild size="sm" className="w-full">
-                  <Link href="/vaults">View {workspaceMultisigs.length} Vaults</Link>
-                </Button>
+                <Link
+                  href="/vaults"
+                  className="group flex w-full items-center justify-between rounded-xl border border-border bg-card px-4 py-3.5 transition-colors hover:bg-muted/40 [box-shadow:inset_2px_0_0_rgba(217,119,6,0.3)] hover:[box-shadow:inset_2px_0_0_rgba(217,119,6,0.6)]"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border bg-muted">
+                      <Shield className="h-4 w-4 text-muted-foreground/50" />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-[13px] font-semibold">{workspaceMultisigs.length} vaults</p>
+                      <p className="text-muted-foreground/50 text-[11px] mt-px">View and manage</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/40 transition-[color,transform] group-hover:translate-x-0.5 group-hover:text-primary/60" />
+                </Link>
               )}
             </div>
           }
