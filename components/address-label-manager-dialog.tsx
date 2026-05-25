@@ -1,6 +1,6 @@
 "use client";
 
-import { Pencil, Plus, Search, Tag, Trash2, X } from "lucide-react";
+import { Check, Pencil, Plus, Search, Tag, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useAddressLabels } from "@/lib/hooks/use-address-label";
 import { cn } from "@/lib/utils";
 import type { AddressLabel } from "@/types/address-label";
@@ -277,9 +276,9 @@ function AddressLabelEditor({
         )}
       </div>
 
-      <form onSubmit={onSubmit} className="space-y-3.5">
-        <div className="space-y-2">
-          <Label htmlFor="address">Address</Label>
+      <form onSubmit={onSubmit} className="space-y-3">
+        <div className="space-y-1.5">
+          <label htmlFor="address" className="text-[11px] font-medium text-muted-foreground/50">Address</label>
           <Input
             id="address"
             placeholder="Enter address"
@@ -292,11 +291,13 @@ function AddressLabelEditor({
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="label">Label <span className="text-muted-foreground/50 font-normal">(max 12 chars)</span></Label>
+        <div className="space-y-1.5">
+          <label htmlFor="label" className="text-[11px] font-medium text-muted-foreground/50">
+            Label <span className="text-muted-foreground/30 font-normal">· max 12 chars</span>
+          </label>
           <Input
             id="label"
-            placeholder="Enter label name"
+            placeholder="e.g., Treasury"
             value={formData.label}
             onChange={(e) =>
               onFormDataChange({ ...formData, label: e.target.value })
@@ -306,11 +307,13 @@ function AddressLabelEditor({
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="description">Description <span className="text-muted-foreground/50 font-normal">(Optional)</span></Label>
+        <div className="space-y-1.5">
+          <label htmlFor="description" className="text-[11px] font-medium text-muted-foreground/50">
+            Description <span className="text-muted-foreground/30 font-normal">· optional</span>
+          </label>
           <Input
             id="description"
-            placeholder="Add description"
+            placeholder="Add a note..."
             value={formData.description}
             onChange={(e) =>
               onFormDataChange({ ...formData, description: e.target.value })
@@ -318,24 +321,27 @@ function AddressLabelEditor({
           />
         </div>
 
-        <div className="space-y-2">
-          <Label>Color</Label>
-          <div className="flex flex-wrap gap-2">
+        <div className="space-y-1.5">
+          <p className="text-[11px] font-medium text-muted-foreground/50">Color</p>
+          <div className="flex flex-wrap gap-1.5">
             {DEFAULT_COLORS.map((color) => (
-              <Button
+              <button
                 key={color}
                 type="button"
-                variant="ghost"
                 className={cn(
-                  "h-8 w-8 rounded-full border-2 p-0 transition-all",
+                  "relative h-7 w-7 rounded-full border-2 transition-all hover:scale-110",
                   formData.color === color
-                    ? "scale-110 border-foreground"
-                    : "border-transparent hover:scale-105"
+                    ? "border-foreground/60 scale-110"
+                    : "border-transparent hover:border-foreground/20"
                 )}
                 style={{ backgroundColor: color }}
                 onClick={() => onFormDataChange({ ...formData, color })}
                 aria-label={`Select color ${color}`}
-              />
+              >
+                {formData.color === color && (
+                  <Check className="absolute inset-0 m-auto h-3.5 w-3.5 text-white drop-shadow-sm" />
+                )}
+              </button>
             ))}
           </div>
         </div>
@@ -376,21 +382,15 @@ function AddressLabelRegistry({
           : "flex min-h-0 flex-1 flex-col overflow-hidden"
       }
     >
-      <div
-        className={
-          embedded
-            ? "border-border border-b px-4 py-3"
-            : "shrink-0 border-b px-4 py-3"
-        }
-      >
-        <p className="mb-3 text-muted-foreground/50 text-[11px] font-medium">Saved Labels</p>
-        <div className="relative">
-          <Search className="text-muted-foreground/40 absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+      <div className="border-border border-b flex items-center gap-3 px-4 py-3">
+        <p className="text-muted-foreground/50 text-[11px] font-medium shrink-0">Saved Labels</p>
+        <div className="relative flex-1 min-w-0">
+          <Search className="text-muted-foreground/40 absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2" />
           <Input
-            placeholder="Search labels or addresses..."
+            placeholder="Search..."
             value={searchQuery}
             onChange={(e) => onSearchQueryChange(e.target.value)}
-            className="pl-9"
+            className="pl-8 h-7 text-xs"
           />
         </div>
       </div>
@@ -414,7 +414,7 @@ function AddressLabelRegistry({
       >
         {filteredLabels.length === 0 ? (
           <div className="flex h-full min-h-[12rem] flex-col items-center justify-center gap-3 text-center">
-            <div className="bg-card border-border flex h-10 w-10 items-center justify-center rounded-2xl border">
+            <div className="bg-card border-border flex h-10 w-10 items-center justify-center rounded-xl border">
               <Tag className="text-muted-foreground/60 h-5 w-5" />
             </div>
             <p className="text-muted-foreground/60 text-sm">
