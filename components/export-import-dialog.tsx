@@ -535,7 +535,7 @@ function ExportImportModePicker({
           className={cn(
             "rounded-md px-4 py-1.5 text-[13px] font-medium transition-all",
             mode === m
-              ? "bg-card text-foreground shadow-sm"
+              ? "bg-card dark:bg-muted text-foreground shadow-sm"
               : "text-muted-foreground hover:text-foreground disabled:opacity-50"
           )}
         >
@@ -744,7 +744,7 @@ function ExportImportImportPanel({
               onClick={() => void handleFetchUrl()}
               className={
                 urlFetchState === "success"
-                  ? "border-emerald-600/40 text-emerald-400"
+                  ? "border-emerald-500/40 text-emerald-600 dark:text-emerald-400"
                   : ""
               }
             >
@@ -761,7 +761,7 @@ function ExportImportImportPanel({
             </Button>
           </div>
           {urlFetchState === "success" && (
-            <p className="text-[11px] text-emerald-400">
+            <p className="text-[11px] text-emerald-600 dark:text-emerald-400">
               YAML loaded and validated — review below then click Import.
             </p>
           )}

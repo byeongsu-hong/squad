@@ -120,13 +120,13 @@ export function LandingPage() {
               "flex shrink-0 items-center gap-2 px-4 py-3 transition-colors",
               !loading && executableCount > 0 ? "cursor-pointer" : "cursor-default",
               activeFilter === "Executable"
-                ? "bg-emerald-950/20 [box-shadow:inset_0_-2px_0_rgba(5,150,105,0.6)]"
-                : !loading && executableCount > 0 ? "hover:bg-emerald-950/10" : ""
+                ? "bg-emerald-50 dark:bg-emerald-950/20 [box-shadow:inset_0_-2px_0_rgba(5,150,105,0.6)]"
+                : !loading && executableCount > 0 ? "hover:bg-emerald-50/70 dark:hover:bg-emerald-950/10" : ""
             )}
           >
             <span className={cn(
               "text-[18px] font-bold tabular-nums leading-none",
-              loading ? "text-muted-foreground/20 animate-pulse" : executableCount > 0 ? "text-emerald-400" : "text-muted-foreground/25"
+              loading ? "text-muted-foreground/20 animate-pulse" : executableCount > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground/25"
             )}>
               {executableCount}
             </span>

@@ -310,8 +310,8 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
           {!loading && vaultItems.length === 0 ? (
             <div className="border-border bg-card overflow-hidden rounded-xl border">
               <div className="flex flex-col items-center justify-center gap-2.5 py-10 text-center">
-                <div className="flex h-8 w-8 items-center justify-center rounded-xl border border-emerald-900/30 bg-emerald-950/20">
-                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500/60" />
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl border border-emerald-200/60 bg-emerald-50 dark:border-emerald-900/30 dark:bg-emerald-950/20">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600/60 dark:text-emerald-500/60" />
                 </div>
                 <p className="text-muted-foreground/60 text-[11px]">No proposals yet.</p>
               </div>

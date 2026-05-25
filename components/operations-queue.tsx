@@ -50,7 +50,7 @@ function formatAge(createdAt?: string): string {
 function StatusBadge({ item }: { item: WorkspaceQueueItem }) {
   if (item.readyToExecute) {
     return (
-      <span className="inline-flex items-center gap-1 rounded border border-emerald-800/50 bg-emerald-950/30 px-1.5 py-0.5 text-[10px] text-emerald-400">
+      <span className="inline-flex items-center gap-1 rounded border border-emerald-300/70 bg-emerald-50 px-1.5 py-0.5 text-[10px] text-emerald-600 dark:border-emerald-800/50 dark:bg-emerald-950/30 dark:text-emerald-400">
         <Zap className="h-2.5 w-2.5 fill-current" />
         Ready
       </span>
@@ -65,7 +65,7 @@ function StatusBadge({ item }: { item: WorkspaceQueueItem }) {
   }
   if (item.currentUserApproved && item.proposal.status === "Active") {
     return (
-      <span className="inline-flex items-center gap-1 rounded border border-emerald-800/30 bg-emerald-950/10 px-1.5 py-0.5 text-[10px] text-emerald-500/70">
+      <span className="inline-flex items-center gap-1 rounded border border-emerald-200/70 bg-emerald-50/80 px-1.5 py-0.5 text-[10px] text-emerald-600/70 dark:border-emerald-800/30 dark:bg-emerald-950/10 dark:text-emerald-500/70">
         <Check className="h-2.5 w-2.5" />
         Signed
       </span>
@@ -127,7 +127,7 @@ function QueueRow({
         isSelected
           ? "bg-primary/8"
           : item.readyToExecute
-          ? "hover:bg-emerald-950/15 [box-shadow:inset_2px_0_0_rgba(5,150,105,0.4)]"
+          ? "hover:bg-emerald-50 dark:hover:bg-emerald-950/15 [box-shadow:inset_2px_0_0_rgba(5,150,105,0.4)]"
           : item.needsYourSignature && !item.currentUserApproved
           ? "hover:bg-primary/5 [box-shadow:inset_2px_0_0_rgba(217,119,6,0.4)]"
           : item.currentUserApproved && item.proposal.status === "Active"
@@ -535,10 +535,10 @@ export function OperationsQueue({
             <div className={cn(
               "flex items-center justify-center border",
               compact
-                ? "h-8 w-8 rounded-xl bg-emerald-950/20 border-emerald-900/30"
-                : "h-14 w-14 rounded-2xl bg-emerald-950/20 border-emerald-900/30"
+                ? "h-8 w-8 rounded-xl bg-emerald-50 border-emerald-200/60 dark:bg-emerald-950/20 dark:border-emerald-900/30"
+                : "h-14 w-14 rounded-2xl bg-emerald-50 border-emerald-200/60 dark:bg-emerald-950/20 dark:border-emerald-900/30"
             )}>
-              <CheckCircle2 className={cn("text-emerald-500/60", compact ? "h-3.5 w-3.5" : "h-6 w-6")} />
+              <CheckCircle2 className={cn("text-emerald-600/60 dark:text-emerald-500/60", compact ? "h-3.5 w-3.5" : "h-6 w-6")} />
             </div>
           ) : (
             <div className={cn(

@@ -61,7 +61,7 @@ export function ProviderAdaptersPanel() {
                 <span className="text-foreground/80 text-[13px] font-medium">{chain.name}</span>
                 <div className="flex items-center gap-2">
                   {chain.squadsV4ProgramId ? (
-                    <span className="border-emerald-800/40 bg-emerald-950/20 text-emerald-400 rounded border px-1.5 py-px font-mono text-[10px]">
+                    <span className="border-emerald-300/60 bg-emerald-50 text-emerald-600 dark:border-emerald-800/40 dark:bg-emerald-950/20 dark:text-emerald-400 rounded border px-1.5 py-px font-mono text-[10px]">
                       ready
                     </span>
                   ) : (
@@ -88,7 +88,7 @@ export function ProviderAdaptersPanel() {
           <span className={cn(
             "shrink-0 rounded-full border px-2.5 py-0.5 text-[11px] font-medium",
             safeAdapterFieldsConfigured === 3
-              ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
+              ? "border-emerald-300/60 bg-emerald-50 text-emerald-600 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-400"
               : "border-border text-muted-foreground/60"
           )}>
             {safeChains.length} chain{safeChains.length !== 1 ? "s" : ""}
@@ -104,7 +104,7 @@ export function ProviderAdaptersPanel() {
                 <span className={cn(
                   "rounded border px-1.5 py-px text-[10px]",
                   safeAdapterFieldsConfigured === 3
-                    ? "border-emerald-800/40 bg-emerald-950/20 text-emerald-400"
+                    ? "border-emerald-300/60 bg-emerald-50 text-emerald-600 dark:border-emerald-800/40 dark:bg-emerald-950/20 dark:text-emerald-400"
                     : "border-border text-muted-foreground/40"
                 )}>
                   {safeAdapterFieldsConfigured === 3 ? "configured" : "needs setup"}
