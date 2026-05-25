@@ -46,7 +46,7 @@ export default function SettingsSectionPage({
   const sectionCounts = useMemo<Record<WorkspaceSettingsSection, number>>(
     () => ({
       chains: chains.length,
-      adapters: chains.length,
+      adapters: 0,
       registry: 0,
       labels: labels.length,
     }),

@@ -336,8 +336,16 @@ export function OperationsQueue({
     () => filtered.filter((i) => i.needsYourSignature || i.readyToExecute),
     [filtered]
   );
+  const watchingItems = useMemo(
+    () => filtered.filter(
+      (i) => !i.needsYourSignature && !i.readyToExecute && i.proposal.status === "Active"
+    ),
+    [filtered]
+  );
   const historyItems = useMemo(
-    () => filtered.filter((i) => !i.needsYourSignature && !i.readyToExecute),
+    () => filtered.filter(
+      (i) => !i.needsYourSignature && !i.readyToExecute && i.proposal.status !== "Active"
+    ),
     [filtered]
   );
 
@@ -671,6 +679,34 @@ export function OperationsQueue({
                         : undefined
                     }
                     isActioning={isActionInProgress}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {watchingItems.length > 0 && (
+            <div className="border-border bg-card overflow-hidden rounded-xl border">
+              <div className="border-b border-border flex items-center gap-2 px-3 py-2">
+                <span className="bg-blue-400/60 dark:bg-blue-500/50 h-1.5 w-1.5 rounded-full" />
+                <p className="text-muted-foreground/50 text-[11px] font-medium">
+                  Watching
+                </p>
+                <span className="text-muted-foreground/50 font-mono text-[11px] tabular-nums">
+                  {watchingItems.length}
+                </span>
+              </div>
+              <div className="divide-border divide-y">
+                {watchingItems.map((item) => (
+                  <QueueRow
+                    key={item.focusKey}
+                    item={item}
+                    isSelected={false}
+                    isSelectable={false}
+                    onToggle={() => {}}
+                    onClick={() => setSelectedItem(item)}
+                    compact={compact}
+                    hideChain={hideChain}
                   />
                 ))}
               </div>
