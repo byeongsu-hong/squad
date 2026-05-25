@@ -469,17 +469,19 @@ export function MultisigList({ selectedKey }: { selectedKey?: string }) {
                         <Copy className="h-2.5 w-2.5" />
                       </Button>
                       {row.tags.slice(0, 2).map((tag) => (
-                        <span
+                        <button
                           key={tag}
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); toggleFilterTag(tag); }}
                           className={cn(
-                            "shrink-0 rounded-full border px-1.5 py-px text-[10px]",
+                            "shrink-0 cursor-pointer rounded-full border px-1.5 py-px text-[10px] transition-colors",
                             selectedFilterTags.includes(tag)
-                              ? "border-primary/30 bg-primary/10 text-primary font-medium"
-                              : "border-border bg-muted/60 text-muted-foreground/50"
+                              ? "border-primary/30 bg-primary/10 text-primary font-medium hover:bg-primary/20"
+                              : "border-border bg-muted/60 text-muted-foreground/50 hover:border-primary/30 hover:bg-primary/5 hover:text-primary"
                           )}
                         >
                           {tag}
-                        </span>
+                        </button>
                       ))}
                       {row.tags.length > 2 && (
                         <span className="text-muted-foreground/50 shrink-0 text-[10px]">+{row.tags.length - 2}</span>
