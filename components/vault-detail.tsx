@@ -303,7 +303,7 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
       </div>
 
       {/* Body: Transactions (main) + Signers (sidebar) */}
-      <div className="pt-4 flex flex-col gap-5 md:grid md:grid-cols-[1fr_220px] md:items-start md:gap-6">
+      <div className="pt-4 flex flex-col gap-5 xl:grid xl:grid-cols-[1fr_220px] xl:items-start xl:gap-6">
 
         {/* Transactions — shown first */}
         <div className="order-1">

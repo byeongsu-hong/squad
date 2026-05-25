@@ -579,7 +579,7 @@ export function OperationsQueue({
                   </button>
                 )}
                 <div className="ml-auto flex items-center gap-1.5">
-                  {approveAllItems.length > 0 && (
+                  {approveAllItems.length > 1 && (
                     <Button
                       size="xs"
                       disabled={isActionInProgress}
@@ -591,10 +591,10 @@ export function OperationsQueue({
                       ) : (
                         <Check className="h-3 w-3" />
                       )}
-                      Sign{approveAllItems.length > 1 ? ` all (${approveAllItems.length})` : ""}
+                      Sign all ({approveAllItems.length})
                     </Button>
                   )}
-                  {executeAllItems.length > 0 && (
+                  {executeAllItems.length > 1 && (
                     <Button
                       size="xs"
                       disabled={isActionInProgress}
@@ -606,7 +606,7 @@ export function OperationsQueue({
                       ) : (
                         <Zap className="h-3 w-3" />
                       )}
-                      Execute{executeAllItems.length > 1 ? ` all (${executeAllItems.length})` : ""}
+                      Execute all ({executeAllItems.length})
                     </Button>
                   )}
                 </div>
