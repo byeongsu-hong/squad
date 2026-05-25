@@ -150,11 +150,15 @@ function QueueRow({
         </div>
       )}
 
-      {/* Left: vault name + metadata */}
+      {/* Left: vault/tx label + metadata */}
       <div className="min-w-0 flex-1">
-        {!compact && (
+        {!compact ? (
           <p className="text-foreground mb-0.5 truncate text-[13px] font-medium leading-tight">
             {item.multisig.label ?? "Unnamed"}
+          </p>
+        ) : (
+          <p className="text-foreground/70 mb-0.5 truncate text-[12px] font-medium leading-tight">
+            {item.lineLabel}
           </p>
         )}
         <div className="flex items-center gap-1.5">

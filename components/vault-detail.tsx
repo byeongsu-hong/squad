@@ -302,52 +302,58 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
         </div>
       </div>
 
-      {/* Members */}
-      {multisig.members.length > 0 && (
-        <div className="py-4 border-b border-border/50">
-          <div className="mb-2 flex items-center gap-2">
-            <Users className="text-muted-foreground/60 h-3.5 w-3.5" />
-            <span className="text-muted-foreground/50 text-[11px] font-medium">
-              Signers
-            </span>
-            <span className="text-muted-foreground/40 font-mono text-[11px]">
-              {multisig.threshold}/{multisig.members.length}
-            </span>
-          </div>
-          <TooltipProvider delayDuration={0}>
-            <div className="divide-border/60 divide-y">
-              {multisig.members.map((member) => (
-                <MemberRow
-                  key={member.address}
-                  member={member}
-                  isViewer={viewerAddress === member.address}
-                />
-              ))}
-            </div>
-          </TooltipProvider>
-        </div>
-      )}
+      {/* Body: Transactions (main) + Signers (sidebar) */}
+      <div className="pt-4 flex flex-col gap-5 md:grid md:grid-cols-[1fr_220px] md:items-start md:gap-6">
 
-      {/* Transactions */}
-      <div className="pt-4">
-        <div className="mb-2 flex items-center gap-2">
-          <ArrowLeftRight className="text-muted-foreground/60 h-3.5 w-3.5" />
-          <span className="text-muted-foreground/50 text-[11px] font-medium">
-            Transactions
-          </span>
-          {!loading && vaultItems.length > 0 && (
-            <span className="text-muted-foreground/40 font-mono text-[11px] tabular-nums">
-              {vaultItems.length}
+        {/* Transactions — shown first */}
+        <div className="order-1">
+          <div className="mb-3 flex items-center gap-2">
+            <ArrowLeftRight className="text-muted-foreground/40 h-3.5 w-3.5" />
+            <span className="text-muted-foreground/50 text-[11px] font-medium">
+              Transactions
             </span>
-          )}
+            {!loading && vaultItems.length > 0 && (
+              <span className="text-muted-foreground/40 font-mono text-[11px] tabular-nums">
+                {vaultItems.length}
+              </span>
+            )}
+          </div>
+          <OperationsQueue
+            items={vaultItems}
+            loading={loading}
+            showFilters={false}
+            compact
+            hideChain
+          />
         </div>
-        <OperationsQueue
-          items={vaultItems}
-          loading={loading}
-          showFilters={false}
-          compact
-          hideChain
-        />
+
+        {/* Signers — sidebar on desktop, below transactions on mobile */}
+        {multisig.members.length > 0 && (
+          <div className="order-2">
+            <div className="mb-3 flex items-center gap-2">
+              <Users className="text-muted-foreground/40 h-3.5 w-3.5" />
+              <span className="text-muted-foreground/50 text-[11px] font-medium">
+                Signers
+              </span>
+              <span className="text-muted-foreground/40 font-mono text-[11px]">
+                {multisig.threshold}/{multisig.members.length}
+              </span>
+            </div>
+            <div className="border-border bg-card overflow-hidden rounded-xl border">
+              <TooltipProvider delayDuration={0}>
+                <div className="divide-border/60 divide-y px-2 py-1">
+                  {multisig.members.map((member) => (
+                    <MemberRow
+                      key={member.address}
+                      member={member}
+                      isViewer={viewerAddress === member.address}
+                    />
+                  ))}
+                </div>
+              </TooltipProvider>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
