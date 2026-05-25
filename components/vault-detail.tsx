@@ -289,58 +289,59 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
                     {executableCount} ready
                   </span>
                 )}
-                {pendingCount !== null && pendingCount > 0 && !needsSigningCount && !executableCount && (
-                  <span className="bg-muted text-muted-foreground/60 rounded-full px-2 py-0.5 text-[10px] font-medium">
-                    {pendingCount} pending
-                  </span>
-                )}
                 {CloseButton}
               </div>
             </div>
-            <div className="mt-1.5 flex flex-wrap items-center gap-1">
-              <span className="border-border bg-muted text-muted-foreground/70 rounded-full border px-2 py-0.5 text-[10px] font-medium">
-                {multisig.chainName}
-              </span>
+
+            {/* Single compact meta line */}
+            <div className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-1">
               <span className={cn(
-                "rounded-full border px-2 py-0.5 text-[10px] font-medium",
-                isSquads
-                  ? "border-primary/30 bg-primary/10 text-primary"
-                  : "border-blue-300/50 bg-blue-50 text-blue-700 dark:border-blue-700/50 dark:bg-blue-950/30 dark:text-blue-400"
+                "text-[11px] font-medium",
+                isSquads ? "text-primary/70" : "text-blue-500 dark:text-blue-400"
               )}>
                 {isSquads ? "Squads" : "Safe"}
+              </span>
+              <span className="text-muted-foreground/30 text-[10px]">·</span>
+              <span className="text-muted-foreground/60 text-[11px]">{multisig.chainName}</span>
+              <span className="text-muted-foreground/30 text-[10px]">·</span>
+              <span className={cn(
+                "font-mono text-[11px] font-semibold",
+                isSquads ? "text-primary/80" : "text-blue-500 dark:text-blue-400"
+              )}>
+                {multisig.threshold}/{multisig.members.length}
               </span>
               {multisig.tags.map((tag) => (
                 <span
                   key={tag}
-                  className="border-border bg-muted text-muted-foreground/60 rounded-full border px-2 py-0.5 text-[10px] font-medium"
+                  className="border-border bg-muted/60 text-muted-foreground/50 ml-0.5 rounded-full border px-1.5 py-px text-[10px]"
                 >
                   {tag}
                 </span>
               ))}
             </div>
+
+            {/* Addresses */}
+            <div className="mt-2 space-y-0.5">
+              <AddressRow
+                address={multisig.address}
+                label={
+                  isSquads && multisig.vaultAddress && multisig.vaultAddress !== multisig.address
+                    ? "multisig"
+                    : undefined
+                }
+                labelClassName="text-muted-foreground/40"
+                explorerUrl={explorerUrl}
+              />
+              {isSquads && multisig.vaultAddress && multisig.vaultAddress !== multisig.address && (
+                <AddressRow
+                  address={multisig.vaultAddress}
+                  label="treasury"
+                  labelClassName="text-primary/50"
+                  explorerUrl={explorerUrl}
+                />
+              )}
+            </div>
           </div>
-        </div>
-        <div className="mt-2.5 pl-12 space-y-0.5">
-          <AddressRow
-            address={multisig.address}
-            label={
-              isSquads && multisig.vaultAddress && multisig.vaultAddress !== multisig.address
-                ? "multisig"
-                : isSquads
-                ? "address"
-                : "safe"
-            }
-            labelClassName="text-muted-foreground/50"
-            explorerUrl={explorerUrl}
-          />
-          {isSquads && multisig.vaultAddress && multisig.vaultAddress !== multisig.address && (
-            <AddressRow
-              address={multisig.vaultAddress}
-              label="treasury"
-              labelClassName="text-primary/50"
-              explorerUrl={explorerUrl}
-            />
-          )}
         </div>
       </div>
 
