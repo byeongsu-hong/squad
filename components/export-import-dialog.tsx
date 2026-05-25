@@ -500,7 +500,7 @@ function ExportImportModePicker({
           disabled={disabled}
           onClick={() => onModeChange(m)}
           className={cn(
-            "rounded-md px-4 py-1.5 text-sm font-medium transition-all",
+            "rounded-md px-4 py-1.5 text-[13px] font-medium transition-all",
             mode === m
               ? "bg-card text-foreground shadow-sm"
               : "text-muted-foreground hover:text-foreground disabled:opacity-50"
