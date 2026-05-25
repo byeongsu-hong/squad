@@ -576,11 +576,14 @@ export function OperationsQueue({
       )}
 
       {filtered.length === 0 ? (
-        <div className={cn("flex flex-col items-center justify-center gap-4 text-center", compact ? "py-10" : "py-16")}>
-          <div className="bg-card border-border flex h-12 w-12 items-center justify-center rounded-2xl border">
-            <Inbox className="text-muted-foreground/60 h-5 w-5" />
+        <div className={cn("flex flex-col items-center justify-center gap-3 text-center", compact ? "py-8" : "py-16")}>
+          <div className={cn(
+            "bg-card border-border flex items-center justify-center border",
+            compact ? "h-8 w-8 rounded-xl" : "h-12 w-12 rounded-2xl"
+          )}>
+            <Inbox className={cn("text-muted-foreground/50", compact ? "h-3.5 w-3.5" : "h-5 w-5")} />
           </div>
-          <p className="text-muted-foreground text-sm">
+          <p className={cn("text-muted-foreground", compact ? "text-xs" : "text-sm")}>
             {items.length === 0
               ? "No proposals yet."
               : "No transactions match your filters."}
@@ -607,7 +610,7 @@ export function OperationsQueue({
             <div>
               <div className="mb-2 flex items-center gap-2">
                 <span className="bg-primary h-2 w-2 rounded-full" />
-                <p className="text-muted-foreground/60 text-[11px] font-semibold tracking-wide">
+                <p className="text-muted-foreground/60 text-[11px] font-medium tracking-wide">
                   Needs attention
                 </p>
                 <span className="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-[10px] font-bold tabular-nums">
@@ -695,7 +698,7 @@ export function OperationsQueue({
             <div>
               <div className="mb-2 flex items-center gap-2">
                 <span className="bg-muted-foreground/25 h-2 w-2 rounded-full" />
-                <p className="text-muted-foreground/60 text-[11px] font-semibold tracking-wide">
+                <p className="text-muted-foreground/60 text-[11px] font-medium tracking-wide">
                   History
                 </p>
                 <span className="text-muted-foreground/40 font-mono text-[11px] tabular-nums">

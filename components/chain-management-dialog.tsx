@@ -500,35 +500,20 @@ function ChainRegistry({
                 : "group hover:bg-muted border-border focus-visible:ring-ring flex cursor-pointer items-center justify-between rounded-lg border p-3 transition-colors focus-visible:ring-1 focus-visible:outline-none"
             }
           >
-            <div className="min-w-0 space-y-1">
+            <div className="min-w-0">
               <p className="text-foreground text-sm font-medium">
                 {chain.name}
               </p>
-              <div className="flex flex-wrap items-center gap-2">
-                {chain.id.startsWith("custom-") ? (
-                  <span className="border-primary/30 bg-primary/10 text-primary rounded-full border px-1.5 py-0.5 text-[0.62rem] tracking-[0.16em] uppercase">
-                    Custom
-                  </span>
-                ) : chain.isDefault ? (
-                  <span className="border-border bg-muted text-muted-foreground rounded-full border px-1.5 py-0.5 text-[0.62rem] tracking-[0.16em] uppercase">
-                    Default
-                  </span>
-                ) : null}
+              <div className="mt-0.5 flex items-center gap-1.5">
                 <span className={cn(
-                  "rounded-full border px-1.5 py-0.5 text-[0.62rem] tracking-[0.16em] uppercase",
+                  "inline-block h-1.5 w-1.5 shrink-0 rounded-full",
                   (chain.vmFamily ?? "svm") === "svm"
-                    ? "border-primary/30 bg-primary/10 text-primary"
-                    : "border-blue-300/50 bg-blue-50 text-blue-700 dark:border-blue-700/50 dark:bg-blue-950/30 dark:text-blue-400"
-                )}>
-                  {(chain.vmFamily ?? "svm").toUpperCase()}
-                </span>
-                <span className={cn(
-                  "rounded-full border px-1.5 py-0.5 text-[0.62rem] tracking-[0.16em] uppercase",
-                  (chain.multisigProvider ?? "squads") === "squads"
-                    ? "border-primary/30 bg-primary/10 text-primary"
-                    : "border-blue-300/50 bg-blue-50 text-blue-700 dark:border-blue-700/50 dark:bg-blue-950/30 dark:text-blue-400"
-                )}>
-                  {chain.multisigProvider ?? "squads"}
+                    ? "bg-primary/60"
+                    : "bg-blue-500/60 dark:bg-blue-400/60"
+                )} />
+                <span className="text-muted-foreground/50 text-[10px]">
+                  {chain.multisigProvider === "safe" ? "Safe" : "Squads"}
+                  {chain.isDefault ? " · default" : chain.id.startsWith("custom-") ? " · custom" : ""}
                 </span>
               </div>
               {!embedded ? (
