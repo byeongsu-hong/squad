@@ -136,10 +136,10 @@ export function AddressWithLabel({
             )}
           >
             <div
-              className="inline-flex max-w-full shrink-0 items-center rounded px-1.5 py-0.5"
+              className="inline-flex max-w-full shrink-0 items-center rounded-md px-1.5 py-0.5"
               style={{
-                backgroundColor: `${label.color}15`,
-                borderLeft: `2px solid ${label.color}55`,
+                backgroundColor: `${label.color}0d`,
+                border: `1px solid ${label.color}40`,
               }}
             >
               <span
@@ -164,10 +164,10 @@ export function AddressWithLabel({
             title={`${label.label}${label.description ? `\n${label.description}` : ""}\n${address}`}
           >
             <div
-              className="inline-flex max-w-full shrink-0 items-center rounded px-1.5 py-0.5"
+              className="inline-flex max-w-full shrink-0 items-center rounded-md px-1.5 py-0.5"
               style={{
-                backgroundColor: `${label.color}15`,
-                borderLeft: `2px solid ${label.color}55`,
+                backgroundColor: `${label.color}0d`,
+                border: `1px solid ${label.color}40`,
               }}
             >
               <span

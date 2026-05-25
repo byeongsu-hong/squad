@@ -441,26 +441,20 @@ function AddressLabelRegistry({
                 onClick={() => onEdit(label)}
               >
                 <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="h-2 w-2 shrink-0 rounded-full"
-                            style={{ backgroundColor: label.color }}
-                          />
-                          <div
-                            className="inline-flex max-w-full shrink-0 items-center gap-1 rounded px-1.5 py-0.5"
-                            style={{
-                              backgroundColor: `${label.color}20`,
-                              borderLeft: `2px solid ${label.color}`,
-                            }}
+                        <div
+                          className="inline-flex max-w-full shrink-0 items-center rounded-md px-1.5 py-0.5"
+                          style={{
+                            backgroundColor: `${label.color}0d`,
+                            border: `1px solid ${label.color}40`,
+                          }}
+                        >
+                          <span
+                            className="truncate text-[11px] font-medium whitespace-nowrap"
+                            style={{ color: label.color }}
+                            title={label.label}
                           >
-                            <span
-                              className="truncate text-[11px] font-medium whitespace-nowrap"
-                              style={{ color: label.color }}
-                              title={label.label}
-                            >
-                              {label.label}
-                            </span>
-                          </div>
+                            {label.label}
+                          </span>
                         </div>
                       </div>
                       {embedded ? (
