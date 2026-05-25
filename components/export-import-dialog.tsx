@@ -670,10 +670,9 @@ function ExportImportExportPanel({
               </div>
               <Button
                 type="button"
-                variant="outline"
                 onClick={onCopy}
                 disabled={copied}
-                className="justify-start"
+                className="justify-start bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20"
               >
                 {copied ? (
                   <>
@@ -715,11 +714,11 @@ function ExportImportExportPanel({
       <div
         className={
           embedded
-            ? "bg-muted rounded-xl min-h-[28rem] w-full overflow-auto"
+            ? "border-border/50 bg-muted/30 rounded-xl min-h-[28rem] w-full overflow-auto border"
             : "h-[400px] w-full overflow-auto rounded-md border"
         }
       >
-        <pre className="p-4 text-xs whitespace-pre">
+        <pre className="p-4 font-mono text-[11px] whitespace-pre text-muted-foreground/70">
           <code>{exportContent}</code>
         </pre>
       </div>
@@ -754,7 +753,7 @@ function ExportImportImportPanel({
           <div className="space-y-1">
             <p className="text-foreground text-sm font-medium">Reset state</p>
             <p className="text-muted-foreground/70 text-xs leading-5">
-              If a YAML import left local state broken, clear saved multisigs,
+              If a YAML import left local state broken, clear saved vaults,
               custom chains, labels, and provider settings.
             </p>
           </div>

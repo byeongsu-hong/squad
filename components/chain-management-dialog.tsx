@@ -404,7 +404,7 @@ function ChainEditor({
               )}
             />
           ) : (
-            <div className="border-border bg-muted text-muted-foreground/70 rounded-md border px-3 py-2.5 text-xs">
+            <div className="border-border/50 bg-muted/50 text-muted-foreground/60 rounded-xl border px-3 py-2.5 text-xs">
               Safe adapter addresses are configured in the Adapters tab.
             </div>
           )}
@@ -486,7 +486,7 @@ function ChainRegistry({
       <div
         className={
           embedded
-            ? "border-border space-y-0 overflow-hidden rounded-lg border"
+            ? "border-border/50 divide-border/30 overflow-hidden rounded-xl border divide-y"
             : "space-y-2"
         }
       >
@@ -504,7 +504,7 @@ function ChainRegistry({
             }}
             className={
               embedded
-                ? "group border-border hover:bg-muted focus-visible:ring-ring grid cursor-pointer gap-3 border-b px-4 py-3 transition-colors last:border-b-0 focus-visible:ring-1 focus-visible:outline-none xl:grid-cols-[minmax(12rem,0.58fr)_minmax(0,1.22fr)_auto] xl:items-center"
+                ? "group hover:bg-muted/50 focus-visible:ring-ring grid cursor-pointer gap-3 px-4 py-3 transition-colors focus-visible:ring-1 focus-visible:outline-none xl:grid-cols-[minmax(12rem,0.58fr)_minmax(0,1.22fr)_auto] xl:items-center"
                 : "group hover:bg-muted border-border focus-visible:ring-ring flex cursor-pointer items-center justify-between rounded-lg border p-3 transition-colors focus-visible:ring-1 focus-visible:outline-none"
             }
           >
