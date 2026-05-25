@@ -17,6 +17,7 @@ function isSettingsSection(
   return (
     value === "chains" ||
     value === "adapters" ||
+    value === "abis" ||
     value === "registry" ||
     value === "labels"
   );

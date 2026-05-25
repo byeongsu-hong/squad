@@ -39,4 +39,29 @@ describe("useSettingsQuerySync", () => {
       expect(replace).toHaveBeenCalledWith("/settings?section=labels");
     });
   });
+
+  it("hydrates the custom ABI settings section", async () => {
+    const searchParams = new URLSearchParams("section=abis");
+    const state = {
+      activeSection: "chains" as WorkspaceSettingsSection,
+    };
+
+    const setActiveSection = vi.fn((next: WorkspaceSettingsSection) => {
+      state.activeSection = next;
+    });
+
+    renderHook(() =>
+      useSettingsQuerySync({
+        searchParams,
+        pathname: "/settings",
+        replace: vi.fn(),
+        activeSection: state.activeSection,
+        setActiveSection,
+      })
+    );
+
+    await waitFor(() => {
+      expect(setActiveSection).toHaveBeenCalledWith("abis");
+    });
+  });
 });

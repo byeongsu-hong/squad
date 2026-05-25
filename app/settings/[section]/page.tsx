@@ -1,11 +1,12 @@
 "use client";
 
-import { Database, Layers3, Network, Tag } from "lucide-react";
+import { Code2, Database, Layers3, Network, Tag } from "lucide-react";
 import Link from "next/link";
 import { use, useMemo } from "react";
 
 import { AddressLabelManagerController } from "@/components/address-label-manager-dialog";
 import { ChainManagementController } from "@/components/chain-management-dialog";
+import { CustomAbisPanel } from "@/components/custom-abis-panel";
 import { ExportImportController } from "@/components/export-import-dialog";
 import { PageStage } from "@/components/page-stage";
 import { ProviderAdaptersPanel } from "@/components/provider-adapters-panel";
@@ -13,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { useAddressLabels } from "@/lib/hooks/use-address-label";
 import { cn } from "@/lib/utils";
 import { useChainStore } from "@/stores/chain-store";
+import { useProviderAdapterStore } from "@/stores/provider-adapter-store";
 import type { WorkspaceSettingsSection } from "@/types/workspace";
 
 const TABS: {
@@ -22,13 +24,18 @@ const TABS: {
 }[] = [
   { id: "chains", label: "Chains", icon: Network },
   { id: "adapters", label: "Adapters", icon: Layers3 },
+  { id: "abis", label: "ABIs", icon: Code2 },
   { id: "registry", label: "Export/Import", icon: Database },
   { id: "labels", label: "Labels", icon: Tag },
 ];
 
 function isValidSection(s: string): s is WorkspaceSettingsSection {
   return (
-    s === "chains" || s === "adapters" || s === "registry" || s === "labels"
+    s === "chains" ||
+    s === "adapters" ||
+    s === "abis" ||
+    s === "registry" ||
+    s === "labels"
   );
 }
 
@@ -44,15 +51,19 @@ export default function SettingsSectionPage({
 
   const { chains } = useChainStore();
   const { labels } = useAddressLabels();
+  const customAbiCount = useProviderAdapterStore(
+    (state) => state.settings.safeCustomAbis.length
+  );
 
   const sectionCounts = useMemo<Record<WorkspaceSettingsSection, number>>(
     () => ({
       chains: chains.length,
       adapters: 0,
+      abis: customAbiCount,
       registry: 0,
       labels: labels.length,
     }),
-    [chains, labels.length]
+    [chains.length, customAbiCount, labels.length]
   );
 
   return (
@@ -93,6 +104,7 @@ export default function SettingsSectionPage({
       <div className="pt-6">
         {activeSection === "chains" ? <ChainManagementController /> : null}
         {activeSection === "adapters" ? <ProviderAdaptersPanel /> : null}
+        {activeSection === "abis" ? <CustomAbisPanel /> : null}
         {activeSection === "registry" ? <ExportImportController /> : null}
         {activeSection === "labels" ? (
           <AddressLabelManagerController embedded />

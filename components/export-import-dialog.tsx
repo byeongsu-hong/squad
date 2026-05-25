@@ -11,7 +11,7 @@ import {
   Upload,
   X,
 } from "lucide-react";
-import { useEffect, useMemo, useState, type ChangeEvent } from "react";
+import { type ChangeEvent, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import {
@@ -20,11 +20,11 @@ import {
   importFromYaml,
 } from "@/lib/export-import";
 import {
+  type RawYamlPreview,
+  type WorkspacePackageSummary,
   buildRawYamlPreview,
   buildWorkspacePackageSummary,
   formatBytes,
-  type RawYamlPreview,
-  type WorkspacePackageSummary,
 } from "@/lib/export-import-package";
 import { useAddressLabels } from "@/lib/hooks/use-address-label";
 import { SquadService } from "@/lib/squad";
@@ -523,7 +523,7 @@ export function ExportImportController() {
       <Dialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
         <DialogContent
           showCloseButton={false}
-          className="border-destructive/20 max-w-[30rem] gap-0 overflow-hidden bg-card p-0"
+          className="border-destructive/20 bg-card max-w-[30rem] gap-0 overflow-hidden p-0"
         >
           <div className="border-destructive/15 border-b px-6 py-5">
             <div className="flex items-start gap-4">
@@ -531,9 +531,7 @@ export function ExportImportController() {
                 <AlertTriangle className="text-destructive h-5 w-5" />
               </div>
               <div className="space-y-2">
-                <DialogTitle>
-                  Reset imported workspace state?
-                </DialogTitle>
+                <DialogTitle>Reset imported workspace state?</DialogTitle>
                 <DialogDescription className="max-w-md text-[13px] leading-5">
                   Use this only when a YAML import left the local workspace in a
                   broken state. This action cannot be undone.
@@ -580,7 +578,7 @@ export function ExportImportController() {
             </div>
           </div>
 
-          <div className="flex items-center justify-between px-6 pb-5 pt-2">
+          <div className="flex items-center justify-between px-6 pt-2 pb-5">
             <Button
               type="button"
               variant="outline"
@@ -735,7 +733,7 @@ function WorkspacePackageSummaryView({
 
       {summary.abiRows.length > 0 ? (
         <div className="border-border overflow-hidden rounded-lg border">
-          <div className="border-border grid grid-cols-[minmax(0,1fr)_5rem_5rem_6rem] gap-2 border-b bg-muted/30 px-3 py-2 text-[10px] font-medium text-muted-foreground/60">
+          <div className="border-border bg-muted/30 text-muted-foreground/60 grid grid-cols-[minmax(0,1fr)_5rem_5rem_6rem] gap-2 border-b px-3 py-2 text-[10px] font-medium">
             <span>ABI</span>
             <span>Status</span>
             <span>Functions</span>
@@ -748,7 +746,7 @@ function WorkspacePackageSummaryView({
                 className="grid grid-cols-[minmax(0,1fr)_5rem_5rem_6rem] items-center gap-2 px-3 py-2"
               >
                 <div className="min-w-0">
-                  <p className="truncate text-[12px] font-medium text-foreground">
+                  <p className="text-foreground truncate text-[12px] font-medium">
                     {row.label}
                   </p>
                   <p className="text-muted-foreground/50 text-[10px]">
@@ -800,7 +798,7 @@ function RawYamlPreviewView({
       open={open}
       onToggle={(event) => setOpen(event.currentTarget.open)}
     >
-      <summary className="hover:bg-muted/40 flex cursor-pointer items-center justify-between gap-3 px-4 py-3 text-[12px] font-medium text-muted-foreground/70">
+      <summary className="hover:bg-muted/40 text-muted-foreground/70 flex cursor-pointer items-center justify-between gap-3 px-4 py-3 text-[12px] font-medium">
         <span>{title}</span>
         <span className="text-[11px] font-normal">
           {formatBytes(preview.byteLength)}
@@ -1000,7 +998,7 @@ function ExportImportImportPanel({
         </div>
         <div className="flex items-center justify-between gap-3 px-4 py-3">
           <div className="min-w-0">
-            <p className="truncate text-[12px] text-foreground/80">
+            <p className="text-foreground/80 truncate text-[12px]">
               {fileName ?? "Choose a local YAML package"}
             </p>
             {fileError ? (

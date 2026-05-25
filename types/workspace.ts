@@ -3,6 +3,7 @@ export type WorkspaceProviderId = "squads" | "safe";
 export type WorkspaceSettingsSection =
   | "chains"
   | "adapters"
+  | "abis"
   | "registry"
   | "labels";
 

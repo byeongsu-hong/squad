@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 
+import type { ExportData } from "@/lib/export-import";
 import {
   RAW_YAML_PREVIEW_LIMIT,
   buildRawYamlPreview,
   buildWorkspacePackageSummary,
 } from "@/lib/export-import-package";
-import type { ExportData } from "@/lib/export-import";
 
 describe("workspace package summaries", () => {
   const packageData: ExportData = {

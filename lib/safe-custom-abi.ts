@@ -1,10 +1,10 @@
 import {
-  decodeFunctionData,
-  parseAbi,
-  toFunctionSelector,
   type Abi,
   type AbiFunction,
   type Hex,
+  decodeFunctionData,
+  parseAbi,
+  toFunctionSelector,
 } from "viem";
 
 import type { SafeCustomAbiEntry } from "@/types/provider-adapter";
@@ -25,9 +25,7 @@ interface ParsedCustomAbiFailure {
   functionCount: 0;
 }
 
-export type ParsedCustomAbi =
-  | ParsedCustomAbiSuccess
-  | ParsedCustomAbiFailure;
+export type ParsedCustomAbi = ParsedCustomAbiSuccess | ParsedCustomAbiFailure;
 
 type JsonSafeValue =
   | null

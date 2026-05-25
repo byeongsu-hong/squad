@@ -39,13 +39,13 @@ function normalizeSafeCustomAbis(
   }
 
   return value.map((entry, index) => ({
-      label:
-        typeof entry?.label === "string" && entry.label.trim()
-          ? entry.label.trim()
-          : `Custom ABI ${index + 1}`,
-      source: typeof entry?.source === "string" ? entry.source : "",
-      enabled: entry?.enabled ?? true,
-    }));
+    label:
+      typeof entry?.label === "string" && entry.label.trim()
+        ? entry.label.trim()
+        : `Custom ABI ${index + 1}`,
+    source: typeof entry?.source === "string" ? entry.source : "",
+    enabled: entry?.enabled ?? true,
+  }));
 }
 
 export function normalizeProviderAdapterSettings(
