@@ -91,7 +91,7 @@ export function LandingPage() {
             className={cn(
               "flex shrink-0 items-center gap-2.5 px-5 py-3.5 transition-colors",
               needsSigningCount > 0 ? "cursor-pointer" : "cursor-default",
-              activeFilter === "Action needed" ? "bg-primary/8" : needsSigningCount > 0 ? "hover:bg-primary/5" : ""
+              activeFilter === "Action needed" ? "bg-primary/10 [box-shadow:inset_0_-2px_0_rgba(217,119,6,0.6)]" : needsSigningCount > 0 ? "hover:bg-primary/5" : ""
             )}
           >
             <div className="flex flex-col items-start">
@@ -115,7 +115,7 @@ export function LandingPage() {
             className={cn(
               "flex shrink-0 items-center gap-2.5 px-5 py-3.5 transition-colors",
               executableCount > 0 ? "cursor-pointer" : "cursor-default",
-              activeFilter === "Executable" ? "bg-emerald-950/20" : executableCount > 0 ? "hover:bg-emerald-950/10" : ""
+              activeFilter === "Executable" ? "bg-emerald-950/20 [box-shadow:inset_0_-2px_0_rgba(5,150,105,0.6)]" : executableCount > 0 ? "hover:bg-emerald-950/10" : ""
             )}
           >
             <div className="flex flex-col items-start">
@@ -139,7 +139,7 @@ export function LandingPage() {
             className={cn(
               "flex shrink-0 items-center gap-2.5 px-5 py-3.5 transition-colors",
               watchingCount > 0 ? "cursor-pointer" : "cursor-default",
-              activeFilter === "Pending" ? "bg-muted/60" : watchingCount > 0 ? "hover:bg-muted/40" : ""
+              activeFilter === "Pending" ? "bg-muted/60 [box-shadow:inset_0_-2px_0_rgba(161,161,170,0.4)]" : watchingCount > 0 ? "hover:bg-muted/40" : ""
             )}
           >
             <div className="flex flex-col items-start">

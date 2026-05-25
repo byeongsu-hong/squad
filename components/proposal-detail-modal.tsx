@@ -249,7 +249,7 @@ export function ProposalDetailView({
                 size="sm"
                 onClick={() => rejectByAddress(multisig.address, proposal.transactionIndex, multisig.chainId)}
                 disabled={isActionInProgress}
-                className="w-full"
+                className="w-full border-destructive/30 text-destructive/70 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/50"
               >
                 {isRejectLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                 Reject

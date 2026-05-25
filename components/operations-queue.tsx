@@ -501,17 +501,17 @@ export function OperationsQueue({
                 key={f}
                 type="button"
                 size="sm"
+                variant="ghost"
                 onClick={() => {
                   setStatusFilter(f);
                   resetPage();
                 }}
                 className={cn(
-                  "h-7 rounded-full px-3 text-[11px] font-medium",
+                  "h-7 rounded-full border px-3 text-[11px] font-medium transition-colors",
                   statusFilter === f
-                    ? "bg-foreground text-background hover:bg-foreground/90 border-foreground/20"
-                    : ""
+                    ? "bg-card border-border text-foreground shadow-sm hover:bg-card"
+                    : "border-transparent text-muted-foreground/60 hover:bg-transparent hover:text-foreground hover:border-border/40"
                 )}
-                variant={statusFilter === f ? undefined : "outline"}
               >
                 {f}
               </Button>
