@@ -412,7 +412,7 @@ export function ProposalDetailView({
               <button
                 type="button"
                 onClick={() => setSignersExpanded(!signersExpanded)}
-                className="ml-1 inline-flex items-center gap-0.5 text-[11px] text-muted-foreground/50 transition-colors hover:text-muted-foreground/70"
+                className="ml-1 inline-flex items-center gap-0.5 text-[11px] text-muted-foreground/50 transition-colors hover:text-muted-foreground/80"
               >
                 {signersExpanded ? "hide" : "view all"}
                 {signersExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
@@ -489,7 +489,7 @@ export function ProposalDetailView({
           <button
             type="button"
             onClick={() => setPayloadOpen(!payloadOpen)}
-            className="flex w-full items-center justify-between px-5 py-3.5"
+            className="flex w-full items-center justify-between px-5 py-3.5 transition-colors hover:bg-muted/40"
           >
             <div className="flex items-center gap-2">
               <span className="text-muted-foreground/50 text-[11px] font-medium">
