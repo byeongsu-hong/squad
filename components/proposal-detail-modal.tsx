@@ -31,6 +31,21 @@ import {
 import { useChainStore } from "@/stores/chain-store";
 import type { WorkspaceQueueItem } from "@/types/workspace";
 
+function formatAge(createdAt?: string): string {
+  if (!createdAt) return "";
+  const ms = Date.now() - Date.parse(createdAt);
+  if (Number.isNaN(ms) || ms < 0) return "";
+  const s = Math.floor(ms / 1000);
+  if (s < 60) return "just now";
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  const d = Math.floor(h / 24);
+  if (d < 30) return `${d}d ago`;
+  return new Date(createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
 export function ProposalDetailView({
   item,
   onBack,
@@ -40,7 +55,7 @@ export function ProposalDetailView({
   onBack: () => void;
   onActionSuccess?: () => Promise<void>;
 }) {
-  const [payloadOpen, setPayloadOpen] = useState(false);
+  const [payloadOpen, setPayloadOpen] = useState(true);
   const [signersExpanded, setSignersExpanded] = useState(false);
 
   const { chains } = useChainStore();
@@ -160,11 +175,19 @@ export function ProposalDetailView({
                 {statusConfig.label}
               </span>
             </div>
-            {/* Chain · Provider */}
+            {/* Chain · Provider · Age */}
             <p className="text-muted-foreground/60 mt-0.5 text-[11px]">
               {multisig.chainName}
               <span className="mx-1 opacity-40">·</span>
               {multisig.provider === "safe" ? "Safe" : "Squads"}
+              {proposal.createdAt && (
+                <>
+                  <span className="mx-1 opacity-40">·</span>
+                  <span title={new Date(proposal.createdAt).toLocaleString()}>
+                    {formatAge(proposal.createdAt)}
+                  </span>
+                </>
+              )}
             </p>
           </div>
           <div className="flex shrink-0 items-center gap-2">
@@ -258,7 +281,9 @@ export function ProposalDetailView({
             {currentUserApproved && !readyToExecute && (
               <div className="flex items-center justify-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50/60 px-4 py-2.5 text-[12px] text-emerald-700 dark:border-emerald-900/30 dark:bg-emerald-950/20 dark:text-emerald-400">
                 <Check className="h-3.5 w-3.5 shrink-0" />
-                Signed — waiting on others
+                {multisig.threshold - approvalCount > 0
+                  ? `Signed — ${multisig.threshold - approvalCount} more needed`
+                  : "Signed — waiting on others"}
               </div>
             )}
           </div>

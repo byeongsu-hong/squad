@@ -249,22 +249,48 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
             {CloseButton}
           </div>
         </div>
-        <div className="mt-2 flex items-center gap-1">
-          <span className="font-mono text-muted-foreground/50 text-[11px]">
-            {truncateAddress(multisig.address)}
-          </span>
-          <CopyButton value={multisig.address} />
-          {explorerUrl && (
-            <Button
-              variant="ghost"
-              asChild
-              className="text-muted-foreground/50 hover:text-foreground ml-0.5 h-5 w-5 shrink-0 p-0"
-              aria-label="View on explorer"
-            >
-              <a href={`${explorerUrl}/address/${multisig.address}`} target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="h-3 w-3" />
-              </a>
-            </Button>
+        <div className="mt-2 space-y-0.5">
+          <div className="flex items-center gap-1">
+            {isSquads && multisig.vaultAddress && multisig.vaultAddress !== multisig.address && (
+              <span className="text-muted-foreground/30 text-[10px] font-medium w-14 shrink-0">multisig</span>
+            )}
+            <span className="font-mono text-muted-foreground/50 text-[11px]">
+              {truncateAddress(multisig.address)}
+            </span>
+            <CopyButton value={multisig.address} />
+            {explorerUrl && (
+              <Button
+                variant="ghost"
+                asChild
+                className="text-muted-foreground/50 hover:text-foreground ml-0.5 h-5 w-5 shrink-0 p-0"
+                aria-label="View on explorer"
+              >
+                <a href={`${explorerUrl}/address/${multisig.address}`} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              </Button>
+            )}
+          </div>
+          {isSquads && multisig.vaultAddress && multisig.vaultAddress !== multisig.address && (
+            <div className="flex items-center gap-1">
+              <span className="text-primary/50 text-[10px] font-medium w-14 shrink-0">treasury</span>
+              <span className="font-mono text-muted-foreground/60 text-[11px]">
+                {truncateAddress(multisig.vaultAddress)}
+              </span>
+              <CopyButton value={multisig.vaultAddress} />
+              {explorerUrl && (
+                <Button
+                  variant="ghost"
+                  asChild
+                  className="text-muted-foreground/50 hover:text-foreground ml-0.5 h-5 w-5 shrink-0 p-0"
+                  aria-label="View treasury on explorer"
+                >
+                  <a href={`${explorerUrl}/address/${multisig.vaultAddress}`} target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </Button>
+              )}
+            </div>
           )}
         </div>
       </div>
