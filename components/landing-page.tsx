@@ -52,9 +52,9 @@ export function LandingPage() {
 
   if (workspaceMultisigs.length === 0) {
     return (
-      <div className="flex min-h-[calc(100svh-4.5rem)] flex-col items-center justify-center gap-6 text-center">
-        <div className="bg-card border-border flex h-16 w-16 items-center justify-center rounded-2xl border shadow-sm">
-          <Shield className="text-muted-foreground/50 h-8 w-8" />
+      <div className="flex min-h-[calc(100svh-4.5rem)] flex-col items-center justify-center gap-4 text-center">
+        <div className="bg-card border-border flex h-10 w-10 items-center justify-center rounded-xl border">
+          <Shield className="text-muted-foreground/50 h-5 w-5" />
         </div>
         <div className="space-y-1.5">
           <p className="text-foreground text-[15px] font-semibold">

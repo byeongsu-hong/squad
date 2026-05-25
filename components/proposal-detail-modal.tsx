@@ -254,6 +254,12 @@ export function ProposalDetailView({
                 {statusConfig.label}
               </span>
             </div>
+            {/* Transaction description */}
+            {item.lineLabel && (
+              <p className="text-foreground/80 mt-0.5 truncate text-[13px] font-medium leading-snug">
+                {item.lineLabel}
+              </p>
+            )}
             {/* Chain · Provider · Age */}
             <p className="text-muted-foreground/60 mt-0.5 text-[11px]">
               {multisig.chainName}
