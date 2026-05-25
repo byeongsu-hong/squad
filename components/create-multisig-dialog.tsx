@@ -346,7 +346,7 @@ export function CreateMultisigDialog({
                                   <SelectItem key={opt.value} value={String(opt.value)}>
                                     <span>{opt.label}</span>
                                     {opt.description && (
-                                      <span className="text-muted-foreground ml-1 text-[11px]">
+                                      <span className="text-muted-foreground/60 ml-1 text-[11px]">
                                         · {opt.description}
                                       </span>
                                     )}
@@ -383,7 +383,7 @@ export function CreateMultisigDialog({
                     <FormLabel>Label (Optional)</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="My Multisig Wallet"
+                        placeholder="My Vault"
                         {...field}
                       />
                     </FormControl>
