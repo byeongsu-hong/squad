@@ -329,17 +329,17 @@ function AddressLabelEditor({
                 key={color}
                 type="button"
                 className={cn(
-                  "relative h-5 w-5 rounded transition-all",
+                  "relative h-6 w-6 rounded-md transition-all",
                   formData.color === color
-                    ? "ring-2 ring-offset-1 ring-foreground/50 ring-offset-card"
-                    : "opacity-70 hover:opacity-100 hover:ring-1 hover:ring-offset-1 hover:ring-foreground/20 hover:ring-offset-card"
+                    ? "ring-2 ring-offset-2 ring-foreground/60 ring-offset-card scale-110"
+                    : "opacity-60 hover:opacity-90 hover:scale-105"
                 )}
                 style={{ backgroundColor: color }}
                 onClick={() => onFormDataChange({ ...formData, color })}
                 aria-label={`Select color ${color}`}
               >
                 {formData.color === color && (
-                  <Check className="absolute inset-0 m-auto h-2.5 w-2.5 text-white drop-shadow-sm" />
+                  <Check className="absolute inset-0 m-auto h-3 w-3 text-white drop-shadow" />
                 )}
               </button>
             ))}
