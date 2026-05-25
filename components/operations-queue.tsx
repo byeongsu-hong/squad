@@ -407,6 +407,16 @@ export function OperationsQueue({
   );
   const canExecuteItems = selectedActionItems.filter((i) => i.readyToExecute);
 
+  // All approveables/executeables regardless of selection (for header quick-actions)
+  const approveAllItems = useMemo(
+    () => actionItems.filter((i) => i.needsYourSignature && !i.currentUserApproved),
+    [actionItems]
+  );
+  const executeAllItems = useMemo(
+    () => actionItems.filter((i) => i.readyToExecute),
+    [actionItems]
+  );
+
   const handleBatchApprove = async () => {
     for (const item of canApproveItems) {
       await approveByAddress(
@@ -427,6 +437,26 @@ export function OperationsQueue({
       );
     }
     setSelected(new Set());
+  };
+
+  const handleApproveAll = async () => {
+    for (const item of approveAllItems) {
+      await approveByAddress(
+        item.multisig.address,
+        item.proposal.transactionIndex,
+        item.multisig.chainId
+      );
+    }
+  };
+
+  const handleExecuteAll = async () => {
+    for (const item of executeAllItems) {
+      await executeByAddress(
+        item.multisig.address,
+        item.proposal.transactionIndex,
+        item.multisig.chainId
+      );
+    }
   };
 
   const resetPage = () => setHistoryPage(1);
@@ -583,6 +613,38 @@ export function OperationsQueue({
                 <span className="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-[10px] font-bold tabular-nums">
                   {actionItems.length}
                 </span>
+                <div className="ml-auto flex items-center gap-1.5">
+                  {approveAllItems.length > 0 && (
+                    <Button
+                      size="xs"
+                      disabled={isActionInProgress}
+                      onClick={handleApproveAll}
+                      className="bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20 font-semibold"
+                    >
+                      {isActionInProgress ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <Check className="h-3 w-3" />
+                      )}
+                      Approve{approveAllItems.length > 1 ? ` all (${approveAllItems.length})` : ""}
+                    </Button>
+                  )}
+                  {executeAllItems.length > 0 && (
+                    <Button
+                      size="xs"
+                      disabled={isActionInProgress}
+                      onClick={handleExecuteAll}
+                      className="bg-emerald-600 text-white hover:bg-emerald-500 border-emerald-700/30 font-semibold"
+                    >
+                      {isActionInProgress ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <Zap className="h-3 w-3" />
+                      )}
+                      Execute{executeAllItems.length > 1 ? ` all (${executeAllItems.length})` : ""}
+                    </Button>
+                  )}
+                </div>
               </div>
               <div className="border-border bg-card overflow-hidden rounded-xl border">
                 <ColumnHeaders
