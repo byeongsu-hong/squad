@@ -50,20 +50,26 @@ function SignerDot({
   isCurrentUser: boolean;
 }) {
   const label = useAddressLabel(address);
+  const [copied, setCopied] = useState(false);
   const displayName = label?.label ?? `${address.slice(0, 6)}…${address.slice(-4)}`;
   const status = approved ? "Signed" : rejected ? "Rejected" : "Pending";
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(address);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1200);
+  };
 
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <div
+        <button
+          type="button"
+          onClick={handleCopy}
           className={cn(
-            "h-3 w-3 cursor-default rounded-full transition-transform hover:scale-125",
-            approved
-              ? "bg-emerald-500"
-              : rejected
-              ? "bg-destructive"
-              : "bg-muted-foreground/20",
+            "h-3 w-3 cursor-pointer rounded-full transition-all hover:scale-125",
+            approved ? "bg-emerald-500" : rejected ? "bg-destructive" : "bg-muted-foreground/20",
+            copied && "scale-110 opacity-60",
             isCurrentUser && "ring-1 ring-offset-1 ring-offset-background ring-primary/60"
           )}
         />
@@ -78,14 +84,19 @@ function SignerDot({
           )}
         </div>
         <span className="font-mono text-[10px] text-muted-foreground/60">{address.slice(0, 8)}…{address.slice(-6)}</span>
-        <span
-          className={cn(
-            "text-[10px] font-medium",
-            approved ? "text-emerald-400" : rejected ? "text-destructive" : "text-muted-foreground/40"
-          )}
-        >
-          {status}
-        </span>
+        <div className="flex items-center justify-between gap-3 mt-0.5">
+          <span
+            className={cn(
+              "text-[10px] font-medium",
+              approved ? "text-emerald-400" : rejected ? "text-destructive" : "text-muted-foreground/40"
+            )}
+          >
+            {status}
+          </span>
+          <span className="text-muted-foreground/30 text-[10px]">
+            {copied ? "copied!" : "click to copy"}
+          </span>
+        </div>
       </TooltipContent>
     </Tooltip>
   );
@@ -438,9 +449,9 @@ export function ProposalDetailView({
                       )}
                       <AddressWithLabel
                         address={member.address}
+                        copyOnClick
                         showCopy={false}
-                        showLabelButton={false}
-                        plain
+                        showLabelButton={true}
                         className="min-w-0"
                       />
                     </div>
