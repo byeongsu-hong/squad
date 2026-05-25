@@ -517,10 +517,12 @@ export function ProposalDetailView({
                         {fmt.fields.map((f, j) => (
                           <div key={j} className="px-3 py-2.5">
                             <p className="text-muted-foreground/40 mb-1 text-[11px] font-medium">{f.label}</p>
-                            {typeof f.value === "string" ? (
-                              <p className="break-all text-[12px] text-foreground/80">{f.value}</p>
-                            ) : (
+                            {typeof f.value !== "string" ? (
                               (f.value as ReactNode)
+                            ) : /^[1-9A-HJ-NP-Za-km-z]{32,44}$|^0x[0-9a-fA-F]{40}$/.test(f.value) ? (
+                              <AddressWithLabel address={f.value} showFull />
+                            ) : (
+                              <p className="break-all text-[12px] text-foreground/80">{f.value}</p>
                             )}
                           </div>
                         ))}
