@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, ExternalLink, Usb, X } from "lucide-react";
+import { AlertCircle, ExternalLink, QrCode, Usb, X } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -31,13 +31,16 @@ export function SolanaConnectPanel({
   onClose,
   onOpenLedger,
 }: SolanaConnectPanelProps) {
-  const { installedWallets, availableWallets, connect } = useBrowserWallet();
+  const { installedWallets, availableWallets: allAvailable, connect } = useBrowserWallet();
   const { connectOkx } = useWalletStore();
   const [loadingWallet, setLoadingWallet] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const isOkxInstalled = okxWalletService.isInstalled();
   const isAnyLoading = loadingWallet !== null;
+
+  const wcWallet = allAvailable.find((w) => w.adapter.name === "WalletConnect");
+  const availableWallets = allAvailable.filter((w) => w.adapter.name !== "WalletConnect");
 
   const handleBrowserWallet = async (
     wallet: (typeof installedWallets)[number]
@@ -150,6 +153,17 @@ export function SolanaConnectPanel({
           disabled={isAnyLoading}
           onClick={isOkxInstalled ? handleOkx : () => handleInstallLink(OKX_EXTENSION_URL)}
         />
+
+        {wcWallet && (
+          <WalletRow
+            icon={<QrCode className="text-muted-foreground h-6 w-6" />}
+            name="WalletConnect"
+            subtitle="Scan QR with any mobile wallet"
+            isLoading={loadingWallet === "WalletConnect"}
+            disabled={isAnyLoading}
+            onClick={() => handleBrowserWallet(wcWallet)}
+          />
+        )}
 
         <WalletRow
           icon={<Usb className="text-muted-foreground h-6 w-6" />}

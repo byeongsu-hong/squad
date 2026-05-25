@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, CheckCircle2, QrCode, X } from "lucide-react";
+import { AlertCircle, CheckCircle2, QrCode, Usb, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useAccount, useConnect } from "wagmi";
@@ -30,6 +30,7 @@ export function EvmConnectPanel({ onClose }: EvmConnectPanelProps) {
   const { connect, connectors, variables } = useConnect();
   const { uri, clearUri } = useWcUri();
   const [error, setError] = useState<string | null>(null);
+  const [wcIntent, setWcIntent] = useState<"ledger" | "walletconnect" | null>(null);
 
   const connectingConnector = variables?.connector;
   const connectingId =
@@ -41,18 +42,22 @@ export function EvmConnectPanel({ onClose }: EvmConnectPanelProps) {
   const inlineConnectors = connectors.filter((c) => !isWalletConnect(c));
   const wcConnector = connectors.find((c) => isWalletConnect(c));
 
-  const handleConnect = (connector: Connector) => {
+  const handleConnect = (connector: Connector, intent?: "ledger" | "walletconnect") => {
     setError(null);
+    if (intent) setWcIntent(intent);
     connect(
       { connector },
       {
         onSuccess: () => {
           clearUri();
-          toast.success(`Connected to ${connector.name}`);
+          setWcIntent(null);
+          const label = intent === "ledger" ? "Ledger" : connector.name;
+          toast.success(`Connected to ${label}`);
           onClose();
         },
         onError: (err) => {
           clearUri();
+          setWcIntent(null);
           const isRejection =
             err.name === "UserRejectedRequestError" ||
             err.message?.toLowerCase().includes("rejected") ||
@@ -142,12 +147,20 @@ export function EvmConnectPanel({ onClose }: EvmConnectPanelProps) {
               </>
             )}
             <WalletRow
+              icon={<Usb className="text-muted-foreground h-6 w-6" />}
+              name="Ledger"
+              subtitle="Connect via Ledger Live"
+              isLoading={connectingId === wcConnector.id && wcIntent === "ledger"}
+              disabled={isAnyConnecting}
+              onClick={() => handleConnect(wcConnector, "ledger")}
+            />
+            <WalletRow
               icon={<QrCode className="text-muted-foreground h-6 w-6" />}
               name="WalletConnect"
               subtitle="Scan QR with any mobile wallet"
-              isLoading={connectingId === wcConnector.id}
+              isLoading={connectingId === wcConnector.id && wcIntent === "walletconnect"}
               disabled={isAnyConnecting}
-              onClick={() => handleConnect(wcConnector)}
+              onClick={() => handleConnect(wcConnector, "walletconnect")}
             />
           </div>
         )}

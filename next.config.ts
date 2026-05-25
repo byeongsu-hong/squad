@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: [
+    "@walletconnect/solana-adapter",
+    "@walletconnect/universal-provider",
+  ],
   async headers() {
     return [
       {
