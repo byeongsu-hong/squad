@@ -7,7 +7,6 @@ import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -172,22 +171,23 @@ export function ManageTagsDialog({
           )}
         </div>
 
-        <DialogFooter>
+        <div className="flex gap-3 pt-1">
           <Button
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
+            className="shrink-0"
           >
             Cancel
           </Button>
           <Button
             type="button"
             onClick={handleSave}
-            className="bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20"
+            className="flex-1 bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20"
           >
-            Save Tags
+            Save
           </Button>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );
