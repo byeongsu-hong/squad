@@ -28,28 +28,58 @@ interface VaultDetailProps {
   onBack: () => void;
 }
 
-function CopyButton({ value }: { value: string }) {
+function AddressRow({
+  address,
+  label,
+  labelClassName,
+  explorerUrl,
+}: {
+  address: string;
+  label?: string;
+  labelClassName?: string;
+  explorerUrl?: string | null;
+}) {
   const [copied, setCopied] = useState(false);
-
-  const handleCopy = async () => {
-    await navigator.clipboard.writeText(value);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
+  const handleCopy = () => {
+    navigator.clipboard.writeText(address).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1200);
+    });
   };
-
   return (
-    <Button
-      variant="ghost"
-      onClick={handleCopy}
-      className="text-muted-foreground/50 hover:text-foreground ml-0.5 h-5 w-5 shrink-0 p-0"
-      aria-label="Copy address"
-    >
-      {copied ? (
-        <Check className="h-3 w-3 text-primary" />
-      ) : (
-        <Copy className="h-3 w-3" />
+    <div className="group flex items-center gap-1">
+      {label && (
+        <span className={cn("text-[10px] font-medium w-14 shrink-0", labelClassName)}>
+          {label}
+        </span>
       )}
-    </Button>
+      <button
+        type="button"
+        onClick={handleCopy}
+        className="font-mono text-muted-foreground/50 hover:text-muted-foreground/80 text-[11px] transition-colors"
+        title={address}
+      >
+        {truncateAddress(address)}
+      </button>
+      <div className={cn(
+        "shrink-0 transition-colors",
+        copied ? "text-primary" : "text-muted-foreground/20 group-hover:text-muted-foreground/60"
+      )}>
+        {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+      </div>
+      {explorerUrl && (
+        <Button
+          variant="ghost"
+          asChild
+          className="text-muted-foreground/20 hover:text-muted-foreground/60 ml-0.5 h-5 w-5 shrink-0 p-0 transition-colors"
+          aria-label="View on explorer"
+        >
+          <a href={`${explorerUrl}/address/${address}`} target="_blank" rel="noopener noreferrer">
+            <ExternalLink className="h-3 w-3" />
+          </a>
+        </Button>
+      )}
+    </div>
   );
 }
 
@@ -225,9 +255,6 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
               )}>
                 {isSquads ? "Squads" : "Safe"}
               </span>
-              <span className="border-border bg-muted text-muted-foreground/60 rounded-full border px-2 py-0.5 text-[10px] font-medium">
-                {multisig.threshold}/{multisig.members.length}
-              </span>
               {multisig.tags.map((tag) => (
                 <span
                   key={tag}
@@ -258,47 +285,19 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
           </div>
         </div>
         <div className="mt-2 space-y-0.5">
-          <div className="flex items-center gap-1">
-            {isSquads && multisig.vaultAddress && multisig.vaultAddress !== multisig.address && (
-              <span className="text-muted-foreground/30 text-[10px] font-medium w-14 shrink-0">multisig</span>
-            )}
-            <span className="font-mono text-muted-foreground/50 text-[11px]">
-              {truncateAddress(multisig.address)}
-            </span>
-            <CopyButton value={multisig.address} />
-            {explorerUrl && (
-              <Button
-                variant="ghost"
-                asChild
-                className="text-muted-foreground/50 hover:text-foreground ml-0.5 h-5 w-5 shrink-0 p-0"
-                aria-label="View on explorer"
-              >
-                <a href={`${explorerUrl}/address/${multisig.address}`} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="h-3 w-3" />
-                </a>
-              </Button>
-            )}
-          </div>
+          <AddressRow
+            address={multisig.address}
+            label={isSquads && multisig.vaultAddress && multisig.vaultAddress !== multisig.address ? "multisig" : undefined}
+            labelClassName="text-muted-foreground/30"
+            explorerUrl={explorerUrl}
+          />
           {isSquads && multisig.vaultAddress && multisig.vaultAddress !== multisig.address && (
-            <div className="flex items-center gap-1">
-              <span className="text-primary/50 text-[10px] font-medium w-14 shrink-0">treasury</span>
-              <span className="font-mono text-muted-foreground/60 text-[11px]">
-                {truncateAddress(multisig.vaultAddress)}
-              </span>
-              <CopyButton value={multisig.vaultAddress} />
-              {explorerUrl && (
-                <Button
-                  variant="ghost"
-                  asChild
-                  className="text-muted-foreground/50 hover:text-foreground ml-0.5 h-5 w-5 shrink-0 p-0"
-                  aria-label="View treasury on explorer"
-                >
-                  <a href={`${explorerUrl}/address/${multisig.vaultAddress}`} target="_blank" rel="noopener noreferrer">
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
-                </Button>
-              )}
-            </div>
+            <AddressRow
+              address={multisig.vaultAddress}
+              label="treasury"
+              labelClassName="text-primary/50"
+              explorerUrl={explorerUrl}
+            />
           )}
         </div>
       </div>
