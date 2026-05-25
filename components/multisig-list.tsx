@@ -323,10 +323,17 @@ export function MultisigList({ selectedKey }: { selectedKey?: string }) {
         )}
 
         {filteredRegistryRows.length === 0 && multisigs.length > 0 && !loading && (
-          <div className="py-10 text-center">
+          <div className="flex flex-col items-center gap-3 py-10 text-center">
             <p className="text-muted-foreground/50 text-[12px]">
               No vaults match the current filters.
             </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => { setSelectedFilterTags([]); setFilterText(""); }}
+            >
+              Clear filters
+            </Button>
           </div>
         )}
 
