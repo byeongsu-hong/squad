@@ -378,7 +378,7 @@ export function ProposalDetailView({
           </div>
           {/* Progress bar + count */}
           <div className="mb-3 flex items-center gap-3">
-            <div className="flex-1 h-1.5 overflow-hidden rounded-full bg-muted">
+            <div className="flex-1 h-1.5 overflow-hidden rounded-full bg-muted-foreground/10">
               <div
                 className={cn(
                   "h-full rounded-full transition-all duration-500",

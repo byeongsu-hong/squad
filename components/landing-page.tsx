@@ -98,13 +98,13 @@ export function LandingPage() {
           >
             <span className={cn(
               "text-[18px] font-bold tabular-nums leading-none",
-              loading ? "text-muted-foreground/20 animate-pulse" : needsSigningCount > 0 ? "text-primary" : "text-muted-foreground/25"
+              loading ? "text-muted-foreground/20 animate-pulse" : needsSigningCount > 0 ? "text-primary" : "text-muted-foreground/35"
             )}>
               {needsSigningCount}
             </span>
             <span className={cn(
               "text-[11px] whitespace-nowrap",
-              loading ? "text-muted-foreground/20" : needsSigningCount > 0 ? "text-muted-foreground/60" : "text-muted-foreground/25"
+              loading ? "text-muted-foreground/20" : needsSigningCount > 0 ? "text-muted-foreground/60" : "text-muted-foreground/35"
             )}>
               to sign
             </span>
@@ -126,13 +126,13 @@ export function LandingPage() {
           >
             <span className={cn(
               "text-[18px] font-bold tabular-nums leading-none",
-              loading ? "text-muted-foreground/20 animate-pulse" : executableCount > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground/25"
+              loading ? "text-muted-foreground/20 animate-pulse" : executableCount > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground/35"
             )}>
               {executableCount}
             </span>
             <span className={cn(
               "text-[11px] whitespace-nowrap",
-              loading ? "text-muted-foreground/20" : executableCount > 0 ? "text-muted-foreground/60" : "text-muted-foreground/25"
+              loading ? "text-muted-foreground/20" : executableCount > 0 ? "text-muted-foreground/60" : "text-muted-foreground/35"
             )}>
               ready
             </span>
@@ -154,13 +154,13 @@ export function LandingPage() {
           >
             <span className={cn(
               "text-[18px] font-bold tabular-nums leading-none",
-              loading ? "text-muted-foreground/20 animate-pulse" : watchingCount > 0 ? "text-foreground" : "text-muted-foreground/25"
+              loading ? "text-muted-foreground/20 animate-pulse" : watchingCount > 0 ? "text-foreground" : "text-muted-foreground/35"
             )}>
               {watchingCount}
             </span>
             <span className={cn(
               "text-[11px] whitespace-nowrap",
-              loading ? "text-muted-foreground/20" : watchingCount > 0 ? "text-muted-foreground/60" : "text-muted-foreground/25"
+              loading ? "text-muted-foreground/20" : watchingCount > 0 ? "text-muted-foreground/60" : "text-muted-foreground/35"
             )}>
               watching
             </span>
