@@ -479,21 +479,21 @@ export function MultisigList({ selectedKey }: { selectedKey?: string }) {
                       <span className="text-muted-foreground/50 text-[10px]">
                         {formatProviderLabel(row.multisigProvider)} · {row.threshold}/{row.memberCount}
                       </span>
-                      <span className="text-muted-foreground/50 font-mono text-[10px]">
-                        {formatAddress(multisig.publicKey.toString(), 5, 4)}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        className="h-4 w-4 shrink-0 p-0 opacity-0 transition-[opacity,color] group-hover:opacity-100 text-muted-foreground/50 hover:text-muted-foreground hover:bg-transparent"
+                      <button
+                        type="button"
+                        className="group/addr flex items-center gap-0.5 transition-colors text-muted-foreground/50 hover:text-muted-foreground/80"
                         onClick={(e) => {
                           e.stopPropagation();
                           navigator.clipboard.writeText(multisig.publicKey.toString());
                           toast.success("Address copied");
                         }}
-                        aria-label={`Copy address for ${row.label}`}
+                        title={multisig.publicKey.toString()}
                       >
-                        <Copy className="h-2.5 w-2.5" />
-                      </Button>
+                        <span className="font-mono text-[10px]">
+                          {formatAddress(multisig.publicKey.toString(), 5, 4)}
+                        </span>
+                        <Copy className="h-2.5 w-2.5 opacity-0 group-hover/addr:opacity-100 transition-opacity shrink-0" />
+                      </button>
                       {row.tags.slice(0, 2).map((tag) => (
                         <button
                           key={tag}

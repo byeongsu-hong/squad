@@ -41,6 +41,9 @@ export function LandingPage() {
     (i) => i.proposal.status === "Active" && !i.readyToExecute && !i.needsYourSignature
   ).length;
 
+  // All action counts are confirmed zero (not just loading-zero)
+  const allClear = !loading && needsSigningCount === 0 && executableCount === 0 && watchingCount === 0;
+
   const toggleFilter = (filter: StatFilter) => {
     setActiveFilter((prev) => (prev === filter ? "All" : filter));
   };
@@ -83,91 +86,97 @@ export function LandingPage() {
             <span className="text-muted-foreground/50 text-[11px]">vault{workspaceMultisigs.length !== 1 ? "s" : ""}</span>
           </Link>
 
-          <div className="bg-border w-px shrink-0 self-stretch" />
+          {/* Action stats — only shown during loading or when any count is non-zero */}
+          {!allClear && (
+            <>
+              <div className="bg-border w-px shrink-0 self-stretch" />
 
-          {/* Need signing */}
-          <button
-            type="button"
-            onClick={() => !loading && needsSigningCount > 0 && toggleFilter("Action needed")}
-            className={cn(
-              "flex shrink-0 items-center gap-2 px-4 py-3 transition-colors",
-              !loading && needsSigningCount > 0 ? "cursor-pointer" : "cursor-default",
-              activeFilter === "Action needed"
-                ? "bg-primary/10 [box-shadow:inset_0_-2px_0_rgba(217,119,6,0.6)]"
-                : !loading && needsSigningCount > 0 ? "hover:bg-primary/5" : ""
-            )}
-          >
-            <span className={cn(
-              "text-[18px] font-bold tabular-nums leading-none",
-              loading ? "text-muted-foreground/20 animate-pulse" : needsSigningCount > 0 ? "text-primary" : "text-muted-foreground/30"
-            )}>
-              {needsSigningCount}
-            </span>
-            <span className={cn(
-              "text-[11px] whitespace-nowrap",
-              loading ? "text-muted-foreground/20" : needsSigningCount > 0 ? "text-muted-foreground/60" : "text-muted-foreground/30"
-            )}>
-              to sign
-            </span>
-          </button>
+              {/* Need signing */}
+              <button
+                type="button"
+                onClick={() => !loading && needsSigningCount > 0 && toggleFilter("Action needed")}
+                className={cn(
+                  "flex shrink-0 items-center gap-2 px-4 py-3 transition-colors",
+                  !loading && needsSigningCount > 0 ? "cursor-pointer" : "cursor-default",
+                  activeFilter === "Action needed"
+                    ? "bg-primary/10 [box-shadow:inset_0_-2px_0_rgba(217,119,6,0.6)]"
+                    : !loading && needsSigningCount > 0 ? "hover:bg-primary/5" : ""
+                )}
+              >
+                <span className={cn(
+                  "text-[18px] font-bold tabular-nums leading-none",
+                  loading ? "text-muted-foreground/20 animate-pulse" : needsSigningCount > 0 ? "text-primary" : "text-muted-foreground/30"
+                )}>
+                  {needsSigningCount}
+                </span>
+                <span className={cn(
+                  "text-[11px] whitespace-nowrap",
+                  loading ? "text-muted-foreground/20" : needsSigningCount > 0 ? "text-muted-foreground/60" : "text-muted-foreground/30"
+                )}>
+                  to sign
+                </span>
+              </button>
 
-          <div className="bg-border w-px shrink-0 self-stretch" />
+              <div className="bg-border w-px shrink-0 self-stretch" />
 
-          {/* Executable */}
-          <button
-            type="button"
-            onClick={() => !loading && executableCount > 0 && toggleFilter("Executable")}
-            className={cn(
-              "flex shrink-0 items-center gap-2 px-4 py-3 transition-colors",
-              !loading && executableCount > 0 ? "cursor-pointer" : "cursor-default",
-              activeFilter === "Executable"
-                ? "bg-emerald-50 dark:bg-emerald-950/20 [box-shadow:inset_0_-2px_0_rgba(5,150,105,0.6)]"
-                : !loading && executableCount > 0 ? "hover:bg-emerald-50/70 dark:hover:bg-emerald-950/10" : ""
-            )}
-          >
-            <span className={cn(
-              "text-[18px] font-bold tabular-nums leading-none",
-              loading ? "text-muted-foreground/20 animate-pulse" : executableCount > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground/30"
-            )}>
-              {executableCount}
-            </span>
-            <span className={cn(
-              "text-[11px] whitespace-nowrap",
-              loading ? "text-muted-foreground/20" : executableCount > 0 ? "text-muted-foreground/60" : "text-muted-foreground/30"
-            )}>
-              ready
-            </span>
-          </button>
+              {/* Executable */}
+              <button
+                type="button"
+                onClick={() => !loading && executableCount > 0 && toggleFilter("Executable")}
+                className={cn(
+                  "flex shrink-0 items-center gap-2 px-4 py-3 transition-colors",
+                  !loading && executableCount > 0 ? "cursor-pointer" : "cursor-default",
+                  activeFilter === "Executable"
+                    ? "bg-emerald-50 dark:bg-emerald-950/20 [box-shadow:inset_0_-2px_0_rgba(5,150,105,0.6)]"
+                    : !loading && executableCount > 0 ? "hover:bg-emerald-50/70 dark:hover:bg-emerald-950/10" : ""
+                )}
+              >
+                <span className={cn(
+                  "text-[18px] font-bold tabular-nums leading-none",
+                  loading ? "text-muted-foreground/20 animate-pulse" : executableCount > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground/30"
+                )}>
+                  {executableCount}
+                </span>
+                <span className={cn(
+                  "text-[11px] whitespace-nowrap",
+                  loading ? "text-muted-foreground/20" : executableCount > 0 ? "text-muted-foreground/60" : "text-muted-foreground/30"
+                )}>
+                  ready
+                </span>
+              </button>
 
-          <div className="bg-border w-px shrink-0 self-stretch" />
+              <div className="bg-border w-px shrink-0 self-stretch" />
 
-          {/* Watching */}
-          <button
-            type="button"
-            onClick={() => !loading && watchingCount > 0 && toggleFilter("Watching")}
-            className={cn(
-              "flex shrink-0 items-center gap-2 px-4 py-3 transition-colors",
-              !loading && watchingCount > 0 ? "cursor-pointer" : "cursor-default",
-              activeFilter === "Watching"
-                ? "bg-muted/60 [box-shadow:inset_0_-2px_0_rgba(161,161,170,0.4)]"
-                : !loading && watchingCount > 0 ? "hover:bg-muted/50" : ""
-            )}
-          >
-            <span className={cn(
-              "text-[18px] font-bold tabular-nums leading-none",
-              loading ? "text-muted-foreground/20 animate-pulse" : watchingCount > 0 ? "text-foreground" : "text-muted-foreground/30"
-            )}>
-              {watchingCount}
-            </span>
-            <span className={cn(
-              "text-[11px] whitespace-nowrap",
-              loading ? "text-muted-foreground/20" : watchingCount > 0 ? "text-muted-foreground/60" : "text-muted-foreground/30"
-            )}>
-              watching
-            </span>
-          </button>
+              {/* Watching */}
+              <button
+                type="button"
+                onClick={() => !loading && watchingCount > 0 && toggleFilter("Watching")}
+                className={cn(
+                  "flex shrink-0 items-center gap-2 px-4 py-3 transition-colors",
+                  !loading && watchingCount > 0 ? "cursor-pointer" : "cursor-default",
+                  activeFilter === "Watching"
+                    ? "bg-muted/60 [box-shadow:inset_0_-2px_0_rgba(161,161,170,0.4)]"
+                    : !loading && watchingCount > 0 ? "hover:bg-muted/50" : ""
+                )}
+              >
+                <span className={cn(
+                  "text-[18px] font-bold tabular-nums leading-none",
+                  loading ? "text-muted-foreground/20 animate-pulse" : watchingCount > 0 ? "text-foreground" : "text-muted-foreground/30"
+                )}>
+                  {watchingCount}
+                </span>
+                <span className={cn(
+                  "text-[11px] whitespace-nowrap",
+                  loading ? "text-muted-foreground/20" : watchingCount > 0 ? "text-muted-foreground/60" : "text-muted-foreground/30"
+                )}>
+                  watching
+                </span>
+              </button>
+            </>
+          )}
 
-          {!loading && needsSigningCount === 0 && executableCount === 0 && watchingCount === 0 && (
+          {/* All clear — shown when loaded and all counts are zero */}
+          {allClear && (
             <div className="ml-auto flex items-center gap-1.5 px-4">
               <CheckCircle2 className="h-3 w-3 text-emerald-500/70 dark:text-emerald-400/70" />
               <span className="text-emerald-700/60 dark:text-emerald-400/60 text-[11px] font-medium">All clear</span>

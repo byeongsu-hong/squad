@@ -553,22 +553,29 @@ export function OperationsQueue({
       )}
 
       {filtered.length === 0 ? (
+        // When a dedicated CTA is provided for empty state, skip the generic icon/text —
+        // the stats bar already communicates "All clear"
+        emptyStateCta && items.length === 0 ? (
+          <div className={cn("flex flex-col items-center justify-center", compact ? "py-5" : "py-4")}>
+            {emptyStateCta}
+          </div>
+        ) : (
         <div className={cn("flex flex-col items-center justify-center gap-3 text-center", compact ? "py-5" : "py-7")}>
           {items.length === 0 ? (
             <div className={cn(
               "flex items-center justify-center border",
               compact
                 ? "h-8 w-8 rounded-xl bg-emerald-50 border-emerald-200/60 dark:bg-emerald-950/20 dark:border-emerald-900/30"
-                : "h-14 w-14 rounded-2xl bg-emerald-50 border-emerald-200/60 dark:bg-emerald-950/20 dark:border-emerald-900/30"
+                : "h-10 w-10 rounded-xl bg-emerald-50 border-emerald-200/60 dark:bg-emerald-950/20 dark:border-emerald-900/30"
             )}>
-              <CheckCircle2 className={cn("text-emerald-600/60 dark:text-emerald-500/60", compact ? "h-3.5 w-3.5" : "h-6 w-6")} />
+              <CheckCircle2 className={cn("text-emerald-600/60 dark:text-emerald-500/60", compact ? "h-3.5 w-3.5" : "h-5 w-5")} />
             </div>
           ) : (
             <div className={cn(
               "bg-card border-border flex items-center justify-center border",
-              compact ? "h-8 w-8 rounded-xl" : "h-14 w-14 rounded-2xl"
+              compact ? "h-8 w-8 rounded-xl" : "h-10 w-10 rounded-xl"
             )}>
-              <SlidersHorizontal className={cn("text-muted-foreground/50", compact ? "h-3.5 w-3.5" : "h-6 w-6")} />
+              <SlidersHorizontal className={cn("text-muted-foreground/50", compact ? "h-3.5 w-3.5" : "h-5 w-5")} />
             </div>
           )}
           <p className={cn("text-muted-foreground/60", compact ? "text-[11px]" : "text-[13px]")}>
@@ -590,8 +597,8 @@ export function OperationsQueue({
               Clear filters
             </Button>
           )}
-          {emptyStateCta && items.length === 0 && emptyStateCta}
         </div>
+        )
       ) : (
         <div className="space-y-4">
           {actionItems.length > 0 && (

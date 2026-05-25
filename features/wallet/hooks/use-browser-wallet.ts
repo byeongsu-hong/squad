@@ -11,7 +11,6 @@ export function useBrowserWallet() {
   const {
     wallets,
     select,
-    connect: walletAdapterConnect,
     disconnect: walletAdapterDisconnect,
   } = useWallet();
   const { connectBrowser } = useWalletStore();
@@ -29,13 +28,13 @@ export function useBrowserWallet() {
   const connect = useCallback(
     async (wallet: Wallet) => {
       try {
+        // Select in React context so subsequent hook calls (sign, disconnect) work
         select(wallet.adapter.name);
 
-        await new Promise((resolve) => setTimeout(resolve, 100));
-
-        await walletAdapterConnect();
-
-        await new Promise((resolve) => setTimeout(resolve, 100));
+        // Connect directly on the adapter — avoids WalletNotSelectedError that
+        // would occur if we called walletAdapterConnect() before the context
+        // re-renders with the newly selected wallet
+        await wallet.adapter.connect();
 
         const publicKey = wallet.adapter.publicKey;
         if (!publicKey) {
@@ -50,7 +49,7 @@ export function useBrowserWallet() {
         throw error;
       }
     },
-    [connectBrowser, select, walletAdapterConnect]
+    [connectBrowser, select]
   );
 
   const disconnect = useCallback(async () => {
