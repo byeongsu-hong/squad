@@ -108,14 +108,14 @@ export function LedgerConnectPanel({
         <div className="flex flex-col items-center gap-6">
           <div
             className={cn(
-              "flex h-20 w-20 items-center justify-center rounded-full",
+              "flex h-16 w-16 items-center justify-center rounded-2xl",
               error ? "bg-destructive/10" : "bg-primary/10"
             )}
           >
             {error ? (
-              <AlertCircle className="text-destructive h-10 w-10" />
+              <AlertCircle className="text-destructive h-8 w-8" />
             ) : (
-              <Usb className="text-primary h-10 w-10" />
+              <Usb className="text-primary h-8 w-8" />
             )}
           </div>
 
@@ -241,7 +241,7 @@ export function LedgerConnectPanel({
                     key={account.derivationPath}
                     variant="outline"
                     onClick={() => handleSelectAccount(account)}
-                    className="group hover:border-primary/30 hover:bg-muted h-auto w-full items-center justify-between rounded-xl px-4 py-3.5 text-left"
+                    className="group hover:border-primary/30 hover:bg-muted h-auto w-full items-center justify-between rounded-xl px-3.5 py-2.5 text-left"
                   >
                     <div className="flex flex-col gap-1">
                       <div className="flex items-center gap-2">
