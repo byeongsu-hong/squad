@@ -123,7 +123,7 @@ export function LedgerConnectPanel({
             <h3 className="text-[15px] font-semibold">
               {error ? "Connection Failed" : "Connect Ledger Device"}
             </h3>
-            <p className="text-muted-foreground/70 text-[13px]">
+            <p className={cn("text-[13px]", error ? "text-destructive" : "text-muted-foreground/60")}>
               {error
                 ? error
                 : "Connect your Ledger device and open the Solana app, then click connect."}

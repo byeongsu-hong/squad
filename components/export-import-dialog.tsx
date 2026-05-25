@@ -619,7 +619,7 @@ function ExportImportExportPanel({
         </div>
       </div>
       <div className="bg-muted/30 max-h-[28rem] w-full overflow-auto">
-        <pre className="text-muted-foreground/70 p-4 font-mono text-[11px] whitespace-pre">
+        <pre className="text-muted-foreground/60 p-4 font-mono text-[11px] whitespace-pre">
           <code>{exportContent}</code>
         </pre>
       </div>

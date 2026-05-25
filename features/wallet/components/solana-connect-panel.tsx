@@ -20,7 +20,7 @@ interface SolanaConnectPanelProps {
 
 function InstallLink({ children }: { children: React.ReactNode }) {
   return (
-    <span className="text-muted-foreground/70 inline-flex items-center gap-1">
+    <span className="text-muted-foreground/60 inline-flex items-center gap-1">
       {children}
       <ExternalLink className="h-3 w-3" />
     </span>
