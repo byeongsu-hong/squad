@@ -238,7 +238,7 @@ export function ImportMultisigDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-[11px] font-medium text-muted-foreground/50">
-                    Chain <span className="text-destructive">*</span>
+                    Chain
                   </FormLabel>
                   <Select
                     onValueChange={field.onChange}
@@ -268,7 +268,7 @@ export function ImportMultisigDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-[11px] font-medium text-muted-foreground/50">
-                    Vault Address <span className="text-destructive">*</span>
+                    Vault Address
                   </FormLabel>
                   <FormControl>
                     <Input
@@ -294,7 +294,7 @@ export function ImportMultisigDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-[11px] font-medium text-muted-foreground/50">
-                    Label <span className="text-destructive">*</span>
+                    Label
                   </FormLabel>
                   <FormControl>
                     <Input

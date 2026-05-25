@@ -260,7 +260,7 @@ function ChainEditor({
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-[11px] font-medium text-muted-foreground/50">
-                  Chain Name <span className="text-destructive">*</span>
+                  Chain Name
                 </FormLabel>
                 <FormControl>
                   <Input placeholder="e.g., Eclipse Mainnet" {...field} />
@@ -328,7 +328,7 @@ function ChainEditor({
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-[11px] font-medium text-muted-foreground/50">
-                  RPC URL <span className="text-destructive">*</span>
+                  RPC URL
                 </FormLabel>
                 <FormControl>
                   <Input placeholder="https://..." {...field} />
@@ -345,8 +345,7 @@ function ChainEditor({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-[11px] font-medium text-muted-foreground/50">
-                    Squads Program ID{" "}
-                    <span className="text-destructive">*</span>
+                    Squads Program ID
                   </FormLabel>
                   <FormControl>
                     <Input
