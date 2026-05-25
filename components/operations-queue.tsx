@@ -58,8 +58,8 @@ function StatusBadge({ item }: { item: WorkspaceQueueItem }) {
   }
   if (item.needsYourSignature && !item.currentUserApproved) {
     return (
-      <span className="rounded border border-primary/30 bg-primary/10 px-1.5 py-0.5 font-mono text-[10px] tabular-nums text-primary">
-        {item.approvalCount}/{item.multisig.threshold}
+      <span className="rounded border border-primary/30 bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+        Sign
       </span>
     );
   }
@@ -644,7 +644,7 @@ export function OperationsQueue({
                       size="xs"
                       disabled={isActionInProgress}
                       onClick={handleApproveAll}
-                      className="bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20 font-semibold"
+                      className="h-7 px-2.5 text-[11px] bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20 font-semibold"
                     >
                       {isActionInProgress ? (
                         <Loader2 className="h-3 w-3 animate-spin" />
@@ -659,7 +659,7 @@ export function OperationsQueue({
                       size="xs"
                       disabled={isActionInProgress}
                       onClick={handleExecuteAll}
-                      className="bg-emerald-600 text-white hover:bg-emerald-500 border-emerald-700/30 font-semibold"
+                      className="h-7 px-2.5 text-[11px] bg-emerald-600 text-white hover:bg-emerald-500 border-emerald-700/30 font-semibold"
                     >
                       {isActionInProgress ? (
                         <Loader2 className="h-3 w-3 animate-spin" />
