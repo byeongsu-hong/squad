@@ -172,6 +172,18 @@ function QueueRow({
           </p>
         )}
         <div className="flex items-center gap-1.5">
+          {!compact && item.lineLabel && (
+            <span className={cn(
+              "text-[11px]",
+              item.readyToExecute
+                ? "text-emerald-600/70 dark:text-emerald-500/70"
+                : item.needsYourSignature && !item.currentUserApproved
+                ? "text-primary/60"
+                : "text-muted-foreground/45"
+            )}>
+              {item.lineLabel}
+            </span>
+          )}
           <span className="text-muted-foreground/50 font-mono text-[11px] tabular-nums">
             #{item.proposal.transactionIndex.toString()}
           </span>
@@ -588,7 +600,7 @@ export function OperationsQueue({
                   <button
                     type="button"
                     onClick={toggleSelectAll}
-                    className="text-muted-foreground/40 hover:text-muted-foreground/70 text-[11px] transition-colors"
+                    className="text-muted-foreground/55 hover:text-muted-foreground/80 text-[11px] transition-colors"
                   >
                     {allSelected ? "deselect all" : "select all"}
                   </button>
