@@ -25,7 +25,7 @@ const TABS: {
 }[] = [
   { id: "chains", label: "Chains", icon: Network },
   { id: "adapters", label: "Adapters", icon: Layers3 },
-  { id: "registry", label: "Export / import", icon: Database },
+  { id: "registry", label: "Export/Import", icon: Database },
   { id: "labels", label: "Label manager", icon: Tag },
 ];
 

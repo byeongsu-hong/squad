@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, RotateCcw, Trash2 } from "lucide-react";
+import { Check, Plus, RotateCcw, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { type UseFormReturn, useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -430,8 +430,12 @@ function ChainEditor({
               type="submit"
               className="bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20 flex-1"
             >
-              <Plus className="h-4 w-4" />
-              {editingChain ? "Update Chain" : "Add Chain"}
+              {editingChain ? (
+                <Check className="h-4 w-4" />
+              ) : (
+                <Plus className="h-4 w-4" />
+              )}
+              {editingChain ? "Update" : "Add Chain"}
             </Button>
             {editingChain && (
               <Button type="button" variant="outline" onClick={onCancel}>
