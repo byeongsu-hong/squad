@@ -177,7 +177,7 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
       <div className="mx-auto max-w-[1200px]">
         <div className="flex flex-col items-center gap-3 py-20 text-center">
           <div className="flex w-full justify-end px-2">{CloseButton}</div>
-          <p className="text-foreground text-sm font-semibold">Vault not found</p>
+          <p className="text-foreground text-[13px] font-semibold">Vault not found</p>
           <p className="text-muted-foreground/60 text-[11px]">
             It may have been removed from your registry.
           </p>
