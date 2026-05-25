@@ -450,7 +450,7 @@ function ChainRegistry({
                 "group grid cursor-pointer gap-3 px-4 py-3 transition-colors focus-visible:ring-ring focus-visible:ring-1 focus-visible:outline-none xl:grid-cols-[minmax(12rem,0.58fr)_minmax(0,1.22fr)_auto] xl:items-center",
                 isEditing
                   ? "bg-primary/5 [box-shadow:inset_2px_0_0_rgba(217,119,6,0.5)]"
-                  : "hover:bg-muted/50"
+                  : "hover:bg-muted"
               )}
             >
               <div className="min-w-0">

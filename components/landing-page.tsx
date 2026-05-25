@@ -149,7 +149,7 @@ export function LandingPage() {
               !loading && watchingCount > 0 ? "cursor-pointer" : "cursor-default",
               activeFilter === "Watching"
                 ? "bg-muted/60 [box-shadow:inset_0_-2px_0_rgba(161,161,170,0.4)]"
-                : !loading && watchingCount > 0 ? "hover:bg-muted/40" : ""
+                : !loading && watchingCount > 0 ? "hover:bg-muted/50" : ""
             )}
           >
             <span className={cn(

@@ -126,7 +126,7 @@ function MemberRow({ member, isViewer }: { member: MemberEntry; isViewer: boolea
     <Tooltip>
       <TooltipTrigger asChild>
         <div
-          className="group -mx-1 flex cursor-pointer items-center gap-2 rounded-md px-1 py-1.5 transition-colors hover:bg-muted/40"
+          className="group -mx-1 flex cursor-pointer items-center gap-2 rounded-md px-1 py-1.5 transition-colors hover:bg-muted"
           onClick={handleCopy}
         >
           <div className={cn(
