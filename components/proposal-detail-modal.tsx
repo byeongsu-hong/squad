@@ -420,6 +420,15 @@ export function ProposalDetailView({
               {payloadLoading && (
                 <Loader2 className="h-3 w-3 animate-spin text-muted-foreground/40" />
               )}
+              {payload && !payloadLoading && (
+                <span className="text-muted-foreground/30 font-mono text-[10px]">
+                  {payload.type === "vault"
+                    ? `${payload.instructions.length} instruction${payload.instructions.length !== 1 ? "s" : ""}`
+                    : payload.type === "config"
+                    ? `${payload.actions.length} action${payload.actions.length !== 1 ? "s" : ""}`
+                    : "safe"}
+                </span>
+              )}
             </div>
             {payloadOpen ? (
               <ChevronUp className="h-3.5 w-3.5 text-muted-foreground/40" />

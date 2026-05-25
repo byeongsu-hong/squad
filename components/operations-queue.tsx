@@ -768,7 +768,7 @@ export function OperationsQueue({
       <Dialog open={!!selectedItem} onOpenChange={(open) => !open && setSelectedItem(null)}>
         <DialogContent
           showCloseButton={false}
-          className="flex flex-col gap-0 p-0 max-h-[88vh] sm:max-w-xl overflow-hidden"
+          className="flex flex-col gap-0 p-0 max-h-[88vh] sm:max-w-2xl overflow-hidden"
         >
           {selectedItem && (
             <ProposalDetailView
