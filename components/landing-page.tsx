@@ -1,6 +1,6 @@
 "use client";
 
-import { Clock, Inbox, PenLine, Shield, Zap } from "lucide-react";
+import { Inbox, Shield } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { useAccount } from "wagmi";
@@ -68,77 +68,87 @@ export function LandingPage() {
 
   return (
     <div className="mx-auto max-w-[1200px] pt-1">
-        <div className="bg-card border-border mb-5 flex items-center gap-6 overflow-x-auto rounded-xl border px-5 py-3">
+        <div className="bg-card border-border mb-5 flex items-center overflow-x-auto rounded-xl border">
+          {/* Vaults — secondary nav item, not an action stat */}
           <Link
             href="/vaults"
-            className="flex items-center gap-2 rounded-lg px-1 py-0.5 transition-opacity hover:opacity-70"
+            className="flex shrink-0 items-center gap-1.5 px-4 py-3.5 transition-opacity hover:opacity-70"
           >
-            <Shield className={workspaceMultisigs.length > 0 ? "text-muted-foreground/60 h-4 w-4 shrink-0" : "text-muted-foreground/30 h-4 w-4 shrink-0"} />
-            <div className="flex flex-col">
-              <span className="text-foreground text-2xl font-bold tabular-nums leading-tight">
-                {workspaceMultisigs.length}
-              </span>
-              <span className="text-muted-foreground/50 text-[11px]">
-                Vaults
-              </span>
-            </div>
+            <Shield className="text-muted-foreground/50 h-3.5 w-3.5 shrink-0" />
+            <span className="text-muted-foreground text-sm font-medium tabular-nums">
+              {workspaceMultisigs.length}
+            </span>
+            <span className="text-muted-foreground/50 text-[11px]">vault{workspaceMultisigs.length !== 1 ? "s" : ""}</span>
           </Link>
-          <div className="bg-border h-8 w-px" />
+
+          <div className="bg-border h-8 w-px shrink-0" />
+
+          {/* Action stats */}
           <button
             type="button"
             onClick={() => needsSigningCount > 0 && toggleFilter("Action needed")}
             className={cn(
-              "flex items-center gap-2 rounded-lg px-1 py-0.5 transition-opacity",
-              needsSigningCount > 0 ? "hover:opacity-70 cursor-pointer" : "cursor-default",
-              activeFilter === "Action needed" && "bg-primary/10"
+              "flex shrink-0 items-center gap-2.5 px-5 py-3.5 transition-colors",
+              needsSigningCount > 0 ? "cursor-pointer" : "cursor-default",
+              activeFilter === "Action needed" ? "bg-primary/8" : needsSigningCount > 0 ? "hover:bg-primary/5" : ""
             )}
           >
-            <PenLine className={needsSigningCount > 0 ? "text-primary/60 h-4 w-4 shrink-0" : "text-muted-foreground/30 h-4 w-4 shrink-0"} />
-            <div className="flex flex-col">
-              <span className={needsSigningCount > 0 ? "text-primary text-2xl font-bold tabular-nums leading-tight" : "text-muted-foreground/30 text-2xl font-bold tabular-nums leading-tight"}>
+            <div className="flex flex-col items-start">
+              <span className={cn(
+                "text-2xl font-bold tabular-nums leading-tight",
+                needsSigningCount > 0 ? "text-primary" : "text-muted-foreground/25"
+              )}>
                 {needsSigningCount}
               </span>
-              <span className={cn("text-[11px]", needsSigningCount > 0 ? "text-muted-foreground/50" : "text-muted-foreground/30")}>
-                Needs signing
+              <span className={cn("text-[11px] whitespace-nowrap", needsSigningCount > 0 ? "text-muted-foreground/50" : "text-muted-foreground/25")}>
+                Need signing
               </span>
             </div>
           </button>
-          <div className="bg-border h-8 w-px" />
+
+          <div className="bg-border h-8 w-px shrink-0" />
+
           <button
             type="button"
             onClick={() => executableCount > 0 && toggleFilter("Executable")}
             className={cn(
-              "flex items-center gap-2 rounded-lg px-1 py-0.5 transition-opacity",
-              executableCount > 0 ? "hover:opacity-70 cursor-pointer" : "cursor-default",
-              activeFilter === "Executable" && "bg-emerald-50 dark:bg-emerald-950/20"
+              "flex shrink-0 items-center gap-2.5 px-5 py-3.5 transition-colors",
+              executableCount > 0 ? "cursor-pointer" : "cursor-default",
+              activeFilter === "Executable" ? "bg-emerald-950/20" : executableCount > 0 ? "hover:bg-emerald-950/10" : ""
             )}
           >
-            <Zap className={executableCount > 0 ? "text-emerald-600/60 dark:text-emerald-400/60 h-4 w-4 shrink-0" : "text-muted-foreground/30 h-4 w-4 shrink-0"} />
-            <div className="flex flex-col">
-              <span className={executableCount > 0 ? "text-emerald-600 dark:text-emerald-400 text-2xl font-bold tabular-nums leading-tight" : "text-muted-foreground/30 text-2xl font-bold tabular-nums leading-tight"}>
+            <div className="flex flex-col items-start">
+              <span className={cn(
+                "text-2xl font-bold tabular-nums leading-tight",
+                executableCount > 0 ? "text-emerald-400" : "text-muted-foreground/25"
+              )}>
                 {executableCount}
               </span>
-              <span className={cn("text-[11px]", executableCount > 0 ? "text-muted-foreground/50" : "text-muted-foreground/30")}>
-                Ready to execute
+              <span className={cn("text-[11px] whitespace-nowrap", executableCount > 0 ? "text-muted-foreground/50" : "text-muted-foreground/25")}>
+                Executable
               </span>
             </div>
           </button>
-          <div className="bg-border h-8 w-px" />
+
+          <div className="bg-border h-8 w-px shrink-0" />
+
           <button
             type="button"
             onClick={() => watchingCount > 0 && toggleFilter("Pending")}
             className={cn(
-              "flex items-center gap-2 rounded-lg px-1 py-0.5 transition-opacity",
-              watchingCount > 0 ? "hover:opacity-70 cursor-pointer" : "cursor-default",
-              activeFilter === "Pending" && "bg-muted"
+              "flex shrink-0 items-center gap-2.5 px-5 py-3.5 transition-colors",
+              watchingCount > 0 ? "cursor-pointer" : "cursor-default",
+              activeFilter === "Pending" ? "bg-muted/60" : watchingCount > 0 ? "hover:bg-muted/40" : ""
             )}
           >
-            <Clock className={watchingCount > 0 ? "text-muted-foreground/60 h-4 w-4 shrink-0" : "text-muted-foreground/30 h-4 w-4 shrink-0"} />
-            <div className="flex flex-col">
-              <span className={watchingCount > 0 ? "text-foreground text-2xl font-bold tabular-nums leading-tight" : "text-muted-foreground/30 text-2xl font-bold tabular-nums leading-tight"}>
+            <div className="flex flex-col items-start">
+              <span className={cn(
+                "text-2xl font-bold tabular-nums leading-tight",
+                watchingCount > 0 ? "text-foreground" : "text-muted-foreground/25"
+              )}>
                 {watchingCount}
               </span>
-              <span className={cn("text-[11px]", watchingCount > 0 ? "text-muted-foreground/50" : "text-muted-foreground/30")}>
+              <span className={cn("text-[11px]", watchingCount > 0 ? "text-muted-foreground/50" : "text-muted-foreground/25")}>
                 Pending
               </span>
             </div>
