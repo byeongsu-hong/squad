@@ -69,96 +69,107 @@ export function LandingPage() {
 
   return (
     <div className="mx-auto max-w-[1200px] pt-1">
-        <div className="bg-card border-border mb-5 flex items-center overflow-x-auto rounded-xl border">
-          {/* Vaults — secondary nav item, not an action stat */}
+        <div className="bg-card border-border mb-5 flex items-stretch overflow-x-auto rounded-xl border">
+          {/* Vaults count — links to vault list */}
           <Link
             href="/vaults"
-            className="flex shrink-0 items-center gap-1.5 px-4 py-3.5 transition-opacity hover:opacity-70"
+            className="flex shrink-0 items-center gap-1.5 px-4 py-3 transition-opacity hover:opacity-70"
           >
-            <Shield className="text-muted-foreground/50 h-3.5 w-3.5 shrink-0" />
-            <span className="text-muted-foreground/70 text-[13px] font-medium tabular-nums">
+            <Shield className="text-muted-foreground/40 h-3.5 w-3.5 shrink-0" />
+            <span className="text-muted-foreground/60 text-[13px] font-semibold tabular-nums">
               {workspaceMultisigs.length}
             </span>
-            <span className="text-muted-foreground/50 text-[11px]">vault{workspaceMultisigs.length !== 1 ? "s" : ""}</span>
+            <span className="text-muted-foreground/40 text-[11px]">vault{workspaceMultisigs.length !== 1 ? "s" : ""}</span>
           </Link>
 
-          <div className="bg-border h-8 w-px shrink-0" />
+          <div className="bg-border/60 w-px shrink-0 self-stretch" />
 
-          {/* Action stats */}
+          {/* Need signing */}
           <button
             type="button"
             onClick={() => !loading && needsSigningCount > 0 && toggleFilter("Action needed")}
             className={cn(
-              "flex shrink-0 items-center gap-2.5 px-5 py-3.5 transition-colors",
+              "flex shrink-0 items-center gap-2 px-4 py-3 transition-colors",
               !loading && needsSigningCount > 0 ? "cursor-pointer" : "cursor-default",
-              activeFilter === "Action needed" ? "bg-primary/10 [box-shadow:inset_0_-2px_0_rgba(217,119,6,0.6)]" : !loading && needsSigningCount > 0 ? "hover:bg-primary/5" : ""
+              activeFilter === "Action needed"
+                ? "bg-primary/10 [box-shadow:inset_0_-2px_0_rgba(217,119,6,0.6)]"
+                : !loading && needsSigningCount > 0 ? "hover:bg-primary/5" : ""
             )}
           >
-            <div className={cn("flex flex-col items-start", loading && "animate-pulse")}>
-              <span className={cn(
-                "text-2xl font-bold tabular-nums leading-tight",
-                loading ? "text-muted-foreground/20" : needsSigningCount > 0 ? "text-primary" : "text-muted-foreground/25"
-              )}>
-                {needsSigningCount}
-              </span>
-              <span className={cn("text-[11px] whitespace-nowrap", loading ? "text-muted-foreground/20" : needsSigningCount > 0 ? "text-muted-foreground/50" : "text-muted-foreground/25")}>
-                Need signing
-              </span>
-            </div>
+            <span className={cn(
+              "text-[18px] font-bold tabular-nums leading-none",
+              loading ? "text-muted-foreground/20 animate-pulse" : needsSigningCount > 0 ? "text-primary" : "text-muted-foreground/25"
+            )}>
+              {needsSigningCount}
+            </span>
+            <span className={cn(
+              "text-[11px] whitespace-nowrap",
+              loading ? "text-muted-foreground/20" : needsSigningCount > 0 ? "text-muted-foreground/60" : "text-muted-foreground/25"
+            )}>
+              to sign
+            </span>
           </button>
 
-          <div className="bg-border h-8 w-px shrink-0" />
+          <div className="bg-border/60 w-px shrink-0 self-stretch" />
 
+          {/* Executable */}
           <button
             type="button"
             onClick={() => !loading && executableCount > 0 && toggleFilter("Executable")}
             className={cn(
-              "flex shrink-0 items-center gap-2.5 px-5 py-3.5 transition-colors",
+              "flex shrink-0 items-center gap-2 px-4 py-3 transition-colors",
               !loading && executableCount > 0 ? "cursor-pointer" : "cursor-default",
-              activeFilter === "Executable" ? "bg-emerald-950/20 [box-shadow:inset_0_-2px_0_rgba(5,150,105,0.6)]" : !loading && executableCount > 0 ? "hover:bg-emerald-950/10" : ""
+              activeFilter === "Executable"
+                ? "bg-emerald-950/20 [box-shadow:inset_0_-2px_0_rgba(5,150,105,0.6)]"
+                : !loading && executableCount > 0 ? "hover:bg-emerald-950/10" : ""
             )}
           >
-            <div className={cn("flex flex-col items-start", loading && "animate-pulse")}>
-              <span className={cn(
-                "text-2xl font-bold tabular-nums leading-tight",
-                loading ? "text-muted-foreground/20" : executableCount > 0 ? "text-emerald-400" : "text-muted-foreground/25"
-              )}>
-                {executableCount}
-              </span>
-              <span className={cn("text-[11px] whitespace-nowrap", loading ? "text-muted-foreground/20" : executableCount > 0 ? "text-muted-foreground/50" : "text-muted-foreground/25")}>
-                Executable
-              </span>
-            </div>
+            <span className={cn(
+              "text-[18px] font-bold tabular-nums leading-none",
+              loading ? "text-muted-foreground/20 animate-pulse" : executableCount > 0 ? "text-emerald-400" : "text-muted-foreground/25"
+            )}>
+              {executableCount}
+            </span>
+            <span className={cn(
+              "text-[11px] whitespace-nowrap",
+              loading ? "text-muted-foreground/20" : executableCount > 0 ? "text-muted-foreground/60" : "text-muted-foreground/25"
+            )}>
+              ready
+            </span>
           </button>
 
-          <div className="bg-border h-8 w-px shrink-0" />
+          <div className="bg-border/60 w-px shrink-0 self-stretch" />
 
+          {/* Watching */}
           <button
             type="button"
             onClick={() => !loading && watchingCount > 0 && toggleFilter("Watching")}
             className={cn(
-              "flex shrink-0 items-center gap-2.5 px-5 py-3.5 transition-colors",
+              "flex shrink-0 items-center gap-2 px-4 py-3 transition-colors",
               !loading && watchingCount > 0 ? "cursor-pointer" : "cursor-default",
-              activeFilter === "Watching" ? "bg-muted/60 [box-shadow:inset_0_-2px_0_rgba(161,161,170,0.4)]" : !loading && watchingCount > 0 ? "hover:bg-muted/40" : ""
+              activeFilter === "Watching"
+                ? "bg-muted/60 [box-shadow:inset_0_-2px_0_rgba(161,161,170,0.4)]"
+                : !loading && watchingCount > 0 ? "hover:bg-muted/40" : ""
             )}
           >
-            <div className={cn("flex flex-col items-start", loading && "animate-pulse")}>
-              <span className={cn(
-                "text-2xl font-bold tabular-nums leading-tight",
-                loading ? "text-muted-foreground/20" : watchingCount > 0 ? "text-foreground" : "text-muted-foreground/25"
-              )}>
-                {watchingCount}
-              </span>
-              <span className={cn("text-[11px]", loading ? "text-muted-foreground/20" : watchingCount > 0 ? "text-muted-foreground/50" : "text-muted-foreground/25")}>
-                Watching
-              </span>
-            </div>
+            <span className={cn(
+              "text-[18px] font-bold tabular-nums leading-none",
+              loading ? "text-muted-foreground/20 animate-pulse" : watchingCount > 0 ? "text-foreground" : "text-muted-foreground/25"
+            )}>
+              {watchingCount}
+            </span>
+            <span className={cn(
+              "text-[11px] whitespace-nowrap",
+              loading ? "text-muted-foreground/20" : watchingCount > 0 ? "text-muted-foreground/60" : "text-muted-foreground/25"
+            )}>
+              watching
+            </span>
           </button>
 
           {!loading && needsSigningCount === 0 && executableCount === 0 && watchingCount === 0 && (
-            <div className="ml-auto flex items-center gap-1.5 px-5">
-              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500/40" />
-              <span className="text-muted-foreground/25 text-[11px]">All clear</span>
+            <div className="ml-auto flex items-center gap-1.5 px-4">
+              <CheckCircle2 className="h-3 w-3 text-emerald-500/50" />
+              <span className="text-muted-foreground/30 text-[11px]">All clear</span>
             </div>
           )}
         </div>
