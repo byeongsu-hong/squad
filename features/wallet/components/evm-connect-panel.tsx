@@ -70,8 +70,8 @@ export function EvmConnectPanel({ onClose }: EvmConnectPanelProps) {
     return (
       <div className="border-border bg-muted rounded-xl border p-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500/10">
-            <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-500/10">
+            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-[13px] font-medium">

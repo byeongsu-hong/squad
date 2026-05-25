@@ -68,9 +68,9 @@ export function WalletRow({
       variant="outline"
       onClick={onClick}
       disabled={disabled}
-      className="group hover:border-primary/30 hover:bg-muted h-auto w-full justify-start gap-3 rounded-xl px-4 py-3.5 transition-all"
+      className="group hover:border-primary/30 hover:bg-muted h-auto w-full justify-start gap-2.5 rounded-xl px-3.5 py-2.5 transition-all"
     >
-      <div className="bg-muted flex h-10 w-10 shrink-0 items-center justify-center rounded-xl">
+      <div className="bg-muted flex h-8 w-8 shrink-0 items-center justify-center rounded-lg">
         {icon}
       </div>
       <div className="min-w-0 flex-1 text-left">
@@ -81,9 +81,9 @@ export function WalletRow({
       </div>
       <div className="shrink-0">
         {isLoading ? (
-          <Loader2 className="text-muted-foreground h-4 w-4 animate-spin" />
+          <Loader2 className="text-muted-foreground h-3.5 w-3.5 animate-spin" />
         ) : (
-          <ChevronRight className="text-muted-foreground/50 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+          <ChevronRight className="text-muted-foreground/50 h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
         )}
       </div>
     </Button>
