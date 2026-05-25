@@ -282,7 +282,7 @@ function AddressLabelEditor({
           <Label htmlFor="address">Address</Label>
           <Input
             id="address"
-            placeholder="Enter Solana address"
+            placeholder="Enter address"
             value={formData.address}
             onChange={(e) =>
               onFormDataChange({ ...formData, address: e.target.value })
@@ -344,7 +344,7 @@ function AddressLabelEditor({
           type="submit"
           className="bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20 w-full"
         >
-          {isEditing ? "Update Label" : "Add Label"}
+          {isEditing ? "Update" : "Add Label"}
         </Button>
       </form>
     </div>

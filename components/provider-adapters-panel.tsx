@@ -51,7 +51,7 @@ export function ProviderAdaptersPanel() {
                 Active runtime used by the current workspace.
               </p>
             </div>
-            <span className="bg-primary text-primary-foreground rounded-md px-2 py-0.5 text-xs font-medium">
+            <span className="border-primary/30 bg-primary/10 text-primary rounded-md border px-2 py-0.5 text-xs font-medium">
               {liveSquadsChains} live
             </span>
           </div>
