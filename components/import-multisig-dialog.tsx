@@ -313,7 +313,7 @@ export function ImportMultisigDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-[11px] font-medium text-muted-foreground/50">
-                    Tags <span className="text-muted-foreground/40 font-normal">· optional</span>
+                    Tags <span className="text-muted-foreground/50 font-normal">· optional</span>
                   </FormLabel>
                   <FormControl>
                     <Input

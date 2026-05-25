@@ -356,7 +356,7 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
           <div className="order-2">
             <div className="border-border bg-card overflow-hidden rounded-xl border">
               <div className="border-b border-border flex items-center gap-2 px-3 py-2">
-                <Users className="text-muted-foreground/40 h-3.5 w-3.5" />
+                <Users className="text-muted-foreground/50 h-3.5 w-3.5" />
                 <span className="text-muted-foreground/50 text-[11px] font-medium">
                   Signers
                 </span>

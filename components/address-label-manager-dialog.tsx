@@ -269,7 +269,7 @@ function AddressLabelEditor({
             variant="ghost"
             size="icon-sm"
             onClick={onReset}
-            className="text-muted-foreground/40 hover:text-foreground"
+            className="text-muted-foreground/50 hover:text-foreground"
           >
             <X className="h-3 w-3" />
           </Button>
@@ -293,7 +293,7 @@ function AddressLabelEditor({
 
         <div className="space-y-1.5">
           <label htmlFor="label" className="text-[11px] font-medium text-muted-foreground/50">
-            Label <span className="text-muted-foreground/40 font-normal">· max 12 chars</span>
+            Label <span className="text-muted-foreground/50 font-normal">· max 12 chars</span>
           </label>
           <Input
             id="label"
@@ -309,7 +309,7 @@ function AddressLabelEditor({
 
         <div className="space-y-1.5">
           <label htmlFor="description" className="text-[11px] font-medium text-muted-foreground/50">
-            Description <span className="text-muted-foreground/40 font-normal">· optional</span>
+            Description <span className="text-muted-foreground/50 font-normal">· optional</span>
           </label>
           <Input
             id="description"
@@ -389,7 +389,7 @@ function AddressLabelRegistry({
       <div className="border-border border-b flex items-center gap-3 px-4 py-3">
         <p className="text-muted-foreground/50 text-[11px] font-medium shrink-0">Saved Labels</p>
         <div className="relative flex-1 min-w-0">
-          <Search className="text-muted-foreground/40 absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2" />
+          <Search className="text-muted-foreground/50 absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2" />
           <Input
             placeholder="Search..."
             value={searchQuery}
@@ -459,7 +459,7 @@ function AddressLabelRegistry({
                       </div>
                       {embedded ? (
                         <div className="min-w-0 text-[11px]">
-                          <p className={cn("truncate", label.description ? "text-muted-foreground/60" : "text-muted-foreground/40")}>
+                          <p className={cn("truncate", label.description ? "text-muted-foreground/60" : "text-muted-foreground/50")}>
                             {label.description || "—"}
                           </p>
                         </div>
@@ -485,7 +485,7 @@ function AddressLabelRegistry({
                           type="button"
                           variant="ghost"
                           size="icon-sm"
-                          className="text-muted-foreground/40 hover:text-foreground"
+                          className="text-muted-foreground/50 hover:text-foreground"
                           onClick={(event) => {
                             event.stopPropagation();
                             onEdit(label);
@@ -497,7 +497,7 @@ function AddressLabelRegistry({
                           type="button"
                           variant="ghost"
                           size="icon-sm"
-                          className="text-muted-foreground/40 hover:text-foreground"
+                          className="text-muted-foreground/50 hover:text-foreground"
                           onClick={(event) => {
                             event.stopPropagation();
                             onDelete(label.address);

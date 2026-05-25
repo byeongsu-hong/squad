@@ -458,7 +458,7 @@ export function MultisigList({ selectedKey }: { selectedKey?: string }) {
                       </span>
                       <Button
                         variant="ghost"
-                        className="h-4 w-4 shrink-0 p-0 opacity-0 transition-opacity group-hover:opacity-100 text-muted-foreground/40 hover:text-muted-foreground hover:bg-transparent"
+                        className="h-4 w-4 shrink-0 p-0 opacity-0 transition-opacity group-hover:opacity-100 text-muted-foreground/50 hover:text-muted-foreground hover:bg-transparent"
                         onClick={(e) => {
                           e.stopPropagation();
                           navigator.clipboard.writeText(multisig.publicKey.toString());

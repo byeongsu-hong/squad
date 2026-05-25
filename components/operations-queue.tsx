@@ -681,7 +681,7 @@ export function OperationsQueue({
             <div>
               <div className="border-border bg-card overflow-hidden rounded-xl border">
                 <div className="border-b border-border flex items-center gap-2 px-3 py-2">
-                  <span className="bg-muted-foreground/40 h-1.5 w-1.5 rounded-full" />
+                  <span className="bg-muted-foreground/50 h-1.5 w-1.5 rounded-full" />
                   <p className="text-muted-foreground/50 text-[11px] font-medium">
                     History
                   </p>
