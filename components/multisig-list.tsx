@@ -301,7 +301,7 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
             size="icon-sm"
             onClick={loadMultisigs}
             disabled={loading}
-            aria-label="Refresh multisigs"
+            aria-label="Refresh vaults"
             title={`Creator sync on ${normalizedSelectedChain?.name ?? "selected chain"}`}
           >
             {loading ? (
@@ -444,7 +444,7 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
                       onCheckedChange={() => toggleSelect(row.key)}
                       onClick={(e) => e.stopPropagation()}
                       className="size-3.5"
-                      aria-label={`Select ${row.label || "unnamed multisig"}`}
+                      aria-label={`Select ${row.label || "unnamed vault"}`}
                     />
                   </div>
 
