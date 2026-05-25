@@ -575,7 +575,7 @@ export function OperationsQueue({
             <div className="border-border bg-card overflow-hidden rounded-xl border">
               <div className="border-b border-border/50 flex items-center gap-2 px-3 py-2">
                 <span className="bg-primary h-1.5 w-1.5 rounded-full" />
-                <p className="text-muted-foreground/60 text-[11px] font-medium">
+                <p className="text-muted-foreground/50 text-[11px] font-medium">
                   Action needed
                 </p>
                 <span className="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-[10px] font-semibold tabular-nums">
@@ -667,7 +667,7 @@ export function OperationsQueue({
               <div className="border-border bg-card overflow-hidden rounded-xl border">
                 <div className="border-b border-border/50 flex items-center gap-2 px-3 py-2">
                   <span className="bg-muted-foreground/25 h-1.5 w-1.5 rounded-full" />
-                  <p className="text-muted-foreground/60 text-[11px] font-medium">
+                  <p className="text-muted-foreground/50 text-[11px] font-medium">
                     History
                   </p>
                   <span className="text-muted-foreground/40 font-mono text-[11px] tabular-nums">

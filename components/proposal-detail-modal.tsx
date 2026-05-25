@@ -183,8 +183,8 @@ export function ProposalDetailView({
     if (proposal.status === "Executed")
       return {
         label: "Executed",
-        pill: "bg-muted text-muted-foreground",
-        bar: "bg-muted-foreground/30",
+        pill: "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400",
+        bar: "bg-emerald-500/50",
         icon: null,
       };
     if (proposal.status === "Rejected")
@@ -192,6 +192,13 @@ export function ProposalDetailView({
         label: "Rejected",
         pill: "bg-destructive/15 text-destructive",
         bar: "bg-destructive",
+        icon: null,
+      };
+    if (proposal.status === "Cancelled")
+      return {
+        label: "Cancelled",
+        pill: "bg-muted text-muted-foreground/70",
+        bar: "bg-muted-foreground/20",
         icon: null,
       };
     if (readyToExecute)
