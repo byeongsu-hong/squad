@@ -21,7 +21,7 @@ interface AddressWithLabelProps {
 }
 
 // Well-known Solana addresses that should be auto-labeled
-const WELL_KNOWN_ADDRESSES: Record<
+export const WELL_KNOWN_ADDRESSES: Record<
   string,
   { label: string; color: string; description: string }
 > = {

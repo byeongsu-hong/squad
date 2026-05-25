@@ -15,7 +15,7 @@ import { type ReactNode, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 
-import { AddressWithLabel } from "@/components/address-with-label";
+import { AddressWithLabel, WELL_KNOWN_ADDRESSES } from "@/components/address-with-label";
 import { useProposalActions } from "@/lib/hooks/use-proposal-actions";
 import { useViewerAddressForMultisig } from "@/lib/hooks/use-viewer-address";
 import { useWorkspacePayload } from "@/lib/hooks/use-workspace-payload";
@@ -527,12 +527,18 @@ export function ProposalDetailView({
                 })}
 
               {payload?.type === "vault" &&
-                payload.instructions.map((instr, i) => (
+                payload.instructions.map((instr, i) => {
+                  const wellKnown = WELL_KNOWN_ADDRESSES[instr.programAddress];
+                  return (
                   <div key={i} className="border-border rounded-xl border overflow-hidden">
                     {/* Instruction header */}
                     <div className="border-border/50 bg-muted/50 flex items-center gap-2 border-b px-3 py-2.5">
                       <span className="text-muted-foreground/40 font-mono text-[10px]">#{i + 1}</span>
-                      <span className="text-muted-foreground/50 text-[11px] font-medium">Program</span>
+                      {wellKnown ? (
+                        <span className="text-[13px] font-semibold text-foreground/80">{wellKnown.label}</span>
+                      ) : (
+                        <span className="text-muted-foreground/50 text-[11px] font-medium">Program</span>
+                      )}
                     </div>
                     {/* Program address */}
                     <div className="border-border/50 border-b px-3 py-2.5">
@@ -577,7 +583,8 @@ export function ProposalDetailView({
                       </div>
                     )}
                   </div>
-                ))}
+                  );
+                })}
             </div>
           )}
         </div>
