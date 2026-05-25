@@ -509,16 +509,19 @@ export function ProposalDetailView({
                 <p className="text-muted-foreground/40 py-2 text-[11px]">No data available.</p>
               )}
 
-              {payload && "transactionPda" in payload && (
-                <PayloadField label="Transaction PDA" value={payload.transactionPda} copyable />
-              )}
-
-              {payload?.type === "vault" && payload.vaultAddress && (
-                <PayloadAddressField label="Vault (treasury)" address={payload.vaultAddress} />
-              )}
+              {(payload && "transactionPda" in payload && payload.transactionPda) || (payload?.type === "vault" && payload.vaultAddress) ? (
+                <div className="border-border divide-border/50 divide-y rounded-xl border overflow-hidden px-3">
+                  {payload && "transactionPda" in payload && payload.transactionPda && (
+                    <PayloadField label="Transaction PDA" value={payload.transactionPda} copyable />
+                  )}
+                  {payload?.type === "vault" && payload.vaultAddress && (
+                    <PayloadAddressField label="Vault" address={payload.vaultAddress} />
+                  )}
+                </div>
+              ) : null}
 
               {payload?.type === "safe" && (
-                <>
+                <div className="border-border divide-border/50 divide-y rounded-xl border overflow-hidden px-3">
                   {payload.safeTxHash && (
                     <PayloadField label="Safe tx hash" value={payload.safeTxHash} copyable />
                   )}
@@ -535,16 +538,14 @@ export function ProposalDetailView({
                     <PayloadField label="Calldata" value={payload.data} mono />
                   )}
                   {payload.dataDecoded != null && (
-                    <div className="border-border rounded-xl border bg-card overflow-hidden">
-                      <div className="border-border/50 border-b px-3 py-2">
-                        <p className="text-muted-foreground/50 text-[11px] font-medium">Decoded</p>
-                      </div>
-                      <pre className="overflow-x-auto p-3 font-mono text-[11px] text-muted-foreground/70 leading-relaxed">
+                    <div className="border-t border-border/50 py-2">
+                      <p className="text-muted-foreground/40 mb-1.5 text-[11px] font-medium">Decoded</p>
+                      <pre className="overflow-x-auto font-mono text-[11px] text-muted-foreground/70 leading-relaxed">
                         {JSON.stringify(payload.dataDecoded, null, 2)}
                       </pre>
                     </div>
                   )}
-                </>
+                </div>
               )}
 
               {payload?.type === "config" &&
@@ -657,13 +658,11 @@ function PayloadField({
   mono?: boolean;
 }) {
   return (
-    <div className="border-border rounded-xl border overflow-hidden">
-      <div className="border-border/50 bg-muted/50 flex items-center justify-between border-b px-3 py-2">
-        <p className="text-muted-foreground/50 text-[11px] font-medium">{label}</p>
+    <div className="flex items-start justify-between gap-3 py-2">
+      <span className="text-muted-foreground/40 mt-0.5 shrink-0 text-[11px] font-medium">{label}</span>
+      <div className="flex min-w-0 items-start gap-1">
+        <p className={cn("break-all text-right text-[11px] text-foreground/70 leading-relaxed", mono && "font-mono")}>{value}</p>
         {copyable && <CopyBtn text={value} />}
-      </div>
-      <div className="px-3 py-2.5">
-        <p className={cn("break-all text-[11px] text-foreground/70 leading-relaxed", mono && "font-mono")}>{value}</p>
       </div>
     </div>
   );
@@ -671,13 +670,9 @@ function PayloadField({
 
 function PayloadAddressField({ label, address }: { label: string; address: string }) {
   return (
-    <div className="border-border rounded-xl border overflow-hidden">
-      <div className="border-border/50 bg-muted/50 border-b px-3 py-2">
-        <p className="text-muted-foreground/50 text-[11px] font-medium">{label}</p>
-      </div>
-      <div className="px-3 py-2.5">
-        <AddressWithLabel address={address} showFull />
-      </div>
+    <div className="flex items-start justify-between gap-3 py-2">
+      <span className="text-muted-foreground/40 mt-0.5 shrink-0 text-[11px] font-medium">{label}</span>
+      <AddressWithLabel address={address} showFull copyOnClick showCopy={false} className="min-w-0" />
     </div>
   );
 }

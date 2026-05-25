@@ -51,62 +51,22 @@ import {
   matchesMultisigSelectionKey,
 } from "@/types/multisig";
 
-const GRID_COLS = "36px minmax(0,2fr) 96px minmax(0,1fr) 56px";
-
 function formatProviderLabel(provider: RegistrySummaryRow["multisigProvider"]) {
   return provider === "safe" ? "Safe" : "Squads";
 }
 
-function VaultColumnHeaders({
-  selectable = false,
-  allSelected = false,
-  onToggleAll,
-}: {
-  selectable?: boolean;
-  allSelected?: boolean;
-  onToggleAll?: () => void;
-}) {
-  return (
-    <div
-      className="border-border bg-muted grid items-center border-b px-3 py-2"
-      style={{ gridTemplateColumns: GRID_COLS }}
-    >
-      <div className="flex items-center justify-center">
-        {selectable && (
-          <Checkbox
-            checked={allSelected}
-            onCheckedChange={onToggleAll}
-            className="size-3.5"
-            aria-label="Select all"
-          />
-        )}
-      </div>
-      {["Vault", "Chain", "Status", ""].map((h, i) => (
-        <span
-          key={i}
-          className="text-muted-foreground/40 text-[11px] font-medium"
-        >
-          {h}
-        </span>
-      ))}
-    </div>
-  );
-}
-
 function VaultRowSkeleton() {
   return (
-    <div
-      className="grid items-center px-3 py-2.5"
-      style={{ gridTemplateColumns: GRID_COLS }}
-    >
-      <div />
-      <div className="space-y-1 pr-2">
+    <div className="flex items-center gap-2.5 px-3 py-2.5">
+      <div className="min-w-0 flex-1 space-y-1.5">
         <Skeleton className="h-3 w-28 rounded-sm" />
-        <Skeleton className="h-2.5 w-36 rounded-sm" />
+        <div className="flex items-center gap-1.5">
+          <Skeleton className="h-3.5 w-14 rounded" />
+          <Skeleton className="h-2.5 w-24 rounded-sm" />
+        </div>
       </div>
-      <Skeleton className="h-3 w-14 rounded-sm" />
-      <Skeleton className="h-3 w-20 rounded-sm" />
-      <div className="flex justify-end">
+      <div className="flex shrink-0 items-center gap-1.5">
+        <Skeleton className="h-3 w-20 rounded-sm" />
         <Skeleton className="h-7 w-7 rounded-md" />
       </div>
     </div>
@@ -383,10 +343,9 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
           </div>
         )}
 
-      {/* Loading skeleton — table-shaped */}
+      {/* Loading skeleton */}
       {loading && (
         <div className="border-border bg-card overflow-hidden rounded-xl border">
-          <VaultColumnHeaders />
           <div className="divide-border/50 divide-y">
             {Array.from({ length: 4 }).map((_, i) => (
               <VaultRowSkeleton key={i} />
@@ -395,51 +354,39 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
         </div>
       )}
 
-      {/* Vault table */}
+      {/* Vault list */}
       {!loading && hasMultisigs && filteredRegistryRows.length > 0 && (
         <div className="border-border bg-card overflow-hidden rounded-xl border">
-          <VaultColumnHeaders
-            selectable
-            allSelected={selectedForDeletion.size === multisigs.length && multisigs.length > 0}
-            onToggleAll={toggleSelectAll}
-          />
           <div className="divide-border/50 divide-y">
             {filteredRegistryRows.map((row) => {
               const multisig = getMultisigForRow(row);
               if (!multisig) return null;
 
               const isSelected = selectedForDeletion.has(row.key);
-              const isActiveDesk = matchesMultisigSelectionKey(
-                multisig,
-                selectedMultisigKey
-              );
+              const isActiveDesk = matchesMultisigSelectionKey(multisig, selectedMultisigKey);
               const isEditing = editingLabel === row.key;
 
               return (
                 <div
                   key={row.key}
                   className={cn(
-                    "group grid cursor-pointer items-center px-3 py-2.5 transition-colors",
+                    "group flex cursor-pointer items-center gap-2.5 px-3 py-2.5 transition-colors",
                     isSelected
                       ? "bg-primary/8"
                       : isActiveDesk
-                        ? "bg-primary/5 [box-shadow:inset_2px_0_0_rgba(217,119,6,0.5)]"
-                        : row.waiting > 0
-                          ? "hover:bg-primary/5 [box-shadow:inset_2px_0_0_rgba(217,119,6,0.25)]"
-                          : row.executable > 0
-                            ? "hover:bg-emerald-50 dark:hover:bg-emerald-950/20 [box-shadow:inset_2px_0_0_rgba(5,150,105,0.25)]"
-                            : "hover:bg-muted"
+                      ? "bg-primary/5 [box-shadow:inset_2px_0_0_rgba(217,119,6,0.5)]"
+                      : row.waiting > 0
+                      ? "hover:bg-primary/5 [box-shadow:inset_2px_0_0_rgba(217,119,6,0.25)]"
+                      : row.executable > 0
+                      ? "hover:bg-emerald-950/15 [box-shadow:inset_2px_0_0_rgba(5,150,105,0.25)]"
+                      : "hover:bg-muted"
                   )}
-                  style={{ gridTemplateColumns: GRID_COLS }}
                   onClick={() => handleOpenDesk(multisig)}
                 >
                   {/* Checkbox */}
                   <div
-                    className="flex items-center justify-center"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleSelect(row.key);
-                    }}
+                    className="shrink-0"
+                    onClick={(e) => { e.stopPropagation(); toggleSelect(row.key); }}
                   >
                     <Checkbox
                       checked={isSelected}
@@ -450,9 +397,9 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
                     />
                   </div>
 
-                  {/* Name + provider + address */}
+                  {/* Main info */}
                   <div
-                    className="min-w-0 pr-3"
+                    className="min-w-0 flex-1"
                     onClick={(e) => e.stopPropagation()}
                   >
                     {isEditing ? (
@@ -465,23 +412,20 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
                         }}
                         onBlur={() => handleSaveLabel(multisig)}
                         placeholder="Enter label"
-                        className="h-6 w-40 text-[13px]"
+                        className="mb-0.5 h-6 w-40 text-[13px]"
                         autoFocus
                       />
                     ) : (
-                      <div className="flex min-w-0 items-center gap-1.5">
-                        <p className="text-foreground truncate text-[13px] font-medium">
+                      <div className="mb-0.5 flex min-w-0 items-center gap-1.5">
+                        <p className="text-foreground truncate text-[13px] font-medium leading-tight">
                           {row.label}
                         </p>
                         <Button
                           variant="ghost"
-                          className="h-6 w-6 shrink-0 p-0 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground hover:bg-transparent"
+                          className="h-5 w-5 shrink-0 p-0 opacity-0 transition-opacity group-hover:opacity-100 text-muted-foreground hover:text-foreground hover:bg-transparent"
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleStartEditLabel(
-                              getMultisigAccountKey(multisig),
-                              multisig.label
-                            );
+                            handleStartEditLabel(getMultisigAccountKey(multisig), multisig.label);
                           }}
                           aria-label={`Edit label for ${row.label}`}
                         >
@@ -489,17 +433,19 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
                         </Button>
                       </div>
                     )}
-                    <div className="flex items-center gap-1 min-w-0">
-                      <p className="text-muted-foreground/60 shrink-0 text-[10px]">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="border-border/60 bg-muted/60 text-muted-foreground/40 rounded px-1 py-px text-[10px]">
+                        {row.chainName}
+                      </span>
+                      <span className="text-muted-foreground/50 text-[10px]">
                         {formatProviderLabel(row.multisigProvider)} · {row.threshold}/{row.memberCount}
-                      </p>
-                      <span className="text-muted-foreground/25 text-[10px]">·</span>
-                      <span className="text-muted-foreground/45 truncate font-mono text-[10px]">
+                      </span>
+                      <span className="text-muted-foreground/30 font-mono text-[10px]">
                         {formatAddress(multisig.publicKey.toString(), 5, 4)}
                       </span>
                       <Button
                         variant="ghost"
-                        className="h-4 w-4 shrink-0 p-0 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground/40 hover:text-muted-foreground hover:bg-transparent"
+                        className="h-4 w-4 shrink-0 p-0 opacity-0 transition-opacity group-hover:opacity-100 text-muted-foreground/40 hover:text-muted-foreground hover:bg-transparent"
                         onClick={(e) => {
                           e.stopPropagation();
                           navigator.clipboard.writeText(multisig.publicKey.toString());
@@ -513,7 +459,7 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
                         <span
                           key={tag}
                           className={cn(
-                            "shrink-0 rounded-full px-1.5 py-0 text-[9px]",
+                            "shrink-0 rounded-full px-1.5 py-px text-[9px]",
                             selectedFilterTags.includes(tag)
                               ? "bg-primary/15 text-primary font-medium"
                               : "bg-muted text-muted-foreground/60"
@@ -528,53 +474,36 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
                     </div>
                   </div>
 
-                  {/* Chain */}
-                  <span className="text-muted-foreground/60 font-mono text-[11px]">
-                    {row.chainName}
-                  </span>
-
                   {/* Status / attention */}
-                  <div className="min-w-0 pr-2">
+                  <div className="shrink-0">
                     {row.attentionLine ? (
                       row.waiting > 0 ? (
-                        <div className="flex items-center gap-1.5">
-                          <AlertTriangle className="text-primary/80 h-3 w-3 shrink-0" />
-                          <span className="text-primary truncate text-[11px]">
-                            {row.attentionLine}
-                          </span>
+                        <div className="flex items-center gap-1">
+                          <AlertTriangle className="text-primary/70 h-3 w-3 shrink-0" />
+                          <span className="text-primary text-[11px]">{row.attentionLine}</span>
                         </div>
                       ) : row.executable > 0 ? (
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1">
                           <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-500" />
-                          <span className="truncate text-[11px] text-emerald-700 dark:text-emerald-400">
-                            {row.attentionLine}
-                          </span>
+                          <span className="text-[11px] text-emerald-400">{row.attentionLine}</span>
                         </div>
                       ) : (
-                        <div className="flex items-center gap-1.5">
-                          <CheckCircle2 className="text-muted-foreground/30 h-3 w-3 shrink-0" />
-                          <span className="text-muted-foreground/50 truncate text-[11px]">
-                            {row.attentionLine}
-                          </span>
-                        </div>
+                        <span className="text-muted-foreground/40 text-[11px]">{row.attentionLine}</span>
                       )
                     ) : (
-                      <div className="flex items-center gap-1.5">
-                        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500/30" />
-                        <span className="text-muted-foreground/30 text-[11px]">Watching</span>
-                      </div>
+                      <span className="text-muted-foreground/25 text-[11px]">—</span>
                     )}
                   </div>
 
-                  {/* Actions */}
+                  {/* Row actions */}
                   <div
-                    className="flex items-center justify-end gap-0.5"
+                    className="flex shrink-0 items-center gap-0.5"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground/50"
+                      className="h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100 text-muted-foreground/50"
                       onClick={() => handleOpenTagDialog(multisig)}
                       title="Manage tags"
                     >
@@ -588,10 +517,10 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
                         isActiveDesk
                           ? "text-primary"
                           : row.waiting > 0
-                            ? "text-primary/70"
-                            : row.executable > 0
-                              ? "text-emerald-600 dark:text-emerald-400"
-                              : "text-muted-foreground/30 opacity-0 group-hover:opacity-100"
+                          ? "text-primary/70"
+                          : row.executable > 0
+                          ? "text-emerald-400"
+                          : "text-muted-foreground/30 opacity-0 group-hover:opacity-100"
                       )}
                       onClick={() => handleOpenDesk(multisig)}
                       aria-label="Open vault"
