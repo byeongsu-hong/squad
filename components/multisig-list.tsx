@@ -514,7 +514,7 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
                             "shrink-0 rounded-full px-1.5 py-0 text-[9px]",
                             selectedFilterTags.includes(tag)
                               ? "bg-primary/15 text-primary font-medium"
-                              : "bg-muted text-muted-foreground"
+                              : "bg-muted text-muted-foreground/60"
                           )}
                         >
                           {tag}

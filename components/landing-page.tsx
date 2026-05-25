@@ -82,7 +82,7 @@ export function LandingPage() {
             className="flex shrink-0 items-center gap-1.5 px-4 py-3.5 transition-opacity hover:opacity-70"
           >
             <Shield className="text-muted-foreground/50 h-3.5 w-3.5 shrink-0" />
-            <span className="text-muted-foreground text-sm font-medium tabular-nums">
+            <span className="text-muted-foreground/70 text-sm font-medium tabular-nums">
               {workspaceMultisigs.length}
             </span>
             <span className="text-muted-foreground/50 text-[11px]">vault{workspaceMultisigs.length !== 1 ? "s" : ""}</span>

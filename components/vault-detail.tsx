@@ -197,7 +197,7 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
               {multisig.label ?? "Unnamed Vault"}
             </h1>
             <div className="mt-2 flex flex-wrap items-center gap-1.5">
-              <span className="border-border bg-muted text-muted-foreground rounded-full border px-2 py-0.5 text-[10px] font-medium">
+              <span className="border-border bg-muted text-muted-foreground/60 rounded-full border px-2 py-0.5 text-[10px] font-medium">
                 {multisig.chainName}
               </span>
               <span className={cn(
@@ -233,7 +233,7 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
               </span>
             )}
             {pendingCount !== null && pendingCount > 0 && !needsSigningCount && !executableCount && (
-              <span className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-[10px] font-medium">
+              <span className="bg-muted text-muted-foreground/60 rounded-full px-2 py-0.5 text-[10px] font-medium">
                 {pendingCount} pending
               </span>
             )}

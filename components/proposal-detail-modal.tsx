@@ -482,7 +482,7 @@ export function ProposalDetailView({
                   {payload.dataDecoded != null && (
                     <div className="rounded-lg bg-muted px-3 py-2.5">
                       <p className="text-muted-foreground/40 mb-1.5 text-[11px] font-medium">Decoded</p>
-                      <pre className="overflow-x-auto rounded-md bg-background px-3 py-2 font-mono text-[11px] text-muted-foreground">
+                      <pre className="overflow-x-auto rounded-md bg-background px-3 py-2 font-mono text-[11px] text-muted-foreground/70">
                         {JSON.stringify(payload.dataDecoded, null, 2)}
                       </pre>
                     </div>
@@ -555,7 +555,7 @@ export function ProposalDetailView({
                     {instr.data && instr.data !== "1" && (
                       <div className="mt-2.5">
                         <p className="text-muted-foreground/40 mb-1 text-[11px] font-medium">Data</p>
-                        <code className="block break-all rounded-md bg-background px-3 py-2 font-mono text-[11px] text-muted-foreground">
+                        <code className="block break-all rounded-md bg-background px-3 py-2 font-mono text-[11px] text-muted-foreground/70">
                           {instr.data}
                         </code>
                       </div>

@@ -490,7 +490,7 @@ export function ExportImportController({
             <div className="grid gap-2 sm:grid-cols-3">
               <div className="bg-muted rounded-xl px-3 py-3">
                 <p className="text-muted-foreground/50 text-[11px] font-medium">
-                  Multisigs
+                  Vaults
                 </p>
                 <p className="text-foreground mt-1 text-lg font-medium">
                   {multisigCount}
@@ -596,7 +596,7 @@ function ExportImportModePicker({
             </span>
             {embedded ? (
               <span className="text-muted-foreground/60 block text-xs">
-                Merge chains and multisigs from another environment.
+                Merge chains and vaults from another environment.
               </span>
             ) : null}
           </span>
