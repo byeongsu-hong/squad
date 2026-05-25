@@ -6,6 +6,7 @@ import { type ReactNode, useMemo, useState } from "react";
 import { ProposalDetailView } from "@/components/proposal-detail-modal";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Pagination } from "@/components/ui/pagination";
 import {
@@ -759,32 +760,27 @@ export function OperationsQueue({
 
   return (
     <>
-      <div className="flex items-start gap-0">
-        {/* Queue pane - hidden on mobile when detail open, flex-1 on desktop */}
-        <div
-          className={cn(
-            "min-w-0 flex-1",
-            selectedItem && "max-lg:hidden"
-          )}
-        >
-          {queueContent}
-        </div>
+      <div className="min-w-0">
+        {queueContent}
+      </div>
 
-        {/* Detail panel - full-screen on mobile, sticky 42% panel on desktop */}
-        {selectedItem && (
-          <div className="flex-1 bg-background lg:flex-none lg:w-[42%] lg:min-w-[360px] lg:border-l lg:border-border lg:sticky lg:top-[54px] lg:max-h-[calc(100svh-54px)] lg:overflow-y-auto">
+      {/* Proposal detail modal */}
+      <Dialog open={!!selectedItem} onOpenChange={(open) => !open && setSelectedItem(null)}>
+        <DialogContent
+          showCloseButton={false}
+          className="flex flex-col gap-0 p-0 max-h-[88vh] sm:max-w-xl overflow-hidden"
+        >
+          {selectedItem && (
             <ProposalDetailView
               item={selectedItem}
               onBack={() => setSelectedItem(null)}
-              onActionSuccess={async () => {
-                setSelectedItem(null);
-              }}
+              onActionSuccess={async () => setSelectedItem(null)}
             />
-          </div>
-        )}
-      </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
-      {/* Batch action bar - fixed, always renders outside flex container */}
+      {/* Bulk action bar — appears when items selected via checkboxes */}
       <div
         className={cn(
           "fixed right-0 bottom-0 left-0 z-50 transition-transform duration-200",
@@ -801,8 +797,7 @@ export function OperationsQueue({
                 aria-label="Clear selection"
               />
               <span className="text-background text-[13px]">
-                {selected.size} transaction{selected.size !== 1 ? "s" : ""}{" "}
-                selected
+                {selected.size} selected
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -818,7 +813,7 @@ export function OperationsQueue({
                   ) : (
                     <Check className="h-3.5 w-3.5" />
                   )}
-                  Approve ({canApproveItems.length})
+                  Sign ({canApproveItems.length})
                 </Button>
               )}
               {canExecuteItems.length > 0 && (
@@ -842,7 +837,7 @@ export function OperationsQueue({
                 onClick={() => setSelected(new Set())}
                 className="text-background/70 hover:text-background hover:bg-background/10 border-background/20"
               >
-                Clear
+                Cancel
               </Button>
             </div>
           </div>

@@ -396,7 +396,7 @@ function AddressLabelRegistry({
       </div>
 
       {embedded && filteredLabels.length > 0 && (
-        <div className="border-border text-muted-foreground/60 grid grid-cols-[minmax(0,0.95fr)_minmax(0,1.15fr)_minmax(0,1.3fr)_8rem_4.5rem] gap-3 border-b px-4 py-2 text-[0.62rem] tracking-[0.16em] uppercase">
+        <div className="border-border grid grid-cols-[minmax(0,0.95fr)_minmax(0,1.15fr)_minmax(0,1.3fr)_8rem_4.5rem] gap-3 border-b px-4 py-2 text-[11px] font-medium text-muted-foreground/40">
           <span>Label</span>
           <span>Description</span>
           <span>Address</span>

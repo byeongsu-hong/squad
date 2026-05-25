@@ -135,7 +135,7 @@ export function ProposalDetailView({
   return (
     <div className="flex h-full flex-col">
       {/* ── Sticky header ──────────────────────────────────────────────── */}
-      <div className="border-border/60 bg-card sticky top-0 z-10 border-b px-5 py-4">
+      <div className="border-border/60 bg-card shrink-0 border-b px-5 py-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             {/* Vault label + tx index + status pill */}
@@ -451,7 +451,7 @@ export function ProposalDetailView({
                   )}
                   {payload.toAddress && (
                     <div className="bg-muted rounded-lg px-3 py-2.5">
-                      <p className="text-muted-foreground/60 mb-1 text-[11px] font-semibold uppercase tracking-widest">
+                      <p className="text-muted-foreground/40 mb-1 text-[11px] font-medium">
                         Target
                       </p>
                       <AddressWithLabel address={payload.toAddress} showFull />
@@ -460,7 +460,7 @@ export function ProposalDetailView({
                   {payload.data && <PayloadBlock label="Calldata" value={payload.data} />}
                   {payload.dataDecoded != null && (
                     <div className="bg-muted rounded-lg px-3 py-2.5">
-                      <p className="text-muted-foreground/60 mb-1.5 text-[11px] font-semibold uppercase tracking-widest">
+                      <p className="text-muted-foreground/40 mb-1.5 text-[11px] font-medium">
                         Decoded
                       </p>
                       <pre className="bg-background overflow-x-auto rounded-md px-3 py-2 font-mono text-[11px] text-muted-foreground">
@@ -486,7 +486,7 @@ export function ProposalDetailView({
                       </div>
                       {fmt.fields.map((f, j) => (
                         <div key={j} className="mt-1.5">
-                          <p className="text-muted-foreground/60 text-[11px] uppercase tracking-widest">
+                          <p className="text-muted-foreground/40 text-[11px] font-medium">
                             {f.label}
                           </p>
                           {typeof f.value === "string" ? (
@@ -505,7 +505,7 @@ export function ProposalDetailView({
               {payload?.type === "vault" &&
                 payload.instructions.map((instr, i) => (
                   <div key={i} className="bg-muted rounded-lg px-3 py-2.5">
-                    <p className="text-muted-foreground/60 mb-2 text-[11px] font-semibold uppercase tracking-widest">
+                    <p className="text-muted-foreground/40 mb-2 text-[11px] font-medium">
                       Instruction {i + 1}
                     </p>
                     <AddressWithLabel
@@ -514,7 +514,7 @@ export function ProposalDetailView({
                       vaultAddress={payload.vaultAddress ?? undefined}
                     />
                     <div className="mt-2 space-y-1.5 text-[11px]">
-                      <p className="text-muted-foreground/60 uppercase tracking-widest">
+                      <p className="text-muted-foreground/40 font-medium">
                         Accounts ({instr.accountIndexes.length})
                       </p>
                       {instr.accountIndexes.map((idx: number) => (
@@ -529,7 +529,7 @@ export function ProposalDetailView({
                           />
                         </div>
                       ))}
-                      <p className="text-muted-foreground/60 mt-2 uppercase tracking-widest">
+                      <p className="text-muted-foreground/40 mt-2 font-medium">
                         Data
                       </p>
                       <code className="bg-background text-muted-foreground block break-all rounded-md px-3 py-2 font-mono">
