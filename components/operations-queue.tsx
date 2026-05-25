@@ -321,7 +321,7 @@ function RowSkeleton({ compact = false, hideChain = false }: { compact?: boolean
 const STATUS_FILTERS = [
   "All",
   "Action needed",
-  "Pending",
+  "Watching",
   "Executable",
   "Executed",
   "Rejected",
@@ -368,7 +368,10 @@ export function OperationsQueue({
         !item.readyToExecute
       )
         return false;
-      if (statusFilter === "Pending" && item.proposal.status !== "Active")
+      if (
+        statusFilter === "Watching" &&
+        (item.needsYourSignature || item.readyToExecute || item.proposal.status !== "Active")
+      )
         return false;
       if (statusFilter === "Executable" && !item.readyToExecute) return false;
       if (statusFilter === "Executed" && item.proposal.status !== "Executed")

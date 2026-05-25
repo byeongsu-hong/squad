@@ -15,7 +15,7 @@ import { useWorkspaceQueue } from "@/lib/hooks/use-workspace-queue";
 import { useWalletStore } from "@/stores/wallet-store";
 import { cn } from "@/lib/utils";
 
-type StatFilter = "All" | "Action needed" | "Executable" | "Pending";
+type StatFilter = "All" | "Action needed" | "Executable" | "Watching";
 
 export function LandingPage() {
   const { publicKey, connected } = useWalletStore();
@@ -135,11 +135,11 @@ export function LandingPage() {
 
           <button
             type="button"
-            onClick={() => !loading && watchingCount > 0 && toggleFilter("Pending")}
+            onClick={() => !loading && watchingCount > 0 && toggleFilter("Watching")}
             className={cn(
               "flex shrink-0 items-center gap-2.5 px-5 py-3.5 transition-colors",
               !loading && watchingCount > 0 ? "cursor-pointer" : "cursor-default",
-              activeFilter === "Pending" ? "bg-muted/60 [box-shadow:inset_0_-2px_0_rgba(161,161,170,0.4)]" : !loading && watchingCount > 0 ? "hover:bg-muted/40" : ""
+              activeFilter === "Watching" ? "bg-muted/60 [box-shadow:inset_0_-2px_0_rgba(161,161,170,0.4)]" : !loading && watchingCount > 0 ? "hover:bg-muted/40" : ""
             )}
           >
             <div className={cn("flex flex-col items-start", loading && "animate-pulse")}>
@@ -150,7 +150,7 @@ export function LandingPage() {
                 {watchingCount}
               </span>
               <span className={cn("text-[11px]", loading ? "text-muted-foreground/20" : watchingCount > 0 ? "text-muted-foreground/50" : "text-muted-foreground/25")}>
-                Pending
+                Watching
               </span>
             </div>
           </button>

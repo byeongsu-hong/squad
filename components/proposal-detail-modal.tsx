@@ -467,6 +467,10 @@ export function ProposalDetailView({
                 <PayloadField label="Transaction PDA" value={payload.transactionPda} copyable />
               )}
 
+              {payload?.type === "vault" && payload.vaultAddress && (
+                <PayloadAddressField label="Vault (treasury)" address={payload.vaultAddress} />
+              )}
+
               {payload?.type === "safe" && (
                 <>
                   {payload.safeTxHash && (
