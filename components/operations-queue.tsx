@@ -50,35 +50,44 @@ function formatAge(createdAt?: string): string {
 function StatusBadge({ item }: { item: WorkspaceQueueItem }) {
   if (item.readyToExecute) {
     return (
-      <span className="border-emerald-200 bg-emerald-50 text-[10px] text-emerald-700 dark:border-emerald-800/50 dark:bg-emerald-950/30 dark:text-emerald-400 rounded border px-1.5 py-0.5">
-        Ready to execute
+      <span className="inline-flex items-center gap-1 rounded border border-emerald-800/50 bg-emerald-950/30 px-1.5 py-0.5 text-[10px] text-emerald-400">
+        <Zap className="h-2.5 w-2.5 fill-current" />
+        Ready
       </span>
     );
   }
-  if (item.needsYourSignature) {
+  if (item.needsYourSignature && !item.currentUserApproved) {
     return (
-      <span className="border-primary/30 bg-primary/10 text-primary text-[10px] rounded border px-1.5 py-0.5">
-        Waiting on you
+      <span className="rounded border border-primary/30 bg-primary/10 px-1.5 py-0.5 font-mono text-[10px] tabular-nums text-primary">
+        {item.approvalCount}/{item.multisig.threshold}
+      </span>
+    );
+  }
+  if (item.currentUserApproved && item.proposal.status === "Active") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded border border-emerald-800/30 bg-emerald-950/10 px-1.5 py-0.5 text-[10px] text-emerald-500/70">
+        <Check className="h-2.5 w-2.5" />
+        Signed
       </span>
     );
   }
   if (item.proposal.status === "Rejected") {
     return (
-      <span className="border-destructive/30 bg-destructive/10 text-[10px] text-destructive rounded border px-1.5 py-0.5">
+      <span className="rounded border border-destructive/30 bg-destructive/10 px-1.5 py-0.5 text-[10px] text-destructive">
         Rejected
       </span>
     );
   }
   if (item.proposal.status === "Executed") {
     return (
-      <span className="text-muted-foreground/70 text-[10px] rounded border border-border px-1.5 py-0.5">
+      <span className="rounded border border-border px-1.5 py-0.5 text-[10px] text-muted-foreground/70">
         Executed
       </span>
     );
   }
   return (
-    <span className="text-muted-foreground text-[10px] rounded border border-border px-1.5 py-0.5">
-      {item.approvalCount}/{item.multisig.threshold} signed
+    <span className="rounded border border-border px-1.5 py-0.5 font-mono text-[10px] tabular-nums text-muted-foreground">
+      {item.approvalCount}/{item.multisig.threshold}
     </span>
   );
 }
@@ -625,7 +634,7 @@ export function OperationsQueue({
                 <p className="text-muted-foreground/60 text-[11px] font-medium">
                   Needs attention
                 </p>
-                <span className="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-[10px] font-bold tabular-nums">
+                <span className="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-[10px] font-semibold tabular-nums">
                   {actionItems.length}
                 </span>
                 <div className="ml-auto flex items-center gap-1.5">

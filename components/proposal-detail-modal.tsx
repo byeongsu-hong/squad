@@ -152,7 +152,7 @@ export function ProposalDetailView({
               </span>
               <span
                 className={cn(
-                  "inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold",
+                  "inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold",
                   statusConfig.pill
                 )}
               >
@@ -247,7 +247,7 @@ export function ProposalDetailView({
                 ) : (
                   <Check className="h-3.5 w-3.5" />
                 )}
-                {multisig.provider === "safe" ? "Confirm" : "Sign"}
+                Sign
               </Button>
             )}
             {rejectSupported && needsYourSignature && (
