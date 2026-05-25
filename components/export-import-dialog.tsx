@@ -572,7 +572,7 @@ function ExportImportExportPanel({
         <div className="flex items-center gap-5">
           <div>
             <p className="text-muted-foreground/50 text-[11px] font-medium">
-              Squads
+              SVM chains
             </p>
             <p className="text-foreground text-[15px] font-semibold tabular-nums">
               {operationalSquadsChains.length}
