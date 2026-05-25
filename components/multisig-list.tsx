@@ -267,7 +267,7 @@ export function MultisigList({ selectedKey }: { selectedKey?: string }) {
                   "h-7 shrink-0 rounded-full border px-2.5 text-[11px] transition-colors",
                   isActive
                     ? "border-primary/20 bg-primary/15 text-primary hover:bg-primary/20 hover:text-primary font-medium"
-                    : "border-border/30 text-muted-foreground/60 hover:text-foreground hover:border-border hover:bg-muted/30"
+                    : "border-border/50 text-muted-foreground/60 hover:text-foreground hover:border-border hover:bg-muted/30"
                 )}
               >
                 {tag}

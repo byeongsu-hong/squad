@@ -76,10 +76,10 @@ export function LandingPage() {
             className="flex shrink-0 items-center gap-1.5 px-4 py-3 transition-opacity hover:opacity-70"
           >
             <Shield className="text-muted-foreground/40 h-3.5 w-3.5 shrink-0" />
-            <span className="text-muted-foreground/60 text-[13px] font-semibold tabular-nums">
+            <span className="text-foreground/70 text-[13px] font-semibold tabular-nums">
               {workspaceMultisigs.length}
             </span>
-            <span className="text-muted-foreground/40 text-[11px]">vault{workspaceMultisigs.length !== 1 ? "s" : ""}</span>
+            <span className="text-muted-foreground/50 text-[11px]">vault{workspaceMultisigs.length !== 1 ? "s" : ""}</span>
           </Link>
 
           <div className="bg-border/60 w-px shrink-0 self-stretch" />
@@ -168,8 +168,8 @@ export function LandingPage() {
 
           {!loading && needsSigningCount === 0 && executableCount === 0 && watchingCount === 0 && (
             <div className="ml-auto flex items-center gap-1.5 px-4">
-              <CheckCircle2 className="h-3 w-3 text-emerald-500/50" />
-              <span className="text-muted-foreground/30 text-[11px]">All clear</span>
+              <CheckCircle2 className="h-3 w-3 text-emerald-500/60" />
+              <span className="text-muted-foreground/50 text-[11px]">All clear</span>
             </div>
           )}
         </div>
