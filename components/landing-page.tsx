@@ -95,7 +95,7 @@ export function LandingPage() {
           >
             <PenLine className={needsSigningCount > 0 ? "text-primary/60 h-4 w-4 shrink-0" : "text-muted-foreground/30 h-4 w-4 shrink-0"} />
             <div className="flex flex-col">
-              <span className={needsSigningCount > 0 ? "text-primary text-2xl font-bold tabular-nums leading-tight" : "text-muted-foreground text-2xl font-bold tabular-nums leading-tight"}>
+              <span className={needsSigningCount > 0 ? "text-primary text-2xl font-bold tabular-nums leading-tight" : "text-muted-foreground/30 text-2xl font-bold tabular-nums leading-tight"}>
                 {needsSigningCount}
               </span>
               <span className={cn("text-[11px]", needsSigningCount > 0 ? "text-muted-foreground/50" : "text-muted-foreground/30")}>
@@ -115,7 +115,7 @@ export function LandingPage() {
           >
             <Zap className={executableCount > 0 ? "text-emerald-600/60 dark:text-emerald-400/60 h-4 w-4 shrink-0" : "text-muted-foreground/30 h-4 w-4 shrink-0"} />
             <div className="flex flex-col">
-              <span className={executableCount > 0 ? "text-emerald-600 dark:text-emerald-400 text-2xl font-bold tabular-nums leading-tight" : "text-muted-foreground text-2xl font-bold tabular-nums leading-tight"}>
+              <span className={executableCount > 0 ? "text-emerald-600 dark:text-emerald-400 text-2xl font-bold tabular-nums leading-tight" : "text-muted-foreground/30 text-2xl font-bold tabular-nums leading-tight"}>
                 {executableCount}
               </span>
               <span className={cn("text-[11px]", executableCount > 0 ? "text-muted-foreground/50" : "text-muted-foreground/30")}>
@@ -135,7 +135,7 @@ export function LandingPage() {
           >
             <Clock className={watchingCount > 0 ? "text-muted-foreground/60 h-4 w-4 shrink-0" : "text-muted-foreground/30 h-4 w-4 shrink-0"} />
             <div className="flex flex-col">
-              <span className={watchingCount > 0 ? "text-foreground text-2xl font-bold tabular-nums leading-tight" : "text-muted-foreground text-2xl font-bold tabular-nums leading-tight"}>
+              <span className={watchingCount > 0 ? "text-foreground text-2xl font-bold tabular-nums leading-tight" : "text-muted-foreground/30 text-2xl font-bold tabular-nums leading-tight"}>
                 {watchingCount}
               </span>
               <span className={cn("text-[11px]", watchingCount > 0 ? "text-muted-foreground/50" : "text-muted-foreground/30")}>

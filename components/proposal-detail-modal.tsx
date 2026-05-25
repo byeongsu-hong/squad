@@ -281,7 +281,7 @@ export function ProposalDetailView({
           {/* Section label */}
           <div className="mb-3 flex items-center gap-2">
             <Users className="text-muted-foreground/60 h-3.5 w-3.5" />
-            <span className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">
+            <span className="text-muted-foreground/50 text-[11px] font-medium tracking-wide">
               Signers
             </span>
           </div>
@@ -413,7 +413,7 @@ export function ProposalDetailView({
             onClick={() => setPayloadOpen(!payloadOpen)}
             className="h-auto w-full justify-between rounded-none px-5 py-3.5 text-left"
           >
-            <span className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">
+            <span className="text-muted-foreground/50 text-[11px] font-medium tracking-wide">
               Transaction data
             </span>
             {payloadOpen ? (
@@ -564,7 +564,7 @@ function PayloadBlock({
   return (
     <div className="bg-muted rounded-lg px-3 py-2.5">
       <div className="mb-1 flex items-center justify-between">
-        <p className="text-muted-foreground/60 text-[11px] font-semibold uppercase tracking-widest">
+        <p className="text-muted-foreground/50 text-[11px] font-medium tracking-wide">
           {label}
         </p>
         {copyable && <CopyBtn text={value} />}
