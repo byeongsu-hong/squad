@@ -82,7 +82,7 @@ export function LandingPage() {
             <span className="text-muted-foreground/50 text-[11px]">vault{workspaceMultisigs.length !== 1 ? "s" : ""}</span>
           </Link>
 
-          <div className="bg-border/60 w-px shrink-0 self-stretch" />
+          <div className="bg-border w-px shrink-0 self-stretch" />
 
           {/* Need signing */}
           <button
@@ -98,19 +98,19 @@ export function LandingPage() {
           >
             <span className={cn(
               "text-[18px] font-bold tabular-nums leading-none",
-              loading ? "text-muted-foreground/20 animate-pulse" : needsSigningCount > 0 ? "text-primary" : "text-muted-foreground/35"
+              loading ? "text-muted-foreground/20 animate-pulse" : needsSigningCount > 0 ? "text-primary" : "text-muted-foreground/40"
             )}>
               {needsSigningCount}
             </span>
             <span className={cn(
               "text-[11px] whitespace-nowrap",
-              loading ? "text-muted-foreground/20" : needsSigningCount > 0 ? "text-muted-foreground/60" : "text-muted-foreground/35"
+              loading ? "text-muted-foreground/20" : needsSigningCount > 0 ? "text-muted-foreground/60" : "text-muted-foreground/40"
             )}>
               to sign
             </span>
           </button>
 
-          <div className="bg-border/60 w-px shrink-0 self-stretch" />
+          <div className="bg-border w-px shrink-0 self-stretch" />
 
           {/* Executable */}
           <button
@@ -126,19 +126,19 @@ export function LandingPage() {
           >
             <span className={cn(
               "text-[18px] font-bold tabular-nums leading-none",
-              loading ? "text-muted-foreground/20 animate-pulse" : executableCount > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground/35"
+              loading ? "text-muted-foreground/20 animate-pulse" : executableCount > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground/40"
             )}>
               {executableCount}
             </span>
             <span className={cn(
               "text-[11px] whitespace-nowrap",
-              loading ? "text-muted-foreground/20" : executableCount > 0 ? "text-muted-foreground/60" : "text-muted-foreground/35"
+              loading ? "text-muted-foreground/20" : executableCount > 0 ? "text-muted-foreground/60" : "text-muted-foreground/40"
             )}>
               ready
             </span>
           </button>
 
-          <div className="bg-border/60 w-px shrink-0 self-stretch" />
+          <div className="bg-border w-px shrink-0 self-stretch" />
 
           {/* Watching */}
           <button
@@ -154,13 +154,13 @@ export function LandingPage() {
           >
             <span className={cn(
               "text-[18px] font-bold tabular-nums leading-none",
-              loading ? "text-muted-foreground/20 animate-pulse" : watchingCount > 0 ? "text-foreground" : "text-muted-foreground/35"
+              loading ? "text-muted-foreground/20 animate-pulse" : watchingCount > 0 ? "text-foreground" : "text-muted-foreground/40"
             )}>
               {watchingCount}
             </span>
             <span className={cn(
               "text-[11px] whitespace-nowrap",
-              loading ? "text-muted-foreground/20" : watchingCount > 0 ? "text-muted-foreground/60" : "text-muted-foreground/35"
+              loading ? "text-muted-foreground/20" : watchingCount > 0 ? "text-muted-foreground/60" : "text-muted-foreground/40"
             )}>
               watching
             </span>
