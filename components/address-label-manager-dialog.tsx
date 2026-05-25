@@ -460,9 +460,9 @@ function AddressLabelRegistry({
                         </div>
                       </div>
                       {embedded ? (
-                        <div className="text-muted-foreground min-w-0 text-sm">
-                          <p className="truncate">
-                            {label.description || "No description"}
+                        <div className="min-w-0 text-sm">
+                          <p className={cn("truncate", label.description ? "text-muted-foreground" : "text-muted-foreground/30")}>
+                            {label.description || "—"}
                           </p>
                         </div>
                       ) : null}

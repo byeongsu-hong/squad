@@ -197,7 +197,7 @@ export function AccountMenu({ onAddWallet }: AccountMenuProps) {
         {!allWalletsConnected && (
           <>
             <DropdownMenuSeparator className="my-1" />
-            <DropdownMenuLabel className="text-muted-foreground px-2 py-1 pt-0 text-xs font-normal">
+            <DropdownMenuLabel className="text-muted-foreground/40 px-2 py-1.5 text-[11px] font-medium">
               Add another
             </DropdownMenuLabel>
 
