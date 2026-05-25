@@ -171,7 +171,7 @@ export function LedgerConnectPanel({
             </RadioGroup>
           </div>
 
-          <Button onClick={handleConnect} disabled={loading} className="w-full">
+          <Button onClick={handleConnect} disabled={loading} className="w-full bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20">
             {loading ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
