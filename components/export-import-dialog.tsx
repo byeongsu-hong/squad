@@ -558,8 +558,13 @@ function ExportImportModePicker({
           className={cn(
             "cursor-pointer font-normal text-foreground/80",
             embedded
-              ? "border-border bg-card rounded-xl flex items-start gap-3 border px-3 py-3 text-xs font-medium"
-              : "flex items-center space-x-2 text-xs font-medium"
+              ? "rounded-xl flex items-start gap-3 border px-3 py-3 text-xs font-medium transition-colors"
+              : "flex items-center space-x-2 text-xs font-medium",
+            embedded && mode === "export"
+              ? "border-primary/40 bg-primary/5"
+              : embedded
+                ? "border-border bg-card"
+                : ""
           )}
         >
           <RadioGroupItem
@@ -582,8 +587,13 @@ function ExportImportModePicker({
           className={cn(
             "cursor-pointer font-normal text-foreground/80",
             embedded
-              ? "border-border bg-card rounded-xl flex items-start gap-3 border px-3 py-3 text-xs font-medium"
-              : "flex items-center space-x-2 text-xs font-medium"
+              ? "rounded-xl flex items-start gap-3 border px-3 py-3 text-xs font-medium transition-colors"
+              : "flex items-center space-x-2 text-xs font-medium",
+            embedded && mode === "import"
+              ? "border-primary/40 bg-primary/5"
+              : embedded
+                ? "border-border bg-card"
+                : ""
           )}
         >
           <RadioGroupItem
