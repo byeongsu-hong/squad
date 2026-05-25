@@ -162,7 +162,7 @@ export function AddressWithLabel({
               <span className="truncate">{label.label}</span>
             </div>
             {showFull ? (
-              <code className="text-muted-foreground max-w-full truncate font-mono text-xs tabular-nums">
+              <code className="text-muted-foreground/60 max-w-full truncate font-mono text-xs tabular-nums">
                 {address}
               </code>
             ) : null}

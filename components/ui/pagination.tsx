@@ -48,7 +48,7 @@ export function Pagination({
 
   return (
     <div className="flex flex-col gap-3 px-2 sm:flex-row sm:items-center sm:justify-between">
-      <div className="text-muted-foreground text-sm">
+      <div className="text-muted-foreground/60 text-sm">
         Showing {startIndex + 1}–{endIndex} of {totalItems}
       </div>
 
@@ -71,7 +71,7 @@ export function Pagination({
                 return (
                   <span
                     key={`ellipsis-${index}`}
-                    className="text-muted-foreground px-2 text-sm"
+                    className="text-muted-foreground/60 px-2 text-sm"
                   >
                     …
                   </span>
