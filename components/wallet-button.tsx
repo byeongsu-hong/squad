@@ -37,7 +37,7 @@ export function WalletButton() {
           className="bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20"
         >
           <Wallet className="h-4 w-4" />
-          Connect Wallet
+          <span className="hidden sm:inline">Connect Wallet</span>
         </Button>
       )}
       <ConnectWalletDialog

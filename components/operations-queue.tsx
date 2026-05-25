@@ -545,7 +545,7 @@ export function OperationsQueue({
       )}
 
       {filtered.length === 0 ? (
-        <div className={cn("flex flex-col items-center justify-center gap-3 text-center", compact ? "py-8" : "py-20")}>
+        <div className={cn("flex flex-col items-center justify-center gap-3 text-center", compact ? "py-8" : "py-14")}>
           {items.length === 0 ? (
             <div className={cn(
               "flex items-center justify-center border",

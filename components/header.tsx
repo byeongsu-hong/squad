@@ -38,15 +38,15 @@ export function Header() {
   return (
     <header className="border-border bg-card/90 sticky top-0 z-30 border-b backdrop-blur-md">
       <div className="flex h-[54px] w-full items-center justify-between gap-4 px-4 sm:px-5 md:px-6">
-        <div className="flex items-center gap-8">
+        <div className="flex min-w-0 items-center gap-4 sm:gap-8">
           <Link
             href="/"
-            className="text-foreground text-base font-bold tracking-[-0.02em]"
+            className="text-foreground shrink-0 text-base font-bold tracking-[-0.02em]"
           >
             Squad<sup className="text-[9px]">2</sup>
           </Link>
 
-          <nav className="flex">
+          <nav className="flex min-w-0 overflow-x-auto scrollbar-none">
             {([
               { href: "/", label: "Operations", badge: attention },
               { href: "/vaults", label: "Vaults" },
@@ -62,7 +62,7 @@ export function Header() {
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    "-mb-px border-b-2 px-4 py-2 text-[13px] transition-colors inline-flex items-center gap-1.5",
+                    "-mb-px border-b-2 px-2 sm:px-4 py-2 text-[12px] sm:text-[13px] transition-colors inline-flex items-center gap-1 shrink-0",
                     active
                       ? "border-primary text-foreground font-semibold"
                       : "text-muted-foreground hover:text-foreground border-transparent font-normal"

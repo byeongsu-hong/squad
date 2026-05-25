@@ -120,7 +120,7 @@ export function AccountMenu({ onAddWallet }: AccountMenuProps) {
                 <Button
                   type="button"
                   variant="ghost"
-                  className="text-muted-foreground hover:text-foreground h-auto gap-1 p-0 text-[11px] font-normal"
+                  className="text-muted-foreground/60 hover:text-muted-foreground h-auto gap-1 p-0 text-[11px] font-normal"
                   onClick={(e) => {
                     e.stopPropagation();
                     copySolana();
@@ -135,7 +135,7 @@ export function AccountMenu({ onAddWallet }: AccountMenuProps) {
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
-                  className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-[11px] transition-colors"
+                  className="text-muted-foreground/60 hover:text-muted-foreground inline-flex items-center gap-1 text-[11px] transition-colors"
                 >
                   <ExternalLink className="h-3 w-3" />
                   Explorer
@@ -169,7 +169,7 @@ export function AccountMenu({ onAddWallet }: AccountMenuProps) {
                 <Button
                   type="button"
                   variant="ghost"
-                  className="text-muted-foreground hover:text-foreground h-auto gap-1 p-0 text-[11px] font-normal"
+                  className="text-muted-foreground/60 hover:text-muted-foreground h-auto gap-1 p-0 text-[11px] font-normal"
                   onClick={(e) => {
                     e.stopPropagation();
                     copyEvm();
@@ -184,7 +184,7 @@ export function AccountMenu({ onAddWallet }: AccountMenuProps) {
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
-                  className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-[11px] transition-colors"
+                  className="text-muted-foreground/60 hover:text-muted-foreground inline-flex items-center gap-1 text-[11px] transition-colors"
                 >
                   <ExternalLink className="h-3 w-3" />
                   Explorer
