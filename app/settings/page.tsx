@@ -100,7 +100,7 @@ function SettingsPageContent() {
           <ProviderAdaptersPanel />
         ) : null}
         {settingsActiveSection === "registry" ? (
-          <ExportImportController embedded />
+          <ExportImportController />
         ) : null}
         {settingsActiveSection === "labels" ? (
           <AddressLabelManagerController embedded />

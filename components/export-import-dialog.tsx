@@ -35,13 +35,7 @@ import {
 } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { Progress } from "./ui/progress";
-import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import { Textarea } from "./ui/textarea";
-
-interface ExportImportControllerProps {
-  embedded?: boolean;
-  onClose?: () => void;
-}
 
 interface ImportProgressState {
   current: number;
@@ -49,10 +43,7 @@ interface ImportProgressState {
   label: string;
 }
 
-export function ExportImportController({
-  embedded = false,
-  onClose,
-}: ExportImportControllerProps) {
+export function ExportImportController() {
   const [mode, setMode] = useState<"export" | "import">("export");
   const [exportContent, setExportContent] = useState<string>("");
   const [importContent, setImportContent] = useState<string>("");
@@ -317,9 +308,6 @@ export function ExportImportController({
           description: `Imported ${messages.join(" and ")}${failedMultisigs.length > 0 ? `. ${failedMultisigs.length} vault(s) failed.` : ""}`,
         });
         setImportContent("");
-        if (!embedded) {
-          onClose?.();
-        }
       } else if (failedMultisigs.length > 0) {
         toast.error("Import failed", {
           description: `Failed to import ${failedMultisigs.length} multisig(s)`,
@@ -380,13 +368,8 @@ export function ExportImportController({
 
   return (
     <>
-      <div
-        className={
-          embedded ? "space-y-5" : "flex-1 space-y-6 overflow-y-auto py-4"
-        }
-      >
+      <div className="space-y-5">
         <ExportImportModePicker
-          embedded={embedded}
           mode={mode}
           disabled={isImporting}
           onModeChange={handleModeChange}
@@ -394,7 +377,6 @@ export function ExportImportController({
 
         {mode === "export" && exportContent && (
           <ExportImportExportPanel
-            embedded={embedded}
             chains={chains}
             multisigs={multisigs}
             exportContent={exportContent}
@@ -405,38 +387,15 @@ export function ExportImportController({
 
         {mode === "import" && (
           <ExportImportImportPanel
-            embedded={embedded}
             importContent={importContent}
             importProgress={importProgress}
             isImporting={isImporting}
             onImportContentChange={setImportContent}
             onResetImportedState={handleOpenResetDialog}
-            onImport={embedded ? handleImport : undefined}
+            onImport={handleImport}
           />
         )}
       </div>
-
-      {!embedded ? (
-        <div className="flex gap-3 pt-2">
-          <Button type="button" variant="outline" onClick={() => onClose?.()} className="shrink-0">
-            Close
-          </Button>
-          {mode === "import" && (
-            <Button
-              type="button"
-              className="flex-1 bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20"
-              onClick={handleImport}
-              disabled={isImporting}
-            >
-              {isImporting ? (
-                <><Loader2 className="h-4 w-4 animate-spin" />Importing...</>
-              ) : (
-                <><Upload className="h-4 w-4" />Import</>
-              )}
-            </Button>
-          )}
-        </div>
-      ) : null}
 
       <Dialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
         <DialogContent
@@ -521,65 +480,39 @@ export function ExportImportController({
 }
 
 interface ExportImportModePickerProps {
-  embedded: boolean;
   mode: "export" | "import";
   disabled?: boolean;
   onModeChange: (mode: "export" | "import") => void;
 }
 
 function ExportImportModePicker({
-  embedded,
   mode,
   disabled = false,
   onModeChange,
 }: ExportImportModePickerProps) {
-  if (embedded) {
-    return (
-      <div className="bg-muted dark:bg-background inline-flex self-start rounded-lg p-1">
-        {(["export", "import"] as const).map((m) => (
-          <button
-            key={m}
-            type="button"
-            disabled={disabled}
-            onClick={() => onModeChange(m)}
-            className={cn(
-              "rounded-md px-4 py-1.5 text-sm font-medium transition-all",
-              mode === m
-                ? "bg-card text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground disabled:opacity-50"
-            )}
-          >
-            {m === "export" ? "Export" : "Import"}
-          </button>
-        ))}
-      </div>
-    );
-  }
-
   return (
-    <RadioGroup value={mode} onValueChange={onModeChange} disabled={disabled}>
-      <div className="space-y-2">
-        <label
-          htmlFor="export"
-          className="flex cursor-pointer items-center gap-2 text-xs text-foreground/80"
+    <div className="bg-muted dark:bg-background inline-flex self-start rounded-lg p-1">
+      {(["export", "import"] as const).map((m) => (
+        <button
+          key={m}
+          type="button"
+          disabled={disabled}
+          onClick={() => onModeChange(m)}
+          className={cn(
+            "rounded-md px-4 py-1.5 text-sm font-medium transition-all",
+            mode === m
+              ? "bg-card text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground disabled:opacity-50"
+          )}
         >
-          <RadioGroupItem value="export" id="export" />
-          <span>Export to YAML</span>
-        </label>
-        <label
-          htmlFor="import"
-          className="flex cursor-pointer items-center gap-2 text-xs text-foreground/80"
-        >
-          <RadioGroupItem value="import" id="import" />
-          <span>Import from YAML</span>
-        </label>
-      </div>
-    </RadioGroup>
+          {m === "export" ? "Export" : "Import"}
+        </button>
+      ))}
+    </div>
   );
 }
 
 interface ExportImportExportPanelProps {
-  embedded: boolean;
   chains: ChainConfig[];
   multisigs: MultisigAccount[];
   exportContent: string;
@@ -588,7 +521,6 @@ interface ExportImportExportPanelProps {
 }
 
 function ExportImportExportPanel({
-  embedded,
   chains,
   multisigs,
   exportContent,
@@ -600,62 +532,41 @@ function ExportImportExportPanel({
     (chain) => chain.multisigProvider === "safe"
   );
 
-  if (embedded) {
-    return (
-      <div className="border-border bg-card overflow-hidden rounded-xl border">
-        <div className="border-border/50 flex items-center gap-1 border-b px-4 py-3">
-          <div className="flex items-center gap-5">
-            <div>
-              <p className="text-muted-foreground/50 text-[11px] font-medium">Squads</p>
-              <p className="text-foreground text-sm font-semibold tabular-nums">{operationalSquadsChains.length}</p>
-            </div>
-            <div className="bg-border/50 h-7 w-px" />
-            <div>
-              <p className="text-muted-foreground/50 text-[11px] font-medium">Vaults</p>
-              <p className="text-foreground text-sm font-semibold tabular-nums">{multisigs.length}</p>
-            </div>
-            <div className="bg-border/50 h-7 w-px" />
-            <div>
-              <p className="text-muted-foreground/50 text-[11px] font-medium">Safe chains</p>
-              <p className="text-foreground text-sm font-semibold tabular-nums">{preparedSafeChains.length}</p>
-            </div>
-          </div>
-          <div className="ml-auto">
-            <Button
-              type="button"
-              onClick={onCopy}
-              disabled={copied}
-              className="bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20"
-            >
-              {copied ? (
-                <><Check className="h-4 w-4" />Copied</>
-              ) : (
-                <><Copy className="h-4 w-4" />Copy YAML</>
-              )}
-            </Button>
-          </div>
-        </div>
-        <div className="bg-muted/30 min-h-[28rem] w-full overflow-auto">
-          <pre className="p-4 font-mono text-[11px] whitespace-pre text-muted-foreground/70">
-            <code>{exportContent}</code>
-          </pre>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <Button type="button" variant="outline" onClick={onCopy} disabled={copied}>
-          {copied ? (
-            <><Check className="h-4 w-4" />Copied</>
-          ) : (
-            <><Copy className="h-4 w-4" />Copy</>
-          )}
-        </Button>
+    <div className="border-border bg-card overflow-hidden rounded-xl border">
+      <div className="border-border/50 flex items-center gap-1 border-b px-4 py-3">
+        <div className="flex items-center gap-5">
+          <div>
+            <p className="text-muted-foreground/50 text-[11px] font-medium">Squads</p>
+            <p className="text-foreground text-sm font-semibold tabular-nums">{operationalSquadsChains.length}</p>
+          </div>
+          <div className="bg-border/50 h-7 w-px" />
+          <div>
+            <p className="text-muted-foreground/50 text-[11px] font-medium">Vaults</p>
+            <p className="text-foreground text-sm font-semibold tabular-nums">{multisigs.length}</p>
+          </div>
+          <div className="bg-border/50 h-7 w-px" />
+          <div>
+            <p className="text-muted-foreground/50 text-[11px] font-medium">Safe chains</p>
+            <p className="text-foreground text-sm font-semibold tabular-nums">{preparedSafeChains.length}</p>
+          </div>
+        </div>
+        <div className="ml-auto">
+          <Button
+            type="button"
+            onClick={onCopy}
+            disabled={copied}
+            className="bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20"
+          >
+            {copied ? (
+              <><Check className="h-4 w-4" />Copied</>
+            ) : (
+              <><Copy className="h-4 w-4" />Copy YAML</>
+            )}
+          </Button>
+        </div>
       </div>
-      <div className="h-[400px] w-full overflow-auto rounded-md border">
+      <div className="bg-muted/30 min-h-[28rem] w-full overflow-auto">
         <pre className="p-4 font-mono text-[11px] whitespace-pre text-muted-foreground/70">
           <code>{exportContent}</code>
         </pre>
@@ -665,17 +576,15 @@ function ExportImportExportPanel({
 }
 
 interface ExportImportImportPanelProps {
-  embedded: boolean;
   importContent: string;
   importProgress: ImportProgressState | null;
   isImporting: boolean;
   onImportContentChange: (value: string) => void;
   onResetImportedState: () => void;
-  onImport?: () => void;
+  onImport: () => void;
 }
 
 function ExportImportImportPanel({
-  embedded,
   importContent,
   importProgress,
   isImporting,
@@ -727,28 +636,23 @@ function ExportImportImportPanel({
         onChange={(e) => onImportContentChange(e.target.value)}
         disabled={isImporting}
         placeholder="Paste your YAML configuration here..."
-        className={cn(
-          "font-mono text-xs",
-          embedded ? "min-h-[24rem] resize-y rounded-xl" : "min-h-[300px] resize-none rounded-md"
-        )}
+        className="font-mono text-xs min-h-[24rem] resize-y rounded-xl"
       />
 
-      {embedded && onImport && (
-        <div className="flex justify-end">
-          <Button
-            type="button"
-            className="bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20"
-            onClick={onImport}
-            disabled={isImporting}
-          >
-            {isImporting ? (
-              <><Loader2 className="h-4 w-4 animate-spin" />Importing...</>
-            ) : (
-              <><Upload className="h-4 w-4" />Import</>
-            )}
-          </Button>
-        </div>
-      )}
+      <div className="flex justify-end">
+        <Button
+          type="button"
+          className="bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20"
+          onClick={onImport}
+          disabled={isImporting}
+        >
+          {isImporting ? (
+            <><Loader2 className="h-4 w-4 animate-spin" />Importing...</>
+          ) : (
+            <><Upload className="h-4 w-4" />Import</>
+          )}
+        </Button>
+      </div>
     </div>
   );
 }
