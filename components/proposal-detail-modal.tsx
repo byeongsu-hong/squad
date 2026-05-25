@@ -431,9 +431,6 @@ export function ProposalDetailView({
               <span className="text-muted-foreground/50 text-[11px] font-medium">
                 Transaction data
               </span>
-              {payloadLoading && (
-                <Loader2 className="h-3 w-3 animate-spin text-muted-foreground/40" />
-              )}
               {payload && !payloadLoading && (
                 <span className="text-muted-foreground/30 font-mono text-[10px]">
                   {payload.type === "vault"
@@ -453,6 +450,12 @@ export function ProposalDetailView({
 
           {payloadOpen && (
             <div className="space-y-2 px-4 pb-5">
+              {payloadLoading && (
+                <div className="flex items-center justify-center py-6">
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground/30" />
+                </div>
+              )}
+
               {payloadError && (
                 <div className="rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3">
                   <p className="text-[11px] text-destructive/80">{payloadError}</p>
