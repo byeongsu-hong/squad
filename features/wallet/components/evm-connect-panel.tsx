@@ -142,7 +142,7 @@ export function EvmConnectPanel({ onClose }: EvmConnectPanelProps) {
               </>
             )}
             <WalletRow
-              icon={<QrCode className="text-foreground/50 h-6 w-6" />}
+              icon={<QrCode className="text-muted-foreground h-6 w-6" />}
               name="WalletConnect"
               subtitle="Scan QR with any mobile wallet"
               isLoading={connectingId === wcConnector.id}

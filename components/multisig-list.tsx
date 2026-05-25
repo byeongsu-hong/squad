@@ -529,7 +529,7 @@ export function MultisigList({ selectedKey }: { selectedKey?: string }) {
                         isActiveDesk
                           ? "text-primary"
                           : row.waiting > 0
-                          ? "text-primary/70"
+                          ? "text-primary/80"
                           : row.executable > 0
                           ? "text-emerald-600 dark:text-emerald-400"
                           : row.active > 0
