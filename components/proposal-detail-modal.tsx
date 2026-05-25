@@ -332,40 +332,35 @@ export function ProposalDetailView({
           </div>
         )}
 
-        {/* ── Secondary actions (Reject + waiting banner) ──────────────── */}
-        {!isComplete && actionsSupported && (rejectSupported && needsYourSignature && !readyToExecute || currentUserApproved && !readyToExecute) && (
-          <div className="border-border/60 border-b px-5 py-3">
-            {rejectSupported && needsYourSignature && !readyToExecute && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => rejectByAddress(multisig.address, proposal.transactionIndex, multisig.chainId)}
-                disabled={isActionInProgress}
-                className="w-full border-destructive/30 text-destructive/70 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/50"
-              >
-                {isRejectLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                Reject
-              </Button>
-            )}
-            {currentUserApproved && !readyToExecute && (
-              <div className="flex items-center justify-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50/60 px-4 py-2.5 text-[12px] text-emerald-700 dark:border-emerald-900/30 dark:bg-emerald-950/20 dark:text-emerald-400">
-                <Check className="h-3.5 w-3.5 shrink-0" />
-                {multisig.threshold - approvalCount > 0
-                  ? `Signed — ${multisig.threshold - approvalCount} more needed`
-                  : "Signed — waiting on others"}
-              </div>
-            )}
-          </div>
-        )}
-
         {/* ── Signatures ───────────────────────────────────────────────── */}
         <div className="border-border/60 border-b px-5 py-4">
-          {/* Section label */}
+          {/* Section label row */}
           <div className="mb-3 flex items-center gap-2">
-            <Users className="text-muted-foreground/60 h-3.5 w-3.5" />
+            <Users className="text-muted-foreground/60 h-3.5 w-3.5 shrink-0" />
             <span className="text-muted-foreground/50 text-[11px] font-medium">
               Signers
             </span>
+            {/* Signed status inline */}
+            {!isComplete && currentUserApproved && !readyToExecute && (
+              <span className="inline-flex items-center gap-1 text-[11px] text-emerald-500/70">
+                <Check className="h-2.5 w-2.5" />
+                {multisig.threshold - approvalCount > 0
+                  ? `${multisig.threshold - approvalCount} more needed`
+                  : "waiting on others"}
+              </span>
+            )}
+            {/* Reject inline */}
+            {!isComplete && actionsSupported && rejectSupported && needsYourSignature && !readyToExecute && (
+              <button
+                type="button"
+                onClick={() => rejectByAddress(multisig.address, proposal.transactionIndex, multisig.chainId)}
+                disabled={isActionInProgress}
+                className="ml-auto text-destructive/50 hover:text-destructive text-[11px] transition-colors disabled:opacity-40"
+              >
+                {isRejectLoading ? <Loader2 className="inline h-2.5 w-2.5 animate-spin" /> : null}
+                Reject
+              </button>
+            )}
           </div>
           {/* Progress bar + count */}
           <div className="mb-3 flex items-center gap-3">

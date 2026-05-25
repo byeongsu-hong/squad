@@ -80,41 +80,19 @@ function StatusBadge({ item }: { item: WorkspaceQueueItem }) {
   }
   if (item.proposal.status === "Executed") {
     return (
-      <span className="rounded border border-border px-1.5 py-0.5 text-[10px] text-muted-foreground/70">
+      <span className="rounded border border-border px-1.5 py-0.5 text-[10px] text-muted-foreground/50">
         Executed
       </span>
     );
   }
-  return (
-    <span className="rounded border border-border px-1.5 py-0.5 font-mono text-[10px] tabular-nums text-muted-foreground/60">
-      {item.approvalCount}/{item.multisig.threshold}
-    </span>
-  );
-}
-
-function ProgressBar({ item }: { item: WorkspaceQueueItem }) {
-  const pct = Math.min(
-    100,
-    Math.round((item.approvalCount / item.multisig.threshold) * 100)
-  );
-  const barColor = item.readyToExecute
-    ? "bg-emerald-600 dark:bg-emerald-500"
-    : item.needsYourSignature
-      ? "bg-primary"
-      : "bg-muted-foreground/30";
-  return (
-    <div className="flex items-center gap-1.5">
-      <div className="bg-muted h-1.5 w-10 overflow-hidden rounded-full">
-        <div
-          className={cn("h-full rounded-full", barColor)}
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-      <span className="text-muted-foreground/70 font-mono text-[10px]">
-        {item.approvalCount}/{item.multisig.threshold}
+  if (item.proposal.status === "Cancelled") {
+    return (
+      <span className="rounded border border-border px-1.5 py-0.5 text-[10px] text-muted-foreground/50">
+        Cancelled
       </span>
-    </div>
-  );
+    );
+  }
+  return null;
 }
 
 function QueueRow({
@@ -202,7 +180,10 @@ function QueueRow({
         <span className="text-muted-foreground/40 font-mono text-[10px] tabular-nums">
           {item.approvalCount}/{item.multisig.threshold}
         </span>
-        <StatusBadge item={item} />
+        {/* Skip badge when an action button is already shown — it's redundant */}
+        {!(onExecute && item.readyToExecute) && !(onApprove && item.needsYourSignature && !item.currentUserApproved) && (
+          <StatusBadge item={item} />
+        )}
         {onExecute && item.readyToExecute ? (
           <Button
             size="xs"
