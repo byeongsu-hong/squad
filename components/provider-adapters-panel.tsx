@@ -45,7 +45,7 @@ export function ProviderAdaptersPanel() {
         <div className="flex items-center justify-between gap-3 px-4 py-4">
           <div className="space-y-0.5">
             <p className="text-foreground text-sm font-semibold">SVM / Squads</p>
-            <p className="text-muted-foreground/60 text-xs">
+            <p className="text-muted-foreground/60 text-[11px]">
               Native Squads multisig runtime — active and ready.
             </p>
           </div>
@@ -60,7 +60,7 @@ export function ProviderAdaptersPanel() {
         <div className="border-border/50 flex items-center justify-between gap-3 border-b px-4 py-4">
           <div className="space-y-0.5">
             <p className="text-foreground text-sm font-semibold">EVM / Safe</p>
-            <p className="text-muted-foreground/60 text-xs">
+            <p className="text-muted-foreground/60 text-[11px]">
               Configure the Safe adapter for EVM multisig support.
             </p>
           </div>
@@ -118,7 +118,7 @@ export function ProviderAdaptersPanel() {
 
         <div className="border-border/50 bg-muted/30 flex items-center gap-2 border-t px-4 py-2.5">
           <Network className="text-muted-foreground/50 h-3 w-3 shrink-0" />
-          <p className="text-muted-foreground/60 text-xs">Saved locally. Applied when importing a Safe vault on configured chains.</p>
+          <p className="text-muted-foreground/60 text-[11px]">Saved locally. Applied when importing a Safe vault on configured chains.</p>
         </div>
       </div>
     </div>

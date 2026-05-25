@@ -165,7 +165,7 @@ export function ManageTagsDialog({
           )}
 
           {tags.length === 0 && (
-            <div className="text-muted-foreground/60 py-8 text-center text-sm">
+            <div className="text-muted-foreground/50 py-8 text-center text-[11px]">
               No tags yet.
             </div>
           )}

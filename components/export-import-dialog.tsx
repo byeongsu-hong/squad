@@ -723,8 +723,8 @@ function ExportImportImportPanel({
       {isImporting && importProgress ? (
         <div className="border-border bg-card overflow-hidden rounded-xl border">
           <div className="flex items-center justify-between gap-3 px-4 py-3">
-            <p className="text-foreground/80 text-sm">{importProgress.label}</p>
-            <p className="text-muted-foreground/60 text-xs tabular-nums">
+            <p className="text-foreground/80 text-[12px]">{importProgress.label}</p>
+            <p className="text-muted-foreground/60 text-[11px] tabular-nums">
               {Math.min(importProgress.current, importProgress.total)} / {importProgress.total}
             </p>
           </div>

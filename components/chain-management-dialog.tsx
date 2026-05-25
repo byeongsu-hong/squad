@@ -359,7 +359,7 @@ function ChainEditor({
               )}
             />
           ) : (
-            <div className="border-border/50 bg-muted/50 text-muted-foreground/60 rounded-xl border px-3 py-2.5 text-xs">
+            <div className="border-border/50 bg-muted/50 text-muted-foreground/60 rounded-xl border px-3 py-2.5 text-[11px]">
               Safe adapter addresses are configured in the Adapters tab.
             </div>
           )}
@@ -501,7 +501,7 @@ function ChainRegistry({
           );
         })}
         {chains.length === 0 ? (
-          <div className="text-muted-foreground/60 py-8 text-center text-sm">
+          <div className="text-muted-foreground/50 py-8 text-center text-[11px]">
             No chains configured.
           </div>
         ) : null}

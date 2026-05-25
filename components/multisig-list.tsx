@@ -351,7 +351,7 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
             </div>
           )}
           {hasMultisigs && filteredRegistryRows.length < multisigs.length && (
-            <span className="text-muted-foreground/70 ml-auto text-sm">
+            <span className="text-muted-foreground/50 ml-auto font-mono text-[11px] tabular-nums">
               {filteredRegistryRows.length} / {multisigs.length}
             </span>
           )}
@@ -465,7 +465,7 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
                         }}
                         onBlur={() => handleSaveLabel(multisig)}
                         placeholder="Enter label"
-                        className="h-6 w-40 text-sm"
+                        className="h-6 w-40 text-[13px]"
                         autoFocus
                       />
                     ) : (

@@ -421,7 +421,7 @@ function AddressLabelRegistry({
             <div className="bg-card border-border flex h-10 w-10 items-center justify-center rounded-xl border">
               <Tag className="text-muted-foreground/60 h-5 w-5" />
             </div>
-            <p className="text-muted-foreground/60 text-sm">
+            <p className="text-muted-foreground/50 text-[11px]">
               {searchQuery ? "No labels found" : "No labels yet."}
             </p>
           </div>
@@ -464,7 +464,7 @@ function AddressLabelRegistry({
                         </div>
                       </div>
                       {embedded ? (
-                        <div className="min-w-0 text-sm">
+                        <div className="min-w-0 text-[11px]">
                           <p className={cn("truncate", label.description ? "text-muted-foreground/60" : "text-muted-foreground/30")}>
                             {label.description || "—"}
                           </p>

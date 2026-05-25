@@ -147,7 +147,7 @@ export function ProposalDetailView({
               >
                 {multisig.label || "Unnamed"}
               </Link>
-              <span className="text-muted-foreground/60 shrink-0 font-mono text-sm">
+              <span className="text-muted-foreground/50 shrink-0 font-mono text-[11px]">
                 #{proposal.transactionIndex.toString()}
               </span>
               <span
@@ -226,7 +226,7 @@ export function ProposalDetailView({
               <X className="h-3.5 w-3.5 text-destructive/70 shrink-0" />
             )}
             <span className={cn(
-              "text-sm font-medium",
+              "text-[12px] font-medium",
               proposal.status === "Executed"
                 ? "text-emerald-700 dark:text-emerald-400"
                 : "text-destructive/80"
@@ -256,7 +256,7 @@ export function ProposalDetailView({
               </Button>
             )}
             {currentUserApproved && !readyToExecute && (
-              <div className="flex items-center justify-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50/60 px-4 py-2.5 text-sm text-emerald-700 dark:border-emerald-900/30 dark:bg-emerald-950/20 dark:text-emerald-400">
+              <div className="flex items-center justify-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50/60 px-4 py-2.5 text-[12px] text-emerald-700 dark:border-emerald-900/30 dark:bg-emerald-950/20 dark:text-emerald-400">
                 <Check className="h-3.5 w-3.5 shrink-0" />
                 Signed — waiting on others
               </div>
@@ -429,7 +429,7 @@ export function ProposalDetailView({
             <div className="space-y-2 px-4 pb-5">
               {payloadError && (
                 <div className="rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3">
-                  <p className="text-sm text-destructive/80">{payloadError}</p>
+                  <p className="text-[11px] text-destructive/80">{payloadError}</p>
                 </div>
               )}
 
@@ -478,14 +478,14 @@ export function ProposalDetailView({
                     <div key={i} className="border-border rounded-xl border overflow-hidden">
                       <div className="border-border/50 bg-muted/50 flex items-center gap-2 border-b px-3 py-2.5">
                         <span className="text-muted-foreground/40 font-mono text-[10px]">#{i + 1}</span>
-                        <span className="text-foreground text-sm font-semibold">{fmt.type}</span>
+                        <span className="text-foreground text-[13px] font-semibold">{fmt.type}</span>
                       </div>
                       <div className="divide-border/50 divide-y">
                         {fmt.fields.map((f, j) => (
                           <div key={j} className="px-3 py-2.5">
                             <p className="text-muted-foreground/40 mb-1 text-[11px] font-medium">{f.label}</p>
                             {typeof f.value === "string" ? (
-                              <p className="break-all text-sm text-foreground/80">{f.value}</p>
+                              <p className="break-all text-[12px] text-foreground/80">{f.value}</p>
                             ) : (
                               (f.value as ReactNode)
                             )}
