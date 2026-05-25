@@ -43,7 +43,7 @@ export function ProviderAdaptersPanel() {
     <div className="space-y-4">
       {/* SVM / Squads */}
       <div className="border-border bg-card overflow-hidden rounded-xl border">
-        <div className="border-border/50 flex items-center justify-between gap-3 border-b px-4 py-4">
+        <div className="border-border/50 flex items-center justify-between gap-3 border-b px-4 py-3">
           <div className="space-y-0.5">
             <p className="text-foreground text-sm font-semibold">SVM / Squads</p>
             <p className="text-muted-foreground/60 text-[11px]">
@@ -78,7 +78,7 @@ export function ProviderAdaptersPanel() {
 
       {/* EVM / Safe */}
       <div className="border-border bg-card overflow-hidden rounded-xl border">
-        <div className="border-border/50 flex items-center justify-between gap-3 border-b px-4 py-4">
+        <div className="border-border/50 flex items-center justify-between gap-3 border-b px-4 py-3">
           <div className="space-y-0.5">
             <p className="text-foreground text-sm font-semibold">EVM / Safe</p>
             <p className="text-muted-foreground/60 text-[11px]">

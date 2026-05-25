@@ -79,7 +79,7 @@ export function ManageTagsDialog({
     onOpenChange(false);
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       e.preventDefault();
       handleAddTag();
@@ -93,7 +93,7 @@ export function ManageTagsDialog({
           <DialogTitle>Manage Tags</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <div className="space-y-4">
           <div className="space-y-1.5">
             <label htmlFor="new-tag" className="text-[11px] font-medium text-muted-foreground/50">
               Add Tag
@@ -104,7 +104,7 @@ export function ManageTagsDialog({
                 placeholder="Enter tag name..."
                 value={newTag}
                 onChange={(e) => setNewTag(e.target.value)}
-                onKeyPress={handleKeyPress}
+                onKeyDown={handleKeyDown}
                 className="flex-1"
               />
               <Button

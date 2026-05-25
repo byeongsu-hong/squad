@@ -433,10 +433,10 @@ function AddressLabelRegistry({
               <div
                 key={label.address}
                 className={cn(
-                  "group hover:bg-muted flex cursor-pointer items-center gap-2 transition-colors",
+                  "group hover:bg-muted cursor-pointer transition-colors",
                   embedded
-                    ? "grid grid-cols-[minmax(0,0.95fr)_minmax(0,1.15fr)_minmax(0,1.3fr)_8rem_4.5rem] gap-3 px-3 py-3"
-                    : "rounded-xl border px-3 py-2"
+                    ? "grid grid-cols-[minmax(0,0.95fr)_minmax(0,1.15fr)_minmax(0,1.3fr)_8rem_4.5rem] items-center gap-3 px-3 py-3"
+                    : "flex items-center gap-2 rounded-xl border px-3 py-2"
                 )}
                 onClick={() => onEdit(label)}
               >
