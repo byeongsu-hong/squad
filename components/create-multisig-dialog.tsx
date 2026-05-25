@@ -299,11 +299,12 @@ export function CreateMultisigDialog({
                   <FormLabel>Members</FormLabel>
                   <Button
                     type="button"
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
                     onClick={() => append({ key: "", permissions: { mask: 7 } })}
+                    className="text-muted-foreground/60 hover:text-foreground h-7 gap-1.5 px-2 text-[11px]"
                   >
-                    <Plus className="h-4 w-4" />
+                    <Plus className="h-3 w-3" />
                     Add Member
                   </Button>
                 </div>

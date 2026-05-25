@@ -282,8 +282,7 @@ export function ImportMultisigDialog({
                   </FormControl>
                   <FormMessage />
                   <FormDescription>
-                    Paste a Squads public key, a Safe address, or a full Safe
-                    URL like `app.safe.global/home?safe=eth:0x...`
+                    Also accepts `eth:0x...` prefix or a full Safe app URL.
                   </FormDescription>
                 </FormItem>
               )}
