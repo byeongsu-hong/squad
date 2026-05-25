@@ -699,7 +699,7 @@ function ExportImportImportPanel({
       {/* URL fetch */}
       <div className="border-border bg-card overflow-hidden rounded-xl border">
         <div className="border-border flex items-center gap-2 border-b px-4 py-3">
-          <Link className="text-muted-foreground/40 h-3.5 w-3.5 shrink-0" />
+          <Link className="text-muted-foreground/50 h-3.5 w-3.5 shrink-0" />
           <p className="text-muted-foreground/50 text-[11px] font-medium">
             Import from URL
           </p>
@@ -728,7 +728,7 @@ function ExportImportImportPanel({
                 <button
                   type="button"
                   onClick={handleClearUrl}
-                  className="text-muted-foreground/40 hover:text-muted-foreground absolute top-1/2 right-2.5 -translate-y-1/2"
+                  className="text-muted-foreground/50 hover:text-muted-foreground absolute top-1/2 right-2.5 -translate-y-1/2"
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
@@ -773,7 +773,7 @@ function ExportImportImportPanel({
 
       {/* Reset state — intentionally de-emphasised, destructive action */}
       <div className="flex items-center justify-between gap-3 px-1">
-        <p className="text-muted-foreground/40 text-[11px]">
+        <p className="text-muted-foreground/50 text-[11px]">
           Clears vaults, chains, labels &amp; settings — use only if a previous
           import left state broken.
         </p>

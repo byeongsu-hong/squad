@@ -532,7 +532,7 @@ export function MultisigList({ selectedKey }: { selectedKey?: string }) {
                           ? "text-emerald-600 dark:text-emerald-400"
                           : row.active > 0
                           ? "text-emerald-600/50 dark:text-emerald-500/50"
-                          : "text-muted-foreground/25 group-hover:text-muted-foreground/50"
+                          : "text-muted-foreground/30 group-hover:text-muted-foreground/50"
                       )}
                       onClick={() => handleOpenDesk(multisig)}
                       aria-label="Open vault"

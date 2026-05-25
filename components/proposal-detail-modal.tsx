@@ -88,7 +88,7 @@ function SignerDot({
           <span
             className={cn(
               "text-[10px] font-medium",
-              approved ? "text-emerald-400" : rejected ? "text-destructive" : "text-muted-foreground/40"
+              approved ? "text-emerald-400" : rejected ? "text-destructive" : "text-muted-foreground/50"
             )}
           >
             {status}
@@ -350,7 +350,7 @@ export function ProposalDetailView({
         <div className="border-border border-b px-5 py-4">
           {/* Section label row */}
           <div className="mb-3 flex items-center gap-2">
-            <Users className="text-muted-foreground/40 h-3.5 w-3.5 shrink-0" />
+            <Users className="text-muted-foreground/50 h-3.5 w-3.5 shrink-0" />
             <span className="text-muted-foreground/50 text-[11px] font-medium">
               Signers
             </span>
@@ -709,7 +709,7 @@ function CopyBtn({ text }: { text: string }) {
         setCopied(true);
         setTimeout(() => setCopied(false), 1500);
       }}
-      className="text-muted-foreground/40 hover:text-foreground h-5 w-5 shrink-0 p-0"
+      className="text-muted-foreground/50 hover:text-foreground h-5 w-5 shrink-0 p-0"
     >
       {copied ? (
         <Check className="h-3 w-3 text-primary" />

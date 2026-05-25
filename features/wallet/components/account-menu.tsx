@@ -129,7 +129,7 @@ export function AccountMenu({ onAddWallet }: AccountMenuProps) {
                   <Copy className="h-3 w-3" />
                   Copy
                 </Button>
-                <span className="text-muted-foreground/40">·</span>
+                <span className="text-muted-foreground/50">·</span>
                 <a
                   href={`https://solscan.io/account/${publicKey.toString()}`}
                   target="_blank"
@@ -178,7 +178,7 @@ export function AccountMenu({ onAddWallet }: AccountMenuProps) {
                   <Copy className="h-3 w-3" />
                   Copy
                 </Button>
-                <span className="text-muted-foreground/40">·</span>
+                <span className="text-muted-foreground/50">·</span>
                 <a
                   href={`https://etherscan.io/address/${evmAddress}`}
                   target="_blank"

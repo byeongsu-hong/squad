@@ -87,7 +87,7 @@ function StatusBadge({ item }: { item: WorkspaceQueueItem }) {
   }
   if (item.proposal.status === "Cancelled") {
     return (
-      <span className="rounded border border-border/80 bg-muted/60 px-1.5 py-0.5 text-[10px] text-muted-foreground/60">
+      <span className="rounded border border-border bg-muted/60 px-1.5 py-0.5 text-[10px] text-muted-foreground/60">
         Cancelled
       </span>
     );
@@ -560,7 +560,7 @@ export function OperationsQueue({
               "bg-card border-border flex items-center justify-center border",
               compact ? "h-8 w-8 rounded-xl" : "h-14 w-14 rounded-2xl"
             )}>
-              <SlidersHorizontal className={cn("text-muted-foreground/40", compact ? "h-3.5 w-3.5" : "h-6 w-6")} />
+              <SlidersHorizontal className={cn("text-muted-foreground/50", compact ? "h-3.5 w-3.5" : "h-6 w-6")} />
             </div>
           )}
           <p className={cn("text-muted-foreground/60", compact ? "text-[11px]" : "text-[13px]")}>
@@ -681,7 +681,7 @@ export function OperationsQueue({
             <div>
               <div className="border-border bg-card overflow-hidden rounded-xl border">
                 <div className="border-b border-border flex items-center gap-2 px-3 py-2">
-                  <span className="bg-muted-foreground/25 h-1.5 w-1.5 rounded-full" />
+                  <span className="bg-muted-foreground/40 h-1.5 w-1.5 rounded-full" />
                   <p className="text-muted-foreground/50 text-[11px] font-medium">
                     History
                   </p>
