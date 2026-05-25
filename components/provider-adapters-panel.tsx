@@ -43,7 +43,7 @@ export function ProviderAdaptersPanel() {
     <div className="space-y-4">
       {/* SVM / Squads */}
       <div className="border-border bg-card overflow-hidden rounded-xl border">
-        <div className="border-border/50 flex items-center justify-between gap-3 border-b px-4 py-3">
+        <div className="border-border flex items-center justify-between gap-3 border-b px-4 py-3">
           <div className="space-y-0.5">
             <p className="text-foreground text-[13px] font-semibold">SVM / Squads</p>
             <p className="text-muted-foreground/60 text-[11px]">
@@ -78,7 +78,7 @@ export function ProviderAdaptersPanel() {
 
       {/* EVM / Safe */}
       <div className="border-border bg-card overflow-hidden rounded-xl border">
-        <div className="border-border/50 flex items-center justify-between gap-3 border-b px-4 py-3">
+        <div className="border-border flex items-center justify-between gap-3 border-b px-4 py-3">
           <div className="space-y-0.5">
             <p className="text-foreground text-[13px] font-semibold">EVM / Safe</p>
             <p className="text-muted-foreground/60 text-[11px]">
@@ -97,7 +97,7 @@ export function ProviderAdaptersPanel() {
         </div>
 
         {safeChains.length > 0 && (
-          <div className="border-border/50 divide-border/40 divide-y border-b px-4 py-1">
+          <div className="border-border divide-border/50 divide-y border-b px-4 py-1">
             {safeChains.map((chain) => (
               <div key={chain.id} className="flex items-center justify-between py-2.5">
                 <span className="text-foreground/80 text-[13px] font-medium">{chain.name}</span>
@@ -114,8 +114,8 @@ export function ProviderAdaptersPanel() {
           </div>
         )}
 
-        <div className="grid gap-0 lg:divide-x lg:divide-border/50 lg:grid-cols-3">
-          <div className="space-y-1.5 border-border/50 border-b px-4 py-3 lg:border-b-0">
+        <div className="grid gap-0 lg:divide-x lg:divide-border lg:grid-cols-3">
+          <div className="space-y-1.5 border-border border-b px-4 py-3 lg:border-b-0">
             <label htmlFor="safe-tx-service" className="text-[11px] font-medium text-muted-foreground/50">Transaction Service URL</label>
             <Input
               id="safe-tx-service"
@@ -128,7 +128,7 @@ export function ProviderAdaptersPanel() {
             />
           </div>
 
-          <div className="space-y-1.5 border-border/50 border-b px-4 py-3 lg:border-b-0">
+          <div className="space-y-1.5 border-border border-b px-4 py-3 lg:border-b-0">
             <label htmlFor="safe-singleton" className="text-[11px] font-medium text-muted-foreground/50">Singleton Address</label>
             <Input
               id="safe-singleton"
@@ -155,7 +155,7 @@ export function ProviderAdaptersPanel() {
           </div>
         </div>
 
-        <div className="border-border/50 bg-muted/30 flex items-center gap-2 border-t px-4 py-2.5">
+        <div className="border-border bg-muted/30 flex items-center gap-2 border-t px-4 py-2.5">
           <Network className="text-muted-foreground/50 h-3 w-3 shrink-0" />
           <p className="text-muted-foreground/60 text-[11px]">Saved locally. Applied when importing a Safe vault on configured chains.</p>
         </div>

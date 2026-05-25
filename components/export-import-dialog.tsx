@@ -568,7 +568,7 @@ function ExportImportExportPanel({
 
   return (
     <div className="border-border bg-card overflow-hidden rounded-xl border">
-      <div className="border-border/50 flex items-center gap-1 border-b px-4 py-3">
+      <div className="border-border flex items-center gap-1 border-b px-4 py-3">
         <div className="flex items-center gap-5">
           <div>
             <p className="text-muted-foreground/50 text-[11px] font-medium">
@@ -578,7 +578,7 @@ function ExportImportExportPanel({
               {operationalSquadsChains.length}
             </p>
           </div>
-          <div className="bg-border/50 h-7 w-px" />
+          <div className="bg-border h-7 w-px" />
           <div>
             <p className="text-muted-foreground/50 text-[11px] font-medium">
               Vaults
@@ -587,7 +587,7 @@ function ExportImportExportPanel({
               {multisigs.length}
             </p>
           </div>
-          <div className="bg-border/50 h-7 w-px" />
+          <div className="bg-border h-7 w-px" />
           <div>
             <p className="text-muted-foreground/50 text-[11px] font-medium">
               Safe chains
@@ -698,7 +698,7 @@ function ExportImportImportPanel({
     <div className="space-y-3">
       {/* URL fetch */}
       <div className="border-border bg-card overflow-hidden rounded-xl border">
-        <div className="border-border/50 flex items-center gap-2 border-b px-4 py-3">
+        <div className="border-border flex items-center gap-2 border-b px-4 py-3">
           <Link className="text-muted-foreground/40 h-3.5 w-3.5 shrink-0" />
           <p className="text-muted-foreground/50 text-[11px] font-medium">
             Import from URL

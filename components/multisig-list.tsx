@@ -246,7 +246,7 @@ export function MultisigList({ selectedKey }: { selectedKey?: string }) {
       <div className="border-border bg-card overflow-hidden rounded-xl border">
 
         {/* Toolbar — card header */}
-        <div className="border-border/50 flex flex-wrap items-center gap-2 border-b px-3 py-2.5">
+        <div className="border-border flex flex-wrap items-center gap-2 border-b px-3 py-2.5">
           <Input
             placeholder="Search vaults..."
             value={filterText}

@@ -418,7 +418,7 @@ function ChainRegistry({
 }: ChainRegistryProps) {
   return (
     <div className="border-border bg-card overflow-hidden rounded-xl border">
-      <div className="border-border/50 flex items-center justify-between border-b px-4 py-3">
+      <div className="border-border flex items-center justify-between border-b px-4 py-3">
         <p className="text-muted-foreground/50 text-[11px] font-medium">Configured Chains</p>
         <Button
           type="button"
@@ -431,7 +431,7 @@ function ChainRegistry({
           Reset to Defaults
         </Button>
       </div>
-      <div className="divide-border/30 divide-y">
+      <div className="divide-border/50 divide-y">
         {chains.map((chain) => {
           const isEditing = chain.id === editingChainId;
           return (

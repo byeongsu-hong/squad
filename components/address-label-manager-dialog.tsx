@@ -293,7 +293,7 @@ function AddressLabelEditor({
 
         <div className="space-y-1.5">
           <label htmlFor="label" className="text-[11px] font-medium text-muted-foreground/50">
-            Label <span className="text-muted-foreground/30 font-normal">· max 12 chars</span>
+            Label <span className="text-muted-foreground/40 font-normal">· max 12 chars</span>
           </label>
           <Input
             id="label"
@@ -309,7 +309,7 @@ function AddressLabelEditor({
 
         <div className="space-y-1.5">
           <label htmlFor="description" className="text-[11px] font-medium text-muted-foreground/50">
-            Description <span className="text-muted-foreground/30 font-normal">· optional</span>
+            Description <span className="text-muted-foreground/40 font-normal">· optional</span>
           </label>
           <Input
             id="description"
@@ -459,7 +459,7 @@ function AddressLabelRegistry({
                       </div>
                       {embedded ? (
                         <div className="min-w-0 text-[11px]">
-                          <p className={cn("truncate", label.description ? "text-muted-foreground/60" : "text-muted-foreground/30")}>
+                          <p className={cn("truncate", label.description ? "text-muted-foreground/60" : "text-muted-foreground/40")}>
                             {label.description || "—"}
                           </p>
                         </div>
