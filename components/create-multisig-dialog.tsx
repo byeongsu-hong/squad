@@ -412,20 +412,31 @@ export function CreateMultisigDialog({
               </div>
             </div>
 
-            <Button
-              type="submit"
-              disabled={loading}
-              className="bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20 w-full"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Creating...
-                </>
-              ) : (
-                "Create Multisig"
-              )}
-            </Button>
+            <div className="flex gap-3 pt-1">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={loading}
+                className="shrink-0"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={loading}
+                className="flex-1 bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  "Create"
+                )}
+              </Button>
+            </div>
           </form>
         </Form>
       </DialogContent>

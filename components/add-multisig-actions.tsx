@@ -70,14 +70,14 @@ export function AddMultisigActions() {
             disabled={!hasOperationalSquadsChains}
           >
             <Plus className="h-4 w-4" />
-            Create Squads Multisig
+            New Squads Multisig
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => setImportDialogOpen(true)}
             disabled={!hasImportableChains}
           >
             <FileDown className="h-4 w-4" />
-            Import Existing Safe or Squads
+            Import Safe or Squads
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

@@ -633,7 +633,7 @@ export function OperationsQueue({
               <div className="mb-2 flex items-center gap-2">
                 <span className="bg-primary h-2 w-2 rounded-full" />
                 <p className="text-muted-foreground/60 text-[11px] font-medium">
-                  Needs attention
+                  Action needed
                 </p>
                 <span className="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-[10px] font-semibold tabular-nums">
                   {actionItems.length}
