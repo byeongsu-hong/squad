@@ -470,17 +470,17 @@ export function MultisigList({ selectedKey }: { selectedKey?: string }) {
                         <span
                           key={tag}
                           className={cn(
-                            "shrink-0 rounded-full px-1.5 py-px text-[9px]",
+                            "shrink-0 rounded-full border px-1.5 py-px text-[10px]",
                             selectedFilterTags.includes(tag)
-                              ? "bg-primary/15 text-primary font-medium"
-                              : "bg-muted text-muted-foreground/60"
+                              ? "border-primary/30 bg-primary/10 text-primary font-medium"
+                              : "border-border/60 bg-muted/60 text-muted-foreground/50"
                           )}
                         >
                           {tag}
                         </span>
                       ))}
                       {row.tags.length > 2 && (
-                        <span className="text-muted-foreground/40 shrink-0 text-[9px]">+{row.tags.length - 2}</span>
+                        <span className="text-muted-foreground/40 shrink-0 text-[10px]">+{row.tags.length - 2}</span>
                       )}
                     </div>
                   </div>
