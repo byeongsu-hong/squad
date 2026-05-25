@@ -262,7 +262,7 @@ function AddressLabelEditor({
     >
       <div className="mb-4 flex items-center justify-between">
         <p className="text-muted-foreground/50 text-[11px] font-medium">
-          {isEditing ? "Edit Label" : "Add New Label"}
+          {isEditing ? "Edit Label" : "Add Label"}
         </p>
         {isEditing && (
           <Button
@@ -344,7 +344,7 @@ function AddressLabelEditor({
           type="submit"
           className="bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20 w-full"
         >
-          {isEditing ? "Update" : "Add Label"}
+          {isEditing ? "Update" : "Add"}
         </Button>
       </form>
     </div>
