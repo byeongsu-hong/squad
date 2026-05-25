@@ -101,9 +101,17 @@ export function ProviderAdaptersPanel() {
             {safeChains.map((chain) => (
               <div key={chain.id} className="flex items-center justify-between py-2.5">
                 <span className="text-foreground text-[13px] font-medium">{chain.name}</span>
-                {safeAdapterFieldsConfigured === 3 && (
-                  <span className="border-emerald-300/60 bg-emerald-50 text-emerald-600 dark:border-emerald-800/40 dark:bg-emerald-950/20 dark:text-emerald-400 rounded border px-1.5 py-px text-[10px]">
-                    configured
+                {safeAdapterFieldsConfigured === 3 ? (
+                  <span className="border-emerald-300/60 bg-emerald-50 text-emerald-600 dark:border-emerald-800/40 dark:bg-emerald-950/20 dark:text-emerald-400 rounded border px-1.5 py-px font-mono text-[10px]">
+                    ready
+                  </span>
+                ) : safeAdapterFieldsConfigured > 0 ? (
+                  <span className="border-amber-300/50 bg-amber-50/80 text-amber-700 dark:border-amber-500/25 dark:bg-amber-500/10 dark:text-amber-400 rounded border px-1.5 py-px text-[10px]">
+                    partial
+                  </span>
+                ) : (
+                  <span className="border-border text-muted-foreground/40 rounded border px-1.5 py-px text-[10px]">
+                    not set
                   </span>
                 )}
               </div>
