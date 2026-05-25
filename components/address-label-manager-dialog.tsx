@@ -474,7 +474,7 @@ function AddressLabelRegistry({
                         {label.address}
                       </code>
                       {embedded ? (
-                        <div className="text-muted-foreground/70 text-[11px]">
+                        <div className="text-muted-foreground/60 text-[11px]">
                           {formatUpdatedAt(label.updatedAt)}
                         </div>
                       ) : null}
@@ -497,7 +497,7 @@ function AddressLabelRegistry({
                           type="button"
                           variant="ghost"
                           size="icon-sm"
-                          className="text-muted-foreground/50 hover:text-foreground"
+                          className="text-muted-foreground/50 hover:text-destructive"
                           onClick={(event) => {
                             event.stopPropagation();
                             onDelete(label.address);

@@ -223,7 +223,7 @@ export function LandingPage() {
                           {workspaceMultisigs[0].chainName} · {workspaceMultisigs[0].threshold}/{workspaceMultisigs[0].members.length}
                         </p>
                       </div>
-                      <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50 transition-colors group-hover:text-muted-foreground/70" />
+                      <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50 transition-colors group-hover:text-muted-foreground/80" />
                     </div>
                   </div>
                 </Link>

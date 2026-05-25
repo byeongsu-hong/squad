@@ -56,7 +56,7 @@ function AddressRow({
       <button
         type="button"
         onClick={handleCopy}
-        className="font-mono text-muted-foreground/70 hover:text-muted-foreground/80 text-[11px] transition-colors"
+        className="font-mono text-muted-foreground/60 hover:text-muted-foreground/80 text-[11px] transition-colors"
         title={address}
       >
         {truncateAddress(address)}
@@ -300,7 +300,7 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
               {multisig.tags.map((tag) => (
                 <span
                   key={tag}
-                  className="border-border bg-muted text-muted-foreground/70 rounded-full border px-2 py-0.5 text-[10px] font-medium"
+                  className="border-border bg-muted text-muted-foreground/60 rounded-full border px-2 py-0.5 text-[10px] font-medium"
                 >
                   {tag}
                 </span>

@@ -600,7 +600,7 @@ export function OperationsQueue({
                   <button
                     type="button"
                     onClick={toggleSelectAll}
-                    className="text-muted-foreground/60 hover:text-muted-foreground/80 text-[11px] transition-colors"
+                    className="text-muted-foreground/60 hover:text-muted-foreground text-[11px] transition-colors"
                   >
                     {allSelected ? "deselect all" : "select all"}
                   </button>
