@@ -11,7 +11,7 @@ import {
   Upload,
   X,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ChangeEvent } from "react";
 import { toast } from "sonner";
 
 import {
@@ -35,7 +35,6 @@ import { useMultisigStore } from "@/stores/multisig-store";
 import { useProviderAdapterStore } from "@/stores/provider-adapter-store";
 import { useWorkspaceStore } from "@/stores/workspace-store";
 import {
-  type ChainConfig,
   getSquadsProgramId,
   isOperationalSquadsChain,
   normalizeChainConfig,
@@ -789,10 +788,17 @@ function RawYamlPreviewView({
   title: string;
   preview: RawYamlPreview;
 }) {
+  const [open, setOpen] = useState(!preview.defaultCollapsed);
+
+  useEffect(() => {
+    setOpen(!preview.defaultCollapsed);
+  }, [preview.defaultCollapsed, preview.preview]);
+
   return (
     <details
       className="border-border border-t"
-      defaultOpen={!preview.defaultCollapsed}
+      open={open}
+      onToggle={(event) => setOpen(event.currentTarget.open)}
     >
       <summary className="hover:bg-muted/40 flex cursor-pointer items-center justify-between gap-3 px-4 py-3 text-[12px] font-medium text-muted-foreground/70">
         <span>{title}</span>
@@ -887,9 +893,7 @@ function ExportImportImportPanel({
     setUrlError(null);
   };
 
-  const handleFileChange = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = "";
 
