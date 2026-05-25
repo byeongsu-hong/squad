@@ -93,7 +93,7 @@ function SignerDot({
           >
             {status}
           </span>
-          <span className="text-muted-foreground/30 text-[10px]">
+          <span className="text-muted-foreground/50 text-[10px]">
             {copied ? "copied!" : "click to copy"}
           </span>
         </div>
@@ -481,7 +481,7 @@ export function ProposalDetailView({
                 Transaction data
               </span>
               {payload && !payloadLoading && (
-                <span className="text-muted-foreground/30 font-mono text-[10px]">
+                <span className="text-muted-foreground/50 font-mono text-[10px]">
                   {payload.type === "vault"
                     ? `${payload.instructions.length} instruction${payload.instructions.length !== 1 ? "s" : ""}`
                     : payload.type === "config"
@@ -616,7 +616,7 @@ export function ProposalDetailView({
                         <div className="divide-border/30 divide-y">
                           {instr.accountAddresses.map((address, j) => (
                             <div key={j} className="flex items-center gap-3 px-3 py-2">
-                              <span className="text-muted-foreground/30 w-5 shrink-0 text-right font-mono text-[10px]">
+                              <span className="text-muted-foreground/40 w-5 shrink-0 text-right font-mono text-[10px]">
                                 {instr.accountIndexes[j]}
                               </span>
                               <AddressWithLabel

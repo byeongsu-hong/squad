@@ -173,11 +173,11 @@ function QueueRow({
             #{item.proposal.transactionIndex.toString()}
           </span>
           {!hideChain && (
-            <span className="border-border/60 bg-muted/60 text-muted-foreground/40 rounded px-1 py-px text-[10px]">
+            <span className="border-border/60 bg-muted/60 text-muted-foreground/55 rounded px-1 py-px text-[10px]">
               {item.multisig.chainName}
             </span>
           )}
-          <span className="text-muted-foreground/30 font-mono text-[10px] tabular-nums">
+          <span className="text-muted-foreground/45 font-mono text-[10px] tabular-nums">
             {formatAge(item.proposal.createdAt)}
           </span>
         </div>
@@ -188,7 +188,7 @@ function QueueRow({
         className="flex shrink-0 items-center gap-2"
         onClick={(e) => e.stopPropagation()}
       >
-        <span className="text-muted-foreground/40 font-mono text-[10px] tabular-nums">
+        <span className="text-muted-foreground/55 font-mono text-[10px] tabular-nums">
           {item.approvalCount}/{item.multisig.threshold}
         </span>
         {/* Skip badge when an action button is already shown — it's redundant */}
@@ -452,7 +452,7 @@ export function OperationsQueue({
                   "h-7 rounded-full border px-3 text-[11px] font-medium transition-colors",
                   statusFilter === f
                     ? "bg-card border-border text-foreground shadow-sm hover:bg-card"
-                    : "border-border/30 text-muted-foreground/60 hover:bg-muted/30 hover:text-foreground hover:border-border"
+                    : "border-border/50 text-muted-foreground/60 hover:bg-muted/30 hover:text-foreground hover:border-border"
                 )}
               >
                 {f}
