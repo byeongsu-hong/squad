@@ -6,6 +6,7 @@ import { useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+import { cn } from "@/lib/utils";
 import { useChainStore } from "@/stores/chain-store";
 import { useProviderAdapterStore } from "@/stores/provider-adapter-store";
 
@@ -40,46 +41,44 @@ export function ProviderAdaptersPanel() {
 
   return (
     <div className="space-y-4">
-      {/* Adapter status cards */}
-      <div className="grid gap-3 lg:grid-cols-2">
-        <div className="border-border bg-card rounded-xl border p-4">
-          <div className="flex items-start justify-between gap-3">
-            <div className="space-y-0.5">
-              <p className="text-foreground text-sm font-semibold">SVM / Squads</p>
-              <p className="text-muted-foreground/60 text-xs">
-                Active runtime used by the current workspace.
-              </p>
-            </div>
-            <span className="border-primary/30 bg-primary/10 text-primary shrink-0 rounded-full border px-2.5 py-0.5 text-[11px] font-medium">
-              {liveSquadsChains} live
-            </span>
+      {/* SVM / Squads — status only */}
+      <div className="border-border bg-card overflow-hidden rounded-xl border">
+        <div className="flex items-center justify-between gap-3 px-4 py-4">
+          <div className="space-y-0.5">
+            <p className="text-foreground text-sm font-semibold">SVM / Squads</p>
+            <p className="text-muted-foreground/60 text-xs">
+              Native Squads multisig runtime — active and ready.
+            </p>
           </div>
-        </div>
-
-        <div className="border-border bg-card rounded-xl border p-4">
-          <div className="flex items-start justify-between gap-3">
-            <div className="space-y-0.5">
-              <p className="text-foreground text-sm font-semibold">EVM / Safe</p>
-              <p className="text-muted-foreground/60 text-xs">
-                Stored locally for upcoming adapter work.
-              </p>
-            </div>
-            <span className="border-border text-muted-foreground/60 shrink-0 rounded-full border px-2.5 py-0.5 text-[11px] font-medium">
-              {safePreparedChains} chains
-              {safeAdapterFieldsConfigured > 0 && ` · ${safeAdapterFieldsConfigured}/3 ready`}
-            </span>
-          </div>
+          <span className="border-primary/30 bg-primary/10 text-primary shrink-0 rounded-full border px-2.5 py-0.5 text-[11px] font-medium">
+            {liveSquadsChains} live
+          </span>
         </div>
       </div>
 
-      {/* Safe Adapter Configuration */}
-      <div className="border-border bg-card rounded-xl border overflow-hidden">
-        <div className="border-border/50 border-b px-4 py-3">
-          <p className="text-muted-foreground/50 text-[11px] font-medium">Safe Adapter Configuration</p>
+      {/* EVM / Safe — status + config combined */}
+      <div className="border-border bg-card overflow-hidden rounded-xl border">
+        <div className="border-border/50 flex items-center justify-between gap-3 border-b px-4 py-4">
+          <div className="space-y-0.5">
+            <p className="text-foreground text-sm font-semibold">EVM / Safe</p>
+            <p className="text-muted-foreground/60 text-xs">
+              Configure the Safe adapter for EVM multisig support.
+            </p>
+          </div>
+          <span className={cn(
+            "shrink-0 rounded-full border px-2.5 py-0.5 text-[11px] font-medium",
+            safeAdapterFieldsConfigured === 3
+              ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
+              : "border-border text-muted-foreground/60"
+          )}>
+            {safePreparedChains} chain{safePreparedChains !== 1 ? "s" : ""}
+            {safeAdapterFieldsConfigured > 0 && ` · ${safeAdapterFieldsConfigured}/3`}
+          </span>
         </div>
+
         <div className="grid gap-0 lg:divide-x lg:divide-border/50 lg:grid-cols-3">
-          <div className="space-y-1.5 px-4 py-3 border-border/50 border-b lg:border-b-0">
-            <Label htmlFor="safe-tx-service" className="text-xs">Safe Transaction Service URL</Label>
+          <div className="space-y-1.5 border-border/50 border-b px-4 py-3 lg:border-b-0">
+            <Label htmlFor="safe-tx-service" className="text-xs">Transaction Service URL</Label>
             <Input
               id="safe-tx-service"
               value={settings.safeTransactionServiceUrl}
@@ -91,8 +90,8 @@ export function ProviderAdaptersPanel() {
             />
           </div>
 
-          <div className="space-y-1.5 px-4 py-3 border-border/50 border-b lg:border-b-0">
-            <Label htmlFor="safe-singleton" className="text-xs">Safe Singleton Address</Label>
+          <div className="space-y-1.5 border-border/50 border-b px-4 py-3 lg:border-b-0">
+            <Label htmlFor="safe-singleton" className="text-xs">Singleton Address</Label>
             <Input
               id="safe-singleton"
               value={settings.safeSingletonAddress}
@@ -105,7 +104,7 @@ export function ProviderAdaptersPanel() {
           </div>
 
           <div className="space-y-1.5 px-4 py-3">
-            <Label htmlFor="safe-proxy-factory" className="text-xs">Safe Proxy Factory</Label>
+            <Label htmlFor="safe-proxy-factory" className="text-xs">Proxy Factory</Label>
             <Input
               id="safe-proxy-factory"
               value={settings.safeProxyFactoryAddress}
@@ -117,9 +116,10 @@ export function ProviderAdaptersPanel() {
             />
           </div>
         </div>
-        <div className="border-border/50 bg-muted/30 border-t px-4 py-2.5 flex items-center gap-2">
+
+        <div className="border-border/50 bg-muted/30 flex items-center gap-2 border-t px-4 py-2.5">
           <Network className="text-muted-foreground/50 h-3 w-3 shrink-0" />
-          <p className="text-muted-foreground/60 text-xs">Saved locally. Applied when the Safe adapter is enabled.</p>
+          <p className="text-muted-foreground/60 text-xs">Saved locally. Applied when importing a Safe vault on configured chains.</p>
         </div>
       </div>
     </div>

@@ -412,6 +412,7 @@ export function ExportImportController({
             isImporting={isImporting}
             onImportContentChange={setImportContent}
             onResetImportedState={handleOpenResetDialog}
+            onImport={embedded ? handleImport : undefined}
           />
         )}
       </div>
@@ -429,29 +430,12 @@ export function ExportImportController({
               disabled={isImporting}
             >
               {isImporting ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <><Loader2 className="h-4 w-4 animate-spin" />Importing...</>
               ) : (
-                <Upload className="h-4 w-4" />
+                <><Upload className="h-4 w-4" />Import</>
               )}
-              {isImporting ? "Importing..." : "Import"}
             </Button>
           )}
-        </div>
-      ) : mode === "import" ? (
-        <div className="flex justify-end pt-4">
-          <Button
-            type="button"
-            className="bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20"
-            onClick={handleImport}
-            disabled={isImporting}
-          >
-            {isImporting ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Upload className="h-4 w-4" />
-            )}
-            {isImporting ? "Importing..." : "Import"}
-          </Button>
         </div>
       ) : null}
 
@@ -550,66 +534,45 @@ function ExportImportModePicker({
   disabled = false,
   onModeChange,
 }: ExportImportModePickerProps) {
+  if (embedded) {
+    return (
+      <div className="bg-muted dark:bg-background inline-flex self-start rounded-lg p-1">
+        {(["export", "import"] as const).map((m) => (
+          <button
+            key={m}
+            type="button"
+            disabled={disabled}
+            onClick={() => onModeChange(m)}
+            className={cn(
+              "rounded-md px-4 py-1.5 text-sm font-medium transition-all",
+              mode === m
+                ? "bg-card text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground disabled:opacity-50"
+            )}
+          >
+            {m === "export" ? "Export" : "Import"}
+          </button>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <RadioGroup value={mode} onValueChange={onModeChange} disabled={disabled}>
-      <div className={embedded ? "grid gap-2 sm:grid-cols-2" : "space-y-2"}>
+      <div className="space-y-2">
         <Label
-          htmlFor={embedded ? "settings-export" : "export"}
-          className={cn(
-            "cursor-pointer font-normal text-foreground/80",
-            embedded
-              ? "rounded-xl flex items-start gap-3 border px-3 py-3 text-xs font-medium transition-colors"
-              : "flex items-center space-x-2 text-xs font-medium",
-            embedded && mode === "export"
-              ? "border-primary/40 bg-primary/5"
-              : embedded
-                ? "border-border bg-card"
-                : ""
-          )}
+          htmlFor="export"
+          className="flex cursor-pointer items-center space-x-2 text-xs font-medium font-normal text-foreground/80"
         >
-          <RadioGroupItem
-            value="export"
-            id={embedded ? "settings-export" : "export"}
-          />
-          <span className="space-y-1">
-            <span className="text-foreground block text-sm">
-              Export to YAML
-            </span>
-            {embedded ? (
-              <span className="text-muted-foreground/60 block text-xs">
-                Generate the complete portable workspace snapshot.
-              </span>
-            ) : null}
-          </span>
+          <RadioGroupItem value="export" id="export" />
+          <span>Export to YAML</span>
         </Label>
         <Label
-          htmlFor={embedded ? "settings-import" : "import"}
-          className={cn(
-            "cursor-pointer font-normal text-foreground/80",
-            embedded
-              ? "rounded-xl flex items-start gap-3 border px-3 py-3 text-xs font-medium transition-colors"
-              : "flex items-center space-x-2 text-xs font-medium",
-            embedded && mode === "import"
-              ? "border-primary/40 bg-primary/5"
-              : embedded
-                ? "border-border bg-card"
-                : ""
-          )}
+          htmlFor="import"
+          className="flex cursor-pointer items-center space-x-2 text-xs font-medium font-normal text-foreground/80"
         >
-          <RadioGroupItem
-            value="import"
-            id={embedded ? "settings-import" : "import"}
-          />
-          <span className="space-y-1">
-            <span className="text-foreground block text-sm">
-              Import from YAML
-            </span>
-            {embedded ? (
-              <span className="text-muted-foreground/60 block text-xs">
-                Merge chains and vaults from another environment.
-              </span>
-            ) : null}
-          </span>
+          <RadioGroupItem value="import" id="import" />
+          <span>Import from YAML</span>
         </Label>
       </div>
     </RadioGroup>
@@ -638,96 +601,62 @@ function ExportImportExportPanel({
     (chain) => chain.multisigProvider === "safe"
   );
 
-  return (
-    <div
-      className={
-        embedded ? "grid gap-4 xl:grid-cols-[16rem_minmax(0,1fr)]" : "space-y-2"
-      }
-    >
-      <div
-        className={
-          embedded
-            ? "border-border bg-card rounded-xl space-y-3 border p-4"
-            : "flex items-center justify-between"
-        }
-      >
-        {embedded ? (
-          <>
-            <div className="grid gap-2">
-              <div className="bg-muted rounded-xl px-3 py-2">
-                <p className="text-muted-foreground/50 text-[11px] font-medium">
-                  Squads chains
-                </p>
-                <p className="text-foreground mt-1 text-sm font-medium">
-                  {operationalSquadsChains.length}
-                </p>
-              </div>
-              <div className="bg-muted rounded-xl px-3 py-2">
-                <p className="text-muted-foreground/50 text-[11px] font-medium">
-                  Vaults
-                </p>
-                <p className="text-foreground mt-1 text-sm font-medium">
-                  {multisigs.length}
-                </p>
-              </div>
-              <div className="bg-muted rounded-xl px-3 py-2">
-                <p className="text-muted-foreground/50 text-[11px] font-medium">
-                  Safe-ready chains
-                </p>
-                <p className="text-foreground mt-1 text-sm font-medium">
-                  {preparedSafeChains.length}
-                </p>
-              </div>
-              <Button
-                type="button"
-                onClick={onCopy}
-                disabled={copied}
-                className="justify-start bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20"
-              >
-                {copied ? (
-                  <>
-                    <Check className="h-4 w-4" />
-                    Copied
-                  </>
-                ) : (
-                  <>
-                    <Copy className="h-4 w-4" />
-                    Copy YAML
-                  </>
-                )}
-              </Button>
+  if (embedded) {
+    return (
+      <div className="border-border bg-card overflow-hidden rounded-xl border">
+        <div className="border-border/50 flex items-center gap-1 border-b px-4 py-3">
+          <div className="flex items-center gap-5">
+            <div>
+              <p className="text-muted-foreground/50 text-[11px] font-medium">Squads</p>
+              <p className="text-foreground text-sm font-semibold tabular-nums">{operationalSquadsChains.length}</p>
             </div>
-          </>
-        ) : (
-          <>
+            <div className="bg-border/50 h-7 w-px" />
+            <div>
+              <p className="text-muted-foreground/50 text-[11px] font-medium">Vaults</p>
+              <p className="text-foreground text-sm font-semibold tabular-nums">{multisigs.length}</p>
+            </div>
+            <div className="bg-border/50 h-7 w-px" />
+            <div>
+              <p className="text-muted-foreground/50 text-[11px] font-medium">Safe chains</p>
+              <p className="text-foreground text-sm font-semibold tabular-nums">{preparedSafeChains.length}</p>
+            </div>
+          </div>
+          <div className="ml-auto">
             <Button
               type="button"
-              variant="outline"
               onClick={onCopy}
               disabled={copied}
+              className="bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20"
             >
               {copied ? (
-                <>
-                  <Check className="h-4 w-4" />
-                  Copied
-                </>
+                <><Check className="h-4 w-4" />Copied</>
               ) : (
-                <>
-                  <Copy className="h-4 w-4" />
-                  Copy
-                </>
+                <><Copy className="h-4 w-4" />Copy YAML</>
               )}
             </Button>
-          </>
-        )}
+          </div>
+        </div>
+        <div className="bg-muted/30 min-h-[28rem] w-full overflow-auto">
+          <pre className="p-4 font-mono text-[11px] whitespace-pre text-muted-foreground/70">
+            <code>{exportContent}</code>
+          </pre>
+        </div>
       </div>
-      <div
-        className={
-          embedded
-            ? "border-border/50 bg-muted/30 rounded-xl min-h-[28rem] w-full overflow-auto border"
-            : "h-[400px] w-full overflow-auto rounded-md border"
-        }
-      >
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <Button type="button" variant="outline" onClick={onCopy} disabled={copied}>
+          {copied ? (
+            <><Check className="h-4 w-4" />Copied</>
+          ) : (
+            <><Copy className="h-4 w-4" />Copy</>
+          )}
+        </Button>
+      </div>
+      <div className="h-[400px] w-full overflow-auto rounded-md border">
         <pre className="p-4 font-mono text-[11px] whitespace-pre text-muted-foreground/70">
           <code>{exportContent}</code>
         </pre>
@@ -743,6 +672,7 @@ interface ExportImportImportPanelProps {
   isImporting: boolean;
   onImportContentChange: (value: string) => void;
   onResetImportedState: () => void;
+  onImport?: () => void;
 }
 
 function ExportImportImportPanel({
@@ -752,6 +682,7 @@ function ExportImportImportPanel({
   isImporting,
   onImportContentChange,
   onResetImportedState,
+  onImport,
 }: ExportImportImportPanelProps) {
   const progressValue = importProgress
     ? (importProgress.current / importProgress.total) * 100
@@ -759,48 +690,66 @@ function ExportImportImportPanel({
 
   return (
     <div className="space-y-3">
-        <div className="border-border bg-card rounded-xl flex items-start justify-between gap-3 border px-3 py-3">
-          <div className="space-y-1">
-            <p className="text-foreground text-sm font-medium">Reset state</p>
-            <p className="text-muted-foreground/70 text-xs leading-5">
-              If a YAML import left local state broken, clear saved vaults,
-              custom chains, labels, and provider settings.
-            </p>
-          </div>
+      <div className="border-border bg-card overflow-hidden rounded-xl border">
+        <div className="border-border/50 flex items-center justify-between gap-3 border-b px-4 py-3">
+          <p className="text-muted-foreground/50 text-[11px] font-medium">Reset state</p>
           <Button
             type="button"
             variant="outline"
+            size="sm"
             disabled={isImporting}
-            className="shrink-0"
             onClick={onResetImportedState}
           >
             Reset
           </Button>
         </div>
-        {isImporting && importProgress ? (
-          <div className="border-border bg-card rounded-xl space-y-2 border px-3 py-3">
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-foreground/80 text-sm">
-                {importProgress.label}
-              </p>
-              <p className="text-muted-foreground/70 text-xs tabular-nums">
-                {Math.min(importProgress.current, importProgress.total)} /{" "}
-                {importProgress.total}
-              </p>
-            </div>
-            <Progress value={progressValue} className="h-1.5" />
+        <div className="px-4 py-3">
+          <p className="text-muted-foreground/60 text-xs leading-5">
+            Clears saved vaults, custom chains, labels, and provider settings.
+            Use only if a previous import left local state broken.
+          </p>
+        </div>
+      </div>
+
+      {isImporting && importProgress ? (
+        <div className="border-border bg-card overflow-hidden rounded-xl border">
+          <div className="flex items-center justify-between gap-3 px-4 py-3">
+            <p className="text-foreground/80 text-sm">{importProgress.label}</p>
+            <p className="text-muted-foreground/60 text-xs tabular-nums">
+              {Math.min(importProgress.current, importProgress.total)} / {importProgress.total}
+            </p>
           </div>
-        ) : null}
-        <Textarea
-          value={importContent}
-          onChange={(e) => onImportContentChange(e.target.value)}
-          disabled={isImporting}
-          placeholder="Paste your YAML configuration here..."
-          className={cn(
-            "font-mono text-xs",
-            embedded ? "min-h-[28rem] resize-y rounded-xl" : "min-h-[300px] resize-none rounded-md"
-          )}
-        />
+          <Progress value={progressValue} className="h-1 rounded-none" />
+        </div>
+      ) : null}
+
+      <Textarea
+        value={importContent}
+        onChange={(e) => onImportContentChange(e.target.value)}
+        disabled={isImporting}
+        placeholder="Paste your YAML configuration here..."
+        className={cn(
+          "font-mono text-xs",
+          embedded ? "min-h-[24rem] resize-y rounded-xl" : "min-h-[300px] resize-none rounded-md"
+        )}
+      />
+
+      {embedded && onImport && (
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            className="bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20"
+            onClick={onImport}
+            disabled={isImporting}
+          >
+            {isImporting ? (
+              <><Loader2 className="h-4 w-4 animate-spin" />Importing...</>
+            ) : (
+              <><Upload className="h-4 w-4" />Import</>
+            )}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
