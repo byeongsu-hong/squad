@@ -605,7 +605,7 @@ export function ProposalDetailView({
                     <div className="border-border bg-muted/50 flex items-center gap-2 border-b px-3 py-2.5">
                       <span className="text-muted-foreground/50 font-mono text-[10px]">#{i + 1}</span>
                       {wellKnown ? (
-                        <span className="text-[13px] font-semibold text-foreground/80">{wellKnown.label}</span>
+                        <span className="text-[13px] font-semibold text-foreground">{wellKnown.label}</span>
                       ) : (
                         <span className="text-muted-foreground/50 text-[11px] font-medium">Program</span>
                       )}

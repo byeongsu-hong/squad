@@ -167,7 +167,7 @@ function QueueRow({
             {item.multisig.label ?? "Unnamed"}
           </p>
         ) : (
-          <p className="text-foreground/80 mb-0.5 truncate text-[12px] font-medium leading-tight">
+          <p className="text-foreground mb-0.5 truncate text-[12px] font-medium leading-tight">
             {item.lineLabel}
           </p>
         )}

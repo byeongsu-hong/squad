@@ -310,8 +310,8 @@ export function MultisigList({ selectedKey }: { selectedKey?: string }) {
         {/* Body */}
         {!hasMultisigs && !loading && (
           <div className="flex flex-col items-center justify-center gap-4 py-14 text-center">
-            <div className="bg-muted border-border flex h-12 w-12 items-center justify-center rounded-2xl border">
-              <Shield className="text-muted-foreground/50 h-6 w-6" />
+            <div className="bg-muted border-border flex h-14 w-14 items-center justify-center rounded-2xl border">
+              <Shield className="text-muted-foreground/50 h-7 w-7" />
             </div>
             <div className="space-y-1">
               <p className="text-foreground text-[14px] font-semibold">No vaults yet</p>

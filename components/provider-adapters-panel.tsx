@@ -58,7 +58,7 @@ export function ProviderAdaptersPanel() {
           <div className="divide-border divide-y px-4 py-1">
             {squadsChains.map((chain) => (
               <div key={chain.id} className="flex items-center justify-between py-2.5">
-                <span className="text-foreground/80 text-[13px] font-medium">{chain.name}</span>
+                <span className="text-foreground text-[13px] font-medium">{chain.name}</span>
                 <div className="flex items-center gap-2">
                   {chain.squadsV4ProgramId ? (
                     <span className="border-emerald-300/60 bg-emerald-50 text-emerald-600 dark:border-emerald-800/40 dark:bg-emerald-950/20 dark:text-emerald-400 rounded border px-1.5 py-px font-mono text-[10px]">
@@ -100,7 +100,7 @@ export function ProviderAdaptersPanel() {
           <div className="border-border divide-border divide-y border-b px-4 py-1">
             {safeChains.map((chain) => (
               <div key={chain.id} className="flex items-center justify-between py-2.5">
-                <span className="text-foreground/80 text-[13px] font-medium">{chain.name}</span>
+                <span className="text-foreground text-[13px] font-medium">{chain.name}</span>
                 <span className={cn(
                   "rounded border px-1.5 py-px text-[10px]",
                   safeAdapterFieldsConfigured === 3

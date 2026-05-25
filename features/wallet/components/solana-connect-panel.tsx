@@ -152,7 +152,7 @@ export function SolanaConnectPanel({
         />
 
         <WalletRow
-          icon={<Usb className="text-foreground/55 h-6 w-6" />}
+          icon={<Usb className="text-foreground/50 h-6 w-6" />}
           name="Ledger"
           subtitle="Hardware device"
           disabled={isAnyLoading}
