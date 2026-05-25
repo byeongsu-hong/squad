@@ -57,7 +57,7 @@ export function ConnectWalletDialog({
           <div className="flex flex-col gap-3">
             <div
               role="tablist"
-              className="bg-muted dark:bg-card flex items-center gap-0.5 rounded-lg p-1"
+              className="bg-muted dark:bg-background flex items-center gap-0.5 rounded-lg p-1"
             >
               {(["solana", "ethereum"] as const).map((tab) => (
                 <Button
