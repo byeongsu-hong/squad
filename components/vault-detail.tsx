@@ -50,6 +50,19 @@ function truncateAddress(address: string) {
   return `${address.slice(0, 6)}…${address.slice(-4)}`;
 }
 
+function formatPermissions(mask: number): string {
+  const propose = (mask & 1) !== 0;
+  const vote = (mask & 2) !== 0;
+  const execute = (mask & 4) !== 0;
+  if (propose && vote && execute) return "Full";
+  if (propose && vote) return "P+V";
+  if (vote && execute) return "V+E";
+  if (propose) return "Propose";
+  if (vote) return "Vote";
+  if (execute) return "Execute";
+  return "—";
+}
+
 type MemberEntry = WorkspaceMultisig["members"][number];
 
 function MemberRow({ member, isViewer }: { member: MemberEntry; isViewer: boolean }) {
@@ -97,6 +110,11 @@ function MemberRow({ member, isViewer }: { member: MemberEntry; isViewer: boolea
       {isViewer && (
         <span className="shrink-0 text-[9px] font-medium text-primary/60">
           you
+        </span>
+      )}
+      {member.permissionsMask !== 7 && (
+        <span className="text-muted-foreground/40 shrink-0 rounded bg-muted px-1.5 py-0.5 font-mono text-[9px]">
+          {formatPermissions(member.permissionsMask)}
         </span>
       )}
       <Button

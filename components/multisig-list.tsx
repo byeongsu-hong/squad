@@ -539,21 +539,21 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
                       row.waiting > 0 ? (
                         <div className="flex items-center gap-1.5">
                           <AlertTriangle className="text-primary/80 h-3 w-3 shrink-0" />
-                          <span className="text-primary truncate text-xs">
+                          <span className="text-primary truncate text-[11px]">
                             {row.attentionLine}
                           </span>
                         </div>
                       ) : row.executable > 0 ? (
                         <div className="flex items-center gap-1.5">
                           <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-500" />
-                          <span className="truncate text-xs text-emerald-700 dark:text-emerald-400">
+                          <span className="truncate text-[11px] text-emerald-700 dark:text-emerald-400">
                             {row.attentionLine}
                           </span>
                         </div>
                       ) : (
                         <div className="flex items-center gap-1.5">
                           <CheckCircle2 className="text-muted-foreground/30 h-3 w-3 shrink-0" />
-                          <span className="text-muted-foreground/50 truncate text-xs">
+                          <span className="text-muted-foreground/50 truncate text-[11px]">
                             {row.attentionLine}
                           </span>
                         </div>
@@ -561,7 +561,7 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
                     ) : (
                       <div className="flex items-center gap-1.5">
                         <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500/30" />
-                        <span className="text-muted-foreground/30 text-xs">Watching</span>
+                        <span className="text-muted-foreground/30 text-[11px]">Watching</span>
                       </div>
                     )}
                   </div>

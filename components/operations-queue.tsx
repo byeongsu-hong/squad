@@ -221,7 +221,7 @@ function QueueRow({
           </p>
         </div>
       )}
-      <span className="text-muted-foreground/60 font-mono text-xs">
+      <span className="text-muted-foreground/60 font-mono text-[11px]">
         #{item.proposal.transactionIndex.toString()}
       </span>
       <span className="text-muted-foreground/60 font-mono text-[11px]">

@@ -471,7 +471,7 @@ function ChainRegistry({
                   </span>
                 </div>
               </div>
-              <div className="text-muted-foreground/70 min-w-0 space-y-0.5 text-xs">
+              <div className="text-muted-foreground/70 min-w-0 space-y-0.5 text-[11px]">
                 <p className="truncate font-mono">{stripProtocol(chain.rpcUrl)}</p>
                 {chain.explorerUrl ? (
                   <p className="truncate font-mono text-muted-foreground/60">
