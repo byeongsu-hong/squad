@@ -366,7 +366,7 @@ export function MultisigList({ splitPane = false }: { splitPane?: boolean }) {
           <div className="space-y-1.5">
             <p className="text-foreground text-base font-semibold">No vaults yet</p>
             <p className="text-muted-foreground/60 text-sm">
-              {publicKey ? "Import or create a vault to get started." : "Connect a wallet to get started."}
+              {publicKey ? "Import a vault to get started." : "Connect a wallet to get started."}
             </p>
           </div>
           <AddMultisigActions />

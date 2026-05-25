@@ -58,7 +58,7 @@ export function LandingPage() {
           </p>
           <p className="text-muted-foreground/60 max-w-xs text-sm">
             {isConnected
-              ? "Import or create a vault to start signing."
+              ? "Import a vault to start signing."
               : "Connect a wallet to get started."}
           </p>
         </div>
@@ -87,21 +87,21 @@ export function LandingPage() {
           {/* Action stats */}
           <button
             type="button"
-            onClick={() => needsSigningCount > 0 && toggleFilter("Action needed")}
+            onClick={() => !loading && needsSigningCount > 0 && toggleFilter("Action needed")}
             className={cn(
               "flex shrink-0 items-center gap-2.5 px-5 py-3.5 transition-colors",
-              needsSigningCount > 0 ? "cursor-pointer" : "cursor-default",
-              activeFilter === "Action needed" ? "bg-primary/10 [box-shadow:inset_0_-2px_0_rgba(217,119,6,0.6)]" : needsSigningCount > 0 ? "hover:bg-primary/5" : ""
+              !loading && needsSigningCount > 0 ? "cursor-pointer" : "cursor-default",
+              activeFilter === "Action needed" ? "bg-primary/10 [box-shadow:inset_0_-2px_0_rgba(217,119,6,0.6)]" : !loading && needsSigningCount > 0 ? "hover:bg-primary/5" : ""
             )}
           >
-            <div className="flex flex-col items-start">
+            <div className={cn("flex flex-col items-start", loading && "animate-pulse")}>
               <span className={cn(
                 "text-2xl font-bold tabular-nums leading-tight",
-                needsSigningCount > 0 ? "text-primary" : "text-muted-foreground/25"
+                loading ? "text-muted-foreground/20" : needsSigningCount > 0 ? "text-primary" : "text-muted-foreground/25"
               )}>
                 {needsSigningCount}
               </span>
-              <span className={cn("text-[11px] whitespace-nowrap", needsSigningCount > 0 ? "text-muted-foreground/50" : "text-muted-foreground/25")}>
+              <span className={cn("text-[11px] whitespace-nowrap", loading ? "text-muted-foreground/20" : needsSigningCount > 0 ? "text-muted-foreground/50" : "text-muted-foreground/25")}>
                 Need signing
               </span>
             </div>
@@ -111,21 +111,21 @@ export function LandingPage() {
 
           <button
             type="button"
-            onClick={() => executableCount > 0 && toggleFilter("Executable")}
+            onClick={() => !loading && executableCount > 0 && toggleFilter("Executable")}
             className={cn(
               "flex shrink-0 items-center gap-2.5 px-5 py-3.5 transition-colors",
-              executableCount > 0 ? "cursor-pointer" : "cursor-default",
-              activeFilter === "Executable" ? "bg-emerald-950/20 [box-shadow:inset_0_-2px_0_rgba(5,150,105,0.6)]" : executableCount > 0 ? "hover:bg-emerald-950/10" : ""
+              !loading && executableCount > 0 ? "cursor-pointer" : "cursor-default",
+              activeFilter === "Executable" ? "bg-emerald-950/20 [box-shadow:inset_0_-2px_0_rgba(5,150,105,0.6)]" : !loading && executableCount > 0 ? "hover:bg-emerald-950/10" : ""
             )}
           >
-            <div className="flex flex-col items-start">
+            <div className={cn("flex flex-col items-start", loading && "animate-pulse")}>
               <span className={cn(
                 "text-2xl font-bold tabular-nums leading-tight",
-                executableCount > 0 ? "text-emerald-400" : "text-muted-foreground/25"
+                loading ? "text-muted-foreground/20" : executableCount > 0 ? "text-emerald-400" : "text-muted-foreground/25"
               )}>
                 {executableCount}
               </span>
-              <span className={cn("text-[11px] whitespace-nowrap", executableCount > 0 ? "text-muted-foreground/50" : "text-muted-foreground/25")}>
+              <span className={cn("text-[11px] whitespace-nowrap", loading ? "text-muted-foreground/20" : executableCount > 0 ? "text-muted-foreground/50" : "text-muted-foreground/25")}>
                 Executable
               </span>
             </div>
@@ -135,27 +135,27 @@ export function LandingPage() {
 
           <button
             type="button"
-            onClick={() => watchingCount > 0 && toggleFilter("Pending")}
+            onClick={() => !loading && watchingCount > 0 && toggleFilter("Pending")}
             className={cn(
               "flex shrink-0 items-center gap-2.5 px-5 py-3.5 transition-colors",
-              watchingCount > 0 ? "cursor-pointer" : "cursor-default",
-              activeFilter === "Pending" ? "bg-muted/60 [box-shadow:inset_0_-2px_0_rgba(161,161,170,0.4)]" : watchingCount > 0 ? "hover:bg-muted/40" : ""
+              !loading && watchingCount > 0 ? "cursor-pointer" : "cursor-default",
+              activeFilter === "Pending" ? "bg-muted/60 [box-shadow:inset_0_-2px_0_rgba(161,161,170,0.4)]" : !loading && watchingCount > 0 ? "hover:bg-muted/40" : ""
             )}
           >
-            <div className="flex flex-col items-start">
+            <div className={cn("flex flex-col items-start", loading && "animate-pulse")}>
               <span className={cn(
                 "text-2xl font-bold tabular-nums leading-tight",
-                watchingCount > 0 ? "text-foreground" : "text-muted-foreground/25"
+                loading ? "text-muted-foreground/20" : watchingCount > 0 ? "text-foreground" : "text-muted-foreground/25"
               )}>
                 {watchingCount}
               </span>
-              <span className={cn("text-[11px]", watchingCount > 0 ? "text-muted-foreground/50" : "text-muted-foreground/25")}>
+              <span className={cn("text-[11px]", loading ? "text-muted-foreground/20" : watchingCount > 0 ? "text-muted-foreground/50" : "text-muted-foreground/25")}>
                 Pending
               </span>
             </div>
           </button>
 
-          {needsSigningCount === 0 && executableCount === 0 && watchingCount === 0 && !loading && (
+          {!loading && needsSigningCount === 0 && executableCount === 0 && watchingCount === 0 && (
             <div className="ml-auto flex items-center gap-1.5 px-5">
               <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500/40" />
               <span className="text-muted-foreground/25 text-[11px]">All clear</span>

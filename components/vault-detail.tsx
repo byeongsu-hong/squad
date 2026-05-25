@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeftRight, Copy, Check, X, Users, User } from "lucide-react";
+import { ArrowLeftRight, Copy, Check, X, Users, User, ExternalLink } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -13,6 +13,8 @@ import { useViewerAddressForMultisig } from "@/lib/hooks/use-viewer-address";
 import { useWorkspaceMultisigs } from "@/lib/hooks/use-workspace-multisigs";
 import { useWorkspaceQueue } from "@/lib/hooks/use-workspace-queue";
 import { useWalletStore } from "@/stores/wallet-store";
+import { useChainStore } from "@/stores/chain-store";
+import { normalizeChainConfig } from "@/types/chain";
 import type { WorkspaceMultisig } from "@/types/workspace";
 
 interface VaultDetailProps {
@@ -135,6 +137,7 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
   const getViewerAddress = useViewerAddressForMultisig();
   const { workspaceMultisigMap } = useWorkspaceMultisigs();
   const { proposals, loading, workspaceMultisigs } = useProposalsQuery();
+  const { chains } = useChainStore();
 
   const multisig = workspaceMultisigMap.get(vaultKey) ?? null;
 
@@ -188,6 +191,9 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
 
   const isSquads = multisig.provider === "squads";
   const viewerAddress = getViewerAddress(multisig.provider);
+
+  const chainConfig = chains.find((c) => normalizeChainConfig(c).id === multisig.chainId);
+  const explorerUrl = chainConfig ? normalizeChainConfig(chainConfig).explorerUrl : null;
 
   return (
     <div className="max-w-[1200px]">
@@ -248,6 +254,18 @@ export function VaultDetail({ vaultKey, onBack }: VaultDetailProps) {
             {truncateAddress(multisig.address)}
           </span>
           <CopyButton value={multisig.address} />
+          {explorerUrl && (
+            <Button
+              variant="ghost"
+              asChild
+              className="text-muted-foreground/50 hover:text-foreground ml-0.5 h-5 w-5 shrink-0 p-0"
+              aria-label="View on explorer"
+            >
+              <a href={`${explorerUrl}/address/${multisig.address}`} target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="h-3 w-3" />
+              </a>
+            </Button>
+          )}
         </div>
       </div>
 
