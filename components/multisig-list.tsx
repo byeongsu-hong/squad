@@ -81,7 +81,7 @@ function VaultColumnHeaders({
           />
         )}
       </div>
-      {["Vault", "Chain", "Action", ""].map((h, i) => (
+      {["Vault", "Chain", "Status", ""].map((h, i) => (
         <span
           key={i}
           className="text-muted-foreground/40 text-[11px] font-medium"
