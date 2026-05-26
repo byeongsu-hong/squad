@@ -3,7 +3,13 @@ import { describe, expect, it } from "vitest";
 import { wagmiConfig } from "./config";
 
 describe("wagmiConfig", () => {
-  it("does not discover injected EVM wallets before the user opens wallet UI", () => {
-    expect(wagmiConfig._internal.mipd).toBeUndefined();
+  it("keeps injected wallet discovery enabled for branded EVM wallet rows", () => {
+    expect(wagmiConfig._internal.mipd).toBeDefined();
+  });
+
+  it("does not add a generic injected fallback connector", () => {
+    expect(wagmiConfig.connectors.map((connector) => connector.name)).not.toContain(
+      "Injected"
+    );
   });
 });
