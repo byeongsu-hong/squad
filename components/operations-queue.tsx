@@ -8,9 +8,12 @@ import {
   SlidersHorizontal,
   Zap,
 } from "lucide-react";
-import { type ReactNode, useMemo, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
+
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { ProposalDetailView } from "@/components/proposal-detail-modal";
+import { useMediaQuery } from "@/lib/hooks/use-media-query";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -41,6 +44,7 @@ interface OperationsQueueProps {
   compact?: boolean;
   hideChain?: boolean;
   emptyStateCta?: ReactNode;
+  statsHeader?: ReactNode;
   defaultStatusFilter?: StatusFilter;
 }
 
@@ -296,6 +300,7 @@ export function OperationsQueue({
   compact = false,
   hideChain = false,
   emptyStateCta,
+  statsHeader,
   defaultStatusFilter = "All",
 }: OperationsQueueProps) {
   const [statusFilter, setStatusFilter] =
@@ -305,13 +310,43 @@ export function OperationsQueue({
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [historyPage, setHistoryPage] = useState(1);
-  const [selectedItem, setSelectedItem] = useState<WorkspaceQueueItem | null>(
-    null
-  );
   const [batchQueue, setBatchQueue] = useState<WorkspaceQueueItem[] | null>(
     null
   );
   const [batchIndex, setBatchIndex] = useState(0);
+
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const proposalKey = searchParams.get("proposal");
+  const isWide = useMediaQuery("(min-width: 1280px)");
+
+  const selectedItem = useMemo(
+    () =>
+      proposalKey
+        ? (items.find((i) => i.focusKey === proposalKey) ?? null)
+        : null,
+    [items, proposalKey]
+  );
+
+  useEffect(() => {
+    if (proposalKey && !selectedItem && !batchQueue && !loading) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("proposal");
+      const qs = params.toString();
+      router.replace(qs ? `/?${qs}` : "/", { scroll: false });
+    }
+  }, [proposalKey, selectedItem, batchQueue, loading, searchParams, router]);
+
+  const selectProposal = useCallback(
+    (item: WorkspaceQueueItem | null) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (item) params.set("proposal", item.focusKey);
+      else params.delete("proposal");
+      const qs = params.toString();
+      router.replace(qs ? `/?${qs}` : "/", { scroll: false });
+    },
+    [searchParams, router]
+  );
 
   const chainOptions = useMemo(
     () => Array.from(new Set(items.map((i) => i.multisig.chainName))).sort(),
@@ -437,11 +472,12 @@ export function OperationsQueue({
   const openBatch = (items: WorkspaceQueueItem[]) => {
     if (items.length === 0) return;
     if (items.length === 1) {
-      setSelectedItem(items[0]);
+      selectProposal(items[0]);
       return;
     }
     setBatchQueue(items);
     setBatchIndex(0);
+    selectProposal(items[0]);
   };
 
   const closeBatch = () => {
@@ -453,8 +489,10 @@ export function OperationsQueue({
     const next = index + 1;
     if (next >= queue.length) {
       closeBatch();
+      selectProposal(null);
     } else {
       setBatchIndex(next);
+      selectProposal(queue[next]);
     }
   };
 
@@ -489,6 +527,21 @@ export function OperationsQueue({
       </div>
     );
   }
+
+  const activeItem = batchQueue ? (batchQueue[batchIndex] ?? null) : selectedItem;
+  const isBatch = batchQueue !== null;
+  const handleClose = () => {
+    selectProposal(null);
+    closeBatch();
+  };
+  const handleSkip = () => advanceBatch(batchQueue!, batchIndex);
+  const handleActionSuccess = async () => {
+    if (isBatch) {
+      advanceBatch(batchQueue!, batchIndex);
+    } else {
+      selectProposal(null);
+    }
+  };
 
   const queueContent = (
     <div>
@@ -715,17 +768,17 @@ export function OperationsQueue({
                     isSelectable
                     isAnySelected={selected.size > 0}
                     onToggle={() => toggleSelect(item.focusKey)}
-                    onClick={() => setSelectedItem(item)}
+                    onClick={() => selectProposal(item)}
                     compact={compact}
                     hideChain={hideChain}
                     onApprove={
                       item.needsYourSignature && !item.currentUserApproved
-                        ? () => setSelectedItem(item)
+                        ? () => selectProposal(item)
                         : undefined
                     }
                     onExecute={
                       item.readyToExecute
-                        ? () => setSelectedItem(item)
+                        ? () => selectProposal(item)
                         : undefined
                     }
                     isActioning={false}
@@ -754,7 +807,7 @@ export function OperationsQueue({
                     isSelected={false}
                     isSelectable={false}
                     onToggle={() => {}}
-                    onClick={() => setSelectedItem(item)}
+                    onClick={() => selectProposal(item)}
                     compact={compact}
                     hideChain={hideChain}
                   />
@@ -783,7 +836,7 @@ export function OperationsQueue({
                       isSelected={false}
                       isSelectable={false}
                       onToggle={() => {}}
-                      onClick={() => setSelectedItem(item)}
+                      onClick={() => selectProposal(item)}
                       compact={compact}
                       hideChain={hideChain}
                     />
@@ -823,55 +876,53 @@ export function OperationsQueue({
 
   return (
     <>
-      <div className="min-w-0">{queueContent}</div>
+      <div className="flex w-full gap-0 xl:gap-5">
+        <div className={cn("min-w-0 w-full", activeItem ? "flex-1" : "mx-auto max-w-3xl")}>
+          {statsHeader}
+          {queueContent}
+        </div>
 
-      {/* Proposal detail modal — supports both single-item and batch (next/skip) mode */}
-      {(() => {
-        const activeItem = batchQueue
-          ? (batchQueue[batchIndex] ?? null)
-          : selectedItem;
-        const isBatch = batchQueue !== null;
-        const handleClose = () => {
-          setSelectedItem(null);
-          closeBatch();
-        };
-        const handleSkip = () => advanceBatch(batchQueue!, batchIndex);
-        const handleActionSuccess = async () => {
-          if (isBatch) {
-            advanceBatch(batchQueue!, batchIndex);
-          } else {
-            setSelectedItem(null);
-          }
-        };
-        return (
-          <Dialog
-            open={!!activeItem}
-            onOpenChange={(open) => !open && handleClose()}
-          >
-            <DialogContent
-              showCloseButton={false}
-              className="flex max-h-[88vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl"
-            >
-              <VisuallyHidden>
-                <DialogTitle>Proposal Detail</DialogTitle>
-                <DialogDescription>
-                  Review the selected proposal details and available actions.
-                </DialogDescription>
-              </VisuallyHidden>
-              {activeItem && (
-                <ProposalDetailView
-                  item={activeItem}
-                  onBack={handleClose}
-                  batchTotal={isBatch ? batchQueue!.length : undefined}
-                  batchIndex={isBatch ? batchIndex : undefined}
-                  onSkip={isBatch ? handleSkip : undefined}
-                  onActionSuccess={handleActionSuccess}
-                />
-              )}
-            </DialogContent>
-          </Dialog>
-        );
-      })()}
+        {activeItem && (
+          <aside className="hidden animate-in fade-in-0 slide-in-from-right-4 duration-300 ease-out motion-reduce:animate-none xl:sticky xl:top-[54px] xl:block xl:max-h-[calc(100svh-54px)] xl:w-[480px] xl:shrink-0 xl:overflow-y-auto xl:rounded-2xl xl:border xl:border-border xl:bg-card 2xl:w-[600px]">
+            <ProposalDetailView
+              item={activeItem}
+              onBack={handleClose}
+              batchTotal={isBatch ? batchQueue!.length : undefined}
+              batchIndex={isBatch ? batchIndex : undefined}
+              onSkip={isBatch ? handleSkip : undefined}
+              onActionSuccess={handleActionSuccess}
+            />
+          </aside>
+        )}
+      </div>
+
+      {/* Proposal detail modal — only on narrow screens (<xl) */}
+      <Dialog
+        open={!isWide && !!activeItem}
+        onOpenChange={(open) => !open && handleClose()}
+      >
+        <DialogContent
+          showCloseButton={false}
+          className="flex max-h-[88vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl"
+        >
+          <VisuallyHidden>
+            <DialogTitle>Proposal Detail</DialogTitle>
+            <DialogDescription>
+              Review the selected proposal details and available actions.
+            </DialogDescription>
+          </VisuallyHidden>
+          {activeItem && (
+            <ProposalDetailView
+              item={activeItem}
+              onBack={handleClose}
+              batchTotal={isBatch ? batchQueue!.length : undefined}
+              batchIndex={isBatch ? batchIndex : undefined}
+              onSkip={isBatch ? handleSkip : undefined}
+              onActionSuccess={handleActionSuccess}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Bulk action bar — appears when items selected via checkboxes */}
       <div
