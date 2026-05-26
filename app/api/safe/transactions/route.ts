@@ -20,6 +20,7 @@ export async function GET(request: Request) {
   const chainName = searchParams.get("chainName");
   const safeAddress = searchParams.get("safeAddress");
   const limitParam = searchParams.get("limit");
+  const force = searchParams.get("force") === "1";
 
   if (!chainId || !chainName || !safeAddress) {
     return NextResponse.json(
@@ -32,7 +33,11 @@ export async function GET(request: Request) {
   const normalizedLimit = Number.isFinite(limit) ? limit : 100;
   const cacheKey = `${chainId}:${safeAddress.toLowerCase()}:${normalizedLimit}`;
   const cachedTransactions = safeTransactionsCache.get(cacheKey);
-  if (cachedTransactions && cachedTransactions.expiresAt > Date.now()) {
+  if (
+    !force &&
+    cachedTransactions &&
+    cachedTransactions.expiresAt > Date.now()
+  ) {
     return NextResponse.json({
       proposals: cachedTransactions.proposals,
       cached: true,
@@ -66,7 +71,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ proposals });
   } catch (error) {
-    if (cachedTransactions) {
+    if (!force && cachedTransactions) {
       return NextResponse.json({
         proposals: cachedTransactions.proposals,
         cached: true,

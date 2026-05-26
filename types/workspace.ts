@@ -30,6 +30,8 @@ export interface WorkspaceMultisig {
   threshold: number;
   members: WorkspaceMember[];
   vaultAddress?: string;
+  importStatus?: "complete" | "degraded";
+  importError?: string;
 }
 
 export interface WorkspaceProposal {

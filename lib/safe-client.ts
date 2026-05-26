@@ -4,9 +4,9 @@ import Safe from "@safe-global/protocol-kit";
 import type { Eip1193Provider } from "@safe-global/protocol-kit";
 import { getAccount, switchChain } from "wagmi/actions";
 
+import { wagmiConfig } from "@/features/wallet";
 import type { SafeServiceMultisigTransaction } from "@/lib/safe";
 import { getSafeChainNumericId } from "@/lib/safe";
-import { wagmiConfig } from "@/features/wallet";
 import type { ChainConfig } from "@/types/chain";
 
 async function getSafeSdk(
@@ -47,6 +47,7 @@ async function loadSafeTransactionForAction(
     chainName: chain.name,
     safeAddress,
     nonce: nonce.toString(),
+    force: "1",
   });
 
   const response = await fetch(`/api/safe/transaction?${params.toString()}`, {

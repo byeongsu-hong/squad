@@ -14,6 +14,8 @@ export interface MultisigAccount {
   label?: string;
   tags?: string[];
   vaultPda?: PublicKey | string;
+  importStatus?: "complete" | "degraded";
+  importError?: string;
 }
 
 interface MultisigMember {

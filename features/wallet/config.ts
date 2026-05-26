@@ -17,10 +17,10 @@ const chains = [mainnet, base, optimism, bsc, arbitrum] as const;
 
 const transports = {
   [mainnet.id]: http(
-    process.env.NEXT_PUBLIC_ETH_RPC_URL ?? "https://eth.llamarpc.com"
+    process.env.NEXT_PUBLIC_ETH_RPC_URL ?? "https://ethereum-rpc.publicnode.com"
   ),
   [base.id]: http(
-    process.env.NEXT_PUBLIC_BASE_RPC_URL ?? "https://base.llamarpc.com"
+    process.env.NEXT_PUBLIC_BASE_RPC_URL ?? "https://base-rpc.publicnode.com"
   ),
   [optimism.id]: http(
     process.env.NEXT_PUBLIC_OP_RPC_URL ?? "https://mainnet.optimism.io"

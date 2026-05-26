@@ -16,6 +16,12 @@ import {
   executeSafeTransaction,
 } from "@/lib/safe-client";
 import { SquadService } from "@/lib/squad";
+import {
+  applyRefreshPlan,
+  getRefreshPlan,
+  proposalActionSucceededEvent,
+  vaultRefreshTarget,
+} from "@/lib/state/refresh-policy";
 import { transactionSignerService } from "@/lib/transaction-signer";
 import {
   getUnsupportedProviderMessage,
@@ -25,7 +31,11 @@ import {
 import { invalidateSafeProposalCache } from "@/lib/workspace/safe-adapter";
 import { useChainStore } from "@/stores/chain-store";
 import { useWalletStore } from "@/stores/wallet-store";
-import { getSquadsProgramId, isOperationalSquadsChain } from "@/types/chain";
+import {
+  getChainRpcUrls,
+  getSquadsProgramId,
+  isOperationalSquadsChain,
+} from "@/types/chain";
 import { WalletType, parseLedgerError } from "@/types/wallet";
 
 interface UseProposalActionsOptions {
@@ -40,6 +50,21 @@ function buildActionKey(
   transactionIndex: bigint
 ) {
   return `${action}-${multisigKey}-${transactionIndex.toString()}`;
+}
+
+function buildActionKeyCandidates(
+  action: ProposalActionType,
+  multisigKey: string,
+  transactionIndex: bigint
+) {
+  const candidates = new Set([
+    buildActionKey(action, multisigKey, transactionIndex),
+  ]);
+  const [, address] = multisigKey.split(":");
+  if (address) {
+    candidates.add(buildActionKey(action, address, transactionIndex));
+  }
+  return candidates;
 }
 
 export function useProposalActions(options: UseProposalActionsOptions = {}) {
@@ -72,11 +97,41 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
         );
       }
       return {
-        service: new SquadService(chain.rpcUrl, getSquadsProgramId(chain)),
+        service: new SquadService(
+          getChainRpcUrls(chain),
+          getSquadsProgramId(chain),
+          {
+            chainId: chain.id,
+          }
+        ),
         chain,
       };
     },
     [chains]
+  );
+
+  const invalidateActionQueries = useCallback(
+    (
+      provider: "squads" | "safe",
+      chainId: string,
+      multisigAddress: string,
+      transactionIndex: bigint
+    ) => {
+      applyRefreshPlan(
+        queryClient,
+        getRefreshPlan(
+          proposalActionSucceededEvent({
+            target: vaultRefreshTarget({
+              provider,
+              chainId,
+              address: multisigAddress,
+            }),
+            nonce: transactionIndex,
+          })
+        )
+      );
+    },
+    [queryClient]
   );
 
   const signAndSendTransaction = useCallback(
@@ -193,7 +248,12 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
 
         toast.success(SUCCESS_MESSAGES.PROPOSAL_APPROVED);
         squadService.invalidateProposalCache(multisigPda);
-        void queryClient.invalidateQueries({ queryKey: ["proposals"] });
+        invalidateActionQueries(
+          "squads",
+          chainId,
+          multisigPda.toString(),
+          transactionIndex
+        );
         await optionsRef.current.onSuccess?.();
       } catch (error) {
         console.error("Failed to approve proposal:", error);
@@ -204,7 +264,12 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
         setActionLoading(null);
       }
     },
-    [publicKey, getSquadService, signAndSendTransaction]
+    [
+      publicKey,
+      getSquadService,
+      signAndSendTransaction,
+      invalidateActionQueries,
+    ]
   );
 
   const reject = useCallback(
@@ -235,7 +300,12 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
 
         toast.success(SUCCESS_MESSAGES.PROPOSAL_REJECTED);
         squadService.invalidateProposalCache(multisigPda);
-        void queryClient.invalidateQueries({ queryKey: ["proposals"] });
+        invalidateActionQueries(
+          "squads",
+          chainId,
+          multisigPda.toString(),
+          transactionIndex
+        );
         await optionsRef.current.onSuccess?.();
       } catch (error) {
         console.error("Failed to reject proposal:", error);
@@ -246,7 +316,12 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
         setActionLoading(null);
       }
     },
-    [publicKey, getSquadService, signAndSendTransaction]
+    [
+      publicKey,
+      getSquadService,
+      signAndSendTransaction,
+      invalidateActionQueries,
+    ]
   );
 
   const execute = useCallback(
@@ -282,7 +357,12 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
 
         toast.success(SUCCESS_MESSAGES.PROPOSAL_EXECUTED);
         squadService.invalidateProposalCache(multisigPda);
-        void queryClient.invalidateQueries({ queryKey: ["proposals"] });
+        invalidateActionQueries(
+          "squads",
+          chainId,
+          multisigPda.toString(),
+          transactionIndex
+        );
         await optionsRef.current.onSuccess?.();
       } catch (error) {
         console.error("Failed to execute proposal:", error);
@@ -293,7 +373,12 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
         setActionLoading(null);
       }
     },
-    [publicKey, getSquadService, signAndSendTransaction]
+    [
+      publicKey,
+      getSquadService,
+      signAndSendTransaction,
+      invalidateActionQueries,
+    ]
   );
 
   const getChain = (chainId: string) => {
@@ -333,7 +418,7 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
         toast.success("Safe transaction submitted.");
       }
       invalidateSafeProposalCache(chainId, multisigKey);
-      void queryClient.invalidateQueries({ queryKey: ["proposals"] });
+      invalidateActionQueries("safe", chainId, multisigKey, transactionIndex);
       await optionsRef.current.onSuccess?.();
     } catch (error) {
       const verb = action === "approve" ? "confirm" : "execute";
@@ -408,7 +493,10 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
       multisigKey: string,
       transactionIndex: bigint
     ) =>
-      actionLoading === buildActionKey(action, multisigKey, transactionIndex),
+      actionLoading !== null &&
+      buildActionKeyCandidates(action, multisigKey, transactionIndex).has(
+        actionLoading
+      ),
     actionLoading,
     isActionInProgress: actionLoading !== null,
   };
