@@ -182,7 +182,7 @@ export async function fetchSafeTransactions(
   }
 
   const response = await fetch(
-    `${baseUrl}/safes/${safeAddress}/all-transactions/?limit=${limit}`,
+    `${baseUrl}/safes/${safeAddress}/multisig-transactions/?limit=${limit}&ordering=-nonce`,
     {
       headers: {
         accept: "application/json",
