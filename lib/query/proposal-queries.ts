@@ -1,17 +1,31 @@
 import { PublicKey } from "@solana/web3.js";
 
+import { proposalQueryKey } from "@/lib/state/refresh-policy";
 import { getWorkspaceProviderAdapter } from "@/lib/workspace/provider-adapters";
 import { loadSquadsWorkspaceProposalsForMultisig } from "@/lib/workspace/squads-adapter";
+import { useRefreshStore } from "@/stores/refresh-store";
 import type { ChainConfig } from "@/types/chain";
 import type { MultisigAccount } from "@/types/multisig";
-import type { WorkspaceMultisig, WorkspaceProposal } from "@/types/workspace";
+import type {
+  WorkspaceMultisig,
+  WorkspaceProposal,
+  WorkspaceProviderId,
+} from "@/types/workspace";
 
 export function proposalsQueryKey(
-  provider: string,
+  provider: WorkspaceProviderId,
   chainId: string,
   multisigAddress: string
 ) {
-  return ["proposals", provider, chainId, multisigAddress] as const;
+  return proposalQueryKey(provider, chainId, multisigAddress);
+}
+
+function refreshScopeForMultisig(multisig: WorkspaceMultisig) {
+  return {
+    provider: multisig.provider,
+    chainId: multisig.chainId,
+    address: multisig.address,
+  };
 }
 
 function toSquadsMultisigAccount(multisig: WorkspaceMultisig): MultisigAccount {
@@ -40,17 +54,38 @@ export function proposalsQueryOptions(
       multisig.address
     ),
     queryFn: async (): Promise<WorkspaceProposal[]> => {
-      if (multisig.provider === "safe") {
-        const adapter = getWorkspaceProviderAdapter("safe");
-        if (!adapter.capabilities.proposalLoading) return [];
-        return adapter.loadProposalsForMultisig({ chains, multisig });
+      const refreshStore = useRefreshStore.getState();
+      const refreshScope = refreshScopeForMultisig(multisig);
+      refreshStore.startRefresh(refreshScope);
+
+      try {
+        let proposals: WorkspaceProposal[];
+        if (multisig.provider === "safe") {
+          const adapter = getWorkspaceProviderAdapter("safe");
+          proposals = adapter.capabilities.proposalLoading
+            ? await adapter.loadProposalsForMultisig({
+                chains,
+                multisig,
+                force: true,
+              })
+            : [];
+        } else {
+          proposals = await loadSquadsWorkspaceProposalsForMultisig(
+            toSquadsMultisigAccount(multisig),
+            chains
+          );
+        }
+        refreshStore.finishRefresh(refreshScope);
+        return proposals;
+      } catch (error) {
+        refreshStore.markDegraded(
+          refreshScope,
+          error instanceof Error ? error.message : "Proposal refresh failed."
+        );
+        refreshStore.markStale(refreshScope);
+        throw error;
       }
-      return loadSquadsWorkspaceProposalsForMultisig(
-        toSquadsMultisigAccount(multisig),
-        chains
-      );
     },
     staleTime: 120_000,
-    refetchInterval: 120_000,
   };
 }

@@ -1,15 +1,14 @@
 import { SAFE_PROPOSALS_TTL, cache, safeProposalsCacheKey } from "@/lib/cache";
-import { decodeSafeCalldataWithCustomAbis } from "@/lib/safe-custom-abi";
 import type {
   WorkspaceProposalLoaderOptions,
   WorkspaceProviderAdapter,
 } from "@/lib/workspace/provider-contract";
-import { useProviderAdapterStore } from "@/stores/provider-adapter-store";
 import type { WorkspacePayload, WorkspaceProposal } from "@/types/workspace";
 
 async function fetchSafeProposals(
   chain: { id: string; name: string },
-  multisig: WorkspaceProposalLoaderOptions["multisig"]
+  multisig: WorkspaceProposalLoaderOptions["multisig"],
+  force = false
 ): Promise<WorkspaceProposal[]> {
   const params = new URLSearchParams({
     chainId: chain.id,
@@ -17,6 +16,9 @@ async function fetchSafeProposals(
     safeAddress: multisig.address,
     limit: "100",
   });
+  if (force) {
+    params.set("force", "1");
+  }
 
   const response = await fetch(`/api/safe/transactions?${params.toString()}`, {
     method: "GET",
@@ -65,14 +67,14 @@ async function loadSafeWorkspaceProposalsForMultisig({
 
     // Stale-while-revalidate: return stale data immediately and refresh in background.
     if (cached?.stale) {
-      fetchSafeProposals(chain, multisig)
+      fetchSafeProposals(chain, multisig, true)
         .then((fresh) => cache.set(cacheKey, fresh, SAFE_PROPOSALS_TTL))
         .catch(() => undefined);
       return cached.data;
     }
   }
 
-  const proposals = await fetchSafeProposals(chain, multisig);
+  const proposals = await fetchSafeProposals(chain, multisig, force);
   cache.set(cacheKey, proposals, SAFE_PROPOSALS_TTL);
   return proposals;
 }
@@ -124,21 +126,7 @@ async function loadSafeWorkspacePayload({
     throw new Error("Safe payload response was empty.");
   }
 
-  if (payload.payload.type !== "safe") {
-    return payload.payload;
-  }
-
-  const decoded = decodeSafeCalldataWithCustomAbis(
-    payload.payload.data,
-    useProviderAdapterStore.getState().settings.safeCustomAbis
-  );
-
-  return decoded
-    ? {
-        ...payload.payload,
-        dataDecoded: decoded,
-      }
-    : payload.payload;
+  return payload.payload;
 }
 
 export const safeWorkspaceAdapter: WorkspaceProviderAdapter = {

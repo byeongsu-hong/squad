@@ -1,8 +1,16 @@
-import { Connection, Keypair, PublicKey } from "@solana/web3.js";
+import {
+  type AccountInfo,
+  Connection,
+  Keypair,
+  PublicKey,
+} from "@solana/web3.js";
 import * as multisig from "@sqds/multisig";
+
+import { useRefreshStore } from "@/stores/refresh-store";
 
 import { cache } from "./cache";
 import { CACHE_CONFIG, ERROR_MESSAGES, RPC_CONFIG } from "./config";
+import { requestBroker } from "./rpc/request-broker";
 
 async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -22,10 +30,18 @@ function getConnection(rpcUrl: string): Connection {
 export class SquadService {
   private connection: Connection;
   private programId: PublicKey;
+  private rpcUrls: string[];
+  private chainId: string;
 
-  constructor(rpcUrl: string, programId: string) {
-    this.connection = getConnection(rpcUrl);
+  constructor(
+    rpcUrl: string | string[],
+    programId: string,
+    options: { chainId?: string } = {}
+  ) {
+    this.rpcUrls = normalizeRpcUrls(rpcUrl);
+    this.connection = getConnection(this.rpcUrls[0]!);
     this.programId = new PublicKey(programId);
+    this.chainId = options.chainId ?? this.rpcUrls[0]!;
   }
 
   private async retryWithBackoff<T>(
@@ -67,6 +83,41 @@ export class SquadService {
         `${operationName} failed after ${RPC_CONFIG.MAX_RETRIES} attempts`
       )
     );
+  }
+
+  async getAccountInfo(
+    publicKey: PublicKey,
+    options: {
+      operationName?: string;
+      cacheKey?: string;
+      ttlMs?: number;
+      useStaleOnError?: boolean;
+    } = {}
+  ): Promise<AccountInfo<Buffer> | null> {
+    const result = await requestBroker.fetch({
+      key:
+        options.cacheKey ??
+        `accountInfo:${publicKey.toBase58()}:${this.programId.toBase58()}`,
+      chainId: this.chainId,
+      endpoints: this.rpcUrls,
+      ttlMs: options.ttlMs ?? CACHE_CONFIG.TTL,
+      allowStaleOnError: options.useStaleOnError,
+      request: (endpoint) => getConnection(endpoint).getAccountInfo(publicKey),
+    });
+
+    this.recordBrokerResult(result.degradedReason?.message);
+    return result.data;
+  }
+
+  private recordBrokerResult(message?: string) {
+    if (message) {
+      useRefreshStore
+        .getState()
+        .markDegraded({ chainId: this.chainId }, message);
+      return;
+    }
+
+    useRefreshStore.getState().clearDegraded({ chainId: this.chainId });
   }
 
   async createMultisig(params: {
@@ -117,7 +168,11 @@ export class SquadService {
 
     const result = await this.retryWithBackoff(async () => {
       // First check if account exists and owner matches
-      const accountInfo = await this.connection.getAccountInfo(multisigPda);
+      const accountInfo = await this.getAccountInfo(multisigPda, {
+        operationName: "Get multisig",
+        cacheKey: `accountInfo:multisig:${multisigPda.toBase58()}:${this.programId.toBase58()}`,
+        useStaleOnError: useCache,
+      });
 
       if (!accountInfo) {
         throw new Error(
@@ -142,10 +197,7 @@ export class SquadService {
 
       // Now try to deserialize
       try {
-        return await multisig.accounts.Multisig.fromAccountAddress(
-          this.connection,
-          multisigPda
-        );
+        return multisig.accounts.Multisig.fromAccountInfo(accountInfo)[0];
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : String(error);
         if (errorMsg.includes("COption") || errorMsg.includes("deserialize")) {
@@ -169,15 +221,27 @@ export class SquadService {
     const CREATOR_MULTISIGS_TTL = 5 * 60_000;
 
     if (useCache) {
-      const cached = cache.get<
-        { publicKey: PublicKey; account: ReturnType<typeof multisig.accounts.Multisig.fromAccountInfo>[0] }[]
-      >(cacheKey);
+      const cached =
+        cache.get<
+          {
+            publicKey: PublicKey;
+            account: ReturnType<
+              typeof multisig.accounts.Multisig.fromAccountInfo
+            >[0];
+          }[]
+        >(cacheKey);
       if (cached) return cached;
     }
 
-    const accounts = await this.retryWithBackoff(
-      () =>
-        this.connection.getProgramAccounts(this.programId, {
+    const accountsResult = await requestBroker.fetch({
+      key: `creatorMultisigs:${creator.toBase58()}:${this.programId.toBase58()}`,
+      chainId: this.chainId,
+      endpoints: this.rpcUrls,
+      ttlMs: CREATOR_MULTISIGS_TTL,
+      concurrency: 1,
+      allowStaleOnError: useCache,
+      request: (endpoint) =>
+        getConnection(endpoint).getProgramAccounts(this.programId, {
           filters: [
             {
               memcmp: {
@@ -187,8 +251,9 @@ export class SquadService {
             },
           ],
         }),
-      "Get multisigs by creator"
-    );
+    });
+    this.recordBrokerResult(accountsResult.degradedReason?.message);
+    const accounts = accountsResult.data;
 
     const result = accounts.map((account) => ({
       publicKey: account.pubkey,
@@ -250,10 +315,19 @@ export class SquadService {
       const batchPdas = pdas.slice(i, i + BATCH_SIZE);
       const batchIndices = transactionIndices.slice(i, i + BATCH_SIZE);
 
-      const accountInfos = await this.retryWithBackoff(
-        () => this.connection.getMultipleAccountsInfo(batchPdas),
-        "Get batched transactions"
-      );
+      const accountInfosResult = await requestBroker.fetch({
+        key: `batchedTransactions:${this.programId.toBase58()}:${batchPdas
+          .map((pda) => pda.toBase58())
+          .join(",")}`,
+        chainId: this.chainId,
+        endpoints: this.rpcUrls,
+        ttlMs: CACHE_CONFIG.TTL,
+        concurrency: 2,
+        request: (endpoint) =>
+          getConnection(endpoint).getMultipleAccountsInfo(batchPdas),
+      });
+      this.recordBrokerResult(accountInfosResult.degradedReason?.message);
+      const accountInfos = accountInfosResult.data;
 
       for (let j = 0; j < batchIndices.length; j++) {
         const index = batchIndices[j]!;
@@ -301,7 +375,11 @@ export class SquadService {
           index: params.transactionIndex,
           programId: this.programId,
         });
-        const accountInfo = await this.connection.getAccountInfo(transactionPda);
+        const accountInfo = await this.getAccountInfo(transactionPda, {
+          operationName: "Get executable transaction",
+          cacheKey: `accountInfo:transaction:${transactionPda.toBase58()}:${this.programId.toBase58()}`,
+          ttlMs: 10_000,
+        });
         if (!accountInfo) throw new Error("Transaction account not found");
         const discriminator = accountInfo.data.subarray(0, 8);
         const isConfig = discriminator.every(
@@ -369,9 +447,15 @@ export class SquadService {
       }
     }
 
-    const proposals = await this.retryWithBackoff(
-      () =>
-        this.connection.getProgramAccounts(this.programId, {
+    const proposalsResult = await requestBroker.fetch({
+      key: `rpc:${cacheKey}`,
+      chainId: this.chainId,
+      endpoints: this.rpcUrls,
+      ttlMs: CACHE_CONFIG.TTL,
+      concurrency: 1,
+      allowStaleOnError: useCache,
+      request: (endpoint) =>
+        getConnection(endpoint).getProgramAccounts(this.programId, {
           filters: [
             {
               memcmp: {
@@ -381,8 +465,9 @@ export class SquadService {
             },
           ],
         }),
-      "Get proposals by multisig"
-    );
+    });
+    this.recordBrokerResult(proposalsResult.degradedReason?.message);
+    const proposals = proposalsResult.data;
 
     const result = proposals
       .map((account) => {
@@ -436,7 +521,11 @@ export class SquadService {
 
     const result = await this.retryWithBackoff(async () => {
       // First check if account exists
-      const accountInfo = await this.connection.getAccountInfo(transactionPda);
+      const accountInfo = await this.getAccountInfo(transactionPda, {
+        operationName: "Get vault transaction",
+        cacheKey,
+        useStaleOnError: useCache,
+      });
 
       if (!accountInfo) {
         throw new Error(
@@ -449,10 +538,9 @@ export class SquadService {
       }
 
       try {
-        return await multisig.accounts.VaultTransaction.fromAccountAddress(
-          this.connection,
-          transactionPda
-        );
+        return multisig.accounts.VaultTransaction.fromAccountInfo(
+          accountInfo
+        )[0];
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : String(error);
         if (errorMsg.includes("buffer") || errorMsg.includes("offset")) {
@@ -498,14 +586,20 @@ export class SquadService {
       }
     }
 
-    const result = await this.retryWithBackoff(
-      () =>
-        multisig.accounts.ConfigTransaction.fromAccountAddress(
-          this.connection,
-          transactionPda
-        ),
-      "Get config transaction"
-    );
+    const accountInfo = await this.getAccountInfo(transactionPda, {
+      operationName: "Get config transaction",
+      cacheKey,
+      useStaleOnError: useCache,
+    });
+
+    if (!accountInfo) {
+      throw new Error(
+        "Transaction not found. The transaction may not have been created yet."
+      );
+    }
+
+    const result =
+      multisig.accounts.ConfigTransaction.fromAccountInfo(accountInfo)[0];
 
     if (useCache) {
       cache.set(cacheKey, result, CACHE_CONFIG.TTL);
@@ -521,5 +615,17 @@ export class SquadService {
   invalidateProposalCache(multisigPda: PublicKey): void {
     const cacheKey = `proposals:${multisigPda.toString()}:${this.programId.toString()}`;
     cache.invalidate(cacheKey);
+    requestBroker.invalidate({ chainId: this.chainId, key: `rpc:${cacheKey}` });
   }
+}
+
+function normalizeRpcUrls(rpcUrl: string | string[]) {
+  const urls = Array.isArray(rpcUrl) ? rpcUrl : [rpcUrl];
+  const normalized = Array.from(
+    new Set(urls.map((url) => url.trim()).filter(Boolean))
+  );
+  if (normalized.length === 0) {
+    throw new Error("At least one RPC URL is required.");
+  }
+  return normalized;
 }

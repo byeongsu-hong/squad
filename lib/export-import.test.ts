@@ -9,7 +9,7 @@ import {
   serializeMultisigAccount,
 } from "@/lib/export-import";
 import type { AddressLabel } from "@/types/address-label";
-import type { ChainConfig } from "@/types/chain";
+import { type ChainConfig, normalizeChainConfig } from "@/types/chain";
 import type { MultisigAccount } from "@/types/multisig";
 import type { ProviderAdapterSettings } from "@/types/provider-adapter";
 
@@ -289,7 +289,7 @@ providerAdapters:
       const imported = importFromYaml(exported);
       const chains = imported.chains!;
 
-      expect(chains[0]).toEqual(mockChains[0]);
+      expect(chains[0]).toEqual(normalizeChainConfig(mockChains[0]));
     });
 
     it("should maintain minimal multisig data", () => {
@@ -329,7 +329,7 @@ providerAdapters:
           },
         ],
       });
-      expect(imported.chains![0]).toEqual(mockChains[0]);
+      expect(imported.chains![0]).toEqual(normalizeChainConfig(mockChains[0]));
       expect(imported.multisigs![0].publicKey).toBe(
         mockMultisigs[0].publicKey.toString()
       );

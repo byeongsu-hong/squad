@@ -36,6 +36,7 @@ import { useMultisigStore } from "@/stores/multisig-store";
 import { useProviderAdapterStore } from "@/stores/provider-adapter-store";
 import { useWorkspaceStore } from "@/stores/workspace-store";
 import {
+  getChainRpcUrls,
   getSquadsProgramId,
   isOperationalSquadsChain,
   normalizeChainConfig,
@@ -299,7 +300,8 @@ export function ExportImportController() {
                   chain,
                   serializedMultisig.publicKey,
                   serializedMultisig.label,
-                  serializedMultisig.tags
+                  serializedMultisig.tags,
+                  { allowDegraded: true }
                 );
                 addMultisig(safeMultisig);
                 importedMultisigs++;
@@ -329,8 +331,9 @@ export function ExportImportController() {
 
             const programIdString = getSquadsProgramId(chain);
             const squadService = new SquadService(
-              chain.rpcUrl,
-              programIdString
+              getChainRpcUrls(chain),
+              programIdString,
+              { chainId: chain.id }
             );
 
             const { PublicKey } = await import("@solana/web3.js");

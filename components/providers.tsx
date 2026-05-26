@@ -13,6 +13,7 @@ import { useMultisigStore } from "@/stores/multisig-store";
 import { useProviderAdapterStore } from "@/stores/provider-adapter-store";
 
 import { ProposalsSync } from "./proposals-sync";
+import { RefreshPolicySync } from "./refresh-policy-sync";
 import { WalletAdapterProvider } from "./wallet-adapter-provider";
 import { WalletSync } from "./wallet-sync";
 
@@ -87,6 +88,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         >
           <WalletAdapterProvider>
             <WalletSync />
+            <RefreshPolicySync />
             <ProposalsSync />
             {children}
             <Toaster />

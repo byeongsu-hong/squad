@@ -22,6 +22,8 @@ export interface RegistrySummaryRow {
   active: number;
   attentionLine: string;
   hasAttention: boolean;
+  importStatus?: "complete" | "degraded";
+  importError?: string;
   searchText: string;
 }
 
@@ -92,11 +94,14 @@ export function buildRegistrySummaryRowsFromMultisigs({
         hasAttention: Boolean(
           attention && (attention.waiting > 0 || attention.executable > 0)
         ),
+        importStatus: multisig.importStatus,
+        importError: multisig.importError,
         searchText: toSearchText([
           multisig.label,
           multisig.publicKey.toString(),
           chainName,
           multisig.chainId,
+          multisig.importStatus,
           ...(multisig.tags ?? []),
         ]),
       } satisfies RegistrySummaryRow;

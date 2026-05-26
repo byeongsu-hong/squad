@@ -2,6 +2,7 @@ export interface ChainConfig {
   id: string;
   name: string;
   rpcUrl: string;
+  rpcUrls?: string[];
   squadsV4ProgramId?: string;
   explorerUrl?: string;
   vmFamily?: "svm" | "evm";
@@ -9,11 +10,42 @@ export interface ChainConfig {
   isDefault?: boolean;
 }
 
+const DEFAULT_RPC_URLS_BY_CHAIN_ID: Record<string, string[]> = {
+  "solana-mainnet": [
+    "https://api.mainnet-beta.solana.com",
+    "https://solana-rpc.publicnode.com",
+  ],
+  "ethereum-mainnet": [
+    "https://ethereum-rpc.publicnode.com",
+    "https://eth.llamarpc.com",
+  ],
+  "base-mainnet": [
+    "https://base-rpc.publicnode.com",
+    "https://base.llamarpc.com",
+  ],
+};
+
+const LEGACY_PRIMARY_RPC_URL_BY_CHAIN_ID: Record<string, string> = {
+  "ethereum-mainnet": "https://eth.llamarpc.com",
+  "base-mainnet": "https://base.llamarpc.com",
+};
+
 export function normalizeChainConfig(chain: ChainConfig): ChainConfig {
   const normalizedProvider = chain.multisigProvider ?? "squads";
+  const defaultRpcUrls = DEFAULT_RPC_URLS_BY_CHAIN_ID[chain.id] ?? [];
+  const primary =
+    LEGACY_PRIMARY_RPC_URL_BY_CHAIN_ID[chain.id] === chain.rpcUrl
+      ? (defaultRpcUrls[0] ?? chain.rpcUrl)
+      : chain.rpcUrl;
+  const rpcUrls = normalizeRpcUrls(primary, [
+    ...(chain.rpcUrls ?? []),
+    ...defaultRpcUrls,
+  ]);
 
   return {
     ...chain,
+    rpcUrl: rpcUrls[0] ?? chain.rpcUrl,
+    rpcUrls,
     vmFamily: chain.vmFamily ?? "svm",
     multisigProvider: normalizedProvider,
     squadsV4ProgramId:
@@ -21,6 +53,18 @@ export function normalizeChainConfig(chain: ChainConfig): ChainConfig {
         ? (chain.squadsV4ProgramId ?? "")
         : undefined,
   };
+}
+
+export function getChainRpcUrls(
+  chain: Pick<ChainConfig, "rpcUrl" | "rpcUrls">
+) {
+  return normalizeRpcUrls(chain.rpcUrl, chain.rpcUrls);
+}
+
+function normalizeRpcUrls(primary: string, fallbacks: string[] = []) {
+  return Array.from(
+    new Set([primary, ...fallbacks].map((url) => url.trim()).filter(Boolean))
+  );
 }
 
 export function isOperationalSquadsChain(chain: ChainConfig) {
@@ -63,7 +107,8 @@ export const DEFAULT_CHAINS: ChainConfig[] = [
   {
     id: "solana-mainnet",
     name: "Solana",
-    rpcUrl: "https://api.mainnet-beta.solana.com",
+    rpcUrl: DEFAULT_RPC_URLS_BY_CHAIN_ID["solana-mainnet"]![0]!,
+    rpcUrls: DEFAULT_RPC_URLS_BY_CHAIN_ID["solana-mainnet"],
     squadsV4ProgramId: "SQDS4ep65T869zMMBKyuUq6aD6EgTu8psMjkvj52pCf",
     explorerUrl: "https://explorer.solana.com",
     vmFamily: "svm",
@@ -118,7 +163,8 @@ export const DEFAULT_CHAINS: ChainConfig[] = [
   {
     id: "ethereum-mainnet",
     name: "Ethereum",
-    rpcUrl: "https://eth.llamarpc.com",
+    rpcUrl: DEFAULT_RPC_URLS_BY_CHAIN_ID["ethereum-mainnet"]![0]!,
+    rpcUrls: DEFAULT_RPC_URLS_BY_CHAIN_ID["ethereum-mainnet"],
     explorerUrl: "https://etherscan.io",
     vmFamily: "evm",
     multisigProvider: "safe",
@@ -126,7 +172,8 @@ export const DEFAULT_CHAINS: ChainConfig[] = [
   {
     id: "base-mainnet",
     name: "Base",
-    rpcUrl: "https://base.llamarpc.com",
+    rpcUrl: DEFAULT_RPC_URLS_BY_CHAIN_ID["base-mainnet"]![0]!,
+    rpcUrls: DEFAULT_RPC_URLS_BY_CHAIN_ID["base-mainnet"],
     explorerUrl: "https://basescan.org",
     vmFamily: "evm",
     multisigProvider: "safe",

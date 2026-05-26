@@ -14,6 +14,7 @@ import type {
 } from "@/lib/workspace/provider-contract";
 import {
   type ChainConfig,
+  getChainRpcUrls,
   getSquadsProgramId,
   isOperationalSquadsChain,
 } from "@/types/chain";
@@ -64,8 +65,9 @@ export async function loadSquadsWorkspaceProposals(
       }
 
       const squadService = new SquadService(
-        chain.rpcUrl,
-        getSquadsProgramId(chain)
+        getChainRpcUrls(chain),
+        getSquadsProgramId(chain),
+        { chainId: chain.id }
       );
       const proposalAccounts = await squadService.getProposalsByMultisig(
         multisig.publicKey
@@ -113,7 +115,13 @@ export async function loadSquadsCreatorMultisigs(
   }
 
   const programIdString = getSquadsProgramId(chain);
-  const squadService = new SquadService(chain.rpcUrl, programIdString);
+  const squadService = new SquadService(
+    getChainRpcUrls(chain),
+    programIdString,
+    {
+      chainId: chain.id,
+    }
+  );
   const accounts = await squadService.getMultisigsByCreator(
     new PublicKey(creatorAddress)
   );
@@ -160,8 +168,9 @@ export async function loadSquadsWorkspaceProposalsForMultisig(
   }
 
   const squadService = new SquadService(
-    chain.rpcUrl,
-    getSquadsProgramId(chain)
+    getChainRpcUrls(chain),
+    getSquadsProgramId(chain),
+    { chainId: chain.id }
   );
   const proposalAccounts = await squadService.getProposalsByMultisig(
     multisig.publicKey
@@ -345,11 +354,22 @@ async function loadSquadsWorkspacePayload(
       })[0]
       .toString();
 
-  const connection = new SquadService(chain.rpcUrl, programIdString).getConnection();
+  const squadService = new SquadService(
+    getChainRpcUrls(chain),
+    programIdString,
+    {
+      chainId: chain.id,
+    }
+  );
 
-  const accountInfo = await connection.getAccountInfo(transactionPda);
+  const accountInfo = await squadService.getAccountInfo(transactionPda, {
+    operationName: "Get workspace transaction payload",
+    cacheKey: `workspacePayload:${chain.id}:${transactionPda.toBase58()}`,
+  });
   if (!accountInfo) {
-    throw new Error("Transaction account not found. Please ensure the proposal was fully created on-chain.");
+    throw new Error(
+      "Transaction account not found. Please ensure the proposal was fully created on-chain."
+    );
   }
   if (!accountInfo.owner.equals(new PublicKey(programIdString))) {
     throw new Error("Invalid transaction account owner");
@@ -361,7 +381,8 @@ async function loadSquadsWorkspacePayload(
   );
 
   if (isConfig) {
-    const [configTx] = multisigSdk.accounts.ConfigTransaction.fromAccountInfo(accountInfo);
+    const [configTx] =
+      multisigSdk.accounts.ConfigTransaction.fromAccountInfo(accountInfo);
     return {
       type: "config",
       transactionPda: transactionPda.toString(),
@@ -370,7 +391,8 @@ async function loadSquadsWorkspacePayload(
     };
   }
 
-  const [vaultTx] = multisigSdk.accounts.VaultTransaction.fromAccountInfo(accountInfo);
+  const [vaultTx] =
+    multisigSdk.accounts.VaultTransaction.fromAccountInfo(accountInfo);
   return {
     type: "vault",
     transactionPda: transactionPda.toString(),

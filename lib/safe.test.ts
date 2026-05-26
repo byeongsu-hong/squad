@@ -1,5 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { createPublicClient } from "viem";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { requestBroker } from "@/lib/rpc/request-broker";
 import {
   getSafeChainAlias,
   getSafeTransactionServiceBaseUrl,
@@ -8,8 +10,35 @@ import {
   parseSafeReference,
   toWorkspaceProposalFromSafeTransaction,
 } from "@/lib/safe";
+import type { ChainConfig } from "@/types/chain";
+
+vi.mock("viem", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("viem")>();
+  return {
+    ...actual,
+    createPublicClient: vi.fn(),
+    http: vi.fn((url: string) => ({ url })),
+  };
+});
 
 describe("safe helpers", () => {
+  const safeChain: ChainConfig = {
+    id: "ethereum-mainnet",
+    name: "Ethereum",
+    rpcUrl: "https://ethereum-rpc.publicnode.com",
+    rpcUrls: [
+      "https://ethereum-rpc.publicnode.com",
+      "https://eth.llamarpc.com",
+    ],
+    vmFamily: "evm",
+    multisigProvider: "safe",
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    requestBroker.clear();
+  });
+
   it("parses raw Safe addresses and Safe URLs", () => {
     expect(
       parseSafeAddressInput("0x562Dfaac27A84be6C96273F5c9594DA1681C0DA7")
@@ -93,5 +122,101 @@ describe("safe helpers", () => {
     });
     expect(proposal?.transactionIndex).toBe(BigInt(32));
     expect(proposal?.approvals).toHaveLength(2);
+  });
+
+  it("loads a full Safe import when owner and threshold reads succeed", async () => {
+    const { loadSafeMultisig } = await import("@/lib/safe");
+    vi.mocked(createPublicClient).mockReturnValue({
+      readContract: vi.fn(async ({ functionName }) => {
+        if (functionName === "getOwners") {
+          return ["0xa7ECcdb9Be08178f896c26b7BbD8C3D4E844d9Ba"];
+        }
+        return 2n;
+      }),
+    } as unknown as ReturnType<typeof createPublicClient>);
+
+    const multisig = await loadSafeMultisig(
+      safeChain,
+      "0x562Dfaac27A84be6C96273F5c9594DA1681C0DA7",
+      "Treasury",
+      ["ops"],
+      { allowDegraded: true }
+    );
+
+    expect(multisig).toMatchObject({
+      provider: "safe",
+      publicKey: "0x562Dfaac27A84be6C96273F5c9594DA1681C0DA7",
+      threshold: 2,
+      label: "Treasury",
+      tags: ["ops"],
+      importStatus: "complete",
+    });
+    expect(multisig.members).toEqual([
+      {
+        key: "0xa7ECcdb9Be08178f896c26b7BbD8C3D4E844d9Ba",
+        permissions: { mask: 0 },
+      },
+    ]);
+  });
+
+  it("keeps Safe import strict by default when owner reads fail", async () => {
+    const { loadSafeMultisig } = await import("@/lib/safe");
+    vi.mocked(createPublicClient).mockReturnValue({
+      readContract: vi.fn(async () => {
+        throw new Error("429 Too Many Requests");
+      }),
+    } as unknown as ReturnType<typeof createPublicClient>);
+
+    await expect(
+      loadSafeMultisig(safeChain, "0x562Dfaac27A84be6C96273F5c9594DA1681C0DA7")
+    ).rejects.toThrow("429 Too Many Requests");
+  });
+
+  it("creates a minimal degraded Safe import when enabled and owner reads fail", async () => {
+    const { loadSafeMultisig } = await import("@/lib/safe");
+    vi.mocked(createPublicClient).mockReturnValue({
+      readContract: vi.fn(async () => {
+        throw new Error("525 SSL handshake failed");
+      }),
+    } as unknown as ReturnType<typeof createPublicClient>);
+
+    const multisig = await loadSafeMultisig(
+      safeChain,
+      "0x7379D7bB2ccA68982E467632B6554fD4e72e9431",
+      "Treasury",
+      ["ops"],
+      { allowDegraded: true }
+    );
+
+    expect(multisig).toMatchObject({
+      provider: "safe",
+      publicKey: "0x7379D7bB2ccA68982E467632B6554fD4e72e9431",
+      chainId: "ethereum-mainnet",
+      threshold: 0,
+      members: [],
+      label: "Treasury",
+      tags: ["ops"],
+      importStatus: "degraded",
+    });
+    expect(multisig.importError).toContain("525 SSL handshake failed");
+  });
+
+  it("does not degrade semantic Safe import failures", async () => {
+    const { loadSafeMultisig } = await import("@/lib/safe");
+    vi.mocked(createPublicClient).mockReturnValue({
+      readContract: vi.fn(async () => {
+        throw new Error("execution reverted");
+      }),
+    } as unknown as ReturnType<typeof createPublicClient>);
+
+    await expect(
+      loadSafeMultisig(
+        safeChain,
+        "0x562Dfaac27A84be6C96273F5c9594DA1681C0DA7",
+        "Not a Safe",
+        [],
+        { allowDegraded: true }
+      )
+    ).rejects.toThrow("execution reverted");
   });
 });

@@ -1,6 +1,12 @@
 import { createPublicClient, getAddress, http, isAddress } from "viem";
 
-import { type ChainConfig, normalizeChainConfig } from "@/types/chain";
+import { isRetryableRpcError, requestBroker } from "@/lib/rpc/request-broker";
+import { useRefreshStore } from "@/stores/refresh-store";
+import {
+  type ChainConfig,
+  getChainRpcUrls,
+  normalizeChainConfig,
+} from "@/types/chain";
 import type { MultisigAccount } from "@/types/multisig";
 import type {
   WorkspacePayload,
@@ -340,7 +346,8 @@ export async function loadSafeMultisig(
   chain: ChainConfig,
   addressInput: string,
   label?: string,
-  tags?: string[]
+  tags?: string[],
+  options: { allowDegraded?: boolean } = {}
 ): Promise<MultisigAccount> {
   const normalizedChain = normalizeChainConfig(chain);
   const address = parseSafeAddressInput(addressInput);
@@ -353,36 +360,103 @@ export async function loadSafeMultisig(
     throw new Error("Selected chain is not configured for Safe imports");
   }
 
-  const client = createPublicClient({
-    transport: http(normalizedChain.rpcUrl),
-  });
+  try {
+    const result = await requestBroker.fetch({
+      key: `safe-import:${address}`,
+      chainId: normalizedChain.id,
+      endpoints: getChainRpcUrls(normalizedChain),
+      ttlMs: 120_000,
+      allowStaleOnError: options.allowDegraded === true,
+      request: async (endpoint) => {
+        const client = createPublicClient({
+          transport: http(endpoint),
+        });
 
-  const [owners, threshold] = await Promise.all([
-    client.readContract({
-      address,
-      abi: SAFE_ABI,
-      functionName: "getOwners",
-    }),
-    client.readContract({
-      address,
-      abi: SAFE_ABI,
-      functionName: "getThreshold",
-    }),
-  ]);
+        const [owners, threshold] = await Promise.all([
+          client.readContract({
+            address,
+            abi: SAFE_ABI,
+            functionName: "getOwners",
+          }),
+          client.readContract({
+            address,
+            abi: SAFE_ABI,
+            functionName: "getThreshold",
+          }),
+        ]);
 
+        return { owners, threshold };
+      },
+    });
+
+    if (result.degradedReason) {
+      useRefreshStore
+        .getState()
+        .markDegraded(
+          { chainId: normalizedChain.id },
+          result.degradedReason.message
+        );
+    } else {
+      useRefreshStore.getState().clearDegraded({ chainId: normalizedChain.id });
+    }
+
+    return buildSafeMultisigAccount({
+      address,
+      chainId: normalizedChain.id,
+      owners: result.data.owners,
+      threshold: result.data.threshold,
+      label,
+      tags,
+      importStatus: "complete",
+    });
+  } catch (error) {
+    if (!options.allowDegraded || !isRetryableRpcError(error)) {
+      throw error;
+    }
+
+    const message = error instanceof Error ? error.message : String(error);
+    useRefreshStore
+      .getState()
+      .markDegraded({ chainId: normalizedChain.id }, message);
+
+    return buildSafeMultisigAccount({
+      address,
+      chainId: normalizedChain.id,
+      owners: [],
+      threshold: 0n,
+      label,
+      tags,
+      importStatus: "degraded",
+      importError: message,
+    });
+  }
+}
+
+function buildSafeMultisigAccount(params: {
+  address: string;
+  chainId: string;
+  owners: readonly string[];
+  threshold: bigint | number;
+  label?: string;
+  tags?: string[];
+  importStatus: "complete" | "degraded";
+  importError?: string;
+}): MultisigAccount {
   return {
     provider: "safe",
-    publicKey: address,
-    threshold: Number(threshold),
-    members: owners.map((owner) => ({
+    publicKey: params.address,
+    threshold: Number(params.threshold),
+    members: params.owners.map((owner) => ({
       key: getAddress(owner),
       permissions: { mask: 0 },
     })),
     transactionIndex: BigInt(0),
     msChangeIndex: 0,
     programId: undefined,
-    chainId: normalizedChain.id,
-    label,
-    tags,
+    chainId: params.chainId,
+    label: params.label,
+    tags: params.tags,
+    importStatus: params.importStatus,
+    importError: params.importError,
   };
 }

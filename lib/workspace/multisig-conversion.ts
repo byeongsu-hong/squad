@@ -33,6 +33,8 @@ export function toWorkspaceMultisig(
       permissionsMask: member.permissions.mask,
     })),
     vaultAddress: multisig.vaultPda?.toString(),
+    importStatus: multisig.importStatus,
+    importError: multisig.importError,
   };
 }
 

@@ -16,7 +16,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import {
   Form,
   FormControl,
@@ -26,6 +25,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -44,6 +44,7 @@ import { chainIdSchema, labelSchema } from "@/lib/validation";
 import { useChainStore } from "@/stores/chain-store";
 import { useMultisigStore } from "@/stores/multisig-store";
 import {
+  getChainRpcUrls,
   getOperationalSquadsChains,
   getSquadsProgramId,
   normalizeChainConfig,
@@ -133,13 +134,18 @@ export function ImportMultisigDialog({
           chain,
           data.multisigAddress,
           data.label,
-          tags
+          tags,
+          { allowDegraded: true }
         );
         addMultisig(safeMultisig);
       } else {
         const multisigPubkey = new PublicKey(data.multisigAddress);
         const programIdString = getSquadsProgramId(chain);
-        const squadService = new SquadService(chain.rpcUrl, programIdString);
+        const squadService = new SquadService(
+          getChainRpcUrls(chain),
+          programIdString,
+          { chainId: chain.id }
+        );
 
         const multisigAccount = await squadService.getMultisig(multisigPubkey);
 
@@ -216,7 +222,7 @@ export function ImportMultisigDialog({
               name="chainId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-[11px] font-medium text-muted-foreground/50">
+                  <FormLabel className="text-muted-foreground/50 text-[11px] font-medium">
                     Chain
                   </FormLabel>
                   <Select
@@ -246,7 +252,7 @@ export function ImportMultisigDialog({
               name="multisigAddress"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-[11px] font-medium text-muted-foreground/50">
+                  <FormLabel className="text-muted-foreground/50 text-[11px] font-medium">
                     Vault Address
                   </FormLabel>
                   <FormControl>
@@ -261,7 +267,9 @@ export function ImportMultisigDialog({
                   </FormControl>
                   <FormMessage />
                   <FormDescription>
-                    Also accepts an <code className="font-mono text-[11px]">eth:0x…</code> prefix or a full Safe app URL.
+                    Also accepts an{" "}
+                    <code className="font-mono text-[11px]">eth:0x…</code>{" "}
+                    prefix or a full Safe app URL.
                   </FormDescription>
                 </FormItem>
               )}
@@ -272,14 +280,11 @@ export function ImportMultisigDialog({
               name="label"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-[11px] font-medium text-muted-foreground/50">
+                  <FormLabel className="text-muted-foreground/50 text-[11px] font-medium">
                     Label
                   </FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="My Vault"
-                      {...field}
-                    />
+                    <Input placeholder="My Vault" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -291,14 +296,14 @@ export function ImportMultisigDialog({
               name="tags"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-[11px] font-medium text-muted-foreground/50">
-                    Tags <span className="text-muted-foreground/50 font-normal">· optional</span>
+                  <FormLabel className="text-muted-foreground/50 text-[11px] font-medium">
+                    Tags{" "}
+                    <span className="text-muted-foreground/50 font-normal">
+                      · optional
+                    </span>
                   </FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="treasury, dao, mainnet"
-                      {...field}
-                    />
+                    <Input placeholder="treasury, dao, mainnet" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -318,7 +323,7 @@ export function ImportMultisigDialog({
               <Button
                 type="submit"
                 disabled={loading}
-                className="flex-1 bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20"
+                className="bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20 flex-1"
               >
                 {loading ? (
                   <>
