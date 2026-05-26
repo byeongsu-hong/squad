@@ -16,7 +16,8 @@ function isSettingsSection(
 ): value is WorkspaceSettingsSection {
   return (
     value === "chains" ||
-    value === "multisigs" ||
+    value === "adapters" ||
+    value === "abis" ||
     value === "registry" ||
     value === "labels"
   );

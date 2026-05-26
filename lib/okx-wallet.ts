@@ -32,15 +32,20 @@ declare global {
   interface Window {
     okxwallet?: {
       solana?: OkxSolanaProvider;
+      // EVM EIP-1193 provider — window.okxwallet itself is the EVM provider
+      request?: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
+      on?: (event: string, handler: (...args: unknown[]) => void) => void;
+      off?: (event: string, handler: (...args: unknown[]) => void) => void;
+      isOKExWallet?: boolean;
     };
   }
 }
 
-export interface OkxConnectResult {
+interface OkxConnectResult {
   publicKey: PublicKey;
 }
 
-export class OkxWalletService {
+class OkxWalletService {
   private getProvider(): OkxSolanaProvider {
     const provider = window.okxwallet?.solana;
     if (!provider) {
@@ -58,36 +63,6 @@ export class OkxWalletService {
     return typeof window !== "undefined" && !!window.okxwallet?.solana;
   }
 
-  /**
-   * Check if currently connected to OKX wallet
-   */
-  isConnected(): boolean {
-    try {
-      const provider = this.getProvider();
-      return !!provider.isConnected && !!provider.publicKey;
-    } catch {
-      return false;
-    }
-  }
-
-  /**
-   * Get the current public key if connected
-   */
-  getPublicKey(): PublicKey | null {
-    try {
-      const provider = this.getProvider();
-      if (provider.publicKey) {
-        return new PublicKey(provider.publicKey.toBase58());
-      }
-      return null;
-    } catch {
-      return null;
-    }
-  }
-
-  /**
-   * Connect to OKX wallet
-   */
   async connect(): Promise<OkxConnectResult> {
     const provider = this.getProvider();
 
@@ -127,53 +102,10 @@ export class OkxWalletService {
     return await provider.signTransaction(transaction);
   }
 
-  /**
-   * Sign multiple transactions
-   */
-  async signAllTransactions<T extends Transaction | VersionedTransaction>(
-    transactions: T[]
-  ): Promise<T[]> {
-    const provider = this.getProvider();
-    return await provider.signAllTransactions(transactions);
-  }
-
-  /**
-   * Sign a message
-   */
   async signMessage(message: Uint8Array): Promise<Uint8Array> {
     const provider = this.getProvider();
     const result = await provider.signMessage(message, "utf8");
     return result.signature;
-  }
-
-  /**
-   * Register event listener
-   */
-  on(
-    event: "connect" | "disconnect" | "accountChanged",
-    callback: () => void
-  ): void {
-    try {
-      const provider = this.getProvider();
-      provider.on(event, callback);
-    } catch {
-      // Ignore if provider not available
-    }
-  }
-
-  /**
-   * Remove event listener
-   */
-  off(
-    event: "connect" | "disconnect" | "accountChanged",
-    callback: () => void
-  ): void {
-    try {
-      const provider = this.getProvider();
-      provider.off(event, callback);
-    } catch {
-      // Ignore if provider not available
-    }
   }
 }
 

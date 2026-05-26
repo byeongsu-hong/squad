@@ -1,12 +1,9 @@
 export type WorkspaceProviderId = "squads" | "safe";
 
-export type WorkspaceQueueFilter = "all" | "waiting" | "executable";
-export type WorkspaceDetailTab = "overview" | "payload";
-export type WorkspaceExplorerMode = "views" | "chains" | "tags";
 export type WorkspaceSettingsSection =
   | "chains"
   | "adapters"
-  | "multisigs"
+  | "abis"
   | "registry"
   | "labels";
 
@@ -17,7 +14,7 @@ export type WorkspaceProposalStatus =
   | "Executed"
   | "Cancelled";
 
-export interface WorkspaceMember {
+interface WorkspaceMember {
   address: string;
   permissionsMask: number;
 }
@@ -33,6 +30,8 @@ export interface WorkspaceMultisig {
   threshold: number;
   members: WorkspaceMember[];
   vaultAddress?: string;
+  importStatus?: "complete" | "degraded";
+  importError?: string;
 }
 
 export interface WorkspaceProposal {
@@ -48,11 +47,6 @@ export interface WorkspaceProposal {
   rejections: string[];
   executed: boolean;
   cancelled: boolean;
-}
-
-export interface WorkspaceProposalSummary {
-  totalCount: number;
-  unavailableReason?: string;
 }
 
 export function getWorkspaceMultisigKey(chainId: string, address: string) {
@@ -75,43 +69,28 @@ export interface WorkspaceQueueItem {
   lineLabel: string;
 }
 
-export interface WorkspaceExplorerView {
-  id: string;
-  label: string;
-  multisigKeys: string[];
-  description: string;
-  meta: string;
-}
-
-export interface WorkspaceRegistryItem {
-  multisig: WorkspaceMultisig;
-  waiting: number;
-  executable: number;
-  active: number;
-}
-
-export interface WorkspacePayloadInstruction {
+interface WorkspacePayloadInstruction {
   programAddress: string;
   accountAddresses: string[];
   accountIndexes: number[];
   data: string;
 }
 
-export interface WorkspacePayloadConfigAction {
+interface WorkspacePayloadConfigAction {
   type: "config";
   transactionPda: string;
   vaultAddress: string | null;
   actions: unknown[];
 }
 
-export interface WorkspacePayloadVaultAction {
+interface WorkspacePayloadVaultAction {
   type: "vault";
   transactionPda: string;
   vaultAddress: string | null;
   instructions: WorkspacePayloadInstruction[];
 }
 
-export interface WorkspacePayloadSafeAction {
+interface WorkspacePayloadSafeAction {
   type: "safe";
   safeTxHash: string | null;
   nonce: string;

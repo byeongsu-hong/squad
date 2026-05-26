@@ -13,7 +13,6 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -35,12 +34,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { RPC_ERROR_PATTERNS, getErrorMessage } from "@/lib/error-handler";
-import { matchesSafeChainAlias, parseSafeReference } from "@/lib/safe";
+import {
+  loadSafeMultisig,
+  matchesSafeChainAlias,
+  parseSafeReference,
+} from "@/lib/safe";
 import { SquadService } from "@/lib/squad";
 import { chainIdSchema, labelSchema } from "@/lib/validation";
 import { useChainStore } from "@/stores/chain-store";
 import { useMultisigStore } from "@/stores/multisig-store";
 import {
+  getChainRpcUrls,
   getOperationalSquadsChains,
   getSquadsProgramId,
   normalizeChainConfig,
@@ -126,42 +130,22 @@ export function ImportMultisigDialog({
     setLoading(true);
     try {
       if (normalizedChain.multisigProvider === "safe") {
-        const response = await fetch("/api/safe/import", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            chain: normalizedChain,
-            addressInput: data.multisigAddress,
-            label: data.label,
-            tags,
-          }),
-        });
-
-        const payload = (await response.json()) as {
-          error?: string;
-          multisig?: Omit<
-            Parameters<typeof addMultisig>[0],
-            "transactionIndex"
-          > & {
-            transactionIndex: string;
-          };
-        };
-
-        if (!response.ok || !payload.multisig) {
-          throw new Error(payload.error ?? "Failed to import Safe multisig");
-        }
-
-        const safeMultisig = {
-          ...payload.multisig,
-          transactionIndex: BigInt(payload.multisig.transactionIndex),
-        };
+        const safeMultisig = await loadSafeMultisig(
+          chain,
+          data.multisigAddress,
+          data.label,
+          tags,
+          { allowDegraded: true }
+        );
         addMultisig(safeMultisig);
       } else {
         const multisigPubkey = new PublicKey(data.multisigAddress);
         const programIdString = getSquadsProgramId(chain);
-        const squadService = new SquadService(chain.rpcUrl, programIdString);
+        const squadService = new SquadService(
+          getChainRpcUrls(chain),
+          programIdString,
+          { chainId: chain.id }
+        );
 
         const multisigAccount = await squadService.getMultisig(multisigPubkey);
 
@@ -190,7 +174,7 @@ export function ImportMultisigDialog({
         });
       }
 
-      toast.success("Multisig imported successfully!");
+      toast.success("Vault imported");
       onOpenChange(false);
       form.reset();
     } catch (error) {
@@ -222,17 +206,13 @@ export function ImportMultisigDialog({
     if (!open) {
       form.reset();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }, [open, form]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent key={`import-dialog-${open}`} className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Import Multisig</DialogTitle>
-          <DialogDescription>
-            Import an existing multisig by entering its address
-          </DialogDescription>
+          <DialogTitle>Import Vault</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -242,8 +222,8 @@ export function ImportMultisigDialog({
               name="chainId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    Chain <span className="text-destructive">*</span>
+                  <FormLabel className="text-muted-foreground/50 text-[11px] font-medium">
+                    Chain
                   </FormLabel>
                   <Select
                     onValueChange={field.onChange}
@@ -263,10 +243,6 @@ export function ImportMultisigDialog({
                     </SelectContent>
                   </Select>
                   <FormMessage />
-                  <FormDescription>
-                    Safe-ready EVM chains and active SVM / Squads chains are
-                    available for import.
-                  </FormDescription>
                 </FormItem>
               )}
             />
@@ -276,12 +252,12 @@ export function ImportMultisigDialog({
               name="multisigAddress"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    Multisig Address <span className="text-destructive">*</span>
+                  <FormLabel className="text-muted-foreground/50 text-[11px] font-medium">
+                    Vault Address
                   </FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Enter multisig address or Safe URL"
+                      placeholder="Enter vault address or Safe URL"
                       disabled={loading}
                       {...field}
                       onChange={(event) =>
@@ -291,8 +267,9 @@ export function ImportMultisigDialog({
                   </FormControl>
                   <FormMessage />
                   <FormDescription>
-                    Paste a Squads public key, a Safe address, or a full Safe
-                    URL like `app.safe.global/home?safe=eth:0x...`
+                    Also accepts an{" "}
+                    <code className="font-mono text-[11px]">eth:0x…</code>{" "}
+                    prefix or a full Safe app URL.
                   </FormDescription>
                 </FormItem>
               )}
@@ -303,16 +280,13 @@ export function ImportMultisigDialog({
               name="label"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    Label <span className="text-destructive">*</span>
+                  <FormLabel className="text-muted-foreground/50 text-[11px] font-medium">
+                    Label
                   </FormLabel>
                   <FormControl>
-                    <Input placeholder="My Imported Multisig" {...field} />
+                    <Input placeholder="My Vault" {...field} />
                   </FormControl>
                   <FormMessage />
-                  <FormDescription>
-                    A friendly name for this multisig
-                  </FormDescription>
                 </FormItem>
               )}
             />
@@ -322,31 +296,38 @@ export function ImportMultisigDialog({
               name="tags"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Tags (Optional)</FormLabel>
+                  <FormLabel className="text-muted-foreground/50 text-[11px] font-medium">
+                    Tags{" "}
+                    <span className="text-muted-foreground/50 font-normal">
+                      · optional
+                    </span>
+                  </FormLabel>
                   <FormControl>
                     <Input placeholder="treasury, dao, mainnet" {...field} />
                   </FormControl>
                   <FormMessage />
-                  <FormDescription>
-                    Comma-separated tags to organize your multisigs
-                  </FormDescription>
                 </FormItem>
               )}
             />
 
-            <div className="flex justify-end gap-3">
+            <div className="flex gap-3 pt-1">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
                 disabled={loading}
+                className="shrink-0"
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={loading}>
+              <Button
+                type="submit"
+                disabled={loading}
+                className="bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20 flex-1"
+              >
                 {loading ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin" />
                     Importing...
                   </>
                 ) : (

@@ -6,11 +6,3 @@ export interface SquadMember {
     mask: number;
   };
 }
-
-export interface SquadMultisigAccount {
-  threshold: number;
-  members: SquadMember[];
-  transactionIndex: bigint;
-  msChangeIndex: number;
-  programId: PublicKey;
-}

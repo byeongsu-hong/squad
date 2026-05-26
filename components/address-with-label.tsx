@@ -4,8 +4,10 @@ import { Copy, Tag } from "lucide-react";
 import { toast } from "sonner";
 
 import { AddressLabelManagerDialog } from "@/components/address-label-manager-dialog";
+import { Button } from "@/components/ui/button";
 import { useAddressLabel } from "@/lib/hooks/use-address-label";
 import { cn } from "@/lib/utils";
+import { formatAddress } from "@/lib/utils/format-address";
 
 interface AddressWithLabelProps {
   address: string;
@@ -13,12 +15,13 @@ interface AddressWithLabelProps {
   showCopy?: boolean;
   showLabelButton?: boolean;
   copyOnClick?: boolean;
+  plain?: boolean;
   className?: string;
   vaultAddress?: string | null;
 }
 
 // Well-known Solana addresses that should be auto-labeled
-const WELL_KNOWN_ADDRESSES: Record<
+export const WELL_KNOWN_ADDRESSES: Record<
   string,
   { label: string; color: string; description: string }
 > = {
@@ -80,6 +83,7 @@ export function AddressWithLabel({
   showCopy = true,
   showLabelButton = true,
   copyOnClick = false,
+  plain = false,
   className,
   vaultAddress,
 }: AddressWithLabelProps) {
@@ -94,7 +98,7 @@ export function AddressWithLabel({
     ? {
         label: "Vault",
         color: "#10b981",
-        description: "Multisig vault account",
+        description: "Program-derived vault address",
       }
     : null;
 
@@ -107,44 +111,50 @@ export function AddressWithLabel({
 
   const handleCopy = () => {
     navigator.clipboard.writeText(address);
-    toast.success("Address copied to clipboard");
+    toast.success("Address copied");
   };
 
-  const displayAddress = showFull
-    ? address
-    : `${address.slice(0, 6)}...${address.slice(-6)}`;
+  const displayAddress = showFull ? address : formatAddress(address, 6, 6);
   const interactiveDisplayClass = copyOnClick
-    ? "transition-colors hover:text-zinc-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-600"
+    ? "transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-border"
     : "";
 
   return (
     <div className={cn("flex min-w-0 items-center gap-1.5", className)}>
       {label ? (
         copyOnClick ? (
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={handleCopy}
             aria-label="Copy address"
             title={address}
             className={cn(
-              "flex min-w-0 text-left",
+              "h-auto min-w-0 p-0 hover:bg-transparent text-left",
               showFull ? "flex-col items-start gap-1" : "items-center gap-2",
               interactiveDisplayClass
             )}
           >
-            <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-zinc-800 bg-zinc-950 px-2.5 py-1 text-xs text-zinc-200 transition-colors hover:border-zinc-700 hover:bg-zinc-900">
+            <div
+              className="inline-flex max-w-full shrink-0 items-center rounded-md px-1.5 py-0.5"
+              style={{
+                backgroundColor: `${label.color}0d`,
+                border: `1px solid ${label.color}40`,
+              }}
+            >
               <span
-                className="h-1.5 w-1.5 shrink-0 rounded-full"
-                style={{ backgroundColor: label.color }}
-              />
-              <span className="truncate">{label.label}</span>
+                className="truncate text-[11px] font-medium"
+                style={{ color: label.color }}
+              >
+                {label.label}
+              </span>
             </div>
             {showFull ? (
-              <code className="max-w-full truncate font-mono text-xs text-zinc-500 tabular-nums transition-colors hover:text-zinc-300">
+              <code className="text-muted-foreground hover:text-foreground max-w-full truncate font-mono text-xs tabular-nums transition-colors">
                 {address}
               </code>
             ) : null}
-          </button>
+          </Button>
         ) : (
           <div
             className={cn(
@@ -153,36 +163,51 @@ export function AddressWithLabel({
             )}
             title={`${label.label}${label.description ? `\n${label.description}` : ""}\n${address}`}
           >
-            <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-zinc-800 bg-zinc-950 px-2.5 py-1 text-xs text-zinc-200 transition-colors hover:border-zinc-700 hover:bg-zinc-900 hover:text-zinc-100">
+            <div
+              className="inline-flex max-w-full shrink-0 items-center rounded-md px-1.5 py-0.5"
+              style={{
+                backgroundColor: `${label.color}0d`,
+                border: `1px solid ${label.color}40`,
+              }}
+            >
               <span
-                className="h-1.5 w-1.5 shrink-0 rounded-full"
-                style={{ backgroundColor: label.color }}
-              />
-              <span className="truncate">{label.label}</span>
+                className="truncate text-[11px] font-medium"
+                style={{ color: label.color }}
+              >
+                {label.label}
+              </span>
             </div>
             {showFull ? (
-              <code className="max-w-full truncate font-mono text-xs text-zinc-500 tabular-nums transition-colors hover:text-zinc-300">
+              <code className="text-muted-foreground/60 max-w-full truncate font-mono text-xs tabular-nums">
                 {address}
               </code>
             ) : null}
           </div>
         )
       ) : copyOnClick ? (
-        <button
+        <Button
           type="button"
+          variant="outline"
           onClick={handleCopy}
           aria-label="Copy address"
           title={address}
           className={cn(
-            "rounded-md border border-zinc-800 bg-zinc-950 px-2 py-1 font-mono text-xs text-zinc-300 transition-colors hover:border-zinc-700 hover:bg-zinc-900 hover:text-zinc-100 focus-visible:ring-1 focus-visible:ring-zinc-600 focus-visible:outline-none",
+            "bg-muted h-auto rounded-md px-2 py-1 font-mono text-xs text-foreground/80 hover:text-foreground",
             interactiveDisplayClass
           )}
         >
           {displayAddress}
-        </button>
+        </Button>
+      ) : plain ? (
+        <span
+          className="font-mono text-[11px] text-muted-foreground/60"
+          title={address}
+        >
+          {displayAddress}
+        </span>
       ) : (
         <code
-          className="rounded-md border border-zinc-800 bg-zinc-950 px-2 py-1 font-mono text-xs text-zinc-300 transition-colors hover:border-zinc-700 hover:bg-zinc-900 hover:text-zinc-100"
+          className="border-border bg-muted text-foreground rounded-md border px-2 py-1 font-mono text-xs"
           title={address}
         >
           {displayAddress}
@@ -191,27 +216,29 @@ export function AddressWithLabel({
 
       <div className="flex items-center gap-0.5">
         {showCopy && (
-          <button
+          <Button
             type="button"
-            className="rounded-sm p-1 text-zinc-500 transition-colors hover:bg-zinc-900 hover:text-zinc-100"
+            variant="ghost"
+            className="text-muted-foreground/60 hover:text-muted-foreground h-5 w-5 shrink-0 p-0"
             onClick={handleCopy}
             aria-label="Copy address"
             title="Copy address"
           >
             <Copy className="h-3 w-3 shrink-0" />
-          </button>
+          </Button>
         )}
 
         {shouldShowLabelButton && (
           <AddressLabelManagerDialog defaultAddress={address}>
-            <button
+            <Button
               type="button"
-              className="rounded-sm p-1 text-zinc-500 transition-colors hover:bg-zinc-900 hover:text-zinc-100"
+              variant="ghost"
+              className="text-muted-foreground/60 hover:text-muted-foreground h-5 w-5 shrink-0 p-0"
               aria-label="Label address"
               title="Label address"
             >
               <Tag className="h-3 w-3 shrink-0" />
-            </button>
+            </Button>
           </AddressLabelManagerDialog>
         )}
       </div>

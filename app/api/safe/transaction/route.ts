@@ -21,6 +21,7 @@ export async function GET(request: Request) {
   const safeAddress = searchParams.get("safeAddress");
   const safeTxHash = searchParams.get("safeTxHash");
   const nonce = searchParams.get("nonce");
+  const force = searchParams.get("force") === "1";
 
   if (!chainId || !chainName) {
     return NextResponse.json(
@@ -43,7 +44,7 @@ export async function GET(request: Request) {
     ? `${chainId}:hash:${safeTxHash.toLowerCase()}`
     : `${chainId}:${safeAddress!.toLowerCase()}:${nonce!}`;
   const cachedTransaction = safeTransactionCache.get(cacheKey);
-  if (cachedTransaction && cachedTransaction.expiresAt > Date.now()) {
+  if (!force && cachedTransaction && cachedTransaction.expiresAt > Date.now()) {
     return NextResponse.json({
       transaction: cachedTransaction.transaction,
       cached: true,
@@ -69,7 +70,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ transaction });
   } catch (error) {
-    if (cachedTransaction) {
+    if (!force && cachedTransaction) {
       return NextResponse.json({
         transaction: cachedTransaction.transaction,
         cached: true,

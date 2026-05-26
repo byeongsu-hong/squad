@@ -1,17 +1,10 @@
 import { create } from "zustand";
 
 import { multisigStorage } from "@/lib/storage";
-import {
-  type MultisigAccount,
-  type ProposalAccount,
-  getMultisigAccountKey,
-  resolveMultisigSelectionKey,
-} from "@/types/multisig";
+import type { MultisigAccount } from "@/types/multisig";
 
 interface MultisigStore {
   multisigs: MultisigAccount[];
-  proposals: ProposalAccount[];
-  selectedMultisigKey: string | null;
   initialized: boolean;
   initializeMultisigs: () => void;
   setMultisigs: (
@@ -31,34 +24,17 @@ interface MultisigStore {
     tags: string[],
     chainId?: string
   ) => void;
-  setProposals: (proposals: ProposalAccount[]) => void;
-  addProposal: (proposal: ProposalAccount) => void;
-  updateProposal: (
-    transactionIndex: bigint,
-    updates: Partial<ProposalAccount>
-  ) => void;
   resetAll: () => void;
-  selectMultisig: (publicKey: string | null) => void;
-  getMultisigByKey: (publicKey: string | null) => MultisigAccount | undefined;
-  getSelectedMultisig: () => MultisigAccount | undefined;
 }
 
-export const useMultisigStore = create<MultisigStore>((set, get) => ({
+export const useMultisigStore = create<MultisigStore>((set) => ({
   multisigs: [],
-  proposals: [],
-  selectedMultisigKey: null,
   initialized: false,
 
   initializeMultisigs: () => {
     const storedMultisigs = multisigStorage.getMultisigs();
-    const selectedKey = resolveMultisigSelectionKey(
-      storedMultisigs,
-      multisigStorage.getSelectedMultisigKey()
-    );
-
     set({
       multisigs: storedMultisigs,
-      selectedMultisigKey: selectedKey,
       initialized: true,
     });
   },
@@ -75,8 +51,16 @@ export const useMultisigStore = create<MultisigStore>((set, get) => ({
   },
 
   addMultisig: (multisig) => {
-    multisigStorage.addMultisig(multisig);
-    set((state) => ({ multisigs: [...state.multisigs, multisig] }));
+    set((state) => {
+      const alreadyExists = state.multisigs.some(
+        (m) =>
+          m.chainId === multisig.chainId &&
+          m.publicKey.toString() === multisig.publicKey.toString()
+      );
+      if (alreadyExists) return state;
+      multisigStorage.addMultisig(multisig);
+      return { multisigs: [...state.multisigs, multisig] };
+    });
   },
 
   deleteMultisig: (publicKey, chainId) => {
@@ -89,22 +73,7 @@ export const useMultisigStore = create<MultisigStore>((set, get) => ({
             (chainId ? m.chainId === chainId : true)
           )
       );
-      const deletedSelectionKey = chainId
-        ? `${chainId}:${publicKey}`
-        : publicKey;
-      const selectedMultisigKey =
-        state.selectedMultisigKey === deletedSelectionKey ||
-        state.selectedMultisigKey === publicKey
-          ? multisigs[0]
-            ? getMultisigAccountKey(multisigs[0])
-            : null
-          : state.selectedMultisigKey;
-
-      if (selectedMultisigKey) {
-        multisigStorage.setSelectedMultisigKey(selectedMultisigKey);
-      }
-
-      return { multisigs, selectedMultisigKey };
+      return { multisigs };
     });
   },
 
@@ -134,63 +103,11 @@ export const useMultisigStore = create<MultisigStore>((set, get) => ({
     });
   },
 
-  setProposals: (proposals) => set({ proposals }),
-
-  addProposal: (proposal) =>
-    set((state) => ({ proposals: [...state.proposals, proposal] })),
-
-  updateProposal: (transactionIndex, updates) =>
-    set((state) => ({
-      proposals: state.proposals.map((proposal) =>
-        proposal.transactionIndex === transactionIndex
-          ? { ...proposal, ...updates }
-          : proposal
-      ),
-    })),
-
   resetAll: () => {
     multisigStorage.saveMultisigs([]);
-    multisigStorage.clearSelectedMultisigKey();
     set({
       multisigs: [],
-      proposals: [],
-      selectedMultisigKey: null,
       initialized: true,
     });
-  },
-
-  selectMultisig: (selectionKey) => {
-    const resolvedSelectionKey = selectionKey
-      ? (resolveMultisigSelectionKey(get().multisigs, selectionKey) ??
-        selectionKey)
-      : null;
-
-    if (resolvedSelectionKey) {
-      multisigStorage.setSelectedMultisigKey(resolvedSelectionKey);
-    }
-    set({ selectedMultisigKey: resolvedSelectionKey });
-  },
-
-  getMultisigByKey: (selectionKey) => {
-    if (!selectionKey) {
-      return undefined;
-    }
-
-    const { multisigs } = get();
-    const resolvedSelectionKey = resolveMultisigSelectionKey(
-      multisigs,
-      selectionKey
-    );
-
-    return multisigs.find(
-      (multisig) =>
-        getMultisigAccountKey(multisig) === resolvedSelectionKey ||
-        multisig.publicKey.toString() === selectionKey
-    );
-  },
-
-  getSelectedMultisig: () => {
-    const { getMultisigByKey, selectedMultisigKey } = get();
-    return getMultisigByKey(selectedMultisigKey);
   },
 }));

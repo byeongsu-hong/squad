@@ -1,25 +1,18 @@
 "use client";
 
-import { Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import { Check, Pencil, Plus, Search, Tag, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Tooltip,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { useAddressLabels } from "@/lib/hooks/use-address-label";
 import { cn } from "@/lib/utils";
 import type { AddressLabel } from "@/types/address-label";
@@ -70,8 +63,8 @@ function DialogShell({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {children || (
-          <Button variant="outline" size="sm">
-            <Plus className="mr-2 h-4 w-4" />
+          <Button variant="outline">
+            <Plus className="h-4 w-4" />
             Manage Labels
           </Button>
         )}
@@ -79,9 +72,6 @@ function DialogShell({
       <DialogContent className="flex h-[600px] w-[900px] !max-w-[900px] flex-col gap-0 p-0">
         <DialogHeader className="shrink-0 border-b px-5 py-3">
           <DialogTitle>Address Label Manager</DialogTitle>
-          <DialogDescription>
-            Add labels to addresses for easier identification
-          </DialogDescription>
         </DialogHeader>
         <AddressLabelManagerController defaultAddress={defaultAddress} />
       </DialogContent>
@@ -137,7 +127,7 @@ export function AddressLabelManagerController({
           description: formData.description || undefined,
           color: formData.color,
         });
-        toast.success("Label updated successfully");
+        toast.success("Label updated");
       } else {
         addLabel({
           address: formData.address,
@@ -145,7 +135,7 @@ export function AddressLabelManagerController({
           description: formData.description || undefined,
           color: formData.color,
         });
-        toast.success("Label added successfully");
+        toast.success("Label added");
       }
 
       handleReset();
@@ -169,7 +159,7 @@ export function AddressLabelManagerController({
   const handleDelete = (address: string) => {
     try {
       deleteLabel(address);
-      toast.success("Label deleted successfully");
+      toast.success("Label deleted");
       if (editingLabel?.address === address) {
         handleReset();
       }
@@ -191,8 +181,14 @@ export function AddressLabelManagerController({
   };
 
   useEffect(() => {
-    handleReset();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    setIsEditing(false);
+    setEditingLabel(null);
+    setFormData({
+      address: defaultAddress || "",
+      label: "",
+      description: "",
+      color: DEFAULT_COLORS[0],
+    });
   }, [defaultAddress, embedded]);
 
   return (
@@ -212,16 +208,9 @@ export function AddressLabelManagerController({
         onFormDataChange={setFormData}
       />
 
-      <div
-        className={
-          embedded
-            ? "min-w-0 border border-zinc-800 bg-zinc-950/35"
-            : "flex min-h-0 flex-1 flex-col overflow-hidden"
-        }
-      >
+      <div className={embedded ? "min-w-0" : "flex min-h-0 flex-1 flex-col overflow-hidden"}>
         <AddressLabelRegistry
           embedded={embedded}
-          labels={labels}
           filteredLabels={filteredLabels}
           searchQuery={searchQuery}
           onSearchQueryChange={setSearchQuery}
@@ -266,43 +255,33 @@ function AddressLabelEditor({
     <div
       className={
         embedded
-          ? "space-y-4 border border-zinc-800 bg-zinc-950/55 p-4"
+          ? "border-border bg-card space-y-4 rounded-xl border p-4"
           : "w-[320px] shrink-0 overflow-y-auto border-r p-4"
       }
     >
-      {embedded ? (
-        <div className="space-y-1 border-b border-zinc-800 pb-4">
-          <p className="text-[0.68rem] tracking-[0.18em] text-zinc-500 uppercase">
-            Label editor
-          </p>
-          <p className="text-sm leading-6 text-zinc-400">
-            Create or revise reusable aliases for addresses that appear across
-            explorer rows, signer maps, and proposal metadata.
-          </p>
-        </div>
-      ) : null}
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-sm font-semibold">
-          {isEditing ? "Edit Label" : "Add New Label"}
-        </h3>
+      <div className="flex items-center justify-between">
+        <p className="text-muted-foreground/50 text-[11px] font-medium">
+          {isEditing ? "Edit Label" : "Add Label"}
+        </p>
         {isEditing && (
           <Button
+            type="button"
             variant="ghost"
-            size="sm"
+            size="icon-sm"
             onClick={onReset}
-            className="h-7 px-2"
+            className="text-muted-foreground/50 hover:text-foreground"
           >
             <X className="h-3 w-3" />
           </Button>
         )}
       </div>
 
-      <form onSubmit={onSubmit} className="space-y-3.5">
-        <div className="space-y-2">
-          <Label htmlFor="address">Address</Label>
+      <form onSubmit={onSubmit} className="space-y-3">
+        <div className="space-y-1.5">
+          <label htmlFor="address" className="text-[11px] font-medium text-muted-foreground/50">Address</label>
           <Input
             id="address"
-            placeholder="Enter Solana address"
+            placeholder="Enter address"
             value={formData.address}
             onChange={(e) =>
               onFormDataChange({ ...formData, address: e.target.value })
@@ -312,11 +291,13 @@ function AddressLabelEditor({
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="label">Label (max 12 chars)</Label>
+        <div className="space-y-1.5">
+          <label htmlFor="label" className="text-[11px] font-medium text-muted-foreground/50">
+            Label <span className="text-muted-foreground/50 font-normal">· max 12 chars</span>
+          </label>
           <Input
             id="label"
-            placeholder="Enter label name"
+            placeholder="e.g., Treasury"
             value={formData.label}
             onChange={(e) =>
               onFormDataChange({ ...formData, label: e.target.value })
@@ -326,11 +307,13 @@ function AddressLabelEditor({
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="description">Description (Optional)</Label>
+        <div className="space-y-1.5">
+          <label htmlFor="description" className="text-[11px] font-medium text-muted-foreground/50">
+            Description <span className="text-muted-foreground/50 font-normal">· optional</span>
+          </label>
           <Input
             id="description"
-            placeholder="Add description"
+            placeholder="Add a note..."
             value={formData.description}
             onChange={(e) =>
               onFormDataChange({ ...formData, description: e.target.value })
@@ -338,28 +321,40 @@ function AddressLabelEditor({
           />
         </div>
 
-        <div className="space-y-2">
-          <Label>Color</Label>
-          <div className="flex flex-wrap gap-2">
+        <div className="space-y-1.5">
+          <p className="text-[11px] font-medium text-muted-foreground/50">Color</p>
+          <div className="flex flex-wrap gap-1">
             {DEFAULT_COLORS.map((color) => (
               <button
                 key={color}
                 type="button"
-                className={`h-8 w-8 rounded-full border-2 transition-all ${
+                className={cn(
+                  "relative h-6 w-6 rounded-md transition-all",
                   formData.color === color
-                    ? "border-foreground scale-110"
-                    : "border-transparent hover:scale-105"
-                }`}
+                    ? "ring-2 ring-offset-2 ring-foreground/60 ring-offset-card scale-110"
+                    : "opacity-60 hover:opacity-90 hover:scale-105"
+                )}
                 style={{ backgroundColor: color }}
                 onClick={() => onFormDataChange({ ...formData, color })}
                 aria-label={`Select color ${color}`}
-              />
+              >
+                {formData.color === color && (
+                  <Check className="absolute inset-0 m-auto h-3 w-3 text-white drop-shadow" />
+                )}
+              </button>
             ))}
           </div>
         </div>
 
-        <Button type="submit" className="w-full" size="sm">
-          {isEditing ? "Update Label" : "Add Label"}
+        <Button
+          type="submit"
+          className="bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20 w-full"
+        >
+          {isEditing ? (
+            <><Check className="h-4 w-4" />Update</>
+          ) : (
+            <><Plus className="h-4 w-4" />Add</>
+          )}
         </Button>
       </form>
     </div>
@@ -368,7 +363,6 @@ function AddressLabelEditor({
 
 interface AddressLabelRegistryProps {
   embedded: boolean;
-  labels: AddressLabel[];
   filteredLabels: AddressLabel[];
   searchQuery: string;
   onSearchQueryChange: (value: string) => void;
@@ -378,7 +372,6 @@ interface AddressLabelRegistryProps {
 
 function AddressLabelRegistry({
   embedded,
-  labels,
   filteredLabels,
   searchQuery,
   onSearchQueryChange,
@@ -389,154 +382,110 @@ function AddressLabelRegistry({
     <div
       className={
         embedded
-          ? "min-w-0 border border-zinc-800 bg-zinc-950/35"
+          ? "border-border bg-card min-w-0 rounded-xl border"
           : "flex min-h-0 flex-1 flex-col overflow-hidden"
       }
     >
-      <div
-        className={
-          embedded
-            ? "border-b border-zinc-800 px-4 py-3"
-            : "shrink-0 border-b px-4 py-3"
-        }
-      >
-        <h3 className="mb-3 text-sm font-semibold">Saved Labels</h3>
-        <div className="relative">
-          <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+      <div className="border-border border-b flex items-center gap-3 px-4 py-3">
+        <p className="text-muted-foreground/50 text-[11px] font-medium shrink-0">Saved Labels</p>
+        <div className="relative flex-1 min-w-0">
+          <Search className="text-muted-foreground/50 absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2" />
           <Input
-            placeholder="Search labels or addresses..."
+            placeholder="Search..."
             value={searchQuery}
             onChange={(e) => onSearchQueryChange(e.target.value)}
-            className="pl-9"
+            className="pl-8 h-7 text-[11px]"
           />
         </div>
-        {embedded ? (
-          <div className="mt-3 grid grid-cols-3 gap-2">
-            <div className="border border-zinc-800 bg-zinc-950/75 px-3 py-2">
-              <p className="text-[0.62rem] tracking-[0.16em] text-zinc-500 uppercase">
-                Total labels
-              </p>
-              <p className="mt-1 text-sm font-medium text-zinc-100">
-                {labels.length}
-              </p>
-            </div>
-            <div className="border border-zinc-800 bg-zinc-950/75 px-3 py-2">
-              <p className="text-[0.62rem] tracking-[0.16em] text-zinc-500 uppercase">
-                With notes
-              </p>
-              <p className="mt-1 text-sm font-medium text-zinc-100">
-                {labels.filter((label) => Boolean(label.description)).length}
-              </p>
-            </div>
-            <div className="border border-zinc-800 bg-zinc-950/75 px-3 py-2">
-              <p className="text-[0.62rem] tracking-[0.16em] text-zinc-500 uppercase">
-                Search result
-              </p>
-              <p className="mt-1 text-sm font-medium text-zinc-100">
-                {filteredLabels.length}
-              </p>
-            </div>
-          </div>
-        ) : null}
       </div>
+
+      {embedded && filteredLabels.length > 0 && (
+        <div className="border-border grid grid-cols-[minmax(0,0.95fr)_minmax(0,1.15fr)_minmax(0,1.3fr)_8rem_4.5rem] gap-3 border-b px-4 py-2 text-[11px] font-medium text-muted-foreground/50">
+          <span>Label</span>
+          <span>Description</span>
+          <span>Address</span>
+          <span>Updated</span>
+          <span className="text-right">Actions</span>
+        </div>
+      )}
 
       <div
         className={
           embedded
-            ? "max-h-[36rem] overflow-y-auto px-4 py-2.5"
+            ? "max-h-[36rem] overflow-y-auto px-4 pb-2.5"
             : "min-h-0 flex-1 overflow-y-auto px-4 py-2.5"
         }
       >
         {filteredLabels.length === 0 ? (
-          <div className="flex h-full min-h-[12rem] items-center justify-center">
-            <div className="text-muted-foreground text-center text-sm">
-              {searchQuery
-                ? "No labels found"
-                : "No labels yet. Add your first label!"}
+          <div className="flex h-full min-h-[12rem] flex-col items-center justify-center gap-3 text-center">
+            <div className="bg-muted border-border flex h-10 w-10 items-center justify-center rounded-xl border">
+              <Tag className="text-muted-foreground/60 h-5 w-5" />
             </div>
+            <p className="text-muted-foreground/50 text-[11px]">
+              {searchQuery ? "No labels found" : "No labels yet."}
+            </p>
           </div>
         ) : (
-          <TooltipProvider>
-            <div
-              className={embedded ? "divide-y divide-zinc-800" : "space-y-1.5"}
-            >
-              {embedded ? (
-                <div className="grid grid-cols-[minmax(0,0.95fr)_minmax(0,1.15fr)_minmax(0,1.3fr)_8rem_4.5rem] gap-3 px-3 py-2 text-[0.62rem] tracking-[0.16em] text-zinc-500 uppercase">
-                  <span>Label</span>
-                  <span>Description</span>
-                  <span>Address</span>
-                  <span>Updated</span>
-                  <span className="text-right">Actions</span>
-                </div>
-              ) : null}
-              {filteredLabels.map((label) => (
-                <Tooltip key={label.address} delayDuration={300}>
-                  <TooltipTrigger asChild>
-                    <div
-                      className={cn(
-                        "group hover:bg-accent flex cursor-pointer items-center gap-2 transition-colors",
-                        embedded
-                          ? "grid grid-cols-[minmax(0,0.95fr)_minmax(0,1.15fr)_minmax(0,1.3fr)_8rem_4.5rem] gap-3 px-3 py-3"
-                          : "rounded-md border px-2.5 py-1.5"
-                      )}
-                      onClick={() => onEdit(label)}
-                    >
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="h-2 w-2 shrink-0 rounded-full"
-                            style={{ backgroundColor: label.color }}
-                          />
-                          <div
-                            className="inline-flex max-w-full shrink-0 items-center gap-1 rounded px-1.5 py-0.5"
-                            style={{
-                              backgroundColor: `${label.color}20`,
-                              borderLeft: `2px solid ${label.color}`,
-                            }}
+          <div
+            className={embedded ? "divide-border divide-y" : "space-y-1.5"}
+          >
+            {filteredLabels.map((label) => (
+              <div
+                key={label.address}
+                className={cn(
+                  "group hover:bg-muted cursor-pointer transition-colors",
+                  embedded
+                    ? "grid grid-cols-[minmax(0,0.95fr)_minmax(0,1.15fr)_minmax(0,1.3fr)_8rem_4.5rem] items-center gap-3 px-3 py-3"
+                    : "flex items-center gap-2 rounded-xl border px-3 py-2"
+                )}
+                onClick={() => onEdit(label)}
+              >
+                <div className="min-w-0">
+                        <div
+                          className="inline-flex max-w-full shrink-0 items-center rounded-md px-1.5 py-0.5"
+                          style={{
+                            backgroundColor: `${label.color}0d`,
+                            border: `1px solid ${label.color}40`,
+                          }}
+                        >
+                          <span
+                            className="truncate text-[11px] font-medium whitespace-nowrap"
+                            style={{ color: label.color }}
+                            title={label.label}
                           >
-                            <span
-                              className="truncate text-[11px] font-medium whitespace-nowrap"
-                              style={{ color: label.color }}
-                              title={label.label}
-                            >
-                              {label.label}
-                            </span>
-                          </div>
+                            {label.label}
+                          </span>
                         </div>
                       </div>
                       {embedded ? (
-                        <div className="min-w-0 text-sm text-zinc-400">
-                          <p className="truncate">
-                            {label.description || "No description"}
+                        <div className="min-w-0 text-[11px]">
+                          <p className={cn("truncate", label.description ? "text-muted-foreground/60" : "text-muted-foreground/50")}>
+                            {label.description || "—"}
                           </p>
                         </div>
                       ) : null}
                       <code
                         className={cn(
                           embedded
-                            ? "truncate font-mono text-[0.72rem] text-zinc-300"
+                            ? "text-foreground truncate font-mono text-[11px]"
                             : "bg-muted ml-auto w-fit shrink-0 rounded px-1.5 py-0.5 font-mono text-[10px] leading-tight"
                         )}
                       >
                         {label.address}
                       </code>
                       {embedded ? (
-                        <div className="text-[0.72rem] text-zinc-500">
+                        <div className="text-muted-foreground/60 text-[11px]">
                           {formatUpdatedAt(label.updatedAt)}
                         </div>
                       ) : null}
                       <div
-                        className={cn(
-                          "flex shrink-0 gap-0.5",
-                          embedded
-                            ? "justify-end opacity-100"
-                            : "opacity-0 transition-opacity group-hover:opacity-100"
-                        )}
+                        className="flex shrink-0 justify-end gap-0.5 opacity-0 transition-opacity group-hover:opacity-100"
                       >
                         <Button
+                          type="button"
                           variant="ghost"
-                          size="icon"
-                          className="h-6 w-6"
+                          size="icon-sm"
+                          className="text-muted-foreground/50 hover:text-foreground"
                           onClick={(event) => {
                             event.stopPropagation();
                             onEdit(label);
@@ -545,9 +494,10 @@ function AddressLabelRegistry({
                           <Pencil className="h-3 w-3" />
                         </Button>
                         <Button
+                          type="button"
                           variant="ghost"
-                          size="icon"
-                          className="h-6 w-6"
+                          size="icon-sm"
+                          className="text-muted-foreground/50 hover:text-destructive"
                           onClick={(event) => {
                             event.stopPropagation();
                             onDelete(label.address);
@@ -556,12 +506,9 @@ function AddressLabelRegistry({
                           <Trash2 className="h-3 w-3" />
                         </Button>
                       </div>
-                    </div>
-                  </TooltipTrigger>
-                </Tooltip>
-              ))}
-            </div>
-          </TooltipProvider>
+              </div>
+            ))}
+          </div>
         )}
       </div>
     </div>

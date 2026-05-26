@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
+import { DM_Mono, DM_Sans } from "next/font/google";
 
 import { Header } from "@/components/header";
 import { Providers } from "@/components/providers";
@@ -7,21 +7,21 @@ import { Providers } from "@/components/providers";
 import "./globals.css";
 import "./wallet-adapter.css";
 
-const plexSans = IBM_Plex_Sans({
-  variable: "--font-plex-sans",
+const dmSans = DM_Sans({
+  variable: "--font-dm-sans",
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: ["400", "500", "600", "700"],
 });
 
-const plexMono = IBM_Plex_Mono({
-  variable: "--font-plex-mono",
+const dmMono = DM_Mono({
+  variable: "--font-dm-mono",
   subsets: ["latin"],
   weight: ["400", "500"],
 });
 
 export const metadata: Metadata = {
   title: "Squad²",
-  description: "Multisig wallet for Solana and SVM chains",
+  description: "Multisig wallet for Solana, SVM, and EVM chains",
 };
 
 export default function RootLayout({
@@ -32,11 +32,11 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${plexSans.variable} ${plexMono.variable} min-h-screen antialiased`}
+        className={`${dmSans.variable} ${dmMono.variable} min-h-screen antialiased`}
       >
         <Providers>
           <Header />
-          <main className="min-h-[calc(100svh-4.5rem)] w-full px-4 py-4 sm:px-5 md:px-6">
+          <main className="min-h-[calc(100svh-4.5rem)] w-full px-4 py-6 sm:px-5 md:px-6">
             {children}
           </main>
         </Providers>

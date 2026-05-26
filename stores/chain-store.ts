@@ -11,7 +11,6 @@ interface ChainStore {
   addChain: (chain: ChainConfig) => void;
   updateChain: (id: string, updates: Partial<ChainConfig>) => void;
   deleteChain: (id: string) => void;
-  selectChain: (id: string) => void;
   getSelectedChain: () => ChainConfig | undefined;
   resetToDefaults: () => void;
 }
@@ -21,7 +20,10 @@ export const useChainStore = create<ChainStore>((set, get) => ({
   selectedChainId: null,
 
   initializeChains: () => {
-    const storedChains = chainStorage.getChains().map(normalizeChainConfig);
+    const rawStoredChains = chainStorage.getChains();
+    const storedChains = rawStoredChains.map(normalizeChainConfig);
+    const normalizedStorageChanged =
+      JSON.stringify(rawStoredChains) !== JSON.stringify(storedChains);
     const selectedId = chainStorage.getSelectedChainId();
     const storedChainIds = new Set(storedChains.map((chain) => chain.id));
     const missingDefaults = DEFAULT_CHAINS.filter(
@@ -32,7 +34,11 @@ export const useChainStore = create<ChainStore>((set, get) => ({
         ? [...storedChains, ...missingDefaults]
         : DEFAULT_CHAINS;
 
-    if (storedChains.length === 0 || missingDefaults.length > 0) {
+    if (
+      storedChains.length === 0 ||
+      missingDefaults.length > 0 ||
+      normalizedStorageChanged
+    ) {
       chainStorage.saveChains(chains);
     }
 
@@ -84,11 +90,6 @@ export const useChainStore = create<ChainStore>((set, get) => ({
 
       return { chains, selectedChainId };
     });
-  },
-
-  selectChain: (id) => {
-    chainStorage.setSelectedChainId(id);
-    set({ selectedChainId: id });
   },
 
   getSelectedChain: () => {

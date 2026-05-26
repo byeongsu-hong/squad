@@ -1,4 +1,3 @@
-import type { MonitoringProposal } from "@/lib/hooks/use-monitoring-proposals";
 import type { MultisigAccount, ProposalAccount } from "@/types/multisig";
 
 /**
@@ -102,61 +101,6 @@ export function exportProposalsToCSV(
   downloadCSV(csv, filename);
 }
 
-export function exportMonitoringProposalsToCSV(
-  proposals: MonitoringProposal[]
-): void {
-  type ProposalExportRow = {
-    multisig: string;
-    multisigLabel: string;
-    chain: string;
-    runtime: string;
-    provider: string;
-    transactionIndex: string;
-    status: string;
-    approvalCount: number;
-    rejectionCount: number;
-    executed: string;
-    cancelled: string;
-    creator: string;
-  };
-
-  const headers: { key: keyof ProposalExportRow; label: string }[] = [
-    { key: "multisig", label: "Multisig Address" },
-    { key: "multisigLabel", label: "Multisig Name" },
-    { key: "chain", label: "Chain" },
-    { key: "runtime", label: "Runtime" },
-    { key: "provider", label: "Provider" },
-    { key: "transactionIndex", label: "Proposal #" },
-    { key: "status", label: "Status" },
-    { key: "approvalCount", label: "Approvals" },
-    { key: "rejectionCount", label: "Rejections" },
-    { key: "executed", label: "Executed" },
-    { key: "cancelled", label: "Cancelled" },
-    { key: "creator", label: "Creator" },
-  ];
-
-  const data = proposals.map((item) => ({
-    multisig: item.multisig.address,
-    multisigLabel: item.multisig.label || "Unnamed",
-    chain: item.multisig.chainName,
-    runtime: item.multisig.provider === "safe" ? "EVM" : "SVM",
-    provider: item.multisig.provider,
-    transactionIndex: item.proposal.transactionIndex.toString(),
-    status: item.proposal.status,
-    approvalCount: item.proposal.approvals.length,
-    rejectionCount: item.proposal.rejections.length,
-    executed: item.proposal.executed ? "Yes" : "No",
-    cancelled: item.proposal.cancelled ? "Yes" : "No",
-    creator: item.proposal.creator || "Unknown",
-  }));
-
-  const csv = convertToCSV(data, headers);
-  const timestamp = new Date().toISOString().split("T")[0];
-  const filename = `squad-proposals-${timestamp}.csv`;
-
-  downloadCSV(csv, filename);
-}
-
 /**
  * Exports multisigs to CSV
  */
@@ -201,39 +145,3 @@ export function exportMultisigsToCSV(multisigs: MultisigAccount[]): void {
 /**
  * Exports proposal details with member approval/rejection status
  */
-export function exportProposalDetailsToCSV(
-  proposal: ProposalAccount,
-  multisig: MultisigAccount
-): void {
-  type ProposalDetailRow = {
-    member: string;
-    status: string;
-  };
-
-  const headers: { key: keyof ProposalDetailRow; label: string }[] = [
-    { key: "member", label: "Member Address" },
-    { key: "status", label: "Vote Status" },
-  ];
-
-  const data = multisig.members.map((member) => {
-    const memberKey = member.key.toString();
-    const approved = proposal.approvals.some((a) => a.toString() === memberKey);
-    const rejected = proposal.rejections.some(
-      (r) => r.toString() === memberKey
-    );
-
-    let status = "Not Voted";
-    if (approved) status = "Approved";
-    if (rejected) status = "Rejected";
-
-    return {
-      member: memberKey,
-      status,
-    };
-  });
-
-  const csv = convertToCSV(data, headers);
-  const filename = `proposal-${proposal.transactionIndex}-details.csv`;
-
-  downloadCSV(csv, filename);
-}

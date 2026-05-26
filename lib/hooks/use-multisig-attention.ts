@@ -1,115 +1,82 @@
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 
-import { toWorkspaceMultisig } from "@/lib/workspace/multisig-conversion";
-import { loadSquadsWorkspaceProposalsForMultisig } from "@/lib/workspace/squads-adapter";
-import type { ChainConfig } from "@/types/chain";
+import { useProposalsStore } from "@/stores/proposals-store";
 import { type MultisigAccount, getMultisigAccountKey } from "@/types/multisig";
 
-export interface AttentionSummary {
+interface AttentionSummary {
   waiting: number;
   executable: number;
   active: number;
 }
 
 interface UseMultisigAttentionOptions {
-  chains: ChainConfig[];
   multisigs: MultisigAccount[];
   viewerAddress: string | null;
 }
 
 export function useMultisigAttention({
-  chains,
   multisigs,
   viewerAddress,
 }: UseMultisigAttentionOptions) {
-  const [attentionByMultisig, setAttentionByMultisig] = useState<
-    Record<string, AttentionSummary>
-  >({});
+  const proposals = useProposalsStore((state) => state.proposals);
+  const workspaceMultisigs = useProposalsStore(
+    (state) => state.workspaceMultisigs
+  );
 
-  useEffect(() => {
-    let cancelled = false;
+  return useMemo(() => {
+    const workspaceMultisigMap = new Map(
+      workspaceMultisigs.map((m) => [m.address, m])
+    );
 
-    async function loadAttention() {
-      if (multisigs.length === 0) {
-        setAttentionByMultisig({});
-        return;
-      }
+    const attentionByMultisig: Record<string, AttentionSummary> = {};
 
-      const summaries = await Promise.all(
-        multisigs.map(async (multisig) => {
-          try {
-            const workspaceMultisig = toWorkspaceMultisig(multisig, chains);
-            const proposals = await loadSquadsWorkspaceProposalsForMultisig(
-              multisig,
-              chains
-            );
+    for (const multisig of multisigs) {
+      const key = multisig.publicKey.toString();
+      const workspaceMultisig = workspaceMultisigMap.get(key);
 
-            let waiting = 0;
-            let executable = 0;
-            let active = 0;
+      let waiting = 0;
+      let executable = 0;
+      let active = 0;
 
-            for (const proposal of proposals) {
-              const isActive = !proposal.executed && !proposal.cancelled;
-              if (!isActive) {
-                continue;
-              }
+      if (workspaceMultisig) {
+        const multisigProposals = proposals.filter(
+          (p) => p.multisigAddress === key && p.chainId === multisig.chainId
+        );
 
-              active += 1;
+        for (const proposal of multisigProposals) {
+          const isActive = !proposal.executed && !proposal.cancelled;
+          if (!isActive) continue;
 
-              if (proposal.approvals.length >= workspaceMultisig.threshold) {
-                executable += 1;
-              }
+          active += 1;
 
-              const isMember = Boolean(
-                viewerAddress &&
-                workspaceMultisig.members.some(
-                  (member) => member.address === viewerAddress
-                )
-              );
-              const needsSignature =
-                isActive &&
-                isMember &&
-                !proposal.approvals.includes(viewerAddress ?? "") &&
-                !proposal.rejections.includes(viewerAddress ?? "");
-
-              if (needsSignature) {
-                waiting += 1;
-              }
-            }
-
-            return [
-              getMultisigAccountKey(multisig),
-              { waiting, executable, active },
-            ] as const;
-          } catch (error) {
-            console.warn(
-              `Failed to load proposal attention for ${multisig.publicKey.toString()}:`,
-              error
-            );
-            return [getMultisigAccountKey(multisig), null] as const;
+          if (proposal.approvals.length >= workspaceMultisig.threshold) {
+            executable += 1;
           }
-        })
-      );
 
-      if (cancelled) {
-        return;
+          const isMember = Boolean(
+            viewerAddress &&
+              workspaceMultisig.members.some(
+                (member) => member.address === viewerAddress
+              )
+          );
+          const needsSignature =
+            isMember &&
+            !proposal.approvals.includes(viewerAddress ?? "") &&
+            !proposal.rejections.includes(viewerAddress ?? "");
+
+          if (needsSignature) {
+            waiting += 1;
+          }
+        }
       }
 
-      setAttentionByMultisig(
-        Object.fromEntries(
-          summaries.filter(
-            (entry): entry is [string, AttentionSummary] => entry[1] !== null
-          )
-        )
-      );
+      attentionByMultisig[getMultisigAccountKey(multisig)] = {
+        waiting,
+        executable,
+        active,
+      };
     }
 
-    void loadAttention();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [chains, multisigs, viewerAddress]);
-
-  return attentionByMultisig;
+    return attentionByMultisig;
+  }, [multisigs, proposals, workspaceMultisigs, viewerAddress]);
 }

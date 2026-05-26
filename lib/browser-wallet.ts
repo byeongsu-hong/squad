@@ -2,19 +2,19 @@ import { WalletReadyState } from "@solana/wallet-adapter-base";
 import type { Wallet } from "@solana/wallet-adapter-react";
 import type { PublicKey } from "@solana/web3.js";
 
-export interface BrowserWalletInfo {
+interface BrowserWalletInfo {
   name: string;
   icon: string;
   readyState: WalletReadyState;
   url?: string;
 }
 
-export interface ConnectResult {
+interface ConnectResult {
   publicKey: PublicKey;
   walletName: string;
 }
 
-export class BrowserWalletService {
+class BrowserWalletService {
   async connect(wallet: Wallet): Promise<ConnectResult> {
     if (!wallet.adapter) {
       throw new Error("Wallet adapter not found");

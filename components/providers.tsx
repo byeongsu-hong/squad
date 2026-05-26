@@ -1,17 +1,33 @@
 "use client";
 
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
 import { useEffect, useRef } from "react";
+import { WagmiProvider } from "wagmi";
 
 import { Toaster } from "@/components/ui/sonner";
+import { wagmiConfig } from "@/features/wallet";
 import { resolveInitialMultisigs } from "@/lib/initial-config";
 import { useChainStore } from "@/stores/chain-store";
 import { useMultisigStore } from "@/stores/multisig-store";
 import { useProviderAdapterStore } from "@/stores/provider-adapter-store";
-import { getMultisigAccountKey } from "@/types/multisig";
 
+import { ProposalsSync } from "./proposals-sync";
+import { RefreshPolicySync } from "./refresh-policy-sync";
 import { WalletAdapterProvider } from "./wallet-adapter-provider";
 import { WalletSync } from "./wallet-sync";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60_000,
+      gcTime: 600_000,
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      retry: 1,
+    },
+  },
+});
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const didInitRef = useRef(false);
@@ -23,13 +39,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
     (state) => state.initializeSettings
   );
   const setMultisigs = useMultisigStore((state) => state.setMultisigs);
-  const selectMultisig = useMultisigStore((state) => state.selectMultisig);
 
   useEffect(() => {
-    if (didInitRef.current) {
-      return;
-    }
-
+    if (didInitRef.current) return;
     didInitRef.current = true;
 
     const run = async () => {
@@ -37,12 +49,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
       initializeMultisigs();
       initializeProviderAdapterSettings();
 
-      const { chains } = useChainStore.getState();
-      const { multisigs, selectedMultisigKey } = useMultisigStore.getState();
-      const seededMultisigs = await resolveInitialMultisigs(chains);
-      if (seededMultisigs.length === 0) {
-        return;
-      }
+      const { multisigs } = useMultisigStore.getState();
+      const seededMultisigs = await resolveInitialMultisigs();
+      if (seededMultisigs.length === 0) return;
 
       const existingKeys = new Set(
         multisigs.map(
@@ -56,15 +65,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
           )
       );
 
-      if (missingSeeds.length === 0) {
-        return;
-      }
+      if (missingSeeds.length === 0) return;
 
       setMultisigs([...multisigs, ...missingSeeds]);
-
-      if (!selectedMultisigKey) {
-        selectMultisig(getMultisigAccountKey(multisigs[0] ?? missingSeeds[0]));
-      }
     };
 
     void run();
@@ -72,17 +75,26 @@ export function Providers({ children }: { children: React.ReactNode }) {
     initializeChains,
     initializeMultisigs,
     initializeProviderAdapterSettings,
-    selectMultisig,
     setMultisigs,
   ]);
 
   return (
-    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
-      <WalletAdapterProvider>
-        <WalletSync />
-        {children}
-        <Toaster />
-      </WalletAdapterProvider>
-    </ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <WagmiProvider config={wagmiConfig}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem={true}
+        >
+          <WalletAdapterProvider>
+            <WalletSync />
+            <RefreshPolicySync />
+            <ProposalsSync />
+            {children}
+            <Toaster />
+          </WalletAdapterProvider>
+        </ThemeProvider>
+      </WagmiProvider>
+    </QueryClientProvider>
   );
 }

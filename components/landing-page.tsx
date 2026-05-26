@@ -1,127 +1,353 @@
-import { ArrowRight } from "lucide-react";
+"use client";
+
+import { CheckCircle2, ChevronRight, Shield } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
+import { useAccount } from "wagmi";
 
-import { Button } from "@/components/ui/button";
+import { AddMultisigActions } from "@/components/add-multisig-actions";
+import { OperationsQueue } from "@/components/operations-queue";
+import { PageStage } from "@/components/page-stage";
+import { WalletButton } from "@/components/wallet-button";
+import { useViewerAddressForMultisig } from "@/lib/hooks/use-viewer-address";
+import { useWorkspaceQueue } from "@/lib/hooks/use-workspace-queue";
+import { cn } from "@/lib/utils";
+import { useProposalsStore } from "@/stores/proposals-store";
+import { useWalletStore } from "@/stores/wallet-store";
 
-const queueItems = [
-  {
-    title: "Treasury rotation",
-    meta: "Safe / Ethereum",
-    status: "2 of 3 signed",
-    tone: "bg-lime-300",
-  },
-  {
-    title: "Bridge limit update",
-    meta: "Squads / Solana",
-    status: "Waiting on reviewer",
-    tone: "bg-amber-300",
-  },
-  {
-    title: "Payroll batch",
-    meta: "Safe / Base",
-    status: "Ready to execute",
-    tone: "bg-zinc-100",
-  },
-];
-
-const points = [
-  "Aggregate Squads, Safe, Solana, SVM, and EVM workflows.",
-  "See what is blocked, ready, or waiting in one queue.",
-  "Open the next proposal without digging through tabs.",
-];
+type StatFilter = "All" | "Action needed" | "Executable" | "Watching";
 
 export function LandingPage() {
-  return (
-    <div className="relative isolate -mx-4 -my-4 min-h-[calc(100svh-4.5rem)] sm:-mx-5 md:-mx-6">
-      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[28rem] bg-[radial-gradient(circle_at_top_left,oklch(0.28_0.02_110/.28),transparent_32%),linear-gradient(180deg,oklch(0.18_0.012_285),transparent_72%)]" />
+  const { publicKey, connected } = useWalletStore();
+  const { isConnected: evmConnected } = useAccount();
+  const getViewerAddress = useViewerAddressForMultisig();
+  const proposals = useProposalsStore((state) => state.proposals);
+  const loading = useProposalsStore((state) => state.loading);
+  const workspaceMultisigs = useProposalsStore(
+    (state) => state.workspaceMultisigs
+  );
+  const [activeFilter, setActiveFilter] = useState<StatFilter>("All");
 
-      <section className="mx-auto grid min-h-[calc(100svh-4.5rem)] w-full max-w-[82rem] gap-12 px-4 py-10 sm:px-5 sm:py-14 md:px-6 lg:grid-cols-[minmax(0,1fr)_28rem] lg:items-start lg:gap-16 lg:py-18">
-        <div className="max-w-3xl">
-          <div className="inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-950/70 px-3 py-1.5 text-[0.68rem] font-medium tracking-[0.18em] text-zinc-400 uppercase">
-            <span className="h-2 w-2 rounded-full bg-lime-300" />
-            Multisig Aggregator
-          </div>
+  const queueItems = useWorkspaceQueue({
+    workspaceProposals: proposals,
+    multisigs: workspaceMultisigs,
+    viewerAddress: publicKey?.toString() ?? null,
+    getViewerAddressForMultisig: (multisig) =>
+      getViewerAddress(multisig.provider),
+  });
 
-          <h1 className="mt-8 max-w-4xl text-[clamp(3rem,8vw,6.2rem)] font-semibold tracking-[-0.065em] text-zinc-50">
-            All your multisigs, in one place.
-          </h1>
+  const executableCount = queueItems.filter(
+    (item) => item.readyToExecute
+  ).length;
+  const needsSigningCount = queueItems.filter(
+    (i) => i.needsYourSignature && !i.currentUserApproved
+  ).length;
+  const watchingCount = queueItems.filter(
+    (i) =>
+      i.proposal.status === "Active" &&
+      !i.readyToExecute &&
+      !i.needsYourSignature
+  ).length;
 
-          <p className="mt-5 max-w-2xl text-[1.02rem] leading-7 text-zinc-300 sm:text-[1.1rem]">
-            Squad<sup>2</sup> brings Safe and Squads activity into a single
-            queue so your team can review, sign, and execute without bouncing
-            between dashboards.
-          </p>
+  // All action counts are confirmed zero (not just loading-zero)
+  const allClear =
+    !loading &&
+    needsSigningCount === 0 &&
+    executableCount === 0 &&
+    watchingCount === 0;
 
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <Button
-              asChild
-              size="lg"
-              className="group rounded-full bg-zinc-100 px-6 text-zinc-950 hover:bg-white"
-            >
-              <Link href="/operations">
-                Open Operations
-                <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
-              </Link>
-            </Button>
-            <Button
-              asChild
-              size="lg"
-              variant="outline"
-              className="rounded-full border-zinc-800 bg-transparent px-6 text-zinc-200 hover:border-zinc-700 hover:bg-zinc-900"
-            >
-              <Link href="/settings">Configure Workspace</Link>
-            </Button>
-          </div>
+  const toggleFilter = (filter: StatFilter) => {
+    setActiveFilter((prev) => (prev === filter ? "All" : filter));
+  };
 
-          <div className="mt-10 space-y-3 border-t border-zinc-800 pt-6">
-            {points.map((point) => (
-              <p key={point} className="text-sm leading-6 text-zinc-400">
-                {point}
-              </p>
-            ))}
-          </div>
+  const isConnected = connected || evmConnected;
+
+  if (workspaceMultisigs.length === 0) {
+    return (
+      <PageStage className="items-center gap-4 text-center">
+        <div className="bg-card border-border flex h-10 w-10 items-center justify-center rounded-xl border">
+          <Shield className="text-muted-foreground/50 h-5 w-5" />
         </div>
+        <div className="space-y-1.5">
+          <p className="text-foreground text-[15px] font-semibold">
+            {isConnected ? "No vaults yet" : "Get started"}
+          </p>
+          <p className="text-muted-foreground/60 max-w-xs text-[13px]">
+            {isConnected
+              ? "Import a vault to start signing."
+              : "Connect a wallet to get started."}
+          </p>
+        </div>
+        {isConnected ? <AddMultisigActions /> : <WalletButton />}
+      </PageStage>
+    );
+  }
 
-        <div className="landing-panel rounded-[1.75rem] border border-zinc-800 bg-zinc-950/55 p-4 sm:p-5">
-          <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
-            <div>
-              <p className="text-[0.68rem] font-medium tracking-[0.18em] text-zinc-500 uppercase">
-                Queue Preview
-              </p>
-              <p className="mt-1 text-sm text-zinc-300">
-                Work surfaced across providers and chains.
-              </p>
-            </div>
-            <span className="rounded-full border border-zinc-800 px-2.5 py-1 text-[0.68rem] text-zinc-400 uppercase">
-              Live
+  return (
+    <PageStage>
+      <div className="bg-card border-border mb-5 flex items-stretch overflow-x-auto rounded-xl border">
+        {/* Vaults count — links to vault list */}
+        <Link
+          href="/vaults"
+          className="hover:bg-muted/40 flex shrink-0 items-center gap-1.5 px-4 py-3 transition-colors"
+        >
+          <Shield className="text-muted-foreground/50 h-3.5 w-3.5 shrink-0" />
+          <span className="text-foreground text-[13px] font-semibold tabular-nums">
+            {workspaceMultisigs.length}
+          </span>
+          <span className="text-muted-foreground/50 text-[11px]">
+            vault{workspaceMultisigs.length !== 1 ? "s" : ""}
+          </span>
+        </Link>
+
+        {/* Action stats — only shown during loading or when any count is non-zero */}
+        {!allClear && (
+          <>
+            <div className="bg-border w-px shrink-0 self-stretch" />
+
+            {/* Need signing */}
+            <button
+              type="button"
+              onClick={() =>
+                !loading &&
+                needsSigningCount > 0 &&
+                toggleFilter("Action needed")
+              }
+              className={cn(
+                "flex shrink-0 items-center gap-2 px-4 py-3 transition-colors",
+                !loading && needsSigningCount > 0
+                  ? "cursor-pointer"
+                  : "cursor-default",
+                activeFilter === "Action needed"
+                  ? "bg-primary/10 [box-shadow:inset_0_-2px_0_rgba(217,119,6,0.6)]"
+                  : !loading && needsSigningCount > 0
+                    ? "hover:bg-primary/5"
+                    : ""
+              )}
+            >
+              <span
+                className={cn(
+                  "text-[18px] leading-none font-bold tabular-nums",
+                  loading
+                    ? "text-muted-foreground/20 animate-pulse"
+                    : needsSigningCount > 0
+                      ? "text-primary"
+                      : "text-muted-foreground/30"
+                )}
+              >
+                {needsSigningCount}
+              </span>
+              <span
+                className={cn(
+                  "text-[11px] whitespace-nowrap",
+                  loading
+                    ? "text-muted-foreground/20"
+                    : needsSigningCount > 0
+                      ? "text-muted-foreground/60"
+                      : "text-muted-foreground/30"
+                )}
+              >
+                to sign
+              </span>
+            </button>
+
+            <div className="bg-border w-px shrink-0 self-stretch" />
+
+            {/* Executable */}
+            <button
+              type="button"
+              onClick={() =>
+                !loading && executableCount > 0 && toggleFilter("Executable")
+              }
+              className={cn(
+                "flex shrink-0 items-center gap-2 px-4 py-3 transition-colors",
+                !loading && executableCount > 0
+                  ? "cursor-pointer"
+                  : "cursor-default",
+                activeFilter === "Executable"
+                  ? "bg-emerald-50 [box-shadow:inset_0_-2px_0_rgba(5,150,105,0.6)] dark:bg-emerald-950/20"
+                  : !loading && executableCount > 0
+                    ? "hover:bg-emerald-50/70 dark:hover:bg-emerald-950/10"
+                    : ""
+              )}
+            >
+              <span
+                className={cn(
+                  "text-[18px] leading-none font-bold tabular-nums",
+                  loading
+                    ? "text-muted-foreground/20 animate-pulse"
+                    : executableCount > 0
+                      ? "text-emerald-600 dark:text-emerald-400"
+                      : "text-muted-foreground/30"
+                )}
+              >
+                {executableCount}
+              </span>
+              <span
+                className={cn(
+                  "text-[11px] whitespace-nowrap",
+                  loading
+                    ? "text-muted-foreground/20"
+                    : executableCount > 0
+                      ? "text-muted-foreground/60"
+                      : "text-muted-foreground/30"
+                )}
+              >
+                ready
+              </span>
+            </button>
+
+            <div className="bg-border w-px shrink-0 self-stretch" />
+
+            {/* Watching */}
+            <button
+              type="button"
+              onClick={() =>
+                !loading && watchingCount > 0 && toggleFilter("Watching")
+              }
+              className={cn(
+                "flex shrink-0 items-center gap-2 px-4 py-3 transition-colors",
+                !loading && watchingCount > 0
+                  ? "cursor-pointer"
+                  : "cursor-default",
+                activeFilter === "Watching"
+                  ? "bg-muted/60 [box-shadow:inset_0_-2px_0_rgba(161,161,170,0.4)]"
+                  : !loading && watchingCount > 0
+                    ? "hover:bg-muted/50"
+                    : ""
+              )}
+            >
+              <span
+                className={cn(
+                  "text-[18px] leading-none font-bold tabular-nums",
+                  loading
+                    ? "text-muted-foreground/20 animate-pulse"
+                    : watchingCount > 0
+                      ? "text-foreground"
+                      : "text-muted-foreground/30"
+                )}
+              >
+                {watchingCount}
+              </span>
+              <span
+                className={cn(
+                  "text-[11px] whitespace-nowrap",
+                  loading
+                    ? "text-muted-foreground/20"
+                    : watchingCount > 0
+                      ? "text-muted-foreground/60"
+                      : "text-muted-foreground/30"
+                )}
+              >
+                watching
+              </span>
+            </button>
+          </>
+        )}
+
+        {/* All clear — shown when loaded and all counts are zero */}
+        {allClear && (
+          <div className="ml-auto flex items-center gap-1.5 px-4">
+            <CheckCircle2 className="h-3 w-3 text-emerald-500/70 dark:text-emerald-400/70" />
+            <span className="text-[11px] font-medium text-emerald-700/60 dark:text-emerald-400/60">
+              All clear
             </span>
           </div>
+        )}
+      </div>
 
-          <div className="mt-4 space-y-3">
-            {queueItems.map((item) => (
-              <div
-                key={item.title}
-                className="rounded-[1.25rem] border border-zinc-800 bg-zinc-950 px-4 py-3"
+      <OperationsQueue
+        key={activeFilter}
+        items={queueItems}
+        loading={loading}
+        showFilters
+        defaultStatusFilter={activeFilter}
+        emptyStateCta={
+          <div className="mt-1 w-full max-w-sm">
+            {workspaceMultisigs.length === 1 ? (
+              <Link
+                href={`/vaults/${encodeURIComponent(workspaceMultisigs[0].key)}`}
+                className="group block"
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-sm font-medium text-zinc-100">
-                      {item.title}
+                <div className="border-border bg-card hover:bg-primary/[0.03] w-full rounded-xl border px-4 py-3.5 [box-shadow:inset_2px_0_0_rgba(217,119,6,0.3)] transition-colors group-hover:[box-shadow:inset_2px_0_0_rgba(217,119,6,0.6)]">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={cn(
+                        "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border",
+                        workspaceMultisigs[0].provider === "squads"
+                          ? "bg-primary/10 border-primary/20"
+                          : "border-blue-200/60 bg-blue-50 dark:border-blue-700/40 dark:bg-blue-950/20"
+                      )}
+                    >
+                      {workspaceMultisigs[0].label ? (
+                        <span
+                          className={cn(
+                            "text-[14px] leading-none font-bold",
+                            workspaceMultisigs[0].provider === "squads"
+                              ? "text-primary/70"
+                              : "text-blue-600 dark:text-blue-400"
+                          )}
+                        >
+                          {workspaceMultisigs[0].label
+                            .slice(0, 1)
+                            .toUpperCase()}
+                        </span>
+                      ) : (
+                        <Shield
+                          className={cn(
+                            "h-4 w-4",
+                            workspaceMultisigs[0].provider === "squads"
+                              ? "text-primary/60"
+                              : "text-blue-600/60 dark:text-blue-400/60"
+                          )}
+                        />
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1 text-left">
+                      <p
+                        className={cn(
+                          "truncate text-[13px] font-semibold",
+                          workspaceMultisigs[0].label
+                            ? "text-foreground"
+                            : "text-muted-foreground/50 italic"
+                        )}
+                      >
+                        {workspaceMultisigs[0].label ?? "Unnamed Vault"}
+                      </p>
+                      <p className="text-muted-foreground/50 mt-px text-[11px]">
+                        {workspaceMultisigs[0].chainName} ·{" "}
+                        {workspaceMultisigs[0].threshold}/
+                        {workspaceMultisigs[0].members.length}
+                      </p>
+                    </div>
+                    <ChevronRight className="text-muted-foreground/40 group-hover:text-primary/60 h-4 w-4 shrink-0 transition-[color,transform] group-hover:translate-x-0.5" />
+                  </div>
+                </div>
+              </Link>
+            ) : (
+              <Link
+                href="/vaults"
+                className="group border-border bg-card hover:bg-muted/40 flex w-full items-center justify-between rounded-xl border px-4 py-3.5 [box-shadow:inset_2px_0_0_rgba(217,119,6,0.3)] transition-colors hover:[box-shadow:inset_2px_0_0_rgba(217,119,6,0.6)]"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="border-border bg-muted flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border">
+                    <Shield className="text-muted-foreground/50 h-4 w-4" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-[13px] font-semibold">
+                      {workspaceMultisigs.length} vaults
                     </p>
-                    <p className="mt-1 text-xs tracking-[0.12em] text-zinc-500 uppercase">
-                      {item.meta}
+                    <p className="text-muted-foreground/50 mt-px text-[11px]">
+                      View and manage
                     </p>
                   </div>
-                  <span
-                    className={`mt-1 h-2.5 w-2.5 rounded-full ${item.tone}`}
-                  />
                 </div>
-                <p className="mt-3 text-sm text-zinc-400">{item.status}</p>
-              </div>
-            ))}
+                <ChevronRight className="text-muted-foreground/40 group-hover:text-primary/60 h-4 w-4 shrink-0 transition-[color,transform] group-hover:translate-x-0.5" />
+              </Link>
+            )}
           </div>
-        </div>
-      </section>
-    </div>
+        }
+      />
+    </PageStage>
   );
 }

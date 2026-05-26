@@ -43,10 +43,6 @@ export const chainStorage = {
     chainListStorage.remove((chain) => chain.id === id);
   },
 
-  getChainById(id: string): ChainConfig | undefined {
-    return chainListStorage.find((chain) => chain.id === id);
-  },
-
   getSelectedChainId(): string | null {
     return selectedChainStorage.get();
   },
@@ -71,6 +67,8 @@ interface StoredMultisig {
   label?: string;
   tags?: string[];
   vaultPda?: string;
+  importStatus?: "complete" | "degraded";
+  importError?: string;
 }
 
 const multisigListStorage = createListStorage<MultisigAccount, StoredMultisig>(
@@ -91,6 +89,8 @@ const multisigListStorage = createListStorage<MultisigAccount, StoredMultisig>(
       label: m.label,
       tags: m.tags,
       vaultPda: m.vaultPda?.toString(),
+      importStatus: m.importStatus,
+      importError: m.importError,
     }),
     deserialize: (m) => {
       const provider = m.provider ?? "squads";
@@ -111,6 +111,8 @@ const multisigListStorage = createListStorage<MultisigAccount, StoredMultisig>(
           label: m.label,
           tags: m.tags,
           vaultPda: m.vaultPda,
+          importStatus: m.importStatus,
+          importError: m.importError,
         };
       }
 
@@ -129,6 +131,8 @@ const multisigListStorage = createListStorage<MultisigAccount, StoredMultisig>(
         label: m.label,
         tags: m.tags,
         vaultPda: m.vaultPda ? new PublicKey(m.vaultPda) : undefined,
+        importStatus: m.importStatus,
+        importError: m.importError,
       };
     },
   }

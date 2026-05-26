@@ -25,7 +25,8 @@ export async function POST(request: Request) {
       body.chain,
       body.addressInput,
       body.label,
-      body.tags
+      body.tags,
+      { allowDegraded: true }
     );
 
     return NextResponse.json({

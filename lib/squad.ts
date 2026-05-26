@@ -1,30 +1,47 @@
-import { Connection, Keypair, PublicKey } from "@solana/web3.js";
+import {
+  type AccountInfo,
+  Connection,
+  Keypair,
+  PublicKey,
+} from "@solana/web3.js";
 import * as multisig from "@sqds/multisig";
 
+import { useRefreshStore } from "@/stores/refresh-store";
+
 import { cache } from "./cache";
-import {
-  CACHE_CONFIG,
-  ERROR_MESSAGES,
-  RPC_CONFIG,
-  TRANSACTION_DISCRIMINATORS,
-} from "./config";
+import { CACHE_CONFIG, ERROR_MESSAGES, RPC_CONFIG } from "./config";
+import { requestBroker } from "./rpc/request-broker";
 
 async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+const connectionPool = new Map<string, Connection>();
+
+function getConnection(rpcUrl: string): Connection {
+  let conn = connectionPool.get(rpcUrl);
+  if (!conn) {
+    conn = new Connection(rpcUrl, RPC_CONFIG.COMMITMENT);
+    connectionPool.set(rpcUrl, conn);
+  }
+  return conn;
+}
+
 export class SquadService {
   private connection: Connection;
   private programId: PublicKey;
+  private rpcUrls: string[];
+  private chainId: string;
 
-  constructor(rpcUrl: string, programId: string) {
-    this.connection = new Connection(rpcUrl, RPC_CONFIG.COMMITMENT);
+  constructor(
+    rpcUrl: string | string[],
+    programId: string,
+    options: { chainId?: string } = {}
+  ) {
+    this.rpcUrls = normalizeRpcUrls(rpcUrl);
+    this.connection = getConnection(this.rpcUrls[0]!);
     this.programId = new PublicKey(programId);
-  }
-
-  updateConnection(rpcUrl: string, programId: string) {
-    this.connection = new Connection(rpcUrl, RPC_CONFIG.COMMITMENT);
-    this.programId = new PublicKey(programId);
+    this.chainId = options.chainId ?? this.rpcUrls[0]!;
   }
 
   private async retryWithBackoff<T>(
@@ -66,6 +83,41 @@ export class SquadService {
         `${operationName} failed after ${RPC_CONFIG.MAX_RETRIES} attempts`
       )
     );
+  }
+
+  async getAccountInfo(
+    publicKey: PublicKey,
+    options: {
+      operationName?: string;
+      cacheKey?: string;
+      ttlMs?: number;
+      useStaleOnError?: boolean;
+    } = {}
+  ): Promise<AccountInfo<Buffer> | null> {
+    const result = await requestBroker.fetch({
+      key:
+        options.cacheKey ??
+        `accountInfo:${publicKey.toBase58()}:${this.programId.toBase58()}`,
+      chainId: this.chainId,
+      endpoints: this.rpcUrls,
+      ttlMs: options.ttlMs ?? CACHE_CONFIG.TTL,
+      allowStaleOnError: options.useStaleOnError,
+      request: (endpoint) => getConnection(endpoint).getAccountInfo(publicKey),
+    });
+
+    this.recordBrokerResult(result.degradedReason?.message);
+    return result.data;
+  }
+
+  private recordBrokerResult(message?: string) {
+    if (message) {
+      useRefreshStore
+        .getState()
+        .markDegraded({ chainId: this.chainId }, message);
+      return;
+    }
+
+    useRefreshStore.getState().clearDegraded({ chainId: this.chainId });
   }
 
   async createMultisig(params: {
@@ -116,7 +168,11 @@ export class SquadService {
 
     const result = await this.retryWithBackoff(async () => {
       // First check if account exists and owner matches
-      const accountInfo = await this.connection.getAccountInfo(multisigPda);
+      const accountInfo = await this.getAccountInfo(multisigPda, {
+        operationName: "Get multisig",
+        cacheKey: `accountInfo:multisig:${multisigPda.toBase58()}:${this.programId.toBase58()}`,
+        useStaleOnError: useCache,
+      });
 
       if (!accountInfo) {
         throw new Error(
@@ -141,10 +197,7 @@ export class SquadService {
 
       // Now try to deserialize
       try {
-        return await multisig.accounts.Multisig.fromAccountAddress(
-          this.connection,
-          multisigPda
-        );
+        return multisig.accounts.Multisig.fromAccountInfo(accountInfo)[0];
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : String(error);
         if (errorMsg.includes("COption") || errorMsg.includes("deserialize")) {
@@ -163,10 +216,32 @@ export class SquadService {
     return result;
   }
 
-  async getMultisigsByCreator(creator: PublicKey) {
-    const multisigs = await this.retryWithBackoff(
-      () =>
-        this.connection.getProgramAccounts(this.programId, {
+  async getMultisigsByCreator(creator: PublicKey, useCache = true) {
+    const cacheKey = `creatorMultisigs:${creator.toBase58()}:${this.programId.toString()}`;
+    const CREATOR_MULTISIGS_TTL = 5 * 60_000;
+
+    if (useCache) {
+      const cached =
+        cache.get<
+          {
+            publicKey: PublicKey;
+            account: ReturnType<
+              typeof multisig.accounts.Multisig.fromAccountInfo
+            >[0];
+          }[]
+        >(cacheKey);
+      if (cached) return cached;
+    }
+
+    const accountsResult = await requestBroker.fetch({
+      key: `creatorMultisigs:${creator.toBase58()}:${this.programId.toBase58()}`,
+      chainId: this.chainId,
+      endpoints: this.rpcUrls,
+      ttlMs: CREATOR_MULTISIGS_TTL,
+      concurrency: 1,
+      allowStaleOnError: useCache,
+      request: (endpoint) =>
+        getConnection(endpoint).getProgramAccounts(this.programId, {
           filters: [
             {
               memcmp: {
@@ -176,37 +251,20 @@ export class SquadService {
             },
           ],
         }),
-      "Get multisigs by creator"
-    );
+    });
+    this.recordBrokerResult(accountsResult.degradedReason?.message);
+    const accounts = accountsResult.data;
 
-    return multisigs.map((account) => ({
+    const result = accounts.map((account) => ({
       publicKey: account.pubkey,
       account: multisig.accounts.Multisig.fromAccountInfo(account.account)[0],
     }));
-  }
 
-  async createProposal(params: {
-    multisigPda: PublicKey;
-    creator: PublicKey;
-    transactionIndex: bigint;
-  }) {
-    const [proposalPda] = multisig.getProposalPda({
-      multisigPda: params.multisigPda,
-      transactionIndex: params.transactionIndex,
-      programId: this.programId,
-    });
+    if (useCache) {
+      cache.set(cacheKey, result, CREATOR_MULTISIGS_TTL);
+    }
 
-    const instruction = multisig.instructions.proposalCreate({
-      multisigPda: params.multisigPda,
-      transactionIndex: params.transactionIndex,
-      creator: params.creator,
-      programId: this.programId,
-    });
-
-    return {
-      proposalPda,
-      instruction,
-    };
+    return result;
   }
 
   async approveProposal(params: {
@@ -235,36 +293,74 @@ export class SquadService {
     });
   }
 
-  async getTransactionType(
+  async getBatchedTransactionCreators(
     multisigPda: PublicKey,
-    transactionIndex: bigint
-  ): Promise<"config" | "vault"> {
-    const [transactionPda] = multisig.getTransactionPda({
-      multisigPda,
-      index: transactionIndex,
-      programId: this.programId,
+    transactionIndices: bigint[]
+  ): Promise<Map<string, PublicKey | undefined>> {
+    if (transactionIndices.length === 0) return new Map();
+
+    const pdas = transactionIndices.map((index) => {
+      const [pda] = multisig.getTransactionPda({
+        multisigPda,
+        index,
+        programId: this.programId,
+      });
+      return pda;
     });
 
-    const accountInfo = await this.connection.getAccountInfo(transactionPda);
+    const BATCH_SIZE = 100;
+    const creatorMap = new Map<string, PublicKey | undefined>();
 
-    if (!accountInfo) {
-      throw new Error("Transaction account not found");
+    for (let i = 0; i < pdas.length; i += BATCH_SIZE) {
+      const batchPdas = pdas.slice(i, i + BATCH_SIZE);
+      const batchIndices = transactionIndices.slice(i, i + BATCH_SIZE);
+
+      const accountInfosResult = await requestBroker.fetch({
+        key: `batchedTransactions:${this.programId.toBase58()}:${batchPdas
+          .map((pda) => pda.toBase58())
+          .join(",")}`,
+        chainId: this.chainId,
+        endpoints: this.rpcUrls,
+        ttlMs: CACHE_CONFIG.TTL,
+        concurrency: 2,
+        request: (endpoint) =>
+          getConnection(endpoint).getMultipleAccountsInfo(batchPdas),
+      });
+      this.recordBrokerResult(accountInfosResult.degradedReason?.message);
+      const accountInfos = accountInfosResult.data;
+
+      for (let j = 0; j < batchIndices.length; j++) {
+        const index = batchIndices[j]!;
+        const accountInfo = accountInfos[j];
+
+        if (!accountInfo) {
+          creatorMap.set(index.toString(), undefined);
+          continue;
+        }
+
+        try {
+          const discriminator = accountInfo.data.subarray(0, 8);
+          const isConfig = discriminator.every(
+            (byte, k) =>
+              byte === multisig.accounts.configTransactionDiscriminator[k]
+          );
+
+          if (isConfig) {
+            const [configTx] =
+              multisig.accounts.ConfigTransaction.fromAccountInfo(accountInfo);
+            creatorMap.set(index.toString(), configTx.creator);
+          } else {
+            const [vaultTx] =
+              multisig.accounts.VaultTransaction.fromAccountInfo(accountInfo);
+            creatorMap.set(index.toString(), vaultTx.creator);
+          }
+        } catch {
+          creatorMap.set(index.toString(), undefined);
+        }
+      }
     }
 
-    // Check discriminator to determine transaction type
-    // Account discriminator is the first 8 bytes of the account data
-    const discriminator = accountInfo.data.subarray(0, 8);
-
-    // Compare with config transaction discriminator
-    const isConfigTransaction =
-      discriminator.length ===
-        TRANSACTION_DISCRIMINATORS.CONFIG_TRANSACTION.length &&
-      discriminator.every(
-        (byte, index) =>
-          byte === TRANSACTION_DISCRIMINATORS.CONFIG_TRANSACTION[index]
-      );
-
-    return isConfigTransaction ? "config" : "vault";
+    return creatorMap;
   }
 
   async executeProposal(params: {
@@ -274,13 +370,24 @@ export class SquadService {
   }) {
     return await this.retryWithBackoff(async () => {
       try {
-        const txType = await this.getTransactionType(
-          params.multisigPda,
-          params.transactionIndex
+        const [transactionPda] = multisig.getTransactionPda({
+          multisigPda: params.multisigPda,
+          index: params.transactionIndex,
+          programId: this.programId,
+        });
+        const accountInfo = await this.getAccountInfo(transactionPda, {
+          operationName: "Get executable transaction",
+          cacheKey: `accountInfo:transaction:${transactionPda.toBase58()}:${this.programId.toBase58()}`,
+          ttlMs: 10_000,
+        });
+        if (!accountInfo) throw new Error("Transaction account not found");
+        const discriminator = accountInfo.data.subarray(0, 8);
+        const isConfig = discriminator.every(
+          (byte, k) =>
+            byte === multisig.accounts.configTransactionDiscriminator[k]
         );
 
-        if (txType === "config") {
-          // Execute as ConfigTransaction
+        if (isConfig) {
           return await multisig.instructions.configTransactionExecute({
             multisigPda: params.multisigPda,
             transactionIndex: params.transactionIndex,
@@ -288,7 +395,6 @@ export class SquadService {
             programId: this.programId,
           });
         } else {
-          // Execute as VaultTransaction
           return await multisig.instructions.vaultTransactionExecute({
             connection: this.connection,
             multisigPda: params.multisigPda,
@@ -324,23 +430,6 @@ export class SquadService {
     }, "Execute proposal");
   }
 
-  async getProposal(multisigPda: PublicKey, transactionIndex: bigint) {
-    const [proposalPda] = multisig.getProposalPda({
-      multisigPda,
-      transactionIndex,
-      programId: this.programId,
-    });
-
-    return await this.retryWithBackoff(
-      () =>
-        multisig.accounts.Proposal.fromAccountAddress(
-          this.connection,
-          proposalPda
-        ),
-      "Get proposal"
-    );
-  }
-
   async getProposalsByMultisig(multisigPda: PublicKey, useCache = true) {
     const cacheKey = `proposals:${multisigPda.toString()}:${this.programId.toString()}`;
 
@@ -358,9 +447,15 @@ export class SquadService {
       }
     }
 
-    const proposals = await this.retryWithBackoff(
-      () =>
-        this.connection.getProgramAccounts(this.programId, {
+    const proposalsResult = await requestBroker.fetch({
+      key: `rpc:${cacheKey}`,
+      chainId: this.chainId,
+      endpoints: this.rpcUrls,
+      ttlMs: CACHE_CONFIG.TTL,
+      concurrency: 1,
+      allowStaleOnError: useCache,
+      request: (endpoint) =>
+        getConnection(endpoint).getProgramAccounts(this.programId, {
           filters: [
             {
               memcmp: {
@@ -370,8 +465,9 @@ export class SquadService {
             },
           ],
         }),
-      "Get proposals by multisig"
-    );
+    });
+    this.recordBrokerResult(proposalsResult.degradedReason?.message);
+    const proposals = proposalsResult.data;
 
     const result = proposals
       .map((account) => {
@@ -425,7 +521,11 @@ export class SquadService {
 
     const result = await this.retryWithBackoff(async () => {
       // First check if account exists
-      const accountInfo = await this.connection.getAccountInfo(transactionPda);
+      const accountInfo = await this.getAccountInfo(transactionPda, {
+        operationName: "Get vault transaction",
+        cacheKey,
+        useStaleOnError: useCache,
+      });
 
       if (!accountInfo) {
         throw new Error(
@@ -438,10 +538,9 @@ export class SquadService {
       }
 
       try {
-        return await multisig.accounts.VaultTransaction.fromAccountAddress(
-          this.connection,
-          transactionPda
-        );
+        return multisig.accounts.VaultTransaction.fromAccountInfo(
+          accountInfo
+        )[0];
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : String(error);
         if (errorMsg.includes("buffer") || errorMsg.includes("offset")) {
@@ -487,14 +586,20 @@ export class SquadService {
       }
     }
 
-    const result = await this.retryWithBackoff(
-      () =>
-        multisig.accounts.ConfigTransaction.fromAccountAddress(
-          this.connection,
-          transactionPda
-        ),
-      "Get config transaction"
-    );
+    const accountInfo = await this.getAccountInfo(transactionPda, {
+      operationName: "Get config transaction",
+      cacheKey,
+      useStaleOnError: useCache,
+    });
+
+    if (!accountInfo) {
+      throw new Error(
+        "Transaction not found. The transaction may not have been created yet."
+      );
+    }
+
+    const result =
+      multisig.accounts.ConfigTransaction.fromAccountInfo(accountInfo)[0];
 
     if (useCache) {
       cache.set(cacheKey, result, CACHE_CONFIG.TTL);
@@ -503,47 +608,24 @@ export class SquadService {
     return result;
   }
 
-  async getVaultTransactionRaw(
-    multisigPda: PublicKey,
-    transactionIndex: bigint
-  ) {
-    const [transactionPda] = multisig.getTransactionPda({
-      multisigPda,
-      index: transactionIndex,
-      programId: this.programId,
-    });
-
-    return await this.retryWithBackoff(async () => {
-      const accountInfo = await this.connection.getAccountInfo(transactionPda);
-      if (!accountInfo) {
-        throw new Error("Transaction account not found");
-      }
-      return {
-        pda: transactionPda,
-        data: accountInfo.data,
-      };
-    }, "Get vault transaction raw");
-  }
-
   getConnection(): Connection {
     return this.connection;
-  }
-
-  getProgramId(): PublicKey {
-    return this.programId;
-  }
-
-  invalidateCache(multisigPda: PublicKey): void {
-    cache.invalidatePattern(multisigPda.toString());
   }
 
   invalidateProposalCache(multisigPda: PublicKey): void {
     const cacheKey = `proposals:${multisigPda.toString()}:${this.programId.toString()}`;
     cache.invalidate(cacheKey);
+    requestBroker.invalidate({ chainId: this.chainId, key: `rpc:${cacheKey}` });
   }
+}
 
-  invalidateMultisigCache(multisigPda: PublicKey): void {
-    const cacheKey = `multisig:${multisigPda.toString()}:${this.programId.toString()}`;
-    cache.invalidate(cacheKey);
+function normalizeRpcUrls(rpcUrl: string | string[]) {
+  const urls = Array.isArray(rpcUrl) ? rpcUrl : [rpcUrl];
+  const normalized = Array.from(
+    new Set(urls.map((url) => url.trim()).filter(Boolean))
+  );
+  if (normalized.length === 0) {
+    throw new Error("At least one RPC URL is required.");
   }
+  return normalized;
 }

@@ -32,31 +32,14 @@ export function Pagination({
     const showEllipsisEnd = currentPage < totalPages - 2;
 
     if (totalPages <= 7) {
-      // Show all pages if 7 or fewer
-      for (let i = 1; i <= totalPages; i++) {
-        pages.push(i);
-      }
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
     } else {
-      // Always show first page
       pages.push(1);
-
-      if (showEllipsisStart) {
-        pages.push("...");
-      }
-
-      // Show pages around current page
+      if (showEllipsisStart) pages.push("...");
       const start = Math.max(2, currentPage - 1);
       const end = Math.min(totalPages - 1, currentPage + 1);
-
-      for (let i = start; i <= end; i++) {
-        pages.push(i);
-      }
-
-      if (showEllipsisEnd) {
-        pages.push("...");
-      }
-
-      // Always show last page
+      for (let i = start; i <= end; i++) pages.push(i);
+      if (showEllipsisEnd) pages.push("...");
       pages.push(totalPages);
     }
 
@@ -65,19 +48,18 @@ export function Pagination({
 
   return (
     <div className="flex flex-col gap-3 px-2 sm:flex-row sm:items-center sm:justify-between">
-      <div className="text-muted-foreground text-sm">
-        Showing {startIndex + 1}-{endIndex} of {totalItems}
+      <div className="text-muted-foreground/60 text-[11px]">
+        Showing {startIndex + 1}–{endIndex} of {totalItems}
       </div>
 
       <div className="flex min-w-0 items-center gap-2">
         <Button
+          type="button"
           variant="outline"
-          size="sm"
           onClick={() => onPageChange(currentPage - 1)}
           disabled={!canGoPrevious}
-          className="h-9 w-9 shrink-0 p-0"
+          className="h-9 w-9 text-foreground/80"
           aria-label="Previous page"
-          title="Previous page"
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
@@ -89,22 +71,22 @@ export function Pagination({
                 return (
                   <span
                     key={`ellipsis-${index}`}
-                    className="text-muted-foreground px-2 text-sm"
+                    className="text-muted-foreground/60 px-2 text-[13px]"
                   >
-                    ...
+                    …
                   </span>
                 );
               }
-
+              const isActive = currentPage === page;
               return (
                 <Button
                   key={page}
-                  variant={currentPage === page ? "default" : "outline"}
-                  size="sm"
+                  type="button"
+                  variant="outline"
                   onClick={() => onPageChange(page as number)}
                   className={cn(
-                    "h-9 w-9 shrink-0 p-0",
-                    currentPage === page && "pointer-events-none"
+                    "h-9 w-9 text-foreground/80",
+                    isActive && "bg-foreground text-background pointer-events-none border-foreground hover:bg-foreground hover:text-background"
                   )}
                 >
                   {page}
@@ -115,13 +97,12 @@ export function Pagination({
         </div>
 
         <Button
+          type="button"
           variant="outline"
-          size="sm"
           onClick={() => onPageChange(currentPage + 1)}
           disabled={!canGoNext}
-          className="h-9 w-9 shrink-0 p-0"
+          className="h-9 w-9 text-foreground/80"
           aria-label="Next page"
-          title="Next page"
         >
           <ChevronRight className="h-4 w-4" />
         </Button>

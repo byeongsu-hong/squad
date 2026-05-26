@@ -1,0 +1,115 @@
+"use client";
+
+import { Code2, Database, Layers3, Network, Tag } from "lucide-react";
+import Link from "next/link";
+import { use, useMemo } from "react";
+
+import { AddressLabelManagerController } from "@/components/address-label-manager-dialog";
+import { ChainManagementController } from "@/components/chain-management-dialog";
+import { CustomAbisPanel } from "@/components/custom-abis-panel";
+import { ExportImportController } from "@/components/export-import-dialog";
+import { PageStage } from "@/components/page-stage";
+import { ProviderAdaptersPanel } from "@/components/provider-adapters-panel";
+import { Button } from "@/components/ui/button";
+import { useAddressLabels } from "@/lib/hooks/use-address-label";
+import { cn } from "@/lib/utils";
+import { useChainStore } from "@/stores/chain-store";
+import { useProviderAdapterStore } from "@/stores/provider-adapter-store";
+import type { WorkspaceSettingsSection } from "@/types/workspace";
+
+const TABS: {
+  id: WorkspaceSettingsSection;
+  label: string;
+  icon: typeof Network;
+}[] = [
+  { id: "chains", label: "Chains", icon: Network },
+  { id: "adapters", label: "Adapters", icon: Layers3 },
+  { id: "abis", label: "ABIs", icon: Code2 },
+  { id: "registry", label: "Export/Import", icon: Database },
+  { id: "labels", label: "Labels", icon: Tag },
+];
+
+function isValidSection(s: string): s is WorkspaceSettingsSection {
+  return (
+    s === "chains" ||
+    s === "adapters" ||
+    s === "abis" ||
+    s === "registry" ||
+    s === "labels"
+  );
+}
+
+export default function SettingsSectionPage({
+  params,
+}: {
+  params: Promise<{ section: string }>;
+}) {
+  const { section } = use(params);
+  const activeSection: WorkspaceSettingsSection = isValidSection(section)
+    ? section
+    : "chains";
+
+  const { chains } = useChainStore();
+  const { labels } = useAddressLabels();
+  const customAbiCount = useProviderAdapterStore(
+    (state) => state.settings.safeCustomAbis.length
+  );
+
+  const sectionCounts = useMemo<Record<WorkspaceSettingsSection, number>>(
+    () => ({
+      chains: chains.length,
+      adapters: 0,
+      abis: customAbiCount,
+      registry: 0,
+      labels: labels.length,
+    }),
+    [chains.length, customAbiCount, labels.length]
+  );
+
+  return (
+    <PageStage width="settings">
+      <div className="border-border -mb-px border-b">
+        <nav className="flex gap-1 overflow-x-auto">
+          {TABS.map((tab) => {
+            const active = activeSection === tab.id;
+            const Icon = tab.icon;
+            return (
+              <Button
+                key={tab.id}
+                type="button"
+                variant="ghost"
+                asChild
+                className={cn(
+                  "h-auto gap-1.5 rounded-none border-b-2 px-4 py-3 text-[13px] whitespace-nowrap transition-colors",
+                  active
+                    ? "border-b-primary text-foreground -mb-px border-transparent font-semibold hover:bg-transparent"
+                    : "text-muted-foreground/60 hover:text-foreground border-transparent hover:bg-transparent"
+                )}
+              >
+                <Link href={`/settings/${tab.id}`}>
+                  <Icon className="h-3.5 w-3.5 shrink-0" />
+                  {tab.label}
+                  {sectionCounts[tab.id] > 0 && (
+                    <span className="bg-muted text-muted-foreground/50 rounded px-1.5 py-px font-mono text-[10px] tabular-nums">
+                      {sectionCounts[tab.id]}
+                    </span>
+                  )}
+                </Link>
+              </Button>
+            );
+          })}
+        </nav>
+      </div>
+
+      <div className="pt-6">
+        {activeSection === "chains" ? <ChainManagementController /> : null}
+        {activeSection === "adapters" ? <ProviderAdaptersPanel /> : null}
+        {activeSection === "abis" ? <CustomAbisPanel /> : null}
+        {activeSection === "registry" ? <ExportImportController /> : null}
+        {activeSection === "labels" ? (
+          <AddressLabelManagerController embedded />
+        ) : null}
+      </div>
+    </PageStage>
+  );
+}

@@ -7,7 +7,7 @@ export default function MultisigsPage() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace("/");
+    router.replace("/vaults");
   }, [router]);
 
   return null;

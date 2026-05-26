@@ -1,15 +1,15 @@
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
 
+import { decodeSafeCalldataWithCustomAbis } from "@/lib/safe-custom-abi";
+import { payloadQueryKey } from "@/lib/state/refresh-policy";
 import {
   getUnsupportedProviderMessage,
   getWorkspaceProviderAdapter,
 } from "@/lib/workspace/provider-adapters";
+import { useProviderAdapterStore } from "@/stores/provider-adapter-store";
 import type { ChainConfig } from "@/types/chain";
-import type {
-  WorkspaceMultisig,
-  WorkspacePayload,
-  WorkspaceProposal,
-} from "@/types/workspace";
+import type { WorkspaceMultisig, WorkspaceProposal } from "@/types/workspace";
 
 interface UseWorkspacePayloadOptions {
   chains: ChainConfig[];
@@ -22,65 +22,64 @@ export function useWorkspacePayload({
   multisig,
   proposal,
 }: UseWorkspacePayloadOptions) {
-  const [loading, setLoading] = useState(false);
-  const [payload, setPayload] = useState<WorkspacePayload | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const safeCustomAbis = useProviderAdapterStore(
+    (state) => state.settings.safeCustomAbis
+  );
+  const {
+    data: payload,
+    isLoading: loading,
+    error: rawError,
+  } = useQuery({
+    queryKey:
+      multisig && proposal
+        ? payloadQueryKey({
+            provider: multisig.provider,
+            chainId: multisig.chainId,
+            address: multisig.address,
+            nonce: proposal.transactionIndex,
+          })
+        : ["payload", null],
+    queryFn: async () => {
+      if (!multisig || !proposal) return null;
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadPayload() {
-      if (!multisig || !proposal) {
-        setPayload(null);
-        setError(null);
-        return;
+      const adapter = getWorkspaceProviderAdapter(multisig.provider);
+      if (!adapter.capabilities.payload) {
+        throw new Error(
+          getUnsupportedProviderMessage(multisig.provider, "payload")
+        );
       }
-
-      setLoading(true);
-      setPayload(null);
-      setError(null);
-
-      try {
-        const adapter = getWorkspaceProviderAdapter(multisig.provider);
-        if (!adapter.capabilities.payload) {
-          throw new Error(
-            getUnsupportedProviderMessage(multisig.provider, "payload")
-          );
-        }
-        const nextPayload = await adapter.loadPayload({
-          chains,
-          multisig,
-          proposal,
-        });
-
-        if (!cancelled) {
-          setPayload(nextPayload);
-        }
-      } catch (nextError) {
-        if (!cancelled) {
-          setError(
-            nextError instanceof Error
-              ? nextError.message
-              : "Transaction data not available."
-          );
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
+      return adapter.loadPayload({ chains, multisig, proposal });
+    },
+    enabled: Boolean(multisig && proposal),
+    staleTime: Infinity,
+    gcTime: 10 * 60_000,
+    retry: 1,
+  });
+  const decodedPayload = useMemo(() => {
+    if (!payload || payload.type !== "safe") {
+      return payload ?? null;
     }
 
-    void loadPayload();
+    const decoded = decodeSafeCalldataWithCustomAbis(
+      payload.data,
+      safeCustomAbis
+    );
 
-    return () => {
-      cancelled = true;
-    };
-  }, [chains, multisig, proposal]);
+    return decoded
+      ? {
+          ...payload,
+          dataDecoded: decoded,
+        }
+      : payload;
+  }, [payload, safeCustomAbis]);
 
   return {
     loading,
-    payload,
-    error,
+    payload: decodedPayload,
+    error: rawError
+      ? rawError instanceof Error
+        ? rawError.message
+        : "Transaction data not available."
+      : null,
   };
 }

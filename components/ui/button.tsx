@@ -5,26 +5,26 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md border text-sm font-medium tracking-[-0.01em] transition-all duration-150 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/40 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md border font-medium tracking-[-0.01em] transition-all duration-150 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/40 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
   {
     variants: {
       variant: {
         default:
-          "border-zinc-200 bg-zinc-100 text-zinc-950 shadow-none hover:border-zinc-50 hover:bg-white",
+          "border-border bg-muted text-foreground shadow-none hover:border-border/80 hover:bg-muted/80",
         destructive:
-          "border-red-500/40 bg-red-500 text-white hover:bg-red-400 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40",
+          "border-destructive/40 bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40",
         outline:
-          "border-zinc-800 bg-zinc-950/60 text-zinc-200 shadow-none hover:border-zinc-700 hover:bg-zinc-900 hover:text-zinc-50",
-        secondary:
-          "border-zinc-800 bg-zinc-900 text-zinc-100 hover:bg-zinc-800",
+          "border-border bg-card/60 text-foreground shadow-none hover:border-border hover:bg-muted hover:text-foreground",
+        secondary: "border-border bg-muted text-foreground hover:bg-muted/80",
         ghost:
-          "border-transparent text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100",
+          "border-transparent text-muted-foreground hover:bg-muted hover:text-foreground",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
-        default: "h-9 px-4 py-2 has-[>svg]:px-3",
-        sm: "h-9 gap-1.5 px-3.5 has-[>svg]:px-3",
-        lg: "h-10 px-6 has-[>svg]:px-4",
+        default: "h-9 px-4 py-2 text-[13px] has-[>svg]:px-3",
+        sm: "h-9 gap-1.5 px-3.5 text-xs has-[>svg]:px-3",
+        xs: "h-6 gap-1 px-2 text-[10px] has-[>svg]:px-1.5 [&_svg:not([class*='size-'])]:size-2.5",
+        lg: "h-10 px-6 text-[13px] has-[>svg]:px-4",
         icon: "size-10",
         "icon-sm": "size-9",
         "icon-lg": "size-10",
@@ -47,7 +47,7 @@ function Button({
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean;
   }) {
-  const Comp = asChild ? Slot : "button";
+  const Comp = (asChild ? Slot : "button") as React.ElementType;
 
   return (
     <Comp

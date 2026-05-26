@@ -5,10 +5,13 @@ import {
   Check,
   Copy,
   Download,
+  FileText,
+  Link,
   Loader2,
   Upload,
+  X,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { type ChangeEvent, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import {
@@ -16,39 +19,42 @@ import {
   exportAll,
   importFromYaml,
 } from "@/lib/export-import";
+import {
+  type RawYamlPreview,
+  type WorkspacePackageSummary,
+  buildRawYamlPreview,
+  buildWorkspacePackageSummary,
+  formatBytes,
+} from "@/lib/export-import-package";
 import { useAddressLabels } from "@/lib/hooks/use-address-label";
+import { loadSafeMultisig } from "@/lib/safe";
 import { SquadService } from "@/lib/squad";
+import { cn } from "@/lib/utils";
 import { useAddressLabelStore } from "@/stores/address-label-store";
 import { useChainStore } from "@/stores/chain-store";
 import { useMultisigStore } from "@/stores/multisig-store";
 import { useProviderAdapterStore } from "@/stores/provider-adapter-store";
 import { useWorkspaceStore } from "@/stores/workspace-store";
 import {
-  type ChainConfig,
+  getChainRpcUrls,
   getSquadsProgramId,
   isOperationalSquadsChain,
   normalizeChainConfig,
 } from "@/types/chain";
 import type { MultisigAccount } from "@/types/multisig";
+import { providerAdaptersToSettings } from "@/types/provider-adapter";
 
 import { Button } from "./ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "./ui/dialog";
-import { Label } from "./ui/label";
+import { Input } from "./ui/input";
 import { Progress } from "./ui/progress";
-import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
-
-interface ExportImportControllerProps {
-  embedded?: boolean;
-  onClose?: () => void;
-}
+import { Textarea } from "./ui/textarea";
 
 interface ImportProgressState {
   current: number;
@@ -56,41 +62,13 @@ interface ImportProgressState {
   label: string;
 }
 
-export function ExportImportDialog() {
-  return <DialogShell />;
+interface ImportReviewState {
+  data: ExportData;
+  summary: WorkspacePackageSummary;
+  rawPreview: RawYamlPreview;
 }
 
-function DialogShell() {
-  const [isOpen, setIsOpen] = useState(false);
-  const handleDialogChange = (open: boolean) => {
-    setIsOpen(open);
-  };
-
-  return (
-    <Dialog open={isOpen} onOpenChange={handleDialogChange}>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="icon">
-          <Download className="h-4 w-4" />
-          <span className="sr-only">Export / Import</span>
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="flex max-h-[90vh] flex-col overflow-hidden sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle>Export / Import Settings</DialogTitle>
-          <DialogDescription>
-            Export your configuration to YAML or import from clipboard.
-          </DialogDescription>
-        </DialogHeader>
-        <ExportImportController onClose={() => setIsOpen(false)} />
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-export function ExportImportController({
-  embedded = false,
-  onClose,
-}: ExportImportControllerProps) {
+export function ExportImportController() {
   const [mode, setMode] = useState<"export" | "import">("export");
   const [exportContent, setExportContent] = useState<string>("");
   const [importContent, setImportContent] = useState<string>("");
@@ -99,6 +77,9 @@ export function ExportImportController({
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [importProgress, setImportProgress] =
     useState<ImportProgressState | null>(null);
+  const [importReview, setImportReview] = useState<ImportReviewState | null>(
+    null
+  );
 
   const { chains, addChain, resetToDefaults: resetChains } = useChainStore();
   const {
@@ -111,12 +92,36 @@ export function ExportImportController({
   const resetProviderSettings = useProviderAdapterStore(
     (state) => state.resetSettings
   );
+  const updateProviderSettings = useProviderAdapterStore(
+    (state) => state.updateSettings
+  );
+  const providerAdapterSettings = useProviderAdapterStore(
+    (state) => state.settings
+  );
   const resetWorkspace = useWorkspaceStore((state) => state.resetAll);
   const customChainCount = chains.filter((chain) =>
     chain.id.startsWith("custom-")
   ).length;
   const multisigCount = multisigs.length;
   const labelCount = labels.length;
+  const exportPackage = useMemo(() => {
+    if (!exportContent) {
+      return null;
+    }
+
+    try {
+      const data = importFromYaml(exportContent);
+      const summary = buildWorkspacePackageSummary(data, exportContent);
+      return {
+        summary,
+        rawPreview: buildRawYamlPreview(exportContent, {
+          customAbiCount: summary.counts.customAbis,
+        }),
+      };
+    } catch {
+      return null;
+    }
+  }, [exportContent]);
 
   const generateExport = () => {
     try {
@@ -125,8 +130,15 @@ export function ExportImportController({
       const currentLabels = Array.from(
         useAddressLabelStore.getState().labels.values()
       ).sort((a, b) => b.updatedAt - a.updatedAt);
+      const currentProviderAdapterSettings =
+        useProviderAdapterStore.getState().settings;
 
-      const content = exportAll(currentChains, currentMultisigs, currentLabels);
+      const content = exportAll(
+        currentChains,
+        currentMultisigs,
+        currentLabels,
+        currentProviderAdapterSettings
+      );
       setExportContent(content);
     } catch (error) {
       console.error("Export failed:", error);
@@ -148,18 +160,68 @@ export function ExportImportController({
     }
   };
 
-  const handleImport = async () => {
+  const handleSaveYaml = () => {
+    if (!exportContent) return;
+
+    const blob = new Blob([exportContent], {
+      type: "application/x-yaml;charset=utf-8",
+    });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `squad-workspace-${new Date().toISOString().slice(0, 10)}.yaml`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  const updateImportContent = (content: string) => {
+    setImportContent(content);
+    setImportReview(null);
+  };
+
+  const handleReviewImport = () => {
     try {
       if (!importContent.trim()) {
-        toast.error("Please paste YAML content");
+        toast.error("Paste YAML content first");
         return;
       }
 
-      const data: ExportData = importFromYaml(importContent);
+      const data = importFromYaml(importContent);
+      const summary = buildWorkspacePackageSummary(data, importContent);
+      setImportReview({
+        data,
+        summary,
+        rawPreview: buildRawYamlPreview(importContent, {
+          customAbiCount: summary.counts.customAbis,
+        }),
+      });
+    } catch (error) {
+      setImportReview(null);
+      toast.error("Import review failed", {
+        description:
+          error instanceof Error ? error.message : "Unknown error occurred",
+      });
+    }
+  };
+
+  const handleImport = async () => {
+    try {
+      if (!importReview) {
+        handleReviewImport();
+        return;
+      }
+
+      const data = importReview.data;
+      const hasProviderAdapters = Boolean(data.providerAdapters?.evm?.safe);
+      const customAbiCount =
+        data.providerAdapters?.evm?.safe?.customAbis.length ?? 0;
       const totalSteps =
         (data.chains?.length ?? 0) +
         (data.multisigs?.length ?? 0) +
-        ((data.addressLabels?.length ?? 0) > 0 ? 1 : 0);
+        ((data.addressLabels?.length ?? 0) > 0 ? 1 : 0) +
+        (hasProviderAdapters ? 1 : 0);
       let completedSteps = 0;
 
       const updateImportProgress = (label: string) => {
@@ -181,6 +243,7 @@ export function ExportImportController({
       let importedChains = 0;
       let importedMultisigs = 0;
       let importedLabels = 0;
+      let importedProviderAdapters = false;
       const failedMultisigs: string[] = [];
 
       const newChains: typeof chains = [...chains];
@@ -232,44 +295,27 @@ export function ExportImportController({
               serializedMultisig.provider === "safe" ||
               chain.multisigProvider === "safe"
             ) {
-              const response = await fetch("/api/safe/import", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  chain: normalizeChainConfig(chain),
-                  addressInput: serializedMultisig.publicKey,
-                  label: serializedMultisig.label,
-                  tags: serializedMultisig.tags,
-                }),
-              });
-
-              const payload = (await response.json().catch(() => null)) as {
-                error?: string;
-                multisig?: Omit<MultisigAccount, "transactionIndex"> & {
-                  transactionIndex: string;
-                };
-              } | null;
-
-              if (!response.ok || !payload?.multisig) {
+              try {
+                const safeMultisig = await loadSafeMultisig(
+                  chain,
+                  serializedMultisig.publicKey,
+                  serializedMultisig.label,
+                  serializedMultisig.tags,
+                  { allowDegraded: true }
+                );
+                addMultisig(safeMultisig);
+                importedMultisigs++;
+                completeImportStep(
+                  `Imported Safe ${serializedMultisig.label ?? serializedMultisig.publicKey}`
+                );
+              } catch (error) {
                 failedMultisigs.push(
-                  `${serializedMultisig.publicKey} (${payload?.error ?? "Safe import failed"})`
+                  `${serializedMultisig.publicKey} (${error instanceof Error ? error.message : "Safe import failed"})`
                 );
                 completeImportStep(
                   `Safe import failed for ${serializedMultisig.publicKey}`
                 );
-                continue;
               }
-
-              addMultisig({
-                ...payload.multisig,
-                transactionIndex: BigInt(payload.multisig.transactionIndex),
-              });
-              importedMultisigs++;
-              completeImportStep(
-                `Imported Safe ${serializedMultisig.label ?? serializedMultisig.publicKey}`
-              );
               continue;
             }
 
@@ -285,8 +331,9 @@ export function ExportImportController({
 
             const programIdString = getSquadsProgramId(chain);
             const squadService = new SquadService(
-              chain.rpcUrl,
-              programIdString
+              getChainRpcUrls(chain),
+              programIdString,
+              { chainId: chain.id }
             );
 
             const { PublicKey } = await import("@solana/web3.js");
@@ -344,20 +391,29 @@ export function ExportImportController({
         completeImportStep("Merged address labels");
       }
 
+      if (hasProviderAdapters) {
+        updateImportProgress("Configuring EVM Safe adapter...");
+        updateProviderSettings(
+          providerAdaptersToSettings(data.providerAdapters)
+        );
+        importedProviderAdapters = true;
+        completeImportStep("Configured EVM Safe adapter");
+      }
+
       const messages = [];
       if (importedChains > 0) messages.push(`${importedChains} chain(s)`);
-      if (importedMultisigs > 0)
-        messages.push(`${importedMultisigs} multisig(s)`);
+      if (importedMultisigs > 0) messages.push(`${importedMultisigs} vault(s)`);
       if (importedLabels > 0) messages.push(`${importedLabels} label(s)`);
+      if (importedProviderAdapters) messages.push("EVM adapter settings");
+      if (importedProviderAdapters && customAbiCount > 0) {
+        messages.push(`${customAbiCount} custom ABI(s)`);
+      }
 
       if (messages.length > 0) {
         toast.success("Import successful", {
-          description: `Imported ${messages.join(" and ")}${failedMultisigs.length > 0 ? `. ${failedMultisigs.length} multisig(s) failed.` : ""}`,
+          description: `Imported ${messages.join(" and ")}${failedMultisigs.length > 0 ? `. ${failedMultisigs.length} vault(s) failed.` : ""}`,
         });
-        setImportContent("");
-        if (!embedded) {
-          onClose?.();
-        }
+        updateImportContent("");
       } else if (failedMultisigs.length > 0) {
         toast.error("Import failed", {
           description: `Failed to import ${failedMultisigs.length} multisig(s)`,
@@ -385,14 +441,14 @@ export function ExportImportController({
     resetLabels();
     resetProviderSettings();
     resetWorkspace();
-    setImportContent("");
+    updateImportContent("");
     setImportProgress(null);
     setIsImporting(false);
     setResetDialogOpen(false);
 
     toast.success("Workspace reset complete", {
       description:
-        "Saved multisigs, labels, custom chains, and provider settings were cleared.",
+        "Saved vaults, labels, custom chains, and provider settings were cleared.",
     });
   };
 
@@ -403,7 +459,7 @@ export function ExportImportController({
   const handleModeChange = (newMode: "export" | "import") => {
     setMode(newMode);
     setExportContent("");
-    setImportContent("");
+    updateImportContent("");
     setCopied(false);
     if (newMode === "export") {
       generateExport();
@@ -414,17 +470,12 @@ export function ExportImportController({
     if (mode === "export") {
       generateExport();
     }
-  }, [chains, labels, mode, multisigs]);
+  }, [chains, labels, mode, multisigs, providerAdapterSettings]);
 
   return (
     <>
-      <div
-        className={
-          embedded ? "space-y-5" : "flex-1 space-y-6 overflow-y-auto py-4"
-        }
-      >
+      <div className="space-y-5">
         <ExportImportModePicker
-          embedded={embedded}
           mode={mode}
           disabled={isImporting}
           onModeChange={handleModeChange}
@@ -432,71 +483,42 @@ export function ExportImportController({
 
         {mode === "export" && exportContent && (
           <ExportImportExportPanel
-            embedded={embedded}
-            chains={chains}
-            multisigs={multisigs}
             exportContent={exportContent}
+            packageSummary={exportPackage?.summary ?? null}
+            rawPreview={exportPackage?.rawPreview ?? null}
             copied={copied}
             onCopy={handleCopy}
+            onSave={handleSaveYaml}
           />
         )}
 
         {mode === "import" && (
           <ExportImportImportPanel
-            embedded={embedded}
             importContent={importContent}
+            importReview={importReview}
             importProgress={importProgress}
             isImporting={isImporting}
-            onImportContentChange={setImportContent}
+            onImportContentChange={updateImportContent}
             onResetImportedState={handleOpenResetDialog}
+            onReview={handleReviewImport}
+            onImport={handleImport}
           />
         )}
       </div>
 
-      {!embedded ? (
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onClose?.()}>
-            Close
-          </Button>
-          {mode === "import" && (
-            <Button onClick={handleImport} disabled={isImporting}>
-              {isImporting ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Upload className="mr-2 h-4 w-4" />
-              )}
-              {isImporting ? "Importing..." : "Import"}
-            </Button>
-          )}
-        </DialogFooter>
-      ) : mode === "import" ? (
-        <div className="flex justify-end pt-4">
-          <Button onClick={handleImport} disabled={isImporting}>
-            {isImporting ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Upload className="mr-2 h-4 w-4" />
-            )}
-            {isImporting ? "Importing..." : "Import"}
-          </Button>
-        </div>
-      ) : null}
-
       <Dialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
         <DialogContent
           showCloseButton={false}
-          className="max-w-[30rem] gap-0 overflow-hidden border-red-500/20 bg-[linear-gradient(180deg,rgba(35,20,20,0.98),rgba(20,15,18,0.99))] p-0"
+          className="border-destructive/20 bg-card max-w-[30rem] gap-0 overflow-hidden p-0"
         >
-          <div className="border-b border-red-500/15 px-6 py-5">
+          <div className="border-destructive/15 border-b px-6 py-5">
             <div className="flex items-start gap-4">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-red-500/20 bg-red-500/10">
-                <AlertTriangle className="h-5 w-5 text-red-300" />
+              <div className="border-destructive/20 bg-destructive/10 flex h-11 w-11 shrink-0 items-center justify-center rounded-full border">
+                <AlertTriangle className="text-destructive h-5 w-5" />
               </div>
               <div className="space-y-2">
-                <DialogTitle className="text-[1.1rem]">
-                  Reset imported workspace state?
-                </DialogTitle>
-                <DialogDescription className="max-w-md">
+                <DialogTitle>Reset imported workspace state?</DialogTitle>
+                <DialogDescription className="max-w-md text-[13px] leading-5">
                   Use this only when a YAML import left the local workspace in a
                   broken state. This action cannot be undone.
                 </DialogDescription>
@@ -505,51 +527,44 @@ export function ExportImportController({
           </div>
 
           <div className="space-y-4 px-6 py-5">
-            <div className="grid gap-2 border border-zinc-800 bg-zinc-950/50 p-4">
-              <p className="text-[0.68rem] tracking-[0.18em] text-zinc-500 uppercase">
+            <div className="bg-muted grid gap-2 rounded-xl p-4">
+              <p className="text-muted-foreground/50 text-[11px] font-medium">
                 What gets cleared
               </p>
-              <p className="text-sm text-zinc-300">
-                Saved multisigs, custom chains, address labels, provider
-                settings, and current workspace selections.
+              <p className="text-foreground/80 text-[13px]">
+                Saved vaults, custom chains, address labels, provider settings,
+                and current workspace selections.
               </p>
             </div>
             <div className="grid gap-2 sm:grid-cols-3">
-              <div className="border border-zinc-800 bg-zinc-950/50 px-3 py-3">
-                <p className="text-[0.62rem] tracking-[0.16em] text-zinc-500 uppercase">
-                  Multisigs
+              <div className="bg-muted rounded-xl px-3 py-3">
+                <p className="text-muted-foreground/50 text-[11px] font-medium">
+                  Vaults
                 </p>
-                <p className="mt-1 text-lg font-medium text-zinc-100">
+                <p className="text-foreground mt-1 text-[15px] font-semibold tabular-nums">
                   {multisigCount}
                 </p>
               </div>
-              <div className="border border-zinc-800 bg-zinc-950/50 px-3 py-3">
-                <p className="text-[0.62rem] tracking-[0.16em] text-zinc-500 uppercase">
+              <div className="bg-muted rounded-xl px-3 py-3">
+                <p className="text-muted-foreground/50 text-[11px] font-medium">
                   Custom chains
                 </p>
-                <p className="mt-1 text-lg font-medium text-zinc-100">
+                <p className="text-foreground mt-1 text-[15px] font-semibold tabular-nums">
                   {customChainCount}
                 </p>
               </div>
-              <div className="border border-zinc-800 bg-zinc-950/50 px-3 py-3">
-                <p className="text-[0.62rem] tracking-[0.16em] text-zinc-500 uppercase">
+              <div className="bg-muted rounded-xl px-3 py-3">
+                <p className="text-muted-foreground/50 text-[11px] font-medium">
                   Labels
                 </p>
-                <p className="mt-1 text-lg font-medium text-zinc-100">
+                <p className="text-foreground mt-1 text-[15px] font-semibold tabular-nums">
                   {labelCount}
                 </p>
               </div>
             </div>
-            <p className="text-sm leading-6 text-zinc-500">
-              Default chain presets remain available after reset. Right now this
-              action will remove {multisigCount} multisig
-              {multisigCount === 1 ? "" : "s"}, {customChainCount} custom chain
-              {customChainCount === 1 ? "" : "s"}, and {labelCount} label
-              {labelCount === 1 ? "" : "s"}.
-            </p>
           </div>
 
-          <DialogFooter className="border-t border-zinc-800 px-6 py-5 sm:justify-between">
+          <div className="flex items-center justify-between px-6 pt-2 pb-5">
             <Button
               type="button"
               variant="outline"
@@ -562,9 +577,9 @@ export function ExportImportController({
               variant="destructive"
               onClick={handleResetImportedState}
             >
-              Reset Workspace State
+              Reset
             </Button>
-          </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
     </>
@@ -572,288 +587,519 @@ export function ExportImportController({
 }
 
 interface ExportImportModePickerProps {
-  embedded: boolean;
   mode: "export" | "import";
   disabled?: boolean;
   onModeChange: (mode: "export" | "import") => void;
 }
 
 function ExportImportModePicker({
-  embedded,
   mode,
   disabled = false,
   onModeChange,
 }: ExportImportModePickerProps) {
   return (
-    <RadioGroup value={mode} onValueChange={onModeChange} disabled={disabled}>
-      <div className={embedded ? "grid gap-2 sm:grid-cols-2" : "space-y-2"}>
-        <Label
-          htmlFor={embedded ? "settings-export" : "export"}
-          className={
-            embedded
-              ? "flex cursor-pointer items-start gap-3 border border-zinc-800 bg-zinc-950/55 px-3 py-3 font-normal"
-              : "flex cursor-pointer items-center space-x-2 font-normal"
-          }
+    <div className="bg-muted dark:bg-background inline-flex self-start rounded-lg p-1">
+      {(["export", "import"] as const).map((m) => (
+        <button
+          key={m}
+          type="button"
+          disabled={disabled}
+          onClick={() => onModeChange(m)}
+          className={cn(
+            "rounded-md px-4 py-1.5 text-[13px] font-medium transition-all",
+            mode === m
+              ? "bg-card dark:bg-muted text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground disabled:opacity-50"
+          )}
         >
-          <RadioGroupItem
-            value="export"
-            id={embedded ? "settings-export" : "export"}
-          />
-          <span className="space-y-1">
-            <span className="block text-sm text-zinc-100">Export to YAML</span>
-            {embedded ? (
-              <span className="block text-xs text-zinc-400">
-                Generate the complete portable workspace snapshot.
-              </span>
-            ) : null}
-          </span>
-        </Label>
-        <Label
-          htmlFor={embedded ? "settings-import" : "import"}
-          className={
-            embedded
-              ? "flex cursor-pointer items-start gap-3 border border-zinc-800 bg-zinc-950/55 px-3 py-3 font-normal"
-              : "flex cursor-pointer items-center space-x-2 font-normal"
-          }
-        >
-          <RadioGroupItem
-            value="import"
-            id={embedded ? "settings-import" : "import"}
-          />
-          <span className="space-y-1">
-            <span className="block text-sm text-zinc-100">
-              Import from YAML
-            </span>
-            {embedded ? (
-              <span className="block text-xs text-zinc-400">
-                Merge chains and multisigs from another environment.
-              </span>
-            ) : null}
-          </span>
-        </Label>
-      </div>
-    </RadioGroup>
-  );
-}
-
-interface ExportImportExportPanelProps {
-  embedded: boolean;
-  chains: ChainConfig[];
-  multisigs: MultisigAccount[];
-  exportContent: string;
-  copied: boolean;
-  onCopy: () => void;
-}
-
-function ExportImportExportPanel({
-  embedded,
-  chains,
-  multisigs,
-  exportContent,
-  copied,
-  onCopy,
-}: ExportImportExportPanelProps) {
-  const operationalSquadsChains = chains.filter(isOperationalSquadsChain);
-  const preparedSafeChains = chains.filter(
-    (chain) => chain.multisigProvider === "safe"
-  );
-
-  return (
-    <div
-      className={
-        embedded ? "grid gap-4 xl:grid-cols-[16rem_minmax(0,1fr)]" : "space-y-2"
-      }
-    >
-      <div
-        className={
-          embedded
-            ? "space-y-3 border border-zinc-800 bg-zinc-950/55 p-4"
-            : "flex items-center justify-between"
-        }
-      >
-        {embedded ? (
-          <>
-            <div className="space-y-1">
-              <p className="text-[0.68rem] tracking-[0.18em] text-zinc-500 uppercase">
-                Export package
-              </p>
-              <p className="text-sm leading-6 text-zinc-400">
-                Current output contains all saved chains and multisigs in a
-                single portable YAML document.
-              </p>
-            </div>
-            <div className="grid gap-2">
-              <div className="border border-zinc-800 bg-zinc-950 px-3 py-2">
-                <p className="text-[0.62rem] tracking-[0.16em] text-zinc-500 uppercase">
-                  Squads chains
-                </p>
-                <p className="mt-1 text-sm font-medium text-zinc-100">
-                  {operationalSquadsChains.length}
-                </p>
-              </div>
-              <div className="border border-zinc-800 bg-zinc-950 px-3 py-2">
-                <p className="text-[0.62rem] tracking-[0.16em] text-zinc-500 uppercase">
-                  Multisigs
-                </p>
-                <p className="mt-1 text-sm font-medium text-zinc-100">
-                  {multisigs.length}
-                </p>
-              </div>
-              <div className="border border-zinc-800 bg-zinc-950 px-3 py-2">
-                <p className="text-[0.62rem] tracking-[0.16em] text-zinc-500 uppercase">
-                  Safe-ready chains
-                </p>
-                <p className="mt-1 text-sm font-medium text-zinc-100">
-                  {preparedSafeChains.length}
-                </p>
-              </div>
-              <Button
-                variant="outline"
-                onClick={onCopy}
-                disabled={copied}
-                className="justify-start border-zinc-800 bg-transparent text-zinc-200 hover:bg-zinc-900"
-              >
-                {copied ? (
-                  <>
-                    <Check className="mr-2 h-4 w-4" />
-                    Copied
-                  </>
-                ) : (
-                  <>
-                    <Copy className="mr-2 h-4 w-4" />
-                    Copy YAML
-                  </>
-                )}
-              </Button>
-            </div>
-          </>
-        ) : (
-          <>
-            <Label>YAML Configuration:</Label>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onCopy}
-              disabled={copied}
-            >
-              {copied ? (
-                <>
-                  <Check className="mr-2 h-4 w-4" />
-                  Copied
-                </>
-              ) : (
-                <>
-                  <Copy className="mr-2 h-4 w-4" />
-                  Copy
-                </>
-              )}
-            </Button>
-          </>
-        )}
-      </div>
-      <div
-        className={
-          embedded
-            ? "min-h-[28rem] w-full overflow-auto border border-zinc-800 bg-zinc-950/35"
-            : "h-[400px] w-full overflow-auto rounded-md border"
-        }
-      >
-        <pre className="p-4 text-xs whitespace-pre">
-          <code>{exportContent}</code>
-        </pre>
-      </div>
+          {m === "export" ? "Export" : "Import"}
+        </button>
+      ))}
     </div>
   );
 }
 
+interface ExportImportExportPanelProps {
+  exportContent: string;
+  packageSummary: WorkspacePackageSummary | null;
+  rawPreview: RawYamlPreview | null;
+  copied: boolean;
+  onCopy: () => void;
+  onSave: () => void;
+}
+
+function ExportImportExportPanel({
+  exportContent,
+  packageSummary,
+  rawPreview,
+  copied,
+  onCopy,
+  onSave,
+}: ExportImportExportPanelProps) {
+  return (
+    <div className="border-border bg-card overflow-hidden rounded-xl border">
+      <div className="border-border flex items-center gap-3 border-b px-4 py-3">
+        <div className="min-w-0">
+          <p className="text-foreground text-[13px] font-semibold">
+            Workspace YAML package
+          </p>
+          <p className="text-muted-foreground/60 text-[11px]">
+            Copy or save exports the complete package.
+          </p>
+        </div>
+        <div className="ml-auto flex shrink-0 items-center gap-2">
+          <Button type="button" variant="outline" onClick={onSave}>
+            <Download className="h-4 w-4" />
+            Save YAML
+          </Button>
+          <Button
+            type="button"
+            onClick={onCopy}
+            disabled={copied}
+            className="bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20"
+          >
+            {copied ? (
+              <>
+                <Check className="h-4 w-4" />
+                Copied
+              </>
+            ) : (
+              <>
+                <Copy className="h-4 w-4" />
+                Copy YAML
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
+      {packageSummary ? (
+        <WorkspacePackageSummaryView summary={packageSummary} />
+      ) : null}
+      <RawYamlPreviewView
+        title="Raw YAML preview"
+        preview={
+          rawPreview ??
+          buildRawYamlPreview(exportContent, { customAbiCount: 0 })
+        }
+      />
+    </div>
+  );
+}
+
+function WorkspacePackageSummaryView({
+  summary,
+}: {
+  summary: WorkspacePackageSummary;
+}) {
+  const stats = [
+    ["Chains", summary.counts.chains.toString()],
+    ["Vaults", summary.counts.vaults.toString()],
+    ["Labels", summary.counts.labels.toString()],
+    ["Safe chains", summary.counts.safeChains.toString()],
+    ["Custom ABIs", summary.counts.customAbis.toString()],
+    ["Enabled ABIs", summary.counts.enabledCustomAbis.toString()],
+    ["YAML size", formatBytes(summary.yamlBytes)],
+    ["ABI source", formatBytes(summary.totalAbiSourceBytes)],
+  ];
+
+  return (
+    <div className="space-y-3 px-4 py-4">
+      <div className="grid gap-2 sm:grid-cols-4">
+        {stats.map(([label, value]) => (
+          <div key={label} className="bg-muted/50 rounded-lg px-3 py-2.5">
+            <p className="text-muted-foreground/50 text-[10px] font-medium">
+              {label}
+            </p>
+            <p className="text-foreground mt-1 text-[14px] font-semibold tabular-nums">
+              {value}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      {summary.abiRows.length > 0 ? (
+        <div className="border-border overflow-hidden rounded-lg border">
+          <div className="border-border bg-muted/30 text-muted-foreground/60 grid grid-cols-[minmax(0,1fr)_5rem_5rem_6rem] gap-2 border-b px-3 py-2 text-[10px] font-medium">
+            <span>ABI</span>
+            <span>Status</span>
+            <span>Functions</span>
+            <span>Size</span>
+          </div>
+          <div className="divide-border divide-y">
+            {summary.abiRows.map((row, index) => (
+              <div
+                key={`${row.label}-${index}`}
+                className="grid grid-cols-[minmax(0,1fr)_5rem_5rem_6rem] items-center gap-2 px-3 py-2"
+              >
+                <div className="min-w-0">
+                  <p className="text-foreground truncate text-[12px] font-medium">
+                    {row.label}
+                  </p>
+                  <p className="text-muted-foreground/50 text-[10px]">
+                    {row.enabled ? "enabled" : "disabled"}
+                  </p>
+                </div>
+                <span
+                  className={cn(
+                    "w-fit rounded border px-1.5 py-px text-[10px]",
+                    row.parseStatus === "valid"
+                      ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                      : "border-destructive/25 bg-destructive/10 text-destructive"
+                  )}
+                  title={row.parseError ?? undefined}
+                >
+                  {row.parseStatus}
+                </span>
+                <span className="text-muted-foreground/70 text-[11px] tabular-nums">
+                  {row.functionCount}
+                </span>
+                <span className="text-muted-foreground/70 text-[11px] tabular-nums">
+                  {formatBytes(row.sourceBytes)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function RawYamlPreviewView({
+  title,
+  preview,
+}: {
+  title: string;
+  preview: RawYamlPreview;
+}) {
+  const [open, setOpen] = useState(!preview.defaultCollapsed);
+
+  useEffect(() => {
+    setOpen(!preview.defaultCollapsed);
+  }, [preview.defaultCollapsed, preview.preview]);
+
+  return (
+    <details
+      className="border-border border-t"
+      open={open}
+      onToggle={(event) => setOpen(event.currentTarget.open)}
+    >
+      <summary className="hover:bg-muted/40 text-muted-foreground/70 flex cursor-pointer items-center justify-between gap-3 px-4 py-3 text-[12px] font-medium">
+        <span>{title}</span>
+        <span className="text-[11px] font-normal">
+          {formatBytes(preview.byteLength)}
+          {preview.isTruncated
+            ? ` · ${formatBytes(preview.omittedBytes)} omitted`
+            : ""}
+        </span>
+      </summary>
+      <div className="bg-muted/30 max-h-[22rem] w-full overflow-auto">
+        <pre className="text-muted-foreground/60 p-4 font-mono text-[11px] whitespace-pre">
+          <code>{preview.preview}</code>
+        </pre>
+      </div>
+    </details>
+  );
+}
+
+type UrlFetchState = "idle" | "loading" | "success" | "error";
+
 interface ExportImportImportPanelProps {
-  embedded: boolean;
   importContent: string;
+  importReview: ImportReviewState | null;
   importProgress: ImportProgressState | null;
   isImporting: boolean;
   onImportContentChange: (value: string) => void;
   onResetImportedState: () => void;
+  onReview: () => void;
+  onImport: () => void;
 }
 
 function ExportImportImportPanel({
-  embedded,
   importContent,
+  importReview,
   importProgress,
   isImporting,
   onImportContentChange,
   onResetImportedState,
+  onReview,
+  onImport,
 }: ExportImportImportPanelProps) {
+  const [urlInput, setUrlInput] = useState("");
+  const [urlFetchState, setUrlFetchState] = useState<UrlFetchState>("idle");
+  const [urlError, setUrlError] = useState<string | null>(null);
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
+
   const progressValue = importProgress
     ? (importProgress.current / importProgress.total) * 100
     : 0;
 
-  return (
-    <div
-      className={
-        embedded ? "grid gap-4 xl:grid-cols-[16rem_minmax(0,1fr)]" : "space-y-3"
+  const handleFetchUrl = async () => {
+    const trimmed = urlInput.trim();
+    if (!trimmed) return;
+
+    if (!/^https?:\/\//i.test(trimmed)) {
+      setUrlError("URL must start with https:// or http://");
+      setUrlFetchState("error");
+      return;
+    }
+
+    setUrlFetchState("loading");
+    setUrlError(null);
+
+    try {
+      const response = await fetch(trimmed);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-    >
-      {embedded ? (
-        <div className="space-y-3 border border-zinc-800 bg-zinc-950/55 p-4">
-          <p className="text-[0.68rem] tracking-[0.18em] text-zinc-500 uppercase">
-            Import rules
+      const text = await response.text();
+      importFromYaml(text);
+      onImportContentChange(text);
+      setFileName(null);
+      setFileError(null);
+      setUrlFetchState("success");
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : "Fetch failed";
+      const isCors =
+        msg.toLowerCase().includes("failed to fetch") ||
+        msg.toLowerCase().includes("cors");
+      setUrlError(
+        isCors ? "CORS blocked — paste the YAML directly instead" : msg
+      );
+      setUrlFetchState("error");
+    }
+  };
+
+  const handleClearUrl = () => {
+    setUrlInput("");
+    setUrlFetchState("idle");
+    setUrlError(null);
+  };
+
+  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      importFromYaml(text);
+      onImportContentChange(text);
+      setFileName(file.name);
+      setFileError(null);
+    } catch (error) {
+      setFileName(null);
+      setFileError(
+        error instanceof Error ? error.message : "Failed to read YAML file"
+      );
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      {/* URL fetch */}
+      <div className="border-border bg-card overflow-hidden rounded-xl border">
+        <div className="border-border flex items-center gap-2 border-b px-4 py-3">
+          <Link className="text-muted-foreground/50 h-3.5 w-3.5 shrink-0" />
+          <p className="text-muted-foreground/50 text-[11px] font-medium">
+            Import from URL
           </p>
-          <div className="space-y-2 text-sm leading-6 text-zinc-400">
-            <p>Existing items are preserved.</p>
-            <p>New chains import before multisigs.</p>
-            <p>Duplicate multisigs are skipped.</p>
-            <p>Missing-chain entries are reported as failures.</p>
-            <p>Non-Squads chains import as settings only.</p>
-            <p>Multisigs targeting Safe-prepared chains are skipped for now.</p>
-          </div>
         </div>
-      ) : null}
-      <div className="space-y-3">
-        <Label>Paste YAML content:</Label>
-        <p className="text-muted-foreground text-sm">
-          Existing items will be preserved. Only new items will be imported.
+        <div className="space-y-2 px-4 py-3">
+          <div className="flex gap-2">
+            <div className="relative min-w-0 flex-1">
+              <Input
+                type="url"
+                value={urlInput}
+                onChange={(e) => {
+                  setUrlInput(e.target.value);
+                  if (urlFetchState !== "idle") {
+                    setUrlFetchState("idle");
+                    setUrlError(null);
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") void handleFetchUrl();
+                }}
+                disabled={isImporting || urlFetchState === "loading"}
+                placeholder="https://raw.githubusercontent.com/…/config.yaml"
+                className={cn("pr-8 font-mono text-[11px]", urlInput && "pr-8")}
+              />
+              {urlInput && urlFetchState !== "loading" && (
+                <button
+                  type="button"
+                  onClick={handleClearUrl}
+                  className="text-muted-foreground/50 hover:text-muted-foreground absolute top-1/2 right-2.5 -translate-y-1/2"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={
+                !urlInput.trim() || isImporting || urlFetchState === "loading"
+              }
+              onClick={() => void handleFetchUrl()}
+              className={
+                urlFetchState === "success"
+                  ? "border-emerald-500/40 text-emerald-600 dark:text-emerald-400"
+                  : ""
+              }
+            >
+              {urlFetchState === "loading" ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : urlFetchState === "success" ? (
+                <>
+                  <Check className="h-3.5 w-3.5" />
+                  Fetched
+                </>
+              ) : (
+                "Fetch"
+              )}
+            </Button>
+          </div>
+          {urlFetchState === "success" && (
+            <p className="text-[11px] text-emerald-600 dark:text-emerald-400">
+              YAML loaded and validated — review the package before importing.
+            </p>
+          )}
+          {urlFetchState === "error" && urlError && (
+            <p className="text-destructive text-[11px]">{urlError}</p>
+          )}
+        </div>
+      </div>
+
+      {/* Local file */}
+      <div className="border-border bg-card overflow-hidden rounded-xl border">
+        <div className="border-border flex items-center gap-2 border-b px-4 py-3">
+          <FileText className="text-muted-foreground/50 h-3.5 w-3.5 shrink-0" />
+          <p className="text-muted-foreground/50 text-[11px] font-medium">
+            Import from file
+          </p>
+        </div>
+        <div className="flex items-center justify-between gap-3 px-4 py-3">
+          <div className="min-w-0">
+            <p className="text-foreground/80 truncate text-[12px]">
+              {fileName ?? "Choose a local YAML package"}
+            </p>
+            {fileError ? (
+              <p className="text-destructive mt-1 text-[11px]">{fileError}</p>
+            ) : (
+              <p className="text-muted-foreground/50 mt-1 text-[11px]">
+                Useful for ABI-heavy exports that are awkward to paste.
+              </p>
+            )}
+          </div>
+          <label
+            className={cn(
+              "border-input bg-background hover:bg-accent hover:text-accent-foreground inline-flex h-8 shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-md border px-3 text-[12px] font-medium",
+              isImporting && "pointer-events-none opacity-50"
+            )}
+          >
+            <Upload className="h-3.5 w-3.5" />
+            Choose file
+            <input
+              type="file"
+              accept=".yaml,.yml,text/yaml,application/x-yaml,text/plain"
+              className="sr-only"
+              disabled={isImporting}
+              onChange={(event) => void handleFileChange(event)}
+            />
+          </label>
+        </div>
+      </div>
+
+      {/* Reset state — intentionally de-emphasised, destructive action */}
+      <div className="flex items-center justify-between gap-3 px-1">
+        <p className="text-muted-foreground/50 text-[11px]">
+          Clears vaults, chains, labels &amp; settings — use only if a previous
+          import left state broken.
         </p>
-        <div className="flex items-start justify-between gap-3 border border-zinc-800 bg-zinc-950/50 px-3 py-3">
-          <div className="space-y-1">
-            <p className="text-sm font-medium text-zinc-100">Reset state</p>
-            <p className="text-xs leading-5 text-zinc-500">
-              If a YAML import left local state broken, clear saved multisigs,
-              custom chains, labels, and provider settings.
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          disabled={isImporting}
+          onClick={onResetImportedState}
+          className="text-muted-foreground/50 hover:text-destructive hover:bg-destructive/5 h-auto shrink-0 px-2 py-1 text-[11px]"
+        >
+          Reset state
+        </Button>
+      </div>
+
+      {isImporting && importProgress ? (
+        <div className="border-border bg-card overflow-hidden rounded-xl border">
+          <div className="flex items-center justify-between gap-3 px-4 py-3">
+            <p className="text-foreground text-[12px]">
+              {importProgress.label}
+            </p>
+            <p className="text-muted-foreground/60 text-[11px] tabular-nums">
+              {Math.min(importProgress.current, importProgress.total)} /{" "}
+              {importProgress.total}
             </p>
           </div>
-          <Button
-            type="button"
-            variant="outline"
-            disabled={isImporting}
-            className="shrink-0"
-            onClick={onResetImportedState}
-          >
-            Reset
-          </Button>
+          <Progress value={progressValue} className="h-1 rounded-none" />
         </div>
-        {isImporting && importProgress ? (
-          <div className="space-y-2 border border-zinc-800 bg-zinc-950/50 px-3 py-3">
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-sm text-zinc-200">{importProgress.label}</p>
-              <p className="text-xs text-zinc-500 tabular-nums">
-                {Math.min(importProgress.current, importProgress.total)} /{" "}
-                {importProgress.total}
-              </p>
-            </div>
-            <Progress value={progressValue} className="h-1.5" />
+      ) : null}
+
+      <Textarea
+        value={importContent}
+        onChange={(e) => onImportContentChange(e.target.value)}
+        disabled={isImporting}
+        placeholder="Paste your YAML configuration here..."
+        className="min-h-[12rem] resize-y rounded-xl font-mono text-xs"
+      />
+
+      {importReview ? (
+        <div className="border-border bg-card overflow-hidden rounded-xl border">
+          <div className="border-border border-b px-4 py-3">
+            <p className="text-foreground text-[13px] font-semibold">
+              Import review
+            </p>
+            <p className="text-muted-foreground/60 text-[11px]">
+              Review the package contents before applying it to this workspace.
+            </p>
           </div>
-        ) : null}
-        <textarea
-          value={importContent}
-          onChange={(e) => onImportContentChange(e.target.value)}
-          disabled={isImporting}
-          placeholder="Paste your YAML configuration here..."
-          className={
-            embedded
-              ? "border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring min-h-[28rem] w-full resize-y overflow-auto border border-zinc-800 px-3 py-2 font-mono text-xs focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-              : "border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring min-h-[300px] w-full resize-none overflow-auto rounded-md border px-3 py-2 font-mono text-xs focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-          }
-        />
+          <WorkspacePackageSummaryView summary={importReview.summary} />
+          <RawYamlPreviewView
+            title="Import YAML preview"
+            preview={importReview.rawPreview}
+          />
+        </div>
+      ) : null}
+
+      <div className="flex justify-end gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onReview}
+          disabled={isImporting || !importContent.trim()}
+        >
+          Review package
+        </Button>
+        <Button
+          type="button"
+          className="bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20"
+          onClick={onImport}
+          disabled={isImporting || !importReview}
+        >
+          {isImporting ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Importing...
+            </>
+          ) : (
+            <>
+              <Upload className="h-4 w-4" />
+              Import
+            </>
+          )}
+        </Button>
       </div>
     </div>
   );

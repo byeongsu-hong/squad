@@ -14,6 +14,7 @@ import type {
 } from "@/lib/workspace/provider-contract";
 import {
   type ChainConfig,
+  getChainRpcUrls,
   getSquadsProgramId,
   isOperationalSquadsChain,
 } from "@/types/chain";
@@ -24,12 +25,10 @@ import {
 } from "@/types/multisig";
 import { toProposalStatus } from "@/types/multisig";
 import type {
-  WorkspaceExplorerView,
   WorkspaceMultisig,
   WorkspacePayload,
   WorkspaceProposal,
   WorkspaceQueueItem,
-  WorkspaceRegistryItem,
 } from "@/types/workspace";
 import { getWorkspaceMultisigKey } from "@/types/workspace";
 
@@ -47,7 +46,6 @@ function getOperationalSquadsChain(chains: ChainConfig[], chainId: string) {
 }
 
 const SQUADS_MULTISIG_LOAD_CONCURRENCY = 3;
-const SQUADS_PROPOSAL_ENRICH_CONCURRENCY = 8;
 
 export async function loadSquadsWorkspaceProposals(
   multisigs: MultisigAccount[],
@@ -67,24 +65,33 @@ export async function loadSquadsWorkspaceProposals(
       }
 
       const squadService = new SquadService(
-        chain.rpcUrl,
-        getSquadsProgramId(chain)
+        getChainRpcUrls(chain),
+        getSquadsProgramId(chain),
+        { chainId: chain.id }
       );
       const proposalAccounts = await squadService.getProposalsByMultisig(
         multisig.publicKey
       );
 
-      return mapWithConcurrency(
-        proposalAccounts,
-        SQUADS_PROPOSAL_ENRICH_CONCURRENCY,
-        (account) =>
-          toWorkspaceProposal(
-            account.account.multisig,
-            account,
-            chain,
-            squadService
-          )
+      const transactionIndices = proposalAccounts.map((a) =>
+        BigInt(a.account.transactionIndex.toString())
       );
+      const creatorMap = await squadService.getBatchedTransactionCreators(
+        multisig.publicKey,
+        transactionIndices
+      );
+
+      return proposalAccounts.map((account) => {
+        const transactionIndex = BigInt(
+          account.account.transactionIndex.toString()
+        );
+        return toWorkspaceProposal(
+          account.account.multisig,
+          account,
+          chain,
+          creatorMap.get(transactionIndex.toString())
+        );
+      });
     }
   );
 
@@ -108,7 +115,13 @@ export async function loadSquadsCreatorMultisigs(
   }
 
   const programIdString = getSquadsProgramId(chain);
-  const squadService = new SquadService(chain.rpcUrl, programIdString);
+  const squadService = new SquadService(
+    getChainRpcUrls(chain),
+    programIdString,
+    {
+      chainId: chain.id,
+    }
+  );
   const accounts = await squadService.getMultisigsByCreator(
     new PublicKey(creatorAddress)
   );
@@ -155,33 +168,41 @@ export async function loadSquadsWorkspaceProposalsForMultisig(
   }
 
   const squadService = new SquadService(
-    chain.rpcUrl,
-    getSquadsProgramId(chain)
+    getChainRpcUrls(chain),
+    getSquadsProgramId(chain),
+    { chainId: chain.id }
   );
   const proposalAccounts = await squadService.getProposalsByMultisig(
     multisig.publicKey
   );
 
-  const proposals = await mapWithConcurrency(
-    proposalAccounts,
-    SQUADS_PROPOSAL_ENRICH_CONCURRENCY,
-    (account) =>
-      toWorkspaceProposal(
+  const transactionIndices = proposalAccounts.map((a) =>
+    BigInt(a.account.transactionIndex.toString())
+  );
+  const creatorMap = await squadService.getBatchedTransactionCreators(
+    multisig.publicKey,
+    transactionIndices
+  );
+
+  return proposalAccounts
+    .map((account) => {
+      const transactionIndex = BigInt(
+        account.account.transactionIndex.toString()
+      );
+      return toWorkspaceProposal(
         account.account.multisig,
         account,
         chain,
-        squadService
-      )
-  );
-
-  return proposals
+        creatorMap.get(transactionIndex.toString())
+      );
+    })
     .filter((proposal): proposal is WorkspaceProposal => proposal !== null)
     .sort((left, right) =>
       Number(right.transactionIndex - left.transactionIndex)
     );
 }
 
-async function toWorkspaceProposal(
+function toWorkspaceProposal(
   multisigKey: PublicKey,
   proposalAccount: {
     publicKey: PublicKey;
@@ -194,40 +215,12 @@ async function toWorkspaceProposal(
     };
   },
   chain: ChainConfig,
-  squadService: SquadService
-): Promise<WorkspaceProposal | null> {
+  creator: PublicKey | undefined
+): WorkspaceProposal | null {
   const status = toProposalStatus(proposalAccount.account.status.__kind);
   const transactionIndex = BigInt(
     proposalAccount.account.transactionIndex.toString()
   );
-
-  let creator: PublicKey | undefined;
-
-  try {
-    const txType = await squadService.getTransactionType(
-      multisigKey,
-      transactionIndex
-    );
-
-    if (txType === "vault") {
-      const vaultTx = await squadService.getVaultTransaction(
-        multisigKey,
-        transactionIndex
-      );
-      creator = vaultTx.creator;
-    } else {
-      const configTx = await squadService.getConfigTransaction(
-        multisigKey,
-        transactionIndex
-      );
-      creator = configTx.creator;
-    }
-  } catch (error) {
-    console.warn(
-      `Failed to load creator for proposal ${transactionIndex.toString()} on ${chain.id}:`,
-      error
-    );
-  }
 
   return {
     provider: "squads",
@@ -332,121 +325,7 @@ export function toWorkspaceProposalFromRaw(
   };
 }
 
-export function buildWorkspaceRegistryItems(
-  multisigs: WorkspaceMultisig[],
-  queueItems: WorkspaceQueueItem[],
-  searchNeedle: string
-): WorkspaceRegistryItem[] {
-  return multisigs
-    .map((multisig) => {
-      const scopedQueue = queueItems.filter(
-        (item) => item.multisig.key === multisig.key
-      );
-
-      return {
-        multisig,
-        waiting: scopedQueue.filter((item) => item.needsYourSignature).length,
-        executable: scopedQueue.filter((item) => item.readyToExecute).length,
-        active: scopedQueue.filter(
-          (item) =>
-            item.proposal.status !== "Executed" &&
-            item.proposal.status !== "Cancelled"
-        ).length,
-      };
-    })
-    .filter((item) => {
-      if (!searchNeedle) {
-        return true;
-      }
-
-      return (
-        item.multisig.label?.toLowerCase().includes(searchNeedle) ||
-        item.multisig.address.toLowerCase().includes(searchNeedle) ||
-        item.multisig.chainName.toLowerCase().includes(searchNeedle)
-      );
-    });
-}
-
-export function buildWorkspaceExplorerViews(
-  registryItems: WorkspaceRegistryItem[]
-): WorkspaceExplorerView[] {
-  const attentionKeys = registryItems
-    .filter((item) => item.waiting > 0 || item.executable > 0)
-    .map((item) => item.multisig.key);
-  const untaggedKeys = registryItems
-    .filter((item) => item.multisig.tags.length === 0)
-    .map((item) => item.multisig.key);
-
-  const chainViews = Array.from(
-    new Map(
-      registryItems.map((item) => [
-        `chain:${item.multisig.chainName}`,
-        {
-          id: `chain:${item.multisig.chainName}`,
-          label: item.multisig.chainName,
-          multisigKeys: registryItems
-            .filter(
-              (entry) => entry.multisig.chainName === item.multisig.chainName
-            )
-            .map((entry) => entry.multisig.key),
-          description: "Chain scope",
-          meta: `${registryItems.filter((entry) => entry.multisig.chainName === item.multisig.chainName).length} multisigs`,
-        } satisfies WorkspaceExplorerView,
-      ])
-    ).values()
-  );
-
-  const tagViews = Array.from(
-    new Map(
-      registryItems
-        .flatMap((item) =>
-          item.multisig.tags.map((tag) => [
-            `tag:${tag}`,
-            {
-              id: `tag:${tag}`,
-              label: tag,
-              multisigKeys: registryItems
-                .filter((entry) => entry.multisig.tags.includes(tag))
-                .map((entry) => entry.multisig.key),
-              description: "Saved grouping",
-              meta: `${registryItems.filter((entry) => entry.multisig.tags.includes(tag)).length} multisigs`,
-            } satisfies WorkspaceExplorerView,
-          ])
-        )
-        .filter((entry): entry is [string, WorkspaceExplorerView] =>
-          Boolean(entry)
-        )
-    ).values()
-  );
-
-  return [
-    {
-      id: "all",
-      label: "All multisigs",
-      multisigKeys: registryItems.map((item) => item.multisig.key),
-      description: "Everything in scope",
-      meta: `${registryItems.length} multisigs`,
-    },
-    {
-      id: "attention",
-      label: "Needs attention",
-      multisigKeys: attentionKeys,
-      description: "Waiting on you or ready to execute",
-      meta: `${attentionKeys.length} multisigs`,
-    },
-    ...chainViews,
-    {
-      id: "tag:none",
-      label: "No tags",
-      multisigKeys: untaggedKeys,
-      description: "Multisigs without saved tags",
-      meta: `${untaggedKeys.length} multisigs`,
-    },
-    ...tagViews,
-  ].filter((view) => view.multisigKeys.length > 0 || view.id === "all");
-}
-
-export async function loadSquadsWorkspacePayload(
+async function loadSquadsWorkspacePayload(
   multisig: WorkspaceMultisig,
   proposal: WorkspaceProposal,
   chains: ChainConfig[]
@@ -475,18 +354,35 @@ export async function loadSquadsWorkspacePayload(
       })[0]
       .toString();
 
-  const squadService = new SquadService(chain.rpcUrl, programIdString);
-  const txType = await squadService.getTransactionType(
-    multisigPda,
-    proposal.transactionIndex
+  const squadService = new SquadService(
+    getChainRpcUrls(chain),
+    programIdString,
+    {
+      chainId: chain.id,
+    }
   );
 
-  if (txType === "config") {
-    const configTx = await squadService.getConfigTransaction(
-      multisigPda,
-      proposal.transactionIndex
+  const accountInfo = await squadService.getAccountInfo(transactionPda, {
+    operationName: "Get workspace transaction payload",
+    cacheKey: `workspacePayload:${chain.id}:${transactionPda.toBase58()}`,
+  });
+  if (!accountInfo) {
+    throw new Error(
+      "Transaction account not found. Please ensure the proposal was fully created on-chain."
     );
+  }
+  if (!accountInfo.owner.equals(new PublicKey(programIdString))) {
+    throw new Error("Invalid transaction account owner");
+  }
 
+  const discriminator = accountInfo.data.subarray(0, 8);
+  const isConfig = discriminator.every(
+    (byte, k) => byte === multisigSdk.accounts.configTransactionDiscriminator[k]
+  );
+
+  if (isConfig) {
+    const [configTx] =
+      multisigSdk.accounts.ConfigTransaction.fromAccountInfo(accountInfo);
     return {
       type: "config",
       transactionPda: transactionPda.toString(),
@@ -495,11 +391,8 @@ export async function loadSquadsWorkspacePayload(
     };
   }
 
-  const vaultTx = await squadService.getVaultTransaction(
-    multisigPda,
-    proposal.transactionIndex
-  );
-
+  const [vaultTx] =
+    multisigSdk.accounts.VaultTransaction.fromAccountInfo(accountInfo);
   return {
     type: "vault",
     transactionPda: transactionPda.toString(),
@@ -517,23 +410,6 @@ export async function loadSquadsWorkspacePayload(
       data: bs58.encode(instruction.data),
     })),
   };
-}
-
-export function invalidateSquadsProposalCache(
-  chainId: string,
-  multisigKey: string,
-  chains: ChainConfig[]
-) {
-  const chain = getOperationalSquadsChain(chains, chainId);
-  if (!chain) {
-    return;
-  }
-
-  const squadService = new SquadService(
-    chain.rpcUrl,
-    getSquadsProgramId(chain)
-  );
-  squadService.invalidateProposalCache(new PublicKey(multisigKey));
 }
 
 export { toWorkspaceMultisig, toWorkspaceMultisigs };
@@ -571,18 +447,3 @@ export const squadsWorkspaceAdapter: WorkspaceProviderAdapter = {
     return loadSquadsWorkspacePayload(multisig, proposal, chains);
   },
 };
-
-export function fromWorkspaceProposal(
-  proposal: WorkspaceProposal
-): ProposalAccount {
-  return {
-    multisig: new PublicKey(proposal.multisigAddress),
-    transactionIndex: proposal.transactionIndex,
-    creator: proposal.creator ? new PublicKey(proposal.creator) : undefined,
-    status: proposal.status,
-    approvals: proposal.approvals.map((item) => new PublicKey(item)),
-    rejections: proposal.rejections.map((item) => new PublicKey(item)),
-    cancelled: proposal.cancelled,
-    executed: proposal.executed,
-  };
-}
