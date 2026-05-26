@@ -27,6 +27,7 @@ import {
   formatBytes,
 } from "@/lib/export-import-package";
 import { useAddressLabels } from "@/lib/hooks/use-address-label";
+import { loadSafeMultisig } from "@/lib/safe";
 import { SquadService } from "@/lib/squad";
 import { cn } from "@/lib/utils";
 import { useAddressLabelStore } from "@/stores/address-label-store";
@@ -293,44 +294,26 @@ export function ExportImportController() {
               serializedMultisig.provider === "safe" ||
               chain.multisigProvider === "safe"
             ) {
-              const response = await fetch("/api/safe/import", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  chain: normalizeChainConfig(chain),
-                  addressInput: serializedMultisig.publicKey,
-                  label: serializedMultisig.label,
-                  tags: serializedMultisig.tags,
-                }),
-              });
-
-              const payload = (await response.json().catch(() => null)) as {
-                error?: string;
-                multisig?: Omit<MultisigAccount, "transactionIndex"> & {
-                  transactionIndex: string;
-                };
-              } | null;
-
-              if (!response.ok || !payload?.multisig) {
+              try {
+                const safeMultisig = await loadSafeMultisig(
+                  chain,
+                  serializedMultisig.publicKey,
+                  serializedMultisig.label,
+                  serializedMultisig.tags
+                );
+                addMultisig(safeMultisig);
+                importedMultisigs++;
+                completeImportStep(
+                  `Imported Safe ${serializedMultisig.label ?? serializedMultisig.publicKey}`
+                );
+              } catch (error) {
                 failedMultisigs.push(
-                  `${serializedMultisig.publicKey} (${payload?.error ?? "Safe import failed"})`
+                  `${serializedMultisig.publicKey} (${error instanceof Error ? error.message : "Safe import failed"})`
                 );
                 completeImportStep(
                   `Safe import failed for ${serializedMultisig.publicKey}`
                 );
-                continue;
               }
-
-              addMultisig({
-                ...payload.multisig,
-                transactionIndex: BigInt(payload.multisig.transactionIndex),
-              });
-              importedMultisigs++;
-              completeImportStep(
-                `Imported Safe ${serializedMultisig.label ?? serializedMultisig.publicKey}`
-              );
               continue;
             }
 
