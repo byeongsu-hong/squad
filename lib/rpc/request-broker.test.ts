@@ -83,7 +83,64 @@ describe("RequestBroker", () => {
     expect(result.degradedReason?.kind).toBe("fallback");
   });
 
-  it("returns stale cache when all fallback endpoints fail", async () => {
+  it("returns fresh cache within ttl without issuing another request", async () => {
+    const broker = new RequestBroker();
+    let calls = 0;
+
+    const first = await broker.fetch({
+      key: "cached-request",
+      chainId: "ethereum-mainnet",
+      endpoints: ["https://rpc.example"],
+      ttlMs: 10_000,
+      request: async () => {
+        calls += 1;
+        return "first";
+      },
+    });
+
+    const second = await broker.fetch({
+      key: "cached-request",
+      chainId: "ethereum-mainnet",
+      endpoints: ["https://rpc.example"],
+      ttlMs: 10_000,
+      request: async () => {
+        calls += 1;
+        return "second";
+      },
+    });
+
+    expect(first.data).toBe("first");
+    expect(second.data).toBe("first");
+    expect(second.stale).toBe(false);
+    expect(calls).toBe(1);
+  });
+
+  it("does not return stale cache unless stale fallback is enabled", async () => {
+    const broker = new RequestBroker();
+
+    await broker.fetch({
+      key: "strict-request",
+      chainId: "ethereum-mainnet",
+      endpoints: ["https://primary.example"],
+      ttlMs: 1,
+      request: async () => "fresh",
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 2));
+
+    await expect(
+      broker.fetch({
+        key: "strict-request",
+        chainId: "ethereum-mainnet",
+        endpoints: ["https://primary.example"],
+        request: async () => {
+          throw new Error("network error");
+        },
+      })
+    ).rejects.toThrow("network error");
+  });
+
+  it("returns stale cache when all fallback endpoints fail and stale fallback is enabled", async () => {
     const degradedReasons: RequestBrokerDegradedReason[] = [];
     const broker = new RequestBroker({
       onDegraded: (reason) => degradedReasons.push(reason),
@@ -103,6 +160,7 @@ describe("RequestBroker", () => {
       key: "stale-request",
       chainId: "ethereum-mainnet",
       endpoints: ["https://primary.example", "https://fallback.example"],
+      allowStaleOnError: true,
       request: async () => {
         throw new Error("network error");
       },

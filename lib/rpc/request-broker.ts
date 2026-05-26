@@ -110,6 +110,15 @@ export class RequestBroker {
     options: RequestBrokerFetchOptions<T>
   ): Promise<RequestBrokerResult<T>> {
     const fullKey = `${options.chainId}:${options.key}`;
+    const cached = this.getFreshCacheEntry<T>(fullKey);
+    if (cached) {
+      return Promise.resolve({
+        data: cached.data,
+        endpoint: cached.endpoint,
+        stale: false,
+      });
+    }
+
     const existing = this.inFlight.get(fullKey);
     if (existing) {
       return existing as Promise<RequestBrokerResult<T>>;
@@ -157,6 +166,15 @@ export class RequestBroker {
       limiter.setConcurrency(normalizedConcurrency);
     }
     return limiter;
+  }
+
+  private getFreshCacheEntry<T>(cacheKey: string) {
+    const entry = this.cache.get(cacheKey) as BrokerCacheEntry<T> | undefined;
+    if (!entry || entry.ttlMs <= 0) {
+      return null;
+    }
+
+    return Date.now() - entry.timestamp < entry.ttlMs ? entry : null;
   }
 
   private async execute<T>(
@@ -217,7 +235,7 @@ export class RequestBroker {
 
     if (
       staleEntry &&
-      options.allowStaleOnError !== false &&
+      options.allowStaleOnError === true &&
       lastErrorRetryable
     ) {
       const reason: RequestBrokerDegradedReason = {
