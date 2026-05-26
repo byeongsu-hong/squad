@@ -2,7 +2,7 @@
 
 import { AlertCircle, ExternalLink, QrCode, Usb, X } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ import { WALLETCONNECT_UNCONFIGURED_MESSAGE } from "../lib/walletconnect";
 import {
   prepareWalletConnectModalState,
   subscribeWalletConnectModalClose,
+  waitForWalletConnectHostRelease,
 } from "../lib/walletconnect-appkit";
 import {
   DetectedBadge,
@@ -50,6 +51,7 @@ export function SolanaConnectPanel({
   const { connectOkx } = useWalletStore();
   const [loadingWallet, setLoadingWallet] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const isMountedRef = useRef(true);
 
   const isOkxInstalled = okxWalletService.isInstalled();
   const isAnyLoading = loadingWallet !== null;
@@ -63,6 +65,12 @@ export function SolanaConnectPanel({
   const availableWallets = allAvailable.filter(
     (w) => w.adapter.name !== "WalletConnect"
   );
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (loadingWallet !== "WalletConnect") return;
@@ -142,7 +150,26 @@ export function SolanaConnectPanel({
       return;
     }
 
-    void handleBrowserWallet(wcWallet);
+    void (async () => {
+      setError(null);
+      setLoadingWallet("WalletConnect");
+      try {
+        await prepareWalletConnectModalState("solana");
+        onClose();
+        await waitForWalletConnectHostRelease();
+        await connect(wcWallet);
+        toast.success("Connected to WalletConnect");
+      } catch (err) {
+        if (isWalletConnectionCancellation(err)) return;
+
+        const message =
+          err instanceof Error ? err.message : "Failed to connect wallet";
+        if (isMountedRef.current) setError(message);
+        toast.error(message);
+      } finally {
+        if (isMountedRef.current) setLoadingWallet(null);
+      }
+    })();
   };
 
   const hasInstalled = installedWalletsWithoutWc.length > 0;

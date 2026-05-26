@@ -19,6 +19,7 @@ const connectVariablesMock = vi.hoisted(() => ({
 }));
 const prepareWalletConnectModalStateMock = vi.hoisted(() => vi.fn());
 const subscribeWalletConnectModalCloseMock = vi.hoisted(() => vi.fn());
+const waitForWalletConnectHostReleaseMock = vi.hoisted(() => vi.fn());
 const modalCloseCallbacks = vi.hoisted(() => ({
   value: [] as Array<() => void>,
 }));
@@ -63,6 +64,7 @@ vi.mock("wagmi", async (importActual) => {
 vi.mock("../lib/walletconnect-appkit", () => ({
   prepareWalletConnectModalState: prepareWalletConnectModalStateMock,
   subscribeWalletConnectModalClose: subscribeWalletConnectModalCloseMock,
+  waitForWalletConnectHostRelease: waitForWalletConnectHostReleaseMock,
 }));
 
 describe("EvmConnectPanel", () => {
@@ -70,6 +72,8 @@ describe("EvmConnectPanel", () => {
     connectMock.mockClear();
     prepareWalletConnectModalStateMock.mockReset();
     prepareWalletConnectModalStateMock.mockResolvedValue(undefined);
+    waitForWalletConnectHostReleaseMock.mockReset();
+    waitForWalletConnectHostReleaseMock.mockResolvedValue(undefined);
     subscribeWalletConnectModalCloseMock.mockReset();
     subscribeWalletConnectModalCloseMock.mockImplementation(
       async (callback: () => void) => {
@@ -136,6 +140,27 @@ describe("EvmConnectPanel", () => {
       { connector: walletConnectConnector },
       expect.any(Object)
     );
+  });
+
+  it("closes the app dialog before opening the official WalletConnect modal", async () => {
+    connectorsMock.value = [walletConnectConnector];
+    const events: string[] = [];
+    const onClose = vi.fn(() => events.push("close"));
+    prepareWalletConnectModalStateMock.mockImplementation(async () => {
+      events.push("prepare");
+    });
+    connectMock.mockImplementation(() => {
+      events.push("connect");
+    });
+
+    render(<EvmConnectPanel onClose={onClose} onOpenLedger={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole("button", { name: /WalletConnect/ }));
+
+    await waitFor(() => expect(connectMock).toHaveBeenCalled());
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(waitForWalletConnectHostReleaseMock).toHaveBeenCalledTimes(1);
+    expect(events).toEqual(["prepare", "close", "connect"]);
   });
 
   it("clears WalletConnect loading if the official modal is closed before connection completes", async () => {

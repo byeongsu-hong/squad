@@ -25,6 +25,14 @@ export async function prepareWalletConnectModalState(
   }
 }
 
+export function waitForWalletConnectHostRelease(): Promise<void> {
+  if (typeof window === "undefined") return Promise.resolve();
+
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, 0);
+  });
+}
+
 export async function subscribeWalletConnectModalClose(
   callback: ModalCloseCallback
 ): Promise<ModalCloseUnsubscribe> {

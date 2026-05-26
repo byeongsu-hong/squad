@@ -17,6 +17,7 @@ const browserWalletState = vi.hoisted(() => ({
 }));
 const prepareWalletConnectModalStateMock = vi.hoisted(() => vi.fn());
 const subscribeWalletConnectModalCloseMock = vi.hoisted(() => vi.fn());
+const waitForWalletConnectHostReleaseMock = vi.hoisted(() => vi.fn());
 const toastErrorMock = vi.hoisted(() => vi.fn());
 const toastSuccessMock = vi.hoisted(() => vi.fn());
 const modalCloseCallbacks = vi.hoisted(() => ({
@@ -74,6 +75,7 @@ vi.mock("sonner", () => ({
 vi.mock("../lib/walletconnect-appkit", () => ({
   prepareWalletConnectModalState: prepareWalletConnectModalStateMock,
   subscribeWalletConnectModalClose: subscribeWalletConnectModalCloseMock,
+  waitForWalletConnectHostRelease: waitForWalletConnectHostReleaseMock,
 }));
 
 describe("SolanaConnectPanel", () => {
@@ -83,6 +85,8 @@ describe("SolanaConnectPanel", () => {
     toastSuccessMock.mockClear();
     prepareWalletConnectModalStateMock.mockReset();
     prepareWalletConnectModalStateMock.mockResolvedValue(undefined);
+    waitForWalletConnectHostReleaseMock.mockReset();
+    waitForWalletConnectHostReleaseMock.mockResolvedValue(undefined);
     subscribeWalletConnectModalCloseMock.mockReset();
     subscribeWalletConnectModalCloseMock.mockImplementation(
       async (callback: () => void) => {
@@ -122,6 +126,28 @@ describe("SolanaConnectPanel", () => {
       expect(prepareWalletConnectModalStateMock).toHaveBeenCalledWith("solana")
     );
     expect(connectBrowserWalletMock).toHaveBeenCalledWith(walletConnectWallet);
+  });
+
+  it("closes the app dialog before opening the official SVM WalletConnect modal", async () => {
+    browserWalletState.installedWallets = [walletConnectWallet];
+    const events: string[] = [];
+    const onClose = vi.fn(() => events.push("close"));
+    prepareWalletConnectModalStateMock.mockImplementation(async () => {
+      events.push("prepare");
+    });
+    connectBrowserWalletMock.mockImplementation(() => {
+      events.push("connect");
+      return Promise.resolve();
+    });
+
+    render(<SolanaConnectPanel onClose={onClose} onOpenLedger={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole("button", { name: /WalletConnect/ }));
+
+    await waitFor(() => expect(connectBrowserWalletMock).toHaveBeenCalled());
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(waitForWalletConnectHostReleaseMock).toHaveBeenCalledTimes(1);
+    expect(events).toEqual(["prepare", "close", "connect"]);
   });
 
   it("clears WalletConnect loading if the official modal is closed before connection completes", async () => {

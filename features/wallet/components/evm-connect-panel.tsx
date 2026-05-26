@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertCircle, CheckCircle2, QrCode, Usb, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useAccount, useConnect } from "wagmi";
 import type { Connector } from "wagmi";
@@ -16,6 +16,7 @@ import { WALLETCONNECT_UNCONFIGURED_MESSAGE } from "../lib/walletconnect";
 import {
   prepareWalletConnectModalState,
   subscribeWalletConnectModalClose,
+  waitForWalletConnectHostRelease,
 } from "../lib/walletconnect-appkit";
 import {
   DetectedBadge,
@@ -105,12 +106,19 @@ export function EvmConnectPanel({
   const { connect, connectors } = useConnect();
   const [error, setError] = useState<string | null>(null);
   const [connectingId, setConnectingId] = useState<string | null>(null);
+  const isMountedRef = useRef(true);
   const isAnyConnecting = connectingId != null;
 
   const inlineConnectors = getInlineConnectors(connectors);
   const okxConnector = getOkxConnector(connectors);
   const wcConnector = connectors.find((c) => isWalletConnect(c));
   const wcConnectorId = wcConnector?.id;
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (!wcConnectorId || connectingId !== wcConnectorId) return;
@@ -164,8 +172,27 @@ export function EvmConnectPanel({
       toast.error(WALLETCONNECT_UNCONFIGURED_MESSAGE);
       return;
     }
+    setError(null);
+    setConnectingId(wcConnector.id);
     await prepareWalletConnectModalState("eip155");
-    handleConnect(wcConnector);
+    onClose();
+    await waitForWalletConnectHostRelease();
+    connect(
+      { connector: wcConnector },
+      {
+        onSuccess: () => {
+          if (isMountedRef.current) setConnectingId(null);
+          toast.success(`Connected to ${wcConnector.name}`);
+        },
+        onError: (err) => {
+          if (isMountedRef.current) setConnectingId(null);
+          if (isWalletConnectionCancellation(err)) return;
+          const message = err.message ?? "Failed to connect";
+          if (isMountedRef.current) setError(message);
+          toast.error(message);
+        },
+      }
+    );
   };
 
   if (isConnected && address) {
