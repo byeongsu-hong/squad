@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -213,6 +214,9 @@ export function ImportMultisigDialog({
       <DialogContent key={`import-dialog-${open}`} className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Import Vault</DialogTitle>
+          <DialogDescription className="sr-only">
+            Import an existing multisig vault by chain and address.
+          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>

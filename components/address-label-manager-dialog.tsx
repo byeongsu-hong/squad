@@ -4,14 +4,15 @@ import { Check, Pencil, Plus, Search, Tag, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAddressLabels } from "@/lib/hooks/use-address-label";
 import { cn } from "@/lib/utils";
@@ -72,6 +73,9 @@ function DialogShell({
       <DialogContent className="flex h-[600px] w-[900px] !max-w-[900px] flex-col gap-0 p-0">
         <DialogHeader className="shrink-0 border-b px-5 py-3">
           <DialogTitle>Address Label Manager</DialogTitle>
+          <DialogDescription className="sr-only">
+            Search, create, edit, and delete saved address labels.
+          </DialogDescription>
         </DialogHeader>
         <AddressLabelManagerController defaultAddress={defaultAddress} />
       </DialogContent>
@@ -208,7 +212,11 @@ export function AddressLabelManagerController({
         onFormDataChange={setFormData}
       />
 
-      <div className={embedded ? "min-w-0" : "flex min-h-0 flex-1 flex-col overflow-hidden"}>
+      <div
+        className={
+          embedded ? "min-w-0" : "flex min-h-0 flex-1 flex-col overflow-hidden"
+        }
+      >
         <AddressLabelRegistry
           embedded={embedded}
           filteredLabels={filteredLabels}
@@ -278,7 +286,12 @@ function AddressLabelEditor({
 
       <form onSubmit={onSubmit} className="space-y-3">
         <div className="space-y-1.5">
-          <label htmlFor="address" className="text-[11px] font-medium text-muted-foreground/50">Address</label>
+          <label
+            htmlFor="address"
+            className="text-muted-foreground/50 text-[11px] font-medium"
+          >
+            Address
+          </label>
           <Input
             id="address"
             placeholder="Enter address"
@@ -292,8 +305,14 @@ function AddressLabelEditor({
         </div>
 
         <div className="space-y-1.5">
-          <label htmlFor="label" className="text-[11px] font-medium text-muted-foreground/50">
-            Label <span className="text-muted-foreground/50 font-normal">· max 12 chars</span>
+          <label
+            htmlFor="label"
+            className="text-muted-foreground/50 text-[11px] font-medium"
+          >
+            Label{" "}
+            <span className="text-muted-foreground/50 font-normal">
+              · max 12 chars
+            </span>
           </label>
           <Input
             id="label"
@@ -308,8 +327,14 @@ function AddressLabelEditor({
         </div>
 
         <div className="space-y-1.5">
-          <label htmlFor="description" className="text-[11px] font-medium text-muted-foreground/50">
-            Description <span className="text-muted-foreground/50 font-normal">· optional</span>
+          <label
+            htmlFor="description"
+            className="text-muted-foreground/50 text-[11px] font-medium"
+          >
+            Description{" "}
+            <span className="text-muted-foreground/50 font-normal">
+              · optional
+            </span>
           </label>
           <Input
             id="description"
@@ -322,7 +347,9 @@ function AddressLabelEditor({
         </div>
 
         <div className="space-y-1.5">
-          <p className="text-[11px] font-medium text-muted-foreground/50">Color</p>
+          <p className="text-muted-foreground/50 text-[11px] font-medium">
+            Color
+          </p>
           <div className="flex flex-wrap gap-1">
             {DEFAULT_COLORS.map((color) => (
               <button
@@ -331,8 +358,8 @@ function AddressLabelEditor({
                 className={cn(
                   "relative h-6 w-6 rounded-md transition-all",
                   formData.color === color
-                    ? "ring-2 ring-offset-2 ring-foreground/60 ring-offset-card scale-110"
-                    : "opacity-60 hover:opacity-90 hover:scale-105"
+                    ? "ring-foreground/60 ring-offset-card scale-110 ring-2 ring-offset-2"
+                    : "opacity-60 hover:scale-105 hover:opacity-90"
                 )}
                 style={{ backgroundColor: color }}
                 onClick={() => onFormDataChange({ ...formData, color })}
@@ -351,9 +378,15 @@ function AddressLabelEditor({
           className="bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20 w-full"
         >
           {isEditing ? (
-            <><Check className="h-4 w-4" />Update</>
+            <>
+              <Check className="h-4 w-4" />
+              Update
+            </>
           ) : (
-            <><Plus className="h-4 w-4" />Add</>
+            <>
+              <Plus className="h-4 w-4" />
+              Add
+            </>
           )}
         </Button>
       </form>
@@ -386,21 +419,23 @@ function AddressLabelRegistry({
           : "flex min-h-0 flex-1 flex-col overflow-hidden"
       }
     >
-      <div className="border-border border-b flex items-center gap-3 px-4 py-3">
-        <p className="text-muted-foreground/50 text-[11px] font-medium shrink-0">Saved Labels</p>
-        <div className="relative flex-1 min-w-0">
+      <div className="border-border flex items-center gap-3 border-b px-4 py-3">
+        <p className="text-muted-foreground/50 shrink-0 text-[11px] font-medium">
+          Saved Labels
+        </p>
+        <div className="relative min-w-0 flex-1">
           <Search className="text-muted-foreground/50 absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2" />
           <Input
             placeholder="Search..."
             value={searchQuery}
             onChange={(e) => onSearchQueryChange(e.target.value)}
-            className="pl-8 h-7 text-[11px]"
+            className="h-7 pl-8 text-[11px]"
           />
         </div>
       </div>
 
       {embedded && filteredLabels.length > 0 && (
-        <div className="border-border grid grid-cols-[minmax(0,0.95fr)_minmax(0,1.15fr)_minmax(0,1.3fr)_8rem_4.5rem] gap-3 border-b px-4 py-2 text-[11px] font-medium text-muted-foreground/50">
+        <div className="border-border text-muted-foreground/50 grid grid-cols-[minmax(0,0.95fr)_minmax(0,1.15fr)_minmax(0,1.3fr)_8rem_4.5rem] gap-3 border-b px-4 py-2 text-[11px] font-medium">
           <span>Label</span>
           <span>Description</span>
           <span>Address</span>
@@ -426,9 +461,7 @@ function AddressLabelRegistry({
             </p>
           </div>
         ) : (
-          <div
-            className={embedded ? "divide-border divide-y" : "space-y-1.5"}
-          >
+          <div className={embedded ? "divide-border divide-y" : "space-y-1.5"}>
             {filteredLabels.map((label) => (
               <div
                 key={label.address}
@@ -441,71 +474,76 @@ function AddressLabelRegistry({
                 onClick={() => onEdit(label)}
               >
                 <div className="min-w-0">
-                        <div
-                          className="inline-flex max-w-full shrink-0 items-center rounded-md px-1.5 py-0.5"
-                          style={{
-                            backgroundColor: `${label.color}0d`,
-                            border: `1px solid ${label.color}40`,
-                          }}
-                        >
-                          <span
-                            className="truncate text-[11px] font-medium whitespace-nowrap"
-                            style={{ color: label.color }}
-                            title={label.label}
-                          >
-                            {label.label}
-                          </span>
-                        </div>
-                      </div>
-                      {embedded ? (
-                        <div className="min-w-0 text-[11px]">
-                          <p className={cn("truncate", label.description ? "text-muted-foreground/60" : "text-muted-foreground/50")}>
-                            {label.description || "—"}
-                          </p>
-                        </div>
-                      ) : null}
-                      <code
-                        className={cn(
-                          embedded
-                            ? "text-foreground truncate font-mono text-[11px]"
-                            : "bg-muted ml-auto w-fit shrink-0 rounded px-1.5 py-0.5 font-mono text-[10px] leading-tight"
-                        )}
-                      >
-                        {label.address}
-                      </code>
-                      {embedded ? (
-                        <div className="text-muted-foreground/60 text-[11px]">
-                          {formatUpdatedAt(label.updatedAt)}
-                        </div>
-                      ) : null}
-                      <div
-                        className="flex shrink-0 justify-end gap-0.5 opacity-0 transition-opacity group-hover:opacity-100"
-                      >
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon-sm"
-                          className="text-muted-foreground/50 hover:text-foreground"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            onEdit(label);
-                          }}
-                        >
-                          <Pencil className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon-sm"
-                          className="text-muted-foreground/50 hover:text-destructive"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            onDelete(label.address);
-                          }}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
+                  <div
+                    className="inline-flex max-w-full shrink-0 items-center rounded-md px-1.5 py-0.5"
+                    style={{
+                      backgroundColor: `${label.color}0d`,
+                      border: `1px solid ${label.color}40`,
+                    }}
+                  >
+                    <span
+                      className="truncate text-[11px] font-medium whitespace-nowrap"
+                      style={{ color: label.color }}
+                      title={label.label}
+                    >
+                      {label.label}
+                    </span>
+                  </div>
+                </div>
+                {embedded ? (
+                  <div className="min-w-0 text-[11px]">
+                    <p
+                      className={cn(
+                        "truncate",
+                        label.description
+                          ? "text-muted-foreground/60"
+                          : "text-muted-foreground/50"
+                      )}
+                    >
+                      {label.description || "—"}
+                    </p>
+                  </div>
+                ) : null}
+                <code
+                  className={cn(
+                    embedded
+                      ? "text-foreground truncate font-mono text-[11px]"
+                      : "bg-muted ml-auto w-fit shrink-0 rounded px-1.5 py-0.5 font-mono text-[10px] leading-tight"
+                  )}
+                >
+                  {label.address}
+                </code>
+                {embedded ? (
+                  <div className="text-muted-foreground/60 text-[11px]">
+                    {formatUpdatedAt(label.updatedAt)}
+                  </div>
+                ) : null}
+                <div className="flex shrink-0 justify-end gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    className="text-muted-foreground/50 hover:text-foreground"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onEdit(label);
+                    }}
+                  >
+                    <Pencil className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    className="text-muted-foreground/50 hover:text-destructive"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onDelete(label.address);
+                    }}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
               </div>
             ))}
           </div>

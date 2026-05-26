@@ -2,19 +2,33 @@
 
 import { AlertCircle, ExternalLink, QrCode, Usb, X } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { okxWalletService } from "@/lib/okx-wallet";
 import { useWalletStore } from "@/stores/wallet-store";
 
-import { useBrowserWallet } from "../hooks/use-browser-wallet";
 import { OKX_EXTENSION_URL, OKX_WALLET_ICON } from "../assets/okx-icon";
-import { DetectedBadge, SectionLabel, WalletIcon, WalletRow } from "./wallet-row";
+import { useBrowserWallet } from "../hooks/use-browser-wallet";
+import { isWalletConnectionCancellation } from "../lib/wallet-errors";
+import { WALLETCONNECT_UNCONFIGURED_MESSAGE } from "../lib/walletconnect";
+import {
+  prepareWalletConnectModalState,
+  subscribeWalletConnectModalClose,
+  waitForWalletConnectHostRelease,
+} from "../lib/walletconnect-appkit";
+import {
+  DetectedBadge,
+  SectionLabel,
+  WalletIcon,
+  WalletRow,
+} from "./wallet-row";
 
 interface SolanaConnectPanelProps {
+  onBeginWalletConnect?: () => Promise<void> | void;
   onClose: () => void;
+  onEndWalletConnect?: (result: { reopen: boolean }) => void;
   onOpenLedger: () => void;
 }
 
@@ -28,19 +42,63 @@ function InstallLink({ children }: { children: React.ReactNode }) {
 }
 
 export function SolanaConnectPanel({
+  onBeginWalletConnect,
   onClose,
+  onEndWalletConnect,
   onOpenLedger,
 }: SolanaConnectPanelProps) {
-  const { installedWallets, availableWallets: allAvailable, connect } = useBrowserWallet();
+  const {
+    installedWallets,
+    availableWallets: allAvailable,
+    connect,
+  } = useBrowserWallet();
   const { connectOkx } = useWalletStore();
   const [loadingWallet, setLoadingWallet] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const isMountedRef = useRef(true);
 
   const isOkxInstalled = okxWalletService.isInstalled();
   const isAnyLoading = loadingWallet !== null;
 
-  const wcWallet = allAvailable.find((w) => w.adapter.name === "WalletConnect");
-  const availableWallets = allAvailable.filter((w) => w.adapter.name !== "WalletConnect");
+  const wcWallet = [...installedWallets, ...allAvailable].find(
+    (w) => w.adapter.name === "WalletConnect"
+  );
+  const installedWalletsWithoutWc = installedWallets.filter(
+    (w) => w.adapter.name !== "WalletConnect"
+  );
+  const availableWallets = allAvailable.filter(
+    (w) => w.adapter.name !== "WalletConnect"
+  );
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (loadingWallet !== "WalletConnect") return;
+
+    let disposed = false;
+    let unsubscribe: () => void = () => undefined;
+
+    void subscribeWalletConnectModalClose(() => {
+      setLoadingWallet((current) =>
+        current === "WalletConnect" ? null : current
+      );
+    }).then((nextUnsubscribe) => {
+      if (disposed) {
+        nextUnsubscribe();
+        return;
+      }
+      unsubscribe = nextUnsubscribe;
+    });
+
+    return () => {
+      disposed = true;
+      unsubscribe();
+    };
+  }, [loadingWallet]);
 
   const handleBrowserWallet = async (
     wallet: (typeof installedWallets)[number]
@@ -49,10 +107,15 @@ export function SolanaConnectPanel({
     setError(null);
     setLoadingWallet(name);
     try {
+      if (name === "WalletConnect") {
+        await prepareWalletConnectModalState("solana");
+      }
       await connect(wallet);
       toast.success(`Connected to ${name}`);
       onClose();
     } catch (err) {
+      if (isWalletConnectionCancellation(err)) return;
+
       const message =
         err instanceof Error ? err.message : "Failed to connect wallet";
       setError(message);
@@ -84,7 +147,45 @@ export function SolanaConnectPanel({
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
-  const hasInstalled = installedWallets.length > 0;
+  const handleWalletConnect = () => {
+    if (!wcWallet) {
+      setError(WALLETCONNECT_UNCONFIGURED_MESSAGE);
+      toast.error(WALLETCONNECT_UNCONFIGURED_MESSAGE);
+      return;
+    }
+
+    void (async () => {
+      setError(null);
+      setLoadingWallet("WalletConnect");
+      try {
+        await prepareWalletConnectModalState("solana");
+        if (onBeginWalletConnect) {
+          await onBeginWalletConnect();
+        } else {
+          onClose();
+        }
+        await waitForWalletConnectHostRelease();
+        await connect(wcWallet);
+        onEndWalletConnect?.({ reopen: false });
+        toast.success("Connected to WalletConnect");
+      } catch (err) {
+        if (isWalletConnectionCancellation(err)) {
+          onEndWalletConnect?.({ reopen: true });
+          return;
+        }
+
+        const message =
+          err instanceof Error ? err.message : "Failed to connect wallet";
+        if (isMountedRef.current) setError(message);
+        onEndWalletConnect?.({ reopen: true });
+        toast.error(message);
+      } finally {
+        if (isMountedRef.current) setLoadingWallet(null);
+      }
+    })();
+  };
+
+  const hasInstalled = installedWalletsWithoutWc.length > 0;
   const hasAvailable = availableWallets.length > 0;
 
   return (
@@ -109,7 +210,7 @@ export function SolanaConnectPanel({
       {hasInstalled && (
         <div className="flex flex-col gap-2">
           <SectionLabel>Installed</SectionLabel>
-          {installedWallets.map((wallet) => (
+          {installedWalletsWithoutWc.map((wallet) => (
             <WalletRow
               key={wallet.adapter.name}
               icon={
@@ -151,23 +252,27 @@ export function SolanaConnectPanel({
           }
           isLoading={loadingWallet === "OKX Wallet"}
           disabled={isAnyLoading}
-          onClick={isOkxInstalled ? handleOkx : () => handleInstallLink(OKX_EXTENSION_URL)}
+          onClick={
+            isOkxInstalled
+              ? handleOkx
+              : () => handleInstallLink(OKX_EXTENSION_URL)
+          }
         />
 
-        {wcWallet && (
-          <WalletRow
-            icon={<QrCode className="text-muted-foreground h-6 w-6" />}
-            name="WalletConnect"
-            subtitle="Scan QR with any mobile wallet"
-            isLoading={loadingWallet === "WalletConnect"}
-            disabled={isAnyLoading}
-            onClick={() => handleBrowserWallet(wcWallet)}
-          />
-        )}
+        <WalletRow
+          icon={<QrCode className="text-muted-foreground h-6 w-6" />}
+          name="WalletConnect"
+          subtitle={
+            wcWallet ? "Open WalletConnect modal" : "Project id required"
+          }
+          isLoading={loadingWallet === "WalletConnect"}
+          disabled={isAnyLoading}
+          onClick={handleWalletConnect}
+        />
 
         <WalletRow
           icon={<Usb className="text-muted-foreground h-6 w-6" />}
-          name="Ledger"
+          name="Ledger USB"
           subtitle="Hardware device"
           disabled={isAnyLoading}
           onClick={onOpenLedger}
