@@ -11,6 +11,7 @@ import { formatEvmLedgerDerivationPath } from "@/lib/ledger/ethereum-paths";
 import { formatAddress } from "@/lib/utils/format-address";
 
 import { OKX_EXTENSION_URL } from "../assets/okx-icon";
+import { isWalletConnectionCancellation } from "../lib/wallet-errors";
 import { WALLETCONNECT_UNCONFIGURED_MESSAGE } from "../lib/walletconnect";
 import {
   prepareWalletConnectModalState,
@@ -148,11 +149,7 @@ export function EvmConnectPanel({
         },
         onError: (err) => {
           setConnectingId(null);
-          const isRejection =
-            err.name === "UserRejectedRequestError" ||
-            err.message?.toLowerCase().includes("rejected") ||
-            err.message?.toLowerCase().includes("cancelled");
-          if (isRejection) return;
+          if (isWalletConnectionCancellation(err)) return;
           const message = err.message ?? "Failed to connect";
           setError(message);
           toast.error(message);

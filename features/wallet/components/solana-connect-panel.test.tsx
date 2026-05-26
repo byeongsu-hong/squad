@@ -17,6 +17,8 @@ const browserWalletState = vi.hoisted(() => ({
 }));
 const prepareWalletConnectModalStateMock = vi.hoisted(() => vi.fn());
 const subscribeWalletConnectModalCloseMock = vi.hoisted(() => vi.fn());
+const toastErrorMock = vi.hoisted(() => vi.fn());
+const toastSuccessMock = vi.hoisted(() => vi.fn());
 const modalCloseCallbacks = vi.hoisted(() => ({
   value: [] as Array<() => void>,
 }));
@@ -62,6 +64,13 @@ vi.mock("@/stores/wallet-store", () => ({
   }),
 }));
 
+vi.mock("sonner", () => ({
+  toast: {
+    error: toastErrorMock,
+    success: toastSuccessMock,
+  },
+}));
+
 vi.mock("../lib/walletconnect-appkit", () => ({
   prepareWalletConnectModalState: prepareWalletConnectModalStateMock,
   subscribeWalletConnectModalClose: subscribeWalletConnectModalCloseMock,
@@ -70,6 +79,8 @@ vi.mock("../lib/walletconnect-appkit", () => ({
 describe("SolanaConnectPanel", () => {
   beforeEach(() => {
     connectBrowserWalletMock.mockClear();
+    toastErrorMock.mockClear();
+    toastSuccessMock.mockClear();
     prepareWalletConnectModalStateMock.mockReset();
     prepareWalletConnectModalStateMock.mockResolvedValue(undefined);
     subscribeWalletConnectModalCloseMock.mockReset();
@@ -133,6 +144,29 @@ describe("SolanaConnectPanel", () => {
       modalCloseCallbacks.value[0]?.();
     });
 
+    expect(walletConnectButton.disabled).toBe(false);
+  });
+
+  it("does not surface WalletConnect modal close as a connection failure", async () => {
+    browserWalletState.installedWallets = [walletConnectWallet];
+    const closedError = Object.assign(new Error("Wallet window closed"), {
+      name: "WalletWindowClosedError",
+    });
+    connectBrowserWalletMock.mockRejectedValue(closedError);
+
+    render(<SolanaConnectPanel onClose={vi.fn()} onOpenLedger={vi.fn()} />);
+
+    const walletConnectButton = screen.getByRole("button", {
+      name: /WalletConnect/,
+    });
+    fireEvent.click(walletConnectButton);
+
+    await waitFor(() =>
+      expect(connectBrowserWalletMock).toHaveBeenCalledWith(walletConnectWallet)
+    );
+
+    expect(screen.queryByText("Wallet window closed")).toBeNull();
+    expect(toastErrorMock).not.toHaveBeenCalled();
     expect(walletConnectButton.disabled).toBe(false);
   });
 });

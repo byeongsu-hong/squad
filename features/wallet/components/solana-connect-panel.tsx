@@ -11,6 +11,7 @@ import { useWalletStore } from "@/stores/wallet-store";
 
 import { OKX_EXTENSION_URL, OKX_WALLET_ICON } from "../assets/okx-icon";
 import { useBrowserWallet } from "../hooks/use-browser-wallet";
+import { isWalletConnectionCancellation } from "../lib/wallet-errors";
 import { WALLETCONNECT_UNCONFIGURED_MESSAGE } from "../lib/walletconnect";
 import {
   prepareWalletConnectModalState,
@@ -101,6 +102,8 @@ export function SolanaConnectPanel({
       toast.success(`Connected to ${name}`);
       onClose();
     } catch (err) {
+      if (isWalletConnectionCancellation(err)) return;
+
       const message =
         err instanceof Error ? err.message : "Failed to connect wallet";
       setError(message);

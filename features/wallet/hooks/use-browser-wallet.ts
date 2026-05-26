@@ -7,12 +7,10 @@ import { browserWalletService } from "@/lib/browser-wallet";
 import { formatAddress } from "@/lib/utils/format-address";
 import { useWalletStore } from "@/stores/wallet-store";
 
+import { isWalletConnectionCancellation } from "../lib/wallet-errors";
+
 export function useBrowserWallet() {
-  const {
-    wallets,
-    select,
-    disconnect: walletAdapterDisconnect,
-  } = useWallet();
+  const { wallets, select, disconnect: walletAdapterDisconnect } = useWallet();
   const { connectBrowser } = useWalletStore();
 
   const installedWallets = useMemo(
@@ -45,7 +43,9 @@ export function useBrowserWallet() {
         connectBrowser(publicKey, walletName);
         return { publicKey, walletName };
       } catch (error) {
-        console.error("Failed to connect wallet:", error);
+        if (!isWalletConnectionCancellation(error)) {
+          console.error("Failed to connect wallet:", error);
+        }
         throw error;
       }
     },
