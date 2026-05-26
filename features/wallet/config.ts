@@ -52,6 +52,7 @@ const connectors = [
 
 export const wagmiConfig = createConfig({
   chains,
+  multiInjectedProviderDiscovery: false,
   ssr: true,
   connectors,
   transports,
