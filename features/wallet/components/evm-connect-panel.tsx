@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertCircle, CheckCircle2, QrCode, Usb, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useAccount, useConnect } from "wagmi";
 import type { Connector } from "wagmi";
@@ -12,6 +12,10 @@ import { formatAddress } from "@/lib/utils/format-address";
 
 import { OKX_EXTENSION_URL } from "../assets/okx-icon";
 import { WALLETCONNECT_UNCONFIGURED_MESSAGE } from "../lib/walletconnect";
+import {
+  prepareWalletConnectModalState,
+  subscribeWalletConnectModalClose,
+} from "../lib/walletconnect-appkit";
 import {
   DetectedBadge,
   SectionLabel,
@@ -105,6 +109,31 @@ export function EvmConnectPanel({
   const inlineConnectors = getInlineConnectors(connectors);
   const okxConnector = getOkxConnector(connectors);
   const wcConnector = connectors.find((c) => isWalletConnect(c));
+  const wcConnectorId = wcConnector?.id;
+
+  useEffect(() => {
+    if (!wcConnectorId || connectingId !== wcConnectorId) return;
+
+    let disposed = false;
+    let unsubscribe: () => void = () => undefined;
+
+    void subscribeWalletConnectModalClose(() => {
+      setConnectingId((current) =>
+        current === wcConnectorId ? null : current
+      );
+    }).then((nextUnsubscribe) => {
+      if (disposed) {
+        nextUnsubscribe();
+        return;
+      }
+      unsubscribe = nextUnsubscribe;
+    });
+
+    return () => {
+      disposed = true;
+      unsubscribe();
+    };
+  }, [connectingId, wcConnectorId]);
 
   const handleConnect = (connector: Connector) => {
     setError(null);
@@ -132,12 +161,13 @@ export function EvmConnectPanel({
     );
   };
 
-  const handleWalletConnect = () => {
+  const handleWalletConnect = async () => {
     if (!wcConnector) {
       setError(WALLETCONNECT_UNCONFIGURED_MESSAGE);
       toast.error(WALLETCONNECT_UNCONFIGURED_MESSAGE);
       return;
     }
+    await prepareWalletConnectModalState("eip155");
     handleConnect(wcConnector);
   };
 

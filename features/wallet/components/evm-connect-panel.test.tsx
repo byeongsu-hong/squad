@@ -1,4 +1,10 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Connector } from "wagmi";
 
@@ -10,6 +16,11 @@ const connectorsMock = vi.hoisted(() => ({
 }));
 const connectVariablesMock = vi.hoisted(() => ({
   value: undefined as { connector?: Connector } | undefined,
+}));
+const prepareWalletConnectModalStateMock = vi.hoisted(() => vi.fn());
+const subscribeWalletConnectModalCloseMock = vi.hoisted(() => vi.fn());
+const modalCloseCallbacks = vi.hoisted(() => ({
+  value: [] as Array<() => void>,
 }));
 const okxConnector = {
   icon: null,
@@ -49,9 +60,24 @@ vi.mock("wagmi", async (importActual) => {
   };
 });
 
+vi.mock("../lib/walletconnect-appkit", () => ({
+  prepareWalletConnectModalState: prepareWalletConnectModalStateMock,
+  subscribeWalletConnectModalClose: subscribeWalletConnectModalCloseMock,
+}));
+
 describe("EvmConnectPanel", () => {
   beforeEach(() => {
     connectMock.mockClear();
+    prepareWalletConnectModalStateMock.mockReset();
+    prepareWalletConnectModalStateMock.mockResolvedValue(undefined);
+    subscribeWalletConnectModalCloseMock.mockReset();
+    subscribeWalletConnectModalCloseMock.mockImplementation(
+      async (callback: () => void) => {
+        modalCloseCallbacks.value.push(callback);
+        return vi.fn();
+      }
+    );
+    modalCloseCallbacks.value = [];
     connectVariablesMock.value = undefined;
     connectorsMock.value = [];
   });
@@ -96,17 +122,42 @@ describe("EvmConnectPanel", () => {
     ).toBeNull();
   });
 
-  it("opens WalletConnect through the wagmi connector so its official modal owns the flow", () => {
+  it("opens WalletConnect through the wagmi connector so its official modal owns the flow", async () => {
     connectorsMock.value = [walletConnectConnector];
 
     render(<EvmConnectPanel onClose={vi.fn()} onOpenLedger={vi.fn()} />);
 
     fireEvent.click(screen.getByRole("button", { name: /WalletConnect/ }));
 
+    await waitFor(() =>
+      expect(prepareWalletConnectModalStateMock).toHaveBeenCalledWith("eip155")
+    );
     expect(connectMock).toHaveBeenCalledWith(
       { connector: walletConnectConnector },
       expect.any(Object)
     );
+  });
+
+  it("clears WalletConnect loading if the official modal is closed before connection completes", async () => {
+    connectorsMock.value = [walletConnectConnector];
+
+    render(<EvmConnectPanel onClose={vi.fn()} onOpenLedger={vi.fn()} />);
+
+    const walletConnectButton = screen.getByRole("button", {
+      name: /WalletConnect/,
+    });
+    fireEvent.click(walletConnectButton);
+
+    await waitFor(() => expect(walletConnectButton.disabled).toBe(true));
+    await waitFor(() =>
+      expect(subscribeWalletConnectModalCloseMock).toHaveBeenCalled()
+    );
+
+    act(() => {
+      modalCloseCallbacks.value[0]?.();
+    });
+
+    expect(walletConnectButton.disabled).toBe(false);
   });
 
   it("keeps OKX in More options instead of the inline browser wallet section", () => {

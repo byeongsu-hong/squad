@@ -18,7 +18,7 @@ const nextConfig: NextConfig = {
               "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https:",
-              "font-src 'self' data:",
+              "font-src 'self' data: https://fonts.reown.com",
               // Allow HTTPS/WSS to any domain for custom RPC URLs
               // This is necessary for users to use their own RPC endpoints
               "connect-src 'self' https: wss:",

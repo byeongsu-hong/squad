@@ -2,7 +2,7 @@
 
 import { AlertCircle, ExternalLink, QrCode, Usb, X } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,10 @@ import { useWalletStore } from "@/stores/wallet-store";
 import { OKX_EXTENSION_URL, OKX_WALLET_ICON } from "../assets/okx-icon";
 import { useBrowserWallet } from "../hooks/use-browser-wallet";
 import { WALLETCONNECT_UNCONFIGURED_MESSAGE } from "../lib/walletconnect";
+import {
+  prepareWalletConnectModalState,
+  subscribeWalletConnectModalClose,
+} from "../lib/walletconnect-appkit";
 import {
   DetectedBadge,
   SectionLabel,
@@ -59,6 +63,30 @@ export function SolanaConnectPanel({
     (w) => w.adapter.name !== "WalletConnect"
   );
 
+  useEffect(() => {
+    if (loadingWallet !== "WalletConnect") return;
+
+    let disposed = false;
+    let unsubscribe: () => void = () => undefined;
+
+    void subscribeWalletConnectModalClose(() => {
+      setLoadingWallet((current) =>
+        current === "WalletConnect" ? null : current
+      );
+    }).then((nextUnsubscribe) => {
+      if (disposed) {
+        nextUnsubscribe();
+        return;
+      }
+      unsubscribe = nextUnsubscribe;
+    });
+
+    return () => {
+      disposed = true;
+      unsubscribe();
+    };
+  }, [loadingWallet]);
+
   const handleBrowserWallet = async (
     wallet: (typeof installedWallets)[number]
   ) => {
@@ -66,6 +94,9 @@ export function SolanaConnectPanel({
     setError(null);
     setLoadingWallet(name);
     try {
+      if (name === "WalletConnect") {
+        await prepareWalletConnectModalState("solana");
+      }
       await connect(wallet);
       toast.success(`Connected to ${name}`);
       onClose();
