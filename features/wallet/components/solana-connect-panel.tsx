@@ -49,7 +49,12 @@ export function SolanaConnectPanel({
   const isOkxInstalled = okxWalletService.isInstalled();
   const isAnyLoading = loadingWallet !== null;
 
-  const wcWallet = allAvailable.find((w) => w.adapter.name === "WalletConnect");
+  const wcWallet = [...installedWallets, ...allAvailable].find(
+    (w) => w.adapter.name === "WalletConnect"
+  );
+  const installedWalletsWithoutWc = installedWallets.filter(
+    (w) => w.adapter.name !== "WalletConnect"
+  );
   const availableWallets = allAvailable.filter(
     (w) => w.adapter.name !== "WalletConnect"
   );
@@ -106,7 +111,7 @@ export function SolanaConnectPanel({
     void handleBrowserWallet(wcWallet);
   };
 
-  const hasInstalled = installedWallets.length > 0;
+  const hasInstalled = installedWalletsWithoutWc.length > 0;
   const hasAvailable = availableWallets.length > 0;
 
   return (
@@ -131,7 +136,7 @@ export function SolanaConnectPanel({
       {hasInstalled && (
         <div className="flex flex-col gap-2">
           <SectionLabel>Installed</SectionLabel>
-          {installedWallets.map((wallet) => (
+          {installedWalletsWithoutWc.map((wallet) => (
             <WalletRow
               key={wallet.adapter.name}
               icon={

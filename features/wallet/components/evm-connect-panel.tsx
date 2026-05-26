@@ -66,7 +66,13 @@ function connectorPriority(connector: Connector) {
 function getInlineConnectors(connectors: readonly Connector[]) {
   const byKey = new Map<string, Connector>();
   for (const connector of connectors) {
-    if (isWalletConnect(connector) || isGenericInjected(connector)) continue;
+    if (
+      isWalletConnect(connector) ||
+      isGenericInjected(connector) ||
+      isOkxConnector(connector)
+    ) {
+      continue;
+    }
 
     const key = connectorKey(connector);
     const existing = byKey.get(key);
@@ -80,37 +86,44 @@ function getInlineConnectors(connectors: readonly Connector[]) {
   return Array.from(byKey.values());
 }
 
+function getOkxConnector(connectors: readonly Connector[]) {
+  return (
+    connectors.find(
+      (connector) => isOkxConnector(connector) && connector.id === "okxWallet"
+    ) ?? connectors.find((connector) => isOkxConnector(connector))
+  );
+}
+
 export function EvmConnectPanel({
   onClose,
   onOpenLedger,
 }: EvmConnectPanelProps) {
   const { address, isConnected, connector: activeConnector } = useAccount();
-  const { connect, connectors, variables } = useConnect();
+  const { connect, connectors } = useConnect();
   const { uri, clearUri } = useWcUri();
   const [error, setError] = useState<string | null>(null);
-
-  const connectingConnector = variables?.connector;
-  const connectingId =
-    connectingConnector && "id" in connectingConnector
-      ? connectingConnector.id
-      : undefined;
+  const [connectingId, setConnectingId] = useState<string | null>(null);
   const isAnyConnecting = connectingId != null;
 
   const inlineConnectors = getInlineConnectors(connectors);
+  const okxConnector = getOkxConnector(connectors);
   const wcConnector = connectors.find((c) => isWalletConnect(c));
 
   const handleConnect = (connector: Connector) => {
     setError(null);
+    setConnectingId(connector.id);
     connect(
       { connector },
       {
         onSuccess: () => {
           clearUri();
+          setConnectingId(null);
           toast.success(`Connected to ${connector.name}`);
           onClose();
         },
         onError: (err) => {
           clearUri();
+          setConnectingId(null);
           const isRejection =
             err.name === "UserRejectedRequestError" ||
             err.message?.toLowerCase().includes("rejected") ||
@@ -131,6 +144,13 @@ export function EvmConnectPanel({
       return;
     }
     handleConnect(wcConnector);
+  };
+
+  const handleQrClose = () => {
+    clearUri();
+    if (connectingId === wcConnector?.id) {
+      setConnectingId(null);
+    }
   };
 
   if (isConnected && address) {
@@ -155,7 +175,7 @@ export function EvmConnectPanel({
 
   return (
     <>
-      <WcQrModal uri={uri} onClose={clearUri} />
+      <WcQrModal uri={uri} onClose={handleQrClose} />
 
       <div className="flex flex-col gap-4">
         {error && (
@@ -219,6 +239,28 @@ export function EvmConnectPanel({
             disabled={isAnyConnecting}
             onClick={onOpenLedger}
           />
+          {okxConnector && (
+            <WalletRow
+              icon={
+                <WalletIcon icon={okxConnector.icon} name={okxConnector.name} />
+              }
+              name={okxConnector.name}
+              subtitle={
+                okxConnector.id === "okxWallet" && !hasOkxEvmProvider() ? (
+                  "Install extension"
+                ) : (
+                  <DetectedBadge />
+                )
+              }
+              isLoading={connectingId === okxConnector.id}
+              disabled={isAnyConnecting}
+              onClick={
+                okxConnector.id === "okxWallet" && !hasOkxEvmProvider()
+                  ? () => window.open(OKX_EXTENSION_URL, "_blank", "noopener")
+                  : () => handleConnect(okxConnector)
+              }
+            />
+          )}
           <WalletRow
             icon={<QrCode className="text-muted-foreground h-6 w-6" />}
             name="WalletConnect"

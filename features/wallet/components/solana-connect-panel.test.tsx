@@ -6,9 +6,17 @@ import { SolanaConnectPanel } from "./solana-connect-panel";
 
 const connectBrowserWalletMock = vi.hoisted(() => vi.fn());
 const browserWalletState = vi.hoisted(() => ({
-  installedWallets: [],
-  availableWallets: [],
+  installedWallets: [] as unknown[],
+  availableWallets: [] as unknown[],
 }));
+
+const walletConnectWallet = {
+  adapter: {
+    icon: null,
+    name: "WalletConnect",
+    url: "https://walletconnect.com",
+  },
+};
 
 vi.mock("next/image", () => ({
   default: (
@@ -59,5 +67,20 @@ describe("SolanaConnectPanel", () => {
       screen.getByText("WalletConnect project id is not configured.")
     ).toBeTruthy();
     expect(connectBrowserWalletMock).not.toHaveBeenCalled();
+  });
+
+  it("opens SVM WalletConnect even when the adapter is classified as installed", () => {
+    browserWalletState.installedWallets = [walletConnectWallet];
+
+    render(<SolanaConnectPanel onClose={vi.fn()} onOpenLedger={vi.fn()} />);
+
+    const walletConnectButtons = screen.getAllByRole("button", {
+      name: /WalletConnect/,
+    });
+
+    expect(walletConnectButtons).toHaveLength(1);
+    fireEvent.click(walletConnectButtons[0]);
+
+    expect(connectBrowserWalletMock).toHaveBeenCalledWith(walletConnectWallet);
   });
 });
