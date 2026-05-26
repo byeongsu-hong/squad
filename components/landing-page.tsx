@@ -2,7 +2,7 @@
 
 import { CheckCircle2, ChevronRight, Shield } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useAccount } from "wagmi";
 
 import { AddMultisigActions } from "@/components/add-multisig-actions";
@@ -83,10 +83,9 @@ export function LandingPage() {
     );
   }
 
-  return (
-    <PageStage>
-      <div className="bg-card border-border mb-5 flex items-stretch overflow-x-auto rounded-xl border">
-        {/* Vaults count — links to vault list */}
+  const statsHeader = (
+    <div className="bg-card border-border mb-5 flex items-stretch overflow-x-auto rounded-xl border">
+      {/* Vaults count — links to vault list */}
         <Link
           href="/vaults"
           className="hover:bg-muted/40 flex shrink-0 items-center gap-1.5 px-4 py-3 transition-colors"
@@ -255,12 +254,17 @@ export function LandingPage() {
           </div>
         )}
       </div>
+  );
 
+  return (
+    <PageStage width="wide">
+      <Suspense fallback={null}>
       <OperationsQueue
         key={activeFilter}
         items={queueItems}
         loading={loading}
         showFilters
+        statsHeader={statsHeader}
         defaultStatusFilter={activeFilter}
         emptyStateCta={
           <div className="mt-1 w-full max-w-sm">
@@ -348,6 +352,7 @@ export function LandingPage() {
           </div>
         }
       />
+      </Suspense>
     </PageStage>
   );
 }
