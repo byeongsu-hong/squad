@@ -9,13 +9,12 @@ import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
 import { WalletConnectWalletAdapter } from "@solana/wallet-adapter-wallets";
 import { useMemo } from "react";
 
+import { WALLETCONNECT_PROJECT_ID } from "@/features/wallet/lib/walletconnect";
 import { useChainStore } from "@/stores/chain-store";
 
 interface WalletAdapterProviderProps {
   children: React.ReactNode;
 }
-
-const WC_PROJECT_ID = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID ?? "";
 
 export function WalletAdapterProvider({
   children,
@@ -28,11 +27,11 @@ export function WalletAdapterProvider({
   }, [chains]);
 
   const wallets = useMemo(() => {
-    if (!WC_PROJECT_ID) return [];
+    if (!WALLETCONNECT_PROJECT_ID) return [];
     return [
       new WalletConnectWalletAdapter({
         network: WalletAdapterNetwork.Mainnet,
-        options: { projectId: WC_PROJECT_ID },
+        options: { projectId: WALLETCONNECT_PROJECT_ID },
       }),
     ];
   }, []);

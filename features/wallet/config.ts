@@ -4,10 +4,9 @@ import { arbitrum, base, bsc, mainnet, optimism } from "wagmi/chains";
 import { injected, walletConnect } from "wagmi/connectors";
 
 import { OKX_WALLET_ICON } from "./assets/okx-icon";
+import { WALLETCONNECT_PROJECT_ID } from "./lib/walletconnect";
 
-const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID ?? "";
-
-if (!projectId) {
+if (!WALLETCONNECT_PROJECT_ID) {
   console.warn(
     "[wagmi] NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID is not set; WalletConnect will not work."
   );
@@ -47,7 +46,9 @@ const connectors = [
       },
     },
   }),
-  ...(projectId ? [walletConnect({ projectId })] : []),
+  ...(WALLETCONNECT_PROJECT_ID
+    ? [walletConnect({ projectId: WALLETCONNECT_PROJECT_ID })]
+    : []),
 ];
 
 export const wagmiConfig = createConfig({

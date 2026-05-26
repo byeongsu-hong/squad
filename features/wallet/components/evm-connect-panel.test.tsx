@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Connector } from "wagmi";
 
@@ -43,10 +43,33 @@ describe("EvmConnectPanel", () => {
     connectorsMock.value = [];
   });
 
-  it("shows EVM Ledger with the Ethereum derivation path even without WalletConnect", () => {
-    render(<EvmConnectPanel onClose={vi.fn()} />);
+  it("shows EVM Ledger USB as a separate option from WalletConnect", () => {
+    const onOpenLedger = vi.fn();
 
-    expect(screen.getByText("Ledger")).toBeTruthy();
-    expect(screen.getByText("Ledger Live · m/44'/60'/0'/0/n")).toBeTruthy();
+    render(<EvmConnectPanel onClose={vi.fn()} onOpenLedger={onOpenLedger} />);
+
+    const ledgerButton = screen.getByRole("button", {
+      name: /Ledger USB.*m\/44'\/60'\/0'\/0\/0/,
+    });
+
+    expect(ledgerButton).toBeTruthy();
+    expect(screen.queryByText(/Ledger Live/)).toBeNull();
+    expect(screen.getByRole("button", { name: /WalletConnect/ })).toBeTruthy();
+
+    fireEvent.click(ledgerButton);
+
+    expect(onOpenLedger).toHaveBeenCalledTimes(1);
+    expect(connectMock).not.toHaveBeenCalled();
+  });
+
+  it("keeps WalletConnect visible and explains missing configuration", () => {
+    render(<EvmConnectPanel onClose={vi.fn()} onOpenLedger={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole("button", { name: /WalletConnect/ }));
+
+    expect(
+      screen.getByText("WalletConnect project id is not configured.")
+    ).toBeTruthy();
+    expect(connectMock).not.toHaveBeenCalled();
   });
 });

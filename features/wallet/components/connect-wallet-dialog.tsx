@@ -2,16 +2,17 @@
 
 import { useEffect, useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 import { EvmConnectPanel } from "./evm-connect-panel";
+import { EvmLedgerConnectPanel } from "./evm-ledger-connect-panel";
 import { LedgerConnectPanel } from "./ledger-connect-panel";
 import { SolanaConnectPanel } from "./solana-connect-panel";
 
@@ -21,7 +22,7 @@ interface ConnectWalletDialogProps {
   defaultTab?: "solana" | "ethereum";
 }
 
-type ViewType = "tabs" | "ledger";
+type ViewType = "tabs" | "solana-ledger" | "evm-ledger";
 type TabType = "solana" | "ethereum";
 
 export function ConnectWalletDialog({
@@ -49,7 +50,11 @@ export function ConnectWalletDialog({
       <DialogContent className="sm:max-w-[440px]">
         <DialogHeader>
           <DialogTitle>
-            {view === "ledger" ? "Connect Ledger" : "Connect Wallet"}
+            {view === "tabs"
+              ? "Connect Wallet"
+              : view === "evm-ledger"
+                ? "Connect EVM Ledger"
+                : "Connect Solana Ledger"}
           </DialogTitle>
         </DialogHeader>
 
@@ -71,8 +76,8 @@ export function ConnectWalletDialog({
                     "h-auto flex-1 rounded-md py-1.5 text-[13px] font-medium transition-all",
                     activeTab === tab
                       ? tab === "solana"
-                        ? "bg-primary/10 dark:bg-primary/15 text-primary shadow-sm hover:bg-primary/15 dark:hover:bg-primary/20"
-                        : "bg-blue-50 dark:bg-blue-950/25 text-blue-700 dark:text-blue-400 shadow-sm hover:bg-blue-50/80 dark:hover:bg-blue-950/40"
+                        ? "bg-primary/10 dark:bg-primary/15 text-primary hover:bg-primary/15 dark:hover:bg-primary/20 shadow-sm"
+                        : "bg-blue-50 text-blue-700 shadow-sm hover:bg-blue-50/80 dark:bg-blue-950/25 dark:text-blue-400 dark:hover:bg-blue-950/40"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
                   )}
                 >
@@ -85,15 +90,23 @@ export function ConnectWalletDialog({
               {activeTab === "solana" ? (
                 <SolanaConnectPanel
                   onClose={() => handleOpenChange(false)}
-                  onOpenLedger={() => setView("ledger")}
+                  onOpenLedger={() => setView("solana-ledger")}
                 />
               ) : (
-                <EvmConnectPanel onClose={() => handleOpenChange(false)} />
+                <EvmConnectPanel
+                  onClose={() => handleOpenChange(false)}
+                  onOpenLedger={() => setView("evm-ledger")}
+                />
               )}
             </div>
           </div>
-        ) : (
+        ) : view === "solana-ledger" ? (
           <LedgerConnectPanel
+            onBack={() => setView("tabs")}
+            onClose={() => handleOpenChange(false)}
+          />
+        ) : (
+          <EvmLedgerConnectPanel
             onBack={() => setView("tabs")}
             onClose={() => handleOpenChange(false)}
           />

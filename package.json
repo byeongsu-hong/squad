@@ -16,6 +16,7 @@
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
     "@ledgerhq/device-management-kit": "^1.5.0",
+    "@ledgerhq/device-signer-kit-ethereum": "^1.16.0",
     "@ledgerhq/device-signer-kit-solana": "^1.5.0",
     "@ledgerhq/device-transport-kit-web-hid": "^1.2.1",
     "@radix-ui/react-alert-dialog": "^1.1.15",

@@ -7,10 +7,12 @@ import { useAccount, useConnect } from "wagmi";
 import type { Connector } from "wagmi";
 
 import { Button } from "@/components/ui/button";
+import { formatEvmLedgerDerivationPath } from "@/lib/ledger/ethereum-paths";
 import { formatAddress } from "@/lib/utils/format-address";
 
 import { OKX_EXTENSION_URL } from "../assets/okx-icon";
 import { useWcUri } from "../hooks/use-wc-uri";
+import { WALLETCONNECT_UNCONFIGURED_MESSAGE } from "../lib/walletconnect";
 import {
   DetectedBadge,
   SectionLabel,
@@ -21,9 +23,8 @@ import { WcQrModal } from "./wc-qr-modal";
 
 interface EvmConnectPanelProps {
   onClose: () => void;
+  onOpenLedger: () => void;
 }
-
-const EVM_LEDGER_DERIVATION_PATH = "m/44'/60'/0'/0/n";
 
 function isWalletConnect(connector: Connector) {
   return (
@@ -79,14 +80,14 @@ function getInlineConnectors(connectors: readonly Connector[]) {
   return Array.from(byKey.values());
 }
 
-export function EvmConnectPanel({ onClose }: EvmConnectPanelProps) {
+export function EvmConnectPanel({
+  onClose,
+  onOpenLedger,
+}: EvmConnectPanelProps) {
   const { address, isConnected, connector: activeConnector } = useAccount();
   const { connect, connectors, variables } = useConnect();
   const { uri, clearUri } = useWcUri();
   const [error, setError] = useState<string | null>(null);
-  const [wcIntent, setWcIntent] = useState<"ledger" | "walletconnect" | null>(
-    null
-  );
 
   const connectingConnector = variables?.connector;
   const connectingId =
@@ -98,25 +99,18 @@ export function EvmConnectPanel({ onClose }: EvmConnectPanelProps) {
   const inlineConnectors = getInlineConnectors(connectors);
   const wcConnector = connectors.find((c) => isWalletConnect(c));
 
-  const handleConnect = (
-    connector: Connector,
-    intent?: "ledger" | "walletconnect"
-  ) => {
+  const handleConnect = (connector: Connector) => {
     setError(null);
-    if (intent) setWcIntent(intent);
     connect(
       { connector },
       {
         onSuccess: () => {
           clearUri();
-          setWcIntent(null);
-          const label = intent === "ledger" ? "Ledger" : connector.name;
-          toast.success(`Connected to ${label}`);
+          toast.success(`Connected to ${connector.name}`);
           onClose();
         },
         onError: (err) => {
           clearUri();
-          setWcIntent(null);
           const isRejection =
             err.name === "UserRejectedRequestError" ||
             err.message?.toLowerCase().includes("rejected") ||
@@ -128,6 +122,15 @@ export function EvmConnectPanel({ onClose }: EvmConnectPanelProps) {
         },
       }
     );
+  };
+
+  const handleWalletConnect = () => {
+    if (!wcConnector) {
+      setError(WALLETCONNECT_UNCONFIGURED_MESSAGE);
+      toast.error(WALLETCONNECT_UNCONFIGURED_MESSAGE);
+      return;
+    }
+    handleConnect(wcConnector);
   };
 
   if (isConnected && address) {
@@ -211,29 +214,23 @@ export function EvmConnectPanel({ onClose }: EvmConnectPanelProps) {
           <SectionLabel>More options</SectionLabel>
           <WalletRow
             icon={<Usb className="text-muted-foreground h-6 w-6" />}
-            name="Ledger"
-            subtitle={`Ledger Live · ${EVM_LEDGER_DERIVATION_PATH}`}
-            isLoading={
-              connectingId === wcConnector?.id && wcIntent === "ledger"
-            }
-            disabled={isAnyConnecting || !wcConnector}
-            onClick={() => {
-              if (!wcConnector) return;
-              handleConnect(wcConnector, "ledger");
-            }}
+            name="Ledger USB"
+            subtitle={`Ethereum app · ${formatEvmLedgerDerivationPath(0)}`}
+            disabled={isAnyConnecting}
+            onClick={onOpenLedger}
           />
-          {wcConnector && (
-            <WalletRow
-              icon={<QrCode className="text-muted-foreground h-6 w-6" />}
-              name="WalletConnect"
-              subtitle="Scan QR with any mobile wallet"
-              isLoading={
-                connectingId === wcConnector.id && wcIntent === "walletconnect"
-              }
-              disabled={isAnyConnecting}
-              onClick={() => handleConnect(wcConnector, "walletconnect")}
-            />
-          )}
+          <WalletRow
+            icon={<QrCode className="text-muted-foreground h-6 w-6" />}
+            name="WalletConnect"
+            subtitle={
+              wcConnector
+                ? "Scan QR with any mobile wallet"
+                : "Project id required"
+            }
+            isLoading={connectingId === wcConnector?.id}
+            disabled={isAnyConnecting}
+            onClick={handleWalletConnect}
+          />
         </div>
       </div>
     </>

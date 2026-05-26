@@ -9,9 +9,15 @@ import { Button } from "@/components/ui/button";
 import { okxWalletService } from "@/lib/okx-wallet";
 import { useWalletStore } from "@/stores/wallet-store";
 
-import { useBrowserWallet } from "../hooks/use-browser-wallet";
 import { OKX_EXTENSION_URL, OKX_WALLET_ICON } from "../assets/okx-icon";
-import { DetectedBadge, SectionLabel, WalletIcon, WalletRow } from "./wallet-row";
+import { useBrowserWallet } from "../hooks/use-browser-wallet";
+import { WALLETCONNECT_UNCONFIGURED_MESSAGE } from "../lib/walletconnect";
+import {
+  DetectedBadge,
+  SectionLabel,
+  WalletIcon,
+  WalletRow,
+} from "./wallet-row";
 
 interface SolanaConnectPanelProps {
   onClose: () => void;
@@ -31,7 +37,11 @@ export function SolanaConnectPanel({
   onClose,
   onOpenLedger,
 }: SolanaConnectPanelProps) {
-  const { installedWallets, availableWallets: allAvailable, connect } = useBrowserWallet();
+  const {
+    installedWallets,
+    availableWallets: allAvailable,
+    connect,
+  } = useBrowserWallet();
   const { connectOkx } = useWalletStore();
   const [loadingWallet, setLoadingWallet] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -40,7 +50,9 @@ export function SolanaConnectPanel({
   const isAnyLoading = loadingWallet !== null;
 
   const wcWallet = allAvailable.find((w) => w.adapter.name === "WalletConnect");
-  const availableWallets = allAvailable.filter((w) => w.adapter.name !== "WalletConnect");
+  const availableWallets = allAvailable.filter(
+    (w) => w.adapter.name !== "WalletConnect"
+  );
 
   const handleBrowserWallet = async (
     wallet: (typeof installedWallets)[number]
@@ -82,6 +94,16 @@ export function SolanaConnectPanel({
 
   const handleInstallLink = (url: string) => {
     window.open(url, "_blank", "noopener,noreferrer");
+  };
+
+  const handleWalletConnect = () => {
+    if (!wcWallet) {
+      setError(WALLETCONNECT_UNCONFIGURED_MESSAGE);
+      toast.error(WALLETCONNECT_UNCONFIGURED_MESSAGE);
+      return;
+    }
+
+    void handleBrowserWallet(wcWallet);
   };
 
   const hasInstalled = installedWallets.length > 0;
@@ -151,23 +173,27 @@ export function SolanaConnectPanel({
           }
           isLoading={loadingWallet === "OKX Wallet"}
           disabled={isAnyLoading}
-          onClick={isOkxInstalled ? handleOkx : () => handleInstallLink(OKX_EXTENSION_URL)}
+          onClick={
+            isOkxInstalled
+              ? handleOkx
+              : () => handleInstallLink(OKX_EXTENSION_URL)
+          }
         />
 
-        {wcWallet && (
-          <WalletRow
-            icon={<QrCode className="text-muted-foreground h-6 w-6" />}
-            name="WalletConnect"
-            subtitle="Scan QR with any mobile wallet"
-            isLoading={loadingWallet === "WalletConnect"}
-            disabled={isAnyLoading}
-            onClick={() => handleBrowserWallet(wcWallet)}
-          />
-        )}
+        <WalletRow
+          icon={<QrCode className="text-muted-foreground h-6 w-6" />}
+          name="WalletConnect"
+          subtitle={
+            wcWallet ? "Scan QR with any mobile wallet" : "Project id required"
+          }
+          isLoading={loadingWallet === "WalletConnect"}
+          disabled={isAnyLoading}
+          onClick={handleWalletConnect}
+        />
 
         <WalletRow
           icon={<Usb className="text-muted-foreground h-6 w-6" />}
-          name="Ledger"
+          name="Ledger USB"
           subtitle="Hardware device"
           disabled={isAnyLoading}
           onClick={onOpenLedger}
