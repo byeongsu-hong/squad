@@ -4,15 +4,15 @@ import { Plus, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-
 import { useMultisigStore } from "@/stores/multisig-store";
 import type { MultisigAccount } from "@/types/multisig";
 
@@ -91,11 +91,17 @@ export function ManageTagsDialog({
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Manage Tags</DialogTitle>
+          <DialogDescription className="sr-only">
+            Add or remove tags for the selected vault.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <label htmlFor="new-tag" className="text-[11px] font-medium text-muted-foreground/50">
+            <label
+              htmlFor="new-tag"
+              className="text-muted-foreground/50 text-[11px] font-medium"
+            >
               Add Tag
             </label>
             <div className="flex gap-2">
@@ -121,7 +127,9 @@ export function ManageTagsDialog({
           {allGlobalTags.length > 0 &&
             allGlobalTags.some((tag) => !tags.includes(tag)) && (
               <div className="space-y-1.5">
-                <p className="text-muted-foreground/50 text-[11px] font-medium">Available</p>
+                <p className="text-muted-foreground/50 text-[11px] font-medium">
+                  Available
+                </p>
                 <div className="flex flex-wrap gap-1.5">
                   {allGlobalTags
                     .filter((tag) => !tags.includes(tag))
@@ -142,7 +150,9 @@ export function ManageTagsDialog({
 
           {tags.length > 0 && (
             <div className="space-y-1.5">
-              <p className="text-muted-foreground/50 text-[11px] font-medium">Current</p>
+              <p className="text-muted-foreground/50 text-[11px] font-medium">
+                Current
+              </p>
               <div className="flex flex-wrap gap-2">
                 {tags.map((tag) => (
                   <span
@@ -183,7 +193,7 @@ export function ManageTagsDialog({
           <Button
             type="button"
             onClick={handleSave}
-            className="flex-1 bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20"
+            className="bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20 flex-1"
           >
             Save
           </Button>

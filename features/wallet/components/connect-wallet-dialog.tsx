@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -56,6 +57,9 @@ export function ConnectWalletDialog({
                 ? "Connect EVM Ledger"
                 : "Connect Solana Ledger"}
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            Choose a Solana, Ethereum, Ledger, or WalletConnect option.
+          </DialogDescription>
         </DialogHeader>
 
         {view === "tabs" ? (

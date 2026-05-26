@@ -1,5 +1,9 @@
 import type { NextConfig } from "next";
 
+const allowVercelLive =
+  process.env.VERCEL === "1" && process.env.VERCEL_ENV !== "production";
+const vercelLiveSource = allowVercelLive ? " https://vercel.live" : "";
+
 const nextConfig: NextConfig = {
   serverExternalPackages: [
     "@walletconnect/solana-adapter",
@@ -15,14 +19,14 @@ const nextConfig: NextConfig = {
             value: [
               "default-src 'self'",
               // Allow inline scripts/styles for Next.js and React
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+              `script-src 'self' 'unsafe-inline' 'unsafe-eval'${vercelLiveSource}`,
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https:",
               "font-src 'self' data: https://fonts.reown.com",
               // Allow HTTPS/WSS to any domain for custom RPC URLs
               // This is necessary for users to use their own RPC endpoints
               "connect-src 'self' https: wss:",
-              "frame-src https://verify.walletconnect.org https://verify.walletconnect.com",
+              `frame-src https://verify.walletconnect.org https://verify.walletconnect.com${vercelLiveSource}`,
               // Prevent framing
               "frame-ancestors 'none'",
               "base-uri 'self'",

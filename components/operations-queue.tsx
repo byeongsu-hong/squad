@@ -1,13 +1,24 @@
 "use client";
 
-import { Check, CheckCircle2, Loader2, SlidersHorizontal, Zap } from "lucide-react";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import {
+  Check,
+  CheckCircle2,
+  Loader2,
+  SlidersHorizontal,
+  Zap,
+} from "lucide-react";
 import { type ReactNode, useMemo, useState } from "react";
 
 import { ProposalDetailView } from "@/components/proposal-detail-modal";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Pagination } from "@/components/ui/pagination";
 import {
@@ -57,7 +68,7 @@ function StatusBadge({ item }: { item: WorkspaceQueueItem }) {
   }
   if (item.needsYourSignature && !item.currentUserApproved) {
     return (
-      <span className="rounded border border-primary/30 bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+      <span className="border-primary/30 bg-primary/10 text-primary rounded border px-1.5 py-0.5 text-[10px] font-medium">
         Sign
       </span>
     );
@@ -72,7 +83,7 @@ function StatusBadge({ item }: { item: WorkspaceQueueItem }) {
   }
   if (item.proposal.status === "Rejected") {
     return (
-      <span className="rounded border border-destructive/30 bg-destructive/10 px-1.5 py-0.5 text-[10px] text-destructive">
+      <span className="border-destructive/30 bg-destructive/10 text-destructive rounded border px-1.5 py-0.5 text-[10px]">
         Rejected
       </span>
     );
@@ -86,7 +97,7 @@ function StatusBadge({ item }: { item: WorkspaceQueueItem }) {
   }
   if (item.proposal.status === "Cancelled") {
     return (
-      <span className="rounded border border-border bg-muted/60 px-1.5 py-0.5 text-[10px] text-muted-foreground/60">
+      <span className="border-border bg-muted/60 text-muted-foreground/60 rounded border px-1.5 py-0.5 text-[10px]">
         Cancelled
       </span>
     );
@@ -126,12 +137,12 @@ function QueueRow({
         isSelected
           ? "bg-primary/8"
           : item.readyToExecute
-          ? "hover:bg-emerald-50 dark:hover:bg-emerald-950/15 [box-shadow:inset_2px_0_0_rgba(5,150,105,0.4)]"
-          : item.needsYourSignature && !item.currentUserApproved
-          ? "hover:bg-primary/5 [box-shadow:inset_2px_0_0_rgba(217,119,6,0.4)]"
-          : item.currentUserApproved && item.proposal.status === "Active"
-          ? "hover:bg-muted [box-shadow:inset_2px_0_0_rgba(5,150,105,0.2)]"
-          : "hover:bg-muted"
+            ? "[box-shadow:inset_2px_0_0_rgba(5,150,105,0.4)] hover:bg-emerald-50 dark:hover:bg-emerald-950/15"
+            : item.needsYourSignature && !item.currentUserApproved
+              ? "hover:bg-primary/5 [box-shadow:inset_2px_0_0_rgba(217,119,6,0.4)]"
+              : item.currentUserApproved && item.proposal.status === "Active"
+                ? "hover:bg-muted [box-shadow:inset_2px_0_0_rgba(5,150,105,0.2)]"
+                : "hover:bg-muted"
       )}
       onClick={onClick}
     >
@@ -144,7 +155,10 @@ function QueueRow({
               ? "opacity-100"
               : "opacity-0 group-hover:opacity-100"
           )}
-          onClick={(e) => { e.stopPropagation(); onToggle(); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggle();
+          }}
         >
           <Checkbox
             checked={isSelected}
@@ -159,27 +173,33 @@ function QueueRow({
       {/* Left: vault/tx label + metadata */}
       <div className="min-w-0 flex-1">
         {!compact ? (
-          <p className={cn(
-            "mb-0.5 truncate text-[13px] font-medium leading-tight",
-            item.multisig.label ? "text-foreground" : "text-muted-foreground/50 italic"
-          )}>
+          <p
+            className={cn(
+              "mb-0.5 truncate text-[13px] leading-tight font-medium",
+              item.multisig.label
+                ? "text-foreground"
+                : "text-muted-foreground/50 italic"
+            )}
+          >
             {item.multisig.label ?? "Unnamed"}
           </p>
         ) : (
-          <p className="text-foreground mb-0.5 truncate text-[12px] font-medium leading-tight">
+          <p className="text-foreground mb-0.5 truncate text-[12px] leading-tight font-medium">
             {item.lineLabel}
           </p>
         )}
         <div className="flex items-center gap-1.5">
           {!compact && item.lineLabel && (
-            <span className={cn(
-              "text-[11px]",
-              item.readyToExecute
-                ? "text-emerald-600/70 dark:text-emerald-500/70"
-                : item.needsYourSignature && !item.currentUserApproved
-                ? "text-primary/60"
-                : "text-muted-foreground/50"
-            )}>
+            <span
+              className={cn(
+                "text-[11px]",
+                item.readyToExecute
+                  ? "text-emerald-600/70 dark:text-emerald-500/70"
+                  : item.needsYourSignature && !item.currentUserApproved
+                    ? "text-primary/60"
+                    : "text-muted-foreground/50"
+              )}
+            >
               {item.lineLabel}
             </span>
           )}
@@ -206,20 +226,25 @@ function QueueRow({
           {item.approvalCount}/{item.multisig.threshold}
         </span>
         {/* Skip badge when an action button is already shown — it's redundant */}
-        {!(onExecute && item.readyToExecute) && !(onApprove && item.needsYourSignature && !item.currentUserApproved) && (
-          <StatusBadge item={item} />
-        )}
+        {!(onExecute && item.readyToExecute) &&
+          !(
+            onApprove &&
+            item.needsYourSignature &&
+            !item.currentUserApproved
+          ) && <StatusBadge item={item} />}
         {onExecute && item.readyToExecute ? (
           <Button
             size="xs"
             disabled={isActioning}
             onClick={onExecute}
-            className="bg-emerald-600 text-white hover:bg-emerald-500 border-emerald-700/30 font-semibold"
+            className="border-emerald-700/30 bg-emerald-600 font-semibold text-white hover:bg-emerald-500"
           >
             {isActioning ? <Loader2 className="animate-spin" /> : <Zap />}
             Execute
           </Button>
-        ) : onApprove && item.needsYourSignature && !item.currentUserApproved ? (
+        ) : onApprove &&
+          item.needsYourSignature &&
+          !item.currentUserApproved ? (
           <Button
             size="xs"
             disabled={isActioning}
@@ -273,16 +298,20 @@ export function OperationsQueue({
   emptyStateCta,
   defaultStatusFilter = "All",
 }: OperationsQueueProps) {
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>(defaultStatusFilter);
+  const [statusFilter, setStatusFilter] =
+    useState<StatusFilter>(defaultStatusFilter);
   const [chainFilter, setChainFilter] = useState("All");
   const [multisigFilter, setMultisigFilter] = useState("All");
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [historyPage, setHistoryPage] = useState(1);
-  const [selectedItem, setSelectedItem] = useState<WorkspaceQueueItem | null>(null);
-  const [batchQueue, setBatchQueue] = useState<WorkspaceQueueItem[] | null>(null);
+  const [selectedItem, setSelectedItem] = useState<WorkspaceQueueItem | null>(
+    null
+  );
+  const [batchQueue, setBatchQueue] = useState<WorkspaceQueueItem[] | null>(
+    null
+  );
   const [batchIndex, setBatchIndex] = useState(0);
-
 
   const chainOptions = useMemo(
     () => Array.from(new Set(items.map((i) => i.multisig.chainName))).sort(),
@@ -306,7 +335,9 @@ export function OperationsQueue({
         return false;
       if (
         statusFilter === "Watching" &&
-        (item.needsYourSignature || item.readyToExecute || item.proposal.status !== "Active")
+        (item.needsYourSignature ||
+          item.readyToExecute ||
+          item.proposal.status !== "Active")
       )
         return false;
       if (statusFilter === "Executable" && !item.readyToExecute) return false;
@@ -336,15 +367,23 @@ export function OperationsQueue({
     [filtered]
   );
   const watchingItems = useMemo(
-    () => filtered.filter(
-      (i) => !i.needsYourSignature && !i.readyToExecute && i.proposal.status === "Active"
-    ),
+    () =>
+      filtered.filter(
+        (i) =>
+          !i.needsYourSignature &&
+          !i.readyToExecute &&
+          i.proposal.status === "Active"
+      ),
     [filtered]
   );
   const historyItems = useMemo(
-    () => filtered.filter(
-      (i) => !i.needsYourSignature && !i.readyToExecute && i.proposal.status !== "Active"
-    ),
+    () =>
+      filtered.filter(
+        (i) =>
+          !i.needsYourSignature &&
+          !i.readyToExecute &&
+          i.proposal.status !== "Active"
+      ),
     [filtered]
   );
 
@@ -386,7 +425,8 @@ export function OperationsQueue({
 
   // All approveables/executeables regardless of selection (for header quick-actions)
   const approveAllItems = useMemo(
-    () => actionItems.filter((i) => i.needsYourSignature && !i.currentUserApproved),
+    () =>
+      actionItems.filter((i) => i.needsYourSignature && !i.currentUserApproved),
     [actionItems]
   );
   const executeAllItems = useMemo(
@@ -436,7 +476,7 @@ export function OperationsQueue({
   if (loading && items.length === 0) {
     return (
       <div className="border-border bg-card overflow-hidden rounded-xl border">
-        <div className="border-b border-border flex items-center gap-2 px-3 py-2">
+        <div className="border-border flex items-center gap-2 border-b px-3 py-2">
           <Skeleton className="h-1.5 w-1.5 rounded-full" />
           <Skeleton className="h-2.5 w-20 rounded-sm" />
           <Skeleton className="h-4 w-6 rounded-full" />
@@ -469,7 +509,7 @@ export function OperationsQueue({
                   "h-7 rounded-full border px-3 text-[11px] transition-colors",
                   statusFilter === f
                     ? "bg-foreground/[0.07] border-foreground/[0.11] text-foreground font-semibold"
-                    : "border-transparent text-muted-foreground/40 font-normal hover:text-muted-foreground/70 hover:bg-muted/40 hover:border-border/50"
+                    : "text-muted-foreground/40 hover:text-muted-foreground/70 hover:bg-muted/40 hover:border-border/50 border-transparent font-normal"
                 )}
               >
                 {f}
@@ -550,54 +590,83 @@ export function OperationsQueue({
         // When a dedicated CTA is provided for empty state, skip the generic icon/text —
         // the stats bar already communicates "All clear"
         emptyStateCta && items.length === 0 ? (
-          <div className={cn("flex flex-col items-center justify-center", compact ? "py-5" : "py-4")}>
+          <div
+            className={cn(
+              "flex flex-col items-center justify-center",
+              compact ? "py-5" : "py-4"
+            )}
+          >
             {emptyStateCta}
           </div>
         ) : (
-        <div className={cn("flex flex-col items-center justify-center gap-3 text-center", compact ? "py-5" : "py-7")}>
-          {items.length === 0 ? (
-            <div className={cn(
-              "flex items-center justify-center border",
-              compact
-                ? "h-8 w-8 rounded-xl bg-emerald-50 border-emerald-200/60 dark:bg-emerald-950/20 dark:border-emerald-900/30"
-                : "h-10 w-10 rounded-xl bg-emerald-50 border-emerald-200/60 dark:bg-emerald-950/20 dark:border-emerald-900/30"
-            )}>
-              <CheckCircle2 className={cn("text-emerald-600/60 dark:text-emerald-500/60", compact ? "h-3.5 w-3.5" : "h-5 w-5")} />
-            </div>
-          ) : (
-            <div className={cn(
-              "bg-card border-border flex items-center justify-center border",
-              compact ? "h-8 w-8 rounded-xl" : "h-10 w-10 rounded-xl"
-            )}>
-              <SlidersHorizontal className={cn("text-muted-foreground/50", compact ? "h-3.5 w-3.5" : "h-5 w-5")} />
-            </div>
-          )}
-          <p className={cn("text-muted-foreground/60", compact ? "text-[11px]" : "text-[13px]")}>
-            {items.length === 0
-              ? "No proposals yet."
-              : "No transactions match your filters."}
-          </p>
-          {items.length > 0 && filtered.length === 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setStatusFilter("All");
-                setChainFilter("All");
-                setMultisigFilter("All");
-                setSearch("");
-              }}
+          <div
+            className={cn(
+              "flex flex-col items-center justify-center gap-3 text-center",
+              compact ? "py-5" : "py-7"
+            )}
+          >
+            {items.length === 0 ? (
+              <div
+                className={cn(
+                  "flex items-center justify-center border",
+                  compact
+                    ? "h-8 w-8 rounded-xl border-emerald-200/60 bg-emerald-50 dark:border-emerald-900/30 dark:bg-emerald-950/20"
+                    : "h-10 w-10 rounded-xl border-emerald-200/60 bg-emerald-50 dark:border-emerald-900/30 dark:bg-emerald-950/20"
+                )}
+              >
+                <CheckCircle2
+                  className={cn(
+                    "text-emerald-600/60 dark:text-emerald-500/60",
+                    compact ? "h-3.5 w-3.5" : "h-5 w-5"
+                  )}
+                />
+              </div>
+            ) : (
+              <div
+                className={cn(
+                  "bg-card border-border flex items-center justify-center border",
+                  compact ? "h-8 w-8 rounded-xl" : "h-10 w-10 rounded-xl"
+                )}
+              >
+                <SlidersHorizontal
+                  className={cn(
+                    "text-muted-foreground/50",
+                    compact ? "h-3.5 w-3.5" : "h-5 w-5"
+                  )}
+                />
+              </div>
+            )}
+            <p
+              className={cn(
+                "text-muted-foreground/60",
+                compact ? "text-[11px]" : "text-[13px]"
+              )}
             >
-              Clear filters
-            </Button>
-          )}
-        </div>
+              {items.length === 0
+                ? "No proposals yet."
+                : "No transactions match your filters."}
+            </p>
+            {items.length > 0 && filtered.length === 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setStatusFilter("All");
+                  setChainFilter("All");
+                  setMultisigFilter("All");
+                  setSearch("");
+                }}
+              >
+                Clear filters
+              </Button>
+            )}
+          </div>
         )
       ) : (
         <div className="space-y-4">
           {actionItems.length > 0 && (
             <div className="border-border bg-card overflow-hidden rounded-xl border">
-              <div className="border-b border-primary/15 dark:border-primary/10 bg-primary/[0.04] dark:bg-primary/[0.06] flex items-center gap-2 px-3 py-2">
+              <div className="border-primary/15 dark:border-primary/10 bg-primary/[0.04] dark:bg-primary/[0.06] flex items-center gap-2 border-b px-3 py-2">
                 <span className="bg-primary h-1.5 w-1.5 shrink-0 rounded-full" />
                 <p className="text-primary/70 text-[11px] font-semibold">
                   Action needed
@@ -629,7 +698,7 @@ export function OperationsQueue({
                     <Button
                       size="xs"
                       onClick={handleExecuteAll}
-                      className="bg-emerald-600 text-white hover:bg-emerald-500 border-emerald-700/30 font-semibold"
+                      className="border-emerald-700/30 bg-emerald-600 font-semibold text-white hover:bg-emerald-500"
                     >
                       <Zap />
                       Execute all ({executeAllItems.length})
@@ -668,8 +737,8 @@ export function OperationsQueue({
 
           {watchingItems.length > 0 && (
             <div className="border-border bg-card overflow-hidden rounded-xl border">
-              <div className="border-b border-border flex items-center gap-2 px-3 py-2">
-                <span className="bg-blue-400/60 dark:bg-blue-500/50 h-1.5 w-1.5 rounded-full" />
+              <div className="border-border flex items-center gap-2 border-b px-3 py-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-blue-400/60 dark:bg-blue-500/50" />
                 <p className="text-muted-foreground/50 text-[11px] font-medium">
                   Watching
                 </p>
@@ -697,7 +766,7 @@ export function OperationsQueue({
           {historyItems.length > 0 && (
             <div>
               <div className="border-border bg-card overflow-hidden rounded-xl border">
-                <div className="border-b border-border flex items-center gap-2 px-3 py-2">
+                <div className="border-border flex items-center gap-2 border-b px-3 py-2">
                   <span className="bg-muted-foreground/50 h-1.5 w-1.5 rounded-full" />
                   <p className="text-muted-foreground/50 text-[11px] font-medium">
                     History
@@ -754,13 +823,13 @@ export function OperationsQueue({
 
   return (
     <>
-      <div className="min-w-0">
-        {queueContent}
-      </div>
+      <div className="min-w-0">{queueContent}</div>
 
       {/* Proposal detail modal — supports both single-item and batch (next/skip) mode */}
       {(() => {
-        const activeItem = batchQueue ? (batchQueue[batchIndex] ?? null) : selectedItem;
+        const activeItem = batchQueue
+          ? (batchQueue[batchIndex] ?? null)
+          : selectedItem;
         const isBatch = batchQueue !== null;
         const handleClose = () => {
           setSelectedItem(null);
@@ -775,12 +844,20 @@ export function OperationsQueue({
           }
         };
         return (
-          <Dialog open={!!activeItem} onOpenChange={(open) => !open && handleClose()}>
+          <Dialog
+            open={!!activeItem}
+            onOpenChange={(open) => !open && handleClose()}
+          >
             <DialogContent
               showCloseButton={false}
-              className="flex flex-col gap-0 p-0 max-h-[88vh] sm:max-w-2xl overflow-hidden"
+              className="flex max-h-[88vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl"
             >
-              <VisuallyHidden><DialogTitle>Proposal Detail</DialogTitle></VisuallyHidden>
+              <VisuallyHidden>
+                <DialogTitle>Proposal Detail</DialogTitle>
+                <DialogDescription>
+                  Review the selected proposal details and available actions.
+                </DialogDescription>
+              </VisuallyHidden>
               {activeItem && (
                 <ProposalDetailView
                   item={activeItem}
@@ -831,7 +908,7 @@ export function OperationsQueue({
                 <Button
                   size="sm"
                   onClick={handleBatchExecute}
-                  className="bg-emerald-600 text-white hover:bg-emerald-500 border-emerald-700/30"
+                  className="border-emerald-700/30 bg-emerald-600 text-white hover:bg-emerald-500"
                 >
                   <Zap className="h-3.5 w-3.5" />
                   Execute ({canExecuteItems.length})
