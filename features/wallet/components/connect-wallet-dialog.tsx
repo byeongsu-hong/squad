@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
+import { subscribeWalletConnectModalClose } from "../lib/walletconnect-appkit";
 import { EvmConnectPanel } from "./evm-connect-panel";
 import { EvmLedgerConnectPanel } from "./evm-ledger-connect-panel";
 import { LedgerConnectPanel } from "./ledger-connect-panel";
@@ -26,6 +27,14 @@ interface ConnectWalletDialogProps {
 type ViewType = "tabs" | "solana-ledger" | "evm-ledger";
 type TabType = "solana" | "ethereum";
 
+const WALLETCONNECT_RESTORE_DELAY_MS = 300;
+
+interface PendingWalletConnectFlow {
+  restoreTimer: number | null;
+  tab: TabType;
+  unsubscribe: () => void;
+}
+
 export function ConnectWalletDialog({
   open,
   onOpenChange,
@@ -33,13 +42,94 @@ export function ConnectWalletDialog({
 }: ConnectWalletDialogProps) {
   const [view, setView] = useState<ViewType>("tabs");
   const [activeTab, setActiveTab] = useState<TabType>("solana");
+  const nextOpenTabRef = useRef<TabType | null>(null);
+  const pendingWalletConnectFlowRef = useRef<PendingWalletConnectFlow | null>(
+    null
+  );
 
   useEffect(() => {
     if (open) {
-      setActiveTab(defaultTab ?? "solana");
+      setActiveTab(nextOpenTabRef.current ?? defaultTab ?? "solana");
+      nextOpenTabRef.current = null;
       setView("tabs");
     }
   }, [open, defaultTab]);
+
+  const clearPendingWalletConnectFlow = useCallback(() => {
+    const pendingFlow = pendingWalletConnectFlowRef.current;
+    if (!pendingFlow) return;
+
+    pendingFlow.unsubscribe();
+    if (pendingFlow.restoreTimer) {
+      window.clearTimeout(pendingFlow.restoreTimer);
+    }
+    pendingWalletConnectFlowRef.current = null;
+  }, []);
+
+  const restoreWalletDialog = useCallback(
+    (tab: TabType) => {
+      clearPendingWalletConnectFlow();
+      nextOpenTabRef.current = tab;
+      setView("tabs");
+      setActiveTab(tab);
+      onOpenChange(true);
+    },
+    [clearPendingWalletConnectFlow, onOpenChange]
+  );
+
+  const beginWalletConnectFlow = useCallback(
+    async (tab: TabType) => {
+      clearPendingWalletConnectFlow();
+
+      const pendingFlow: PendingWalletConnectFlow = {
+        restoreTimer: null,
+        tab,
+        unsubscribe: () => undefined,
+      };
+      pendingWalletConnectFlowRef.current = pendingFlow;
+
+      const unsubscribe = await subscribeWalletConnectModalClose(() => {
+        const currentFlow = pendingWalletConnectFlowRef.current;
+        if (currentFlow !== pendingFlow || currentFlow.restoreTimer) return;
+
+        currentFlow.restoreTimer = window.setTimeout(() => {
+          if (pendingWalletConnectFlowRef.current === currentFlow) {
+            restoreWalletDialog(currentFlow.tab);
+          }
+        }, WALLETCONNECT_RESTORE_DELAY_MS);
+      });
+
+      if (pendingWalletConnectFlowRef.current === pendingFlow) {
+        pendingFlow.unsubscribe = unsubscribe;
+      } else {
+        unsubscribe();
+      }
+
+      setView("tabs");
+      setActiveTab(tab);
+      onOpenChange(false);
+    },
+    [clearPendingWalletConnectFlow, onOpenChange, restoreWalletDialog]
+  );
+
+  const endWalletConnectFlow = useCallback(
+    ({ reopen }: { reopen: boolean }) => {
+      const pendingFlow = pendingWalletConnectFlowRef.current;
+      if (!pendingFlow) return;
+
+      if (reopen) {
+        restoreWalletDialog(pendingFlow.tab);
+      } else {
+        clearPendingWalletConnectFlow();
+      }
+    },
+    [clearPendingWalletConnectFlow, restoreWalletDialog]
+  );
+
+  useEffect(
+    () => clearPendingWalletConnectFlow,
+    [clearPendingWalletConnectFlow]
+  );
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) setView("tabs");
@@ -94,11 +184,17 @@ export function ConnectWalletDialog({
               {activeTab === "solana" ? (
                 <SolanaConnectPanel
                   onClose={() => handleOpenChange(false)}
+                  onBeginWalletConnect={() => beginWalletConnectFlow("solana")}
+                  onEndWalletConnect={endWalletConnectFlow}
                   onOpenLedger={() => setView("solana-ledger")}
                 />
               ) : (
                 <EvmConnectPanel
                   onClose={() => handleOpenChange(false)}
+                  onBeginWalletConnect={() =>
+                    beginWalletConnectFlow("ethereum")
+                  }
+                  onEndWalletConnect={endWalletConnectFlow}
                   onOpenLedger={() => setView("evm-ledger")}
                 />
               )}

@@ -195,4 +195,30 @@ describe("SolanaConnectPanel", () => {
     expect(toastErrorMock).not.toHaveBeenCalled();
     expect(walletConnectButton.disabled).toBe(false);
   });
+
+  it("asks the host dialog to restore when SVM WalletConnect is cancelled", async () => {
+    browserWalletState.installedWallets = [walletConnectWallet];
+    const onBeginWalletConnect = vi.fn();
+    const onEndWalletConnect = vi.fn();
+    const closedError = Object.assign(new Error("Wallet window closed"), {
+      name: "WalletWindowClosedError",
+    });
+    connectBrowserWalletMock.mockRejectedValue(closedError);
+
+    render(
+      <SolanaConnectPanel
+        onClose={vi.fn()}
+        onOpenLedger={vi.fn()}
+        onBeginWalletConnect={onBeginWalletConnect}
+        onEndWalletConnect={onEndWalletConnect}
+      />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /WalletConnect/ }));
+
+    await waitFor(() =>
+      expect(onEndWalletConnect).toHaveBeenCalledWith({ reopen: true })
+    );
+    expect(onBeginWalletConnect).toHaveBeenCalledTimes(1);
+  });
 });

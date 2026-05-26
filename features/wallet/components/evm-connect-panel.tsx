@@ -26,7 +26,9 @@ import {
 } from "./wallet-row";
 
 interface EvmConnectPanelProps {
+  onBeginWalletConnect?: () => Promise<void> | void;
   onClose: () => void;
+  onEndWalletConnect?: (result: { reopen: boolean }) => void;
   onOpenLedger: () => void;
 }
 
@@ -99,7 +101,9 @@ function getOkxConnector(connectors: readonly Connector[]) {
 }
 
 export function EvmConnectPanel({
+  onBeginWalletConnect,
   onClose,
+  onEndWalletConnect,
   onOpenLedger,
 }: EvmConnectPanelProps) {
   const { address, isConnected, connector: activeConnector } = useAccount();
@@ -175,20 +179,29 @@ export function EvmConnectPanel({
     setError(null);
     setConnectingId(wcConnector.id);
     await prepareWalletConnectModalState("eip155");
-    onClose();
+    if (onBeginWalletConnect) {
+      await onBeginWalletConnect();
+    } else {
+      onClose();
+    }
     await waitForWalletConnectHostRelease();
     connect(
       { connector: wcConnector },
       {
         onSuccess: () => {
           if (isMountedRef.current) setConnectingId(null);
+          onEndWalletConnect?.({ reopen: false });
           toast.success(`Connected to ${wcConnector.name}`);
         },
         onError: (err) => {
           if (isMountedRef.current) setConnectingId(null);
-          if (isWalletConnectionCancellation(err)) return;
+          if (isWalletConnectionCancellation(err)) {
+            onEndWalletConnect?.({ reopen: true });
+            return;
+          }
           const message = err.message ?? "Failed to connect";
           if (isMountedRef.current) setError(message);
+          onEndWalletConnect?.({ reopen: true });
           toast.error(message);
         },
       }

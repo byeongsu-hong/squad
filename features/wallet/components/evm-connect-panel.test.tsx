@@ -185,6 +185,40 @@ describe("EvmConnectPanel", () => {
     expect(walletConnectButton.disabled).toBe(false);
   });
 
+  it("asks the host dialog to restore when WalletConnect is cancelled", async () => {
+    connectorsMock.value = [walletConnectConnector];
+    const events: string[] = [];
+    const onBeginWalletConnect = vi.fn(() => events.push("begin"));
+    const onEndWalletConnect = vi.fn((result: { reopen: boolean }) => {
+      events.push(`end:${result.reopen}`);
+    });
+    connectMock.mockImplementation((...args: unknown[]) => {
+      events.push("connect");
+      const options = args[1] as { onError: (error: Error) => void };
+      options.onError(
+        Object.assign(new Error("Wallet window closed"), {
+          name: "WalletWindowClosedError",
+        })
+      );
+    });
+
+    render(
+      <EvmConnectPanel
+        onClose={vi.fn()}
+        onOpenLedger={vi.fn()}
+        onBeginWalletConnect={onBeginWalletConnect}
+        onEndWalletConnect={onEndWalletConnect}
+      />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /WalletConnect/ }));
+
+    await waitFor(() =>
+      expect(onEndWalletConnect).toHaveBeenCalledWith({ reopen: true })
+    );
+    expect(events).toEqual(["begin", "connect", "end:true"]);
+  });
+
   it("keeps OKX in More options instead of the inline browser wallet section", () => {
     connectorsMock.value = [
       metaMaskConnector,

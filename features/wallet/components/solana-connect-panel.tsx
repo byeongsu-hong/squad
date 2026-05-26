@@ -26,7 +26,9 @@ import {
 } from "./wallet-row";
 
 interface SolanaConnectPanelProps {
+  onBeginWalletConnect?: () => Promise<void> | void;
   onClose: () => void;
+  onEndWalletConnect?: (result: { reopen: boolean }) => void;
   onOpenLedger: () => void;
 }
 
@@ -40,7 +42,9 @@ function InstallLink({ children }: { children: React.ReactNode }) {
 }
 
 export function SolanaConnectPanel({
+  onBeginWalletConnect,
   onClose,
+  onEndWalletConnect,
   onOpenLedger,
 }: SolanaConnectPanelProps) {
   const {
@@ -155,16 +159,25 @@ export function SolanaConnectPanel({
       setLoadingWallet("WalletConnect");
       try {
         await prepareWalletConnectModalState("solana");
-        onClose();
+        if (onBeginWalletConnect) {
+          await onBeginWalletConnect();
+        } else {
+          onClose();
+        }
         await waitForWalletConnectHostRelease();
         await connect(wcWallet);
+        onEndWalletConnect?.({ reopen: false });
         toast.success("Connected to WalletConnect");
       } catch (err) {
-        if (isWalletConnectionCancellation(err)) return;
+        if (isWalletConnectionCancellation(err)) {
+          onEndWalletConnect?.({ reopen: true });
+          return;
+        }
 
         const message =
           err instanceof Error ? err.message : "Failed to connect wallet";
         if (isMountedRef.current) setError(message);
+        onEndWalletConnect?.({ reopen: true });
         toast.error(message);
       } finally {
         if (isMountedRef.current) setLoadingWallet(null);
