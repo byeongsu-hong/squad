@@ -1,6 +1,9 @@
+import type { EIP1193Provider } from "viem";
 import { createConfig, http } from "wagmi";
 import { arbitrum, base, bsc, mainnet, optimism } from "wagmi/chains";
-import { walletConnect } from "wagmi/connectors";
+import { injected, walletConnect } from "wagmi/connectors";
+
+import { OKX_WALLET_ICON } from "./assets/okx-icon";
 
 const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID ?? "";
 
@@ -30,7 +33,22 @@ const transports = {
   ),
 };
 
-const connectors = [...(projectId ? [walletConnect({ projectId })] : [])];
+const connectors = [
+  injected({
+    target: {
+      id: "okxWallet",
+      name: "OKX Wallet",
+      icon: OKX_WALLET_ICON,
+      provider(window) {
+        const provider = (
+          window as unknown as { okxwallet?: unknown } | undefined
+        )?.okxwallet;
+        return provider as EIP1193Provider | undefined;
+      },
+    },
+  }),
+  ...(projectId ? [walletConnect({ projectId })] : []),
+];
 
 export const wagmiConfig = createConfig({
   chains,
