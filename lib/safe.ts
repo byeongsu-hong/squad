@@ -231,11 +231,27 @@ export async function fetchSafeTransactionByNonce(
   safeAddress: string,
   nonce: bigint
 ) {
-  const response = await fetchSafeTransactions(chain, safeAddress, 100);
-  const transaction = response.results.find(
-    (item) =>
-      item.txType === "MULTISIG_TRANSACTION" && BigInt(item.nonce) === nonce
+  const baseUrl = getSafeTransactionServiceBaseUrl(chain);
+  if (!baseUrl) {
+    throw new Error(
+      `No Safe transaction service is configured for ${chain.name}.`
+    );
+  }
+
+  const response = await fetch(
+    `${baseUrl}/safes/${safeAddress}/multisig-transactions/?nonce=${nonce.toString()}&limit=1`,
+    {
+      headers: { accept: "application/json" },
+      cache: "no-store",
+    }
   );
+
+  if (!response.ok) {
+    throw new Error(`Safe transaction service returned ${response.status}.`);
+  }
+
+  const data = (await response.json()) as SafeTransactionsResponse;
+  const transaction = data.results[0];
 
   if (!transaction) {
     throw new Error(
