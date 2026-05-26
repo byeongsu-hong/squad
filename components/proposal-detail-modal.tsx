@@ -1,8 +1,10 @@
 "use client";
 
 import {
+  AlertTriangle,
   Check,
   ChevronDown,
+  ChevronRight,
   ChevronUp,
   Copy,
   Loader2,
@@ -22,10 +24,13 @@ import {
 } from "@/components/ui/tooltip";
 
 import { AddressWithLabel, WELL_KNOWN_ADDRESSES } from "@/components/address-with-label";
+import { useChainId, useSwitchChain } from "wagmi";
+
 import { useAddressLabel } from "@/lib/hooks/use-address-label";
 import { useProposalActions } from "@/lib/hooks/use-proposal-actions";
 import { useViewerAddressForMultisig } from "@/lib/hooks/use-viewer-address";
 import { useWorkspacePayload } from "@/lib/hooks/use-workspace-payload";
+import { getSafeChainNumericId } from "@/lib/safe";
 import { cn } from "@/lib/utils";
 import {
   type ConfigAction,
@@ -121,10 +126,16 @@ export function ProposalDetailView({
   item,
   onBack,
   onActionSuccess,
+  batchTotal,
+  batchIndex,
+  onSkip,
 }: {
   item: WorkspaceQueueItem;
   onBack: () => void;
   onActionSuccess?: () => Promise<void>;
+  batchTotal?: number;
+  batchIndex?: number;
+  onSkip?: () => void;
 }) {
   const [payloadOpen, setPayloadOpen] = useState(true);
   const [signersExpanded, setSignersExpanded] = useState(false);
@@ -171,6 +182,18 @@ export function ProposalDetailView({
   const isExecuteLoading = isActionLoading("execute", multisig.key, proposal.transactionIndex);
 
   const currentUserAddress = getViewerAddress(multisig.provider);
+
+  // EVM chain check for Safe multisigs
+  const currentEvmChainId = useChainId();
+  const { switchChain, isPending: isSwitching } = useSwitchChain();
+  const chainConfig = chains.find((c) => c.id === multisig.chainId);
+  const requiredEvmChainId = multisig.provider === "safe" && chainConfig
+    ? getSafeChainNumericId(chainConfig)
+    : null;
+  const needsChainSwitch = requiredEvmChainId !== null
+    && currentEvmChainId !== Number(requiredEvmChainId);
+  const isBatch = batchTotal !== undefined && batchTotal > 1;
+
   const approvalPct =
     multisig.threshold > 0
       ? Math.min(100, Math.round((approvalCount / multisig.threshold) * 100))
@@ -253,6 +276,11 @@ export function ProposalDetailView({
                 {statusConfig.icon}
                 {statusConfig.label}
               </span>
+              {isBatch && batchIndex !== undefined && (
+                <span className="border-border bg-muted/60 text-muted-foreground/60 shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium tabular-nums">
+                  {batchIndex + 1} / {batchTotal}
+                </span>
+              )}
             </div>
             {/* Transaction description */}
             {item.lineLabel && (
@@ -279,29 +307,56 @@ export function ProposalDetailView({
             {/* Quick-action: always visible regardless of scroll position */}
             {!isComplete && actionsSupported && (
               <>
-                {executeSupported && readyToExecute && (
+                {needsChainSwitch && (readyToExecute || (needsYourSignature && !currentUserApproved)) ? (
                   <Button
                     size="sm"
-                    disabled={isActionInProgress}
-                    onClick={() => executeByAddress(multisig.address, proposal.transactionIndex, multisig.chainId)}
-                    className="bg-emerald-600 text-white hover:bg-emerald-500 border-emerald-700/30 font-semibold"
+                    disabled={isSwitching}
+                    onClick={() => switchChain({ chainId: Number(requiredEvmChainId) as 1 | 10 | 56 | 8453 | 42161 })}
+                    className="border-amber-400/30 bg-amber-500/10 text-amber-700 hover:bg-amber-500/20 dark:text-amber-400 font-semibold"
                   >
-                    {isExecuteLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Zap className="h-3.5 w-3.5" />}
-                    Execute
+                    {isSwitching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <AlertTriangle className="h-3.5 w-3.5" />}
+                    Switch to {chainConfig?.name ?? multisig.chainName}
                   </Button>
-                )}
-                {approveSupported && needsYourSignature && !currentUserApproved && !readyToExecute && (
-                  <Button
-                    size="sm"
-                    disabled={isActionInProgress}
-                    onClick={() => approveByAddress(multisig.address, proposal.transactionIndex, multisig.chainId)}
-                    className="bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20 font-semibold"
-                  >
-                    {isApproveLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
-                    Sign
-                  </Button>
+                ) : (
+                  <>
+                    {executeSupported && readyToExecute && (
+                      <Button
+                        size="sm"
+                        disabled={isActionInProgress}
+                        onClick={() => executeByAddress(multisig.address, proposal.transactionIndex, multisig.chainId)}
+                        className="bg-emerald-600 text-white hover:bg-emerald-500 border-emerald-700/30 font-semibold"
+                      >
+                        {isExecuteLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Zap className="h-3.5 w-3.5" />}
+                        Execute
+                      </Button>
+                    )}
+                    {approveSupported && needsYourSignature && !currentUserApproved && !readyToExecute && (
+                      <Button
+                        size="sm"
+                        disabled={isActionInProgress}
+                        onClick={() => approveByAddress(multisig.address, proposal.transactionIndex, multisig.chainId)}
+                        className="bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20 font-semibold"
+                      >
+                        {isApproveLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+                        Sign
+                      </Button>
+                    )}
+                  </>
                 )}
               </>
+            )}
+            {/* Skip button for batch mode */}
+            {isBatch && onSkip && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onSkip}
+                disabled={isActionInProgress}
+                className="text-muted-foreground/50 hover:text-foreground"
+              >
+                Skip
+                <ChevronRight className="h-3.5 w-3.5" />
+              </Button>
             )}
             {/* X close button */}
             <Button

@@ -18,7 +18,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useProposalActions } from "@/lib/hooks/use-proposal-actions";
 import { cn } from "@/lib/utils";
 import type { WorkspaceQueueItem } from "@/types/workspace";
 
@@ -281,9 +280,9 @@ export function OperationsQueue({
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [historyPage, setHistoryPage] = useState(1);
   const [selectedItem, setSelectedItem] = useState<WorkspaceQueueItem | null>(null);
+  const [batchQueue, setBatchQueue] = useState<WorkspaceQueueItem[] | null>(null);
+  const [batchIndex, setBatchIndex] = useState(0);
 
-  const { approveByAddress, executeByAddress, isActionInProgress } =
-    useProposalActions();
 
   const chainOptions = useMemo(
     () => Array.from(new Set(items.map((i) => i.multisig.chainName))).sort(),
@@ -395,47 +394,42 @@ export function OperationsQueue({
     [actionItems]
   );
 
-  const handleBatchApprove = async () => {
-    for (const item of canApproveItems) {
-      await approveByAddress(
-        item.multisig.address,
-        item.proposal.transactionIndex,
-        item.multisig.chainId
-      );
+  const openBatch = (items: WorkspaceQueueItem[]) => {
+    if (items.length === 0) return;
+    if (items.length === 1) {
+      setSelectedItem(items[0]);
+      return;
     }
+    setBatchQueue(items);
+    setBatchIndex(0);
+  };
+
+  const closeBatch = () => {
+    setBatchQueue(null);
+    setBatchIndex(0);
+  };
+
+  const advanceBatch = (queue: WorkspaceQueueItem[], index: number) => {
+    const next = index + 1;
+    if (next >= queue.length) {
+      closeBatch();
+    } else {
+      setBatchIndex(next);
+    }
+  };
+
+  const handleBatchApprove = () => {
+    openBatch(canApproveItems);
     setSelected(new Set());
   };
 
-  const handleBatchExecute = async () => {
-    for (const item of canExecuteItems) {
-      await executeByAddress(
-        item.multisig.address,
-        item.proposal.transactionIndex,
-        item.multisig.chainId
-      );
-    }
+  const handleBatchExecute = () => {
+    openBatch(canExecuteItems);
     setSelected(new Set());
   };
 
-  const handleApproveAll = async () => {
-    for (const item of approveAllItems) {
-      await approveByAddress(
-        item.multisig.address,
-        item.proposal.transactionIndex,
-        item.multisig.chainId
-      );
-    }
-  };
-
-  const handleExecuteAll = async () => {
-    for (const item of executeAllItems) {
-      await executeByAddress(
-        item.multisig.address,
-        item.proposal.transactionIndex,
-        item.multisig.chainId
-      );
-    }
-  };
+  const handleApproveAll = () => openBatch(approveAllItems);
+  const handleExecuteAll = () => openBatch(executeAllItems);
 
   const resetPage = () => setHistoryPage(1);
 
@@ -624,30 +618,20 @@ export function OperationsQueue({
                   {approveAllItems.length > 1 && (
                     <Button
                       size="xs"
-                      disabled={isActionInProgress}
                       onClick={handleApproveAll}
                       className="bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20 font-semibold"
                     >
-                      {isActionInProgress ? (
-                        <Loader2 className="animate-spin" />
-                      ) : (
-                        <Check />
-                      )}
+                      <Check />
                       Sign all ({approveAllItems.length})
                     </Button>
                   )}
                   {executeAllItems.length > 1 && (
                     <Button
                       size="xs"
-                      disabled={isActionInProgress}
                       onClick={handleExecuteAll}
                       className="bg-emerald-600 text-white hover:bg-emerald-500 border-emerald-700/30 font-semibold"
                     >
-                      {isActionInProgress ? (
-                        <Loader2 className="animate-spin" />
-                      ) : (
-                        <Zap />
-                      )}
+                      <Zap />
                       Execute all ({executeAllItems.length})
                     </Button>
                   )}
@@ -667,25 +651,15 @@ export function OperationsQueue({
                     hideChain={hideChain}
                     onApprove={
                       item.needsYourSignature && !item.currentUserApproved
-                        ? () =>
-                            approveByAddress(
-                              item.multisig.address,
-                              item.proposal.transactionIndex,
-                              item.multisig.chainId
-                            )
+                        ? () => setSelectedItem(item)
                         : undefined
                     }
                     onExecute={
                       item.readyToExecute
-                        ? () =>
-                            executeByAddress(
-                              item.multisig.address,
-                              item.proposal.transactionIndex,
-                              item.multisig.chainId
-                            )
+                        ? () => setSelectedItem(item)
                         : undefined
                     }
-                    isActioning={isActionInProgress}
+                    isActioning={false}
                   />
                 ))}
               </div>
@@ -784,22 +758,43 @@ export function OperationsQueue({
         {queueContent}
       </div>
 
-      {/* Proposal detail modal */}
-      <Dialog open={!!selectedItem} onOpenChange={(open) => !open && setSelectedItem(null)}>
-        <DialogContent
-          showCloseButton={false}
-          className="flex flex-col gap-0 p-0 max-h-[88vh] sm:max-w-2xl overflow-hidden"
-        >
-          <VisuallyHidden><DialogTitle>Proposal Detail</DialogTitle></VisuallyHidden>
-          {selectedItem && (
-            <ProposalDetailView
-              item={selectedItem}
-              onBack={() => setSelectedItem(null)}
-              onActionSuccess={async () => setSelectedItem(null)}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Proposal detail modal — supports both single-item and batch (next/skip) mode */}
+      {(() => {
+        const activeItem = batchQueue ? (batchQueue[batchIndex] ?? null) : selectedItem;
+        const isBatch = batchQueue !== null;
+        const handleClose = () => {
+          setSelectedItem(null);
+          closeBatch();
+        };
+        const handleSkip = () => advanceBatch(batchQueue!, batchIndex);
+        const handleActionSuccess = async () => {
+          if (isBatch) {
+            advanceBatch(batchQueue!, batchIndex);
+          } else {
+            setSelectedItem(null);
+          }
+        };
+        return (
+          <Dialog open={!!activeItem} onOpenChange={(open) => !open && handleClose()}>
+            <DialogContent
+              showCloseButton={false}
+              className="flex flex-col gap-0 p-0 max-h-[88vh] sm:max-w-2xl overflow-hidden"
+            >
+              <VisuallyHidden><DialogTitle>Proposal Detail</DialogTitle></VisuallyHidden>
+              {activeItem && (
+                <ProposalDetailView
+                  item={activeItem}
+                  onBack={handleClose}
+                  batchTotal={isBatch ? batchQueue!.length : undefined}
+                  batchIndex={isBatch ? batchIndex : undefined}
+                  onSkip={isBatch ? handleSkip : undefined}
+                  onActionSuccess={handleActionSuccess}
+                />
+              )}
+            </DialogContent>
+          </Dialog>
+        );
+      })()}
 
       {/* Bulk action bar — appears when items selected via checkboxes */}
       <div
@@ -825,30 +820,20 @@ export function OperationsQueue({
               {canApproveItems.length > 0 && (
                 <Button
                   size="sm"
-                  disabled={isActionInProgress}
                   onClick={handleBatchApprove}
                   className="bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20"
                 >
-                  {isActionInProgress ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <Check className="h-3.5 w-3.5" />
-                  )}
+                  <Check className="h-3.5 w-3.5" />
                   Sign ({canApproveItems.length})
                 </Button>
               )}
               {canExecuteItems.length > 0 && (
                 <Button
                   size="sm"
-                  disabled={isActionInProgress}
                   onClick={handleBatchExecute}
                   className="bg-emerald-600 text-white hover:bg-emerald-500 border-emerald-700/30"
                 >
-                  {isActionInProgress ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <Zap className="h-3.5 w-3.5" />
-                  )}
+                  <Zap className="h-3.5 w-3.5" />
                   Execute ({canExecuteItems.length})
                 </Button>
               )}
