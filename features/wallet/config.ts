@@ -13,6 +13,16 @@ if (!WALLETCONNECT_PROJECT_ID) {
 }
 
 const chains = [mainnet, base, optimism, bsc, arbitrum] as const;
+const isBrowser = typeof window !== "undefined";
+
+const walletConnectMetadata = {
+  name: "Squad^2",
+  description: "Multisig operations workspace",
+  url: !isBrowser
+    ? (process.env.NEXT_PUBLIC_APP_URL ?? "https://squad.byeongsu.dev")
+    : window.location.origin,
+  icons: ["https://squad.byeongsu.dev/icon.png"],
+};
 
 const transports = {
   [mainnet.id]: http(
@@ -46,8 +56,14 @@ const connectors = [
       },
     },
   }),
-  ...(WALLETCONNECT_PROJECT_ID
-    ? [walletConnect({ projectId: WALLETCONNECT_PROJECT_ID })]
+  ...(WALLETCONNECT_PROJECT_ID && isBrowser
+    ? [
+        walletConnect({
+          metadata: walletConnectMetadata,
+          projectId: WALLETCONNECT_PROJECT_ID,
+          showQrModal: true,
+        }),
+      ]
     : []),
 ];
 

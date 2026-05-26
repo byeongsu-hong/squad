@@ -189,7 +189,7 @@ export function SolanaConnectPanel({
           icon={<QrCode className="text-muted-foreground h-6 w-6" />}
           name="WalletConnect"
           subtitle={
-            wcWallet ? "Scan QR with any mobile wallet" : "Project id required"
+            wcWallet ? "Open WalletConnect modal" : "Project id required"
           }
           isLoading={loadingWallet === "WalletConnect"}
           disabled={isAnyLoading}

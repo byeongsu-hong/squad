@@ -11,11 +11,6 @@ const connectorsMock = vi.hoisted(() => ({
 const connectVariablesMock = vi.hoisted(() => ({
   value: undefined as { connector?: Connector } | undefined,
 }));
-const wcUriMock = vi.hoisted(() => ({
-  clearUri: vi.fn(),
-  value: null as string | null,
-}));
-
 const okxConnector = {
   icon: null,
   id: "okxWallet",
@@ -54,29 +49,11 @@ vi.mock("wagmi", async (importActual) => {
   };
 });
 
-vi.mock("../hooks/use-wc-uri", () => ({
-  useWcUri: () => ({
-    clearUri: wcUriMock.clearUri,
-    uri: wcUriMock.value,
-  }),
-}));
-
-vi.mock("./wc-qr-modal", () => ({
-  WcQrModal: ({ uri, onClose }: { uri: string | null; onClose: () => void }) =>
-    uri ? (
-      <button type="button" onClick={onClose}>
-        Close WalletConnect QR
-      </button>
-    ) : null,
-}));
-
 describe("EvmConnectPanel", () => {
   beforeEach(() => {
     connectMock.mockClear();
     connectVariablesMock.value = undefined;
     connectorsMock.value = [];
-    wcUriMock.clearUri.mockClear();
-    wcUriMock.value = null;
   });
 
   it("shows EVM Ledger USB as a separate option from WalletConnect", () => {
@@ -109,26 +86,27 @@ describe("EvmConnectPanel", () => {
     expect(connectMock).not.toHaveBeenCalled();
   });
 
-  it("does not keep the EVM WalletConnect row stuck after the QR modal closes", () => {
+  it("does not render an app-owned QR modal for EVM WalletConnect", () => {
     connectorsMock.value = [walletConnectConnector];
-    connectVariablesMock.value = { connector: walletConnectConnector };
-    wcUriMock.value = "wc:pending-uri";
 
     render(<EvmConnectPanel onClose={vi.fn()} onOpenLedger={vi.fn()} />);
 
-    fireEvent.click(
-      screen.getByRole("button", { name: /Close WalletConnect QR/ })
+    expect(
+      screen.queryByRole("button", { name: /Close WalletConnect QR/ })
+    ).toBeNull();
+  });
+
+  it("opens WalletConnect through the wagmi connector so its official modal owns the flow", () => {
+    connectorsMock.value = [walletConnectConnector];
+
+    render(<EvmConnectPanel onClose={vi.fn()} onOpenLedger={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole("button", { name: /WalletConnect/ }));
+
+    expect(connectMock).toHaveBeenCalledWith(
+      { connector: walletConnectConnector },
+      expect.any(Object)
     );
-
-    expect(wcUriMock.clearUri).toHaveBeenCalledTimes(1);
-    const walletConnectButton = screen
-      .getAllByRole("button")
-      .find((button) =>
-        /Scan QR with any mobile wallet/.test(button.textContent ?? "")
-      );
-
-    expect(walletConnectButton).toBeTruthy();
-    expect((walletConnectButton as HTMLButtonElement).disabled).toBe(false);
   });
 
   it("keeps OKX in More options instead of the inline browser wallet section", () => {
