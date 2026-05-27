@@ -23,6 +23,7 @@ import {
   getChainRpcUrls,
   getSquadsProgramId,
   isOperationalSquadsChain,
+  normalizeChainConfig,
 } from "@/types/chain";
 import {
   type MultisigAccount,
@@ -42,13 +43,21 @@ function getChainConfig(chains: ChainConfig[], chainId: string) {
   return chains.find((chain) => chain.id === chainId);
 }
 
-function getOperationalSquadsChain(chains: ChainConfig[], chainId: string) {
+export function getOperationalSquadsChain(
+  chains: ChainConfig[],
+  chainId: string
+) {
   const chain = getChainConfig(chains, chainId);
-  if (!chain || !isOperationalSquadsChain(chain)) {
+  if (!chain) {
     return null;
   }
 
-  return chain;
+  const normalizedChain = normalizeChainConfig(chain);
+  if (!isOperationalSquadsChain(normalizedChain)) {
+    return null;
+  }
+
+  return normalizedChain;
 }
 
 const SQUADS_MULTISIG_LOAD_CONCURRENCY = 3;

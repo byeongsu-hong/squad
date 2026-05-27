@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { buildWorkspaceQueueItem } from "@/lib/workspace/squads-adapter";
+import {
+  buildWorkspaceQueueItem,
+  getOperationalSquadsChain,
+} from "@/lib/workspace/squads-adapter";
 import type { WorkspaceMultisig, WorkspaceProposal } from "@/types/workspace";
 
 describe("Squads workspace adapter", () => {
@@ -61,5 +64,25 @@ describe("Squads workspace adapter", () => {
     expect(item.needsYourSignature).toBe(false);
     expect(item.readyToExecute).toBe(false);
     expect(item.lineLabel).toBe("Rejected");
+  });
+
+  it("normalizes legacy Solana chain configs before checking V3 fallback support", () => {
+    const chain = getOperationalSquadsChain(
+      [
+        {
+          id: "solana-mainnet",
+          name: "Solana",
+          rpcUrl: "https://api.mainnet-beta.solana.com",
+          squadsV4ProgramId: "SQDS4ep65T869zMMBKyuUq6aD6EgTu8psMjkvj52pCf",
+          vmFamily: "svm",
+          multisigProvider: "squads",
+        },
+      ],
+      "solana-mainnet"
+    );
+
+    expect(chain?.squadsV3ProgramId).toBe(
+      "SMPLecH534NA9acpos4G6x7uf3LWbCAwZQE9e8ZekMu"
+    );
   });
 });
