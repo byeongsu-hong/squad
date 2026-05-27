@@ -8,6 +8,7 @@ import { WagmiProvider } from "wagmi";
 import { Toaster } from "@/components/ui/sonner";
 import { wagmiConfig } from "@/features/wallet";
 import { resolveInitialMultisigs } from "@/lib/initial-config";
+import { repairSquadsVaultImports } from "@/lib/workspace/squads-adapter";
 import { useChainStore } from "@/stores/chain-store";
 import { useMultisigStore } from "@/stores/multisig-store";
 import { useProviderAdapterStore } from "@/stores/provider-adapter-store";
@@ -50,8 +51,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
       initializeProviderAdapterSettings();
 
       const { multisigs } = useMultisigStore.getState();
+      const { chains } = useChainStore.getState();
       const seededMultisigs = await resolveInitialMultisigs();
-      if (seededMultisigs.length === 0) return;
+      let nextMultisigs = multisigs;
 
       const existingKeys = new Set(
         multisigs.map(
@@ -65,9 +67,18 @@ export function Providers({ children }: { children: React.ReactNode }) {
           )
       );
 
-      if (missingSeeds.length === 0) return;
+      if (missingSeeds.length > 0) {
+        nextMultisigs = [...multisigs, ...missingSeeds];
+      }
 
-      setMultisigs([...multisigs, ...missingSeeds]);
+      const repairedMultisigs = await repairSquadsVaultImports(
+        nextMultisigs,
+        chains
+      );
+
+      if (repairedMultisigs !== nextMultisigs || nextMultisigs !== multisigs) {
+        setMultisigs(repairedMultisigs);
+      }
     };
 
     void run();

@@ -109,6 +109,108 @@ export async function resolveSquadsV4ImportedMultisig(
   }
 }
 
+interface RepairSquadsVaultImportsOptions {
+  loadMultisig?: typeof loadSquadsMultisigAccount;
+}
+
+function isSquadsV4RepairCandidate(multisig: MultisigAccount) {
+  if (multisig.provider !== "squads" || getSquadsVersion(multisig) === "v3") {
+    return false;
+  }
+
+  return (
+    !multisig.vaultPda ||
+    multisig.vaultPda.toString() === multisig.publicKey.toString()
+  );
+}
+
+function mergeMultisigMetadata(
+  resolved: MultisigAccount,
+  existing: MultisigAccount
+): MultisigAccount {
+  return {
+    ...resolved,
+    label: existing.label ?? resolved.label,
+    tags: existing.tags ?? resolved.tags,
+  };
+}
+
+function dedupeMultisigs(multisigs: MultisigAccount[]) {
+  const byKey = new Map<string, MultisigAccount>();
+
+  for (const multisig of multisigs) {
+    const key = `${multisig.chainId}:${multisig.publicKey.toString()}`;
+    const existing = byKey.get(key);
+    if (!existing) {
+      byKey.set(key, multisig);
+      continue;
+    }
+
+    byKey.set(key, {
+      ...existing,
+      ...multisig,
+      label: existing.label ?? multisig.label,
+      tags: Array.from(
+        new Set([...(existing.tags ?? []), ...(multisig.tags ?? [])])
+      ),
+      vaultPda: existing.vaultPda ?? multisig.vaultPda,
+    });
+  }
+
+  return Array.from(byKey.values());
+}
+
+export async function repairSquadsVaultImports(
+  multisigs: MultisigAccount[],
+  chains: ChainConfig[],
+  options: RepairSquadsVaultImportsOptions = {}
+) {
+  const loadMultisig = options.loadMultisig ?? loadSquadsMultisigAccount;
+  let changed = false;
+
+  const repaired = await mapWithConcurrency(
+    multisigs,
+    SQUADS_MULTISIG_LOAD_CONCURRENCY,
+    async (multisig) => {
+      if (!isSquadsV4RepairCandidate(multisig)) {
+        return multisig;
+      }
+
+      const chain = getOperationalSquadsChain(chains, multisig.chainId);
+      if (!chain) {
+        return multisig;
+      }
+
+      try {
+        const resolved = await loadMultisig(
+          chain,
+          multisig.publicKey.toString(),
+          multisig.label,
+          multisig.tags
+        );
+        if (
+          resolved.publicKey.toString() === multisig.publicKey.toString() &&
+          resolved.vaultPda?.toString() === multisig.vaultPda?.toString()
+        ) {
+          return multisig;
+        }
+
+        changed = true;
+        return mergeMultisigMetadata(resolved, multisig);
+      } catch {
+        return multisig;
+      }
+    }
+  );
+
+  const deduped = dedupeMultisigs(repaired);
+  if (deduped.length !== repaired.length) {
+    changed = true;
+  }
+
+  return changed ? deduped : multisigs;
+}
+
 export async function loadSquadsMultisigAccount(
   chain: ChainConfig,
   multisigAddress: string,

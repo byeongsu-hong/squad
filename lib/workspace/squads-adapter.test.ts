@@ -5,8 +5,11 @@ import {
   buildWorkspaceQueueItem,
   getOperationalSquadsChain,
   parseSquadsAddressReference,
+  repairSquadsVaultImports,
   resolveSquadsV4ImportedMultisig,
 } from "@/lib/workspace/squads-adapter";
+import type { ChainConfig } from "@/types/chain";
+import type { MultisigAccount } from "@/types/multisig";
 import type { WorkspaceMultisig, WorkspaceProposal } from "@/types/workspace";
 
 describe("Squads workspace adapter", () => {
@@ -16,6 +19,14 @@ describe("Squads workspace adapter", () => {
   const multisigAddress = new PublicKey(
     "EvptYJrjGUB3FXDoW8w8LTpwg1TTS4W1f628c1BnscB4"
   );
+  const chain: ChainConfig = {
+    id: "solana-mainnet",
+    name: "Solana",
+    rpcUrl: "https://api.mainnet-beta.solana.com",
+    squadsV4ProgramId: "SQDS4ep65T869zMMBKyuUq6aD6EgTu8psMjkvj52pCf",
+    vmFamily: "svm",
+    multisigProvider: "squads",
+  };
 
   const proposal: WorkspaceProposal = {
     provider: "squads",
@@ -131,5 +142,49 @@ describe("Squads workspace adapter", () => {
     expect(result.multisigPda).toEqual(multisigAddress);
     expect(result.vaultPda).toEqual(vaultAddress);
     expect(result.account).toBe(account);
+  });
+
+  it("repairs stored Squads V4 vault imports to canonical multisig records", async () => {
+    const storedVaultRecord: MultisigAccount = {
+      provider: "squads",
+      squadsVersion: "v4",
+      publicKey: vaultAddress,
+      threshold: 1,
+      members: [],
+      transactionIndex: 0n,
+      msChangeIndex: 0,
+      chainId: chain.id,
+      label: "Treasury",
+      tags: ["ops"],
+    };
+
+    const repairedRecord: MultisigAccount = {
+      ...storedVaultRecord,
+      publicKey: multisigAddress,
+      threshold: 6,
+      vaultPda: vaultAddress,
+    };
+
+    const repaired = await repairSquadsVaultImports(
+      [storedVaultRecord],
+      [chain],
+      {
+        loadMultisig: async (_chain, address, label, tags) => {
+          expect(address).toBe(vaultAddress.toBase58());
+          return {
+            ...repairedRecord,
+            label,
+            tags,
+          };
+        },
+      }
+    );
+
+    expect(repaired).toHaveLength(1);
+    expect(repaired[0]?.publicKey.toString()).toBe(multisigAddress.toBase58());
+    expect(repaired[0]?.vaultPda?.toString()).toBe(vaultAddress.toBase58());
+    expect(repaired[0]?.threshold).toBe(6);
+    expect(repaired[0]?.label).toBe("Treasury");
+    expect(repaired[0]?.tags).toEqual(["ops"]);
   });
 });
