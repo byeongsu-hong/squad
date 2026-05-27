@@ -2,6 +2,7 @@ import { PublicKey } from "@solana/web3.js";
 import * as multisigSdk from "@sqds/multisig";
 import bs58 from "bs58";
 
+import { isRetryableRpcError } from "@/lib/rpc/request-broker";
 import { SquadService } from "@/lib/squad";
 import {
   SquadsV3Service,
@@ -66,6 +67,48 @@ function getSquadsVersion(multisig: Pick<MultisigAccount, "squadsVersion">) {
   return multisig.squadsVersion ?? "v4";
 }
 
+export function parseSquadsAddressReference(value: string) {
+  const trimmed = value.trim();
+  try {
+    const url = new URL(trimmed);
+    const isSquadsHost =
+      url.hostname === "squads.so" || url.hostname.endsWith(".squads.so");
+    const address = url.pathname.split("/").filter(Boolean).at(-1);
+    if (isSquadsHost && address) {
+      return address;
+    }
+  } catch {
+    // Not a URL; use the raw input as the address.
+  }
+
+  return trimmed;
+}
+
+export async function resolveSquadsV4ImportedMultisig(
+  service: Pick<SquadService, "getMultisig" | "resolveVaultMultisigPda">,
+  importAddress: PublicKey
+) {
+  try {
+    return {
+      multisigPda: importAddress,
+      account: await service.getMultisig(importAddress),
+      vaultPda: undefined,
+    };
+  } catch (directImportError) {
+    const resolvedMultisigPda =
+      await service.resolveVaultMultisigPda(importAddress);
+    if (!resolvedMultisigPda) {
+      throw directImportError;
+    }
+
+    return {
+      multisigPda: resolvedMultisigPda,
+      account: await service.getMultisig(resolvedMultisigPda),
+      vaultPda: importAddress,
+    };
+  }
+}
+
 export async function loadSquadsMultisigAccount(
   chain: ChainConfig,
   multisigAddress: string,
@@ -77,7 +120,9 @@ export async function loadSquadsMultisigAccount(
     throw new Error(`Chain ${chain.name} is not configured for Squads.`);
   }
 
-  const multisigPubkey = new PublicKey(multisigAddress);
+  const importPubkey = new PublicKey(
+    parseSquadsAddressReference(multisigAddress)
+  );
   const programIdString = getSquadsProgramId(normalizedChain, "v4");
   const squadService = new SquadService(
     getChainRpcUrls(normalizedChain),
@@ -86,10 +131,14 @@ export async function loadSquadsMultisigAccount(
   );
 
   try {
-    const multisigAccount = await squadService.getMultisig(multisigPubkey);
     const programId = new PublicKey(programIdString);
+    const {
+      multisigPda,
+      account: multisigAccount,
+      vaultPda: importedVaultPda,
+    } = await resolveSquadsV4ImportedMultisig(squadService, importPubkey);
     const [vaultPda] = multisigSdk.getVaultPda({
-      multisigPda: multisigPubkey,
+      multisigPda,
       index: 0,
       programId,
     });
@@ -97,7 +146,7 @@ export async function loadSquadsMultisigAccount(
     return {
       provider: "squads",
       squadsVersion: "v4",
-      publicKey: multisigPubkey,
+      publicKey: multisigPda,
       threshold: multisigAccount.threshold,
       members: multisigAccount.members.map((m) => ({
         key: m.key,
@@ -109,9 +158,13 @@ export async function loadSquadsMultisigAccount(
       chainId: normalizedChain.id,
       label,
       tags,
-      vaultPda,
+      vaultPda: importedVaultPda ?? vaultPda,
     };
   } catch (v4Error) {
+    if (isRetryableRpcError(v4Error)) {
+      throw v4Error;
+    }
+
     if (!normalizedChain.squadsV3ProgramId) {
       throw v4Error;
     }
@@ -121,8 +174,20 @@ export async function loadSquadsMultisigAccount(
       getSquadsProgramId(normalizedChain, "v3"),
       { chainId: normalizedChain.id }
     );
-    const v3Account = await v3Service.getMultisig(multisigPubkey);
-    return toSquadsV3MultisigAccount(multisigPubkey, v3Account, {
+    let v3Account: Awaited<ReturnType<SquadsV3Service["getMultisig"]>>;
+    try {
+      v3Account = await v3Service.getMultisig(importPubkey);
+    } catch (v3Error) {
+      if (
+        v4Error instanceof Error &&
+        v4Error.message.includes("not a Squads V4 multisig account")
+      ) {
+        throw v4Error;
+      }
+      throw v3Error;
+    }
+
+    return toSquadsV3MultisigAccount(importPubkey, v3Account, {
       chainId: normalizedChain.id,
       label,
       tags,

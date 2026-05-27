@@ -2,6 +2,7 @@ import {
   type AccountInfo,
   Connection,
   Keypair,
+  type ParsedTransactionWithMeta,
   PublicKey,
 } from "@solana/web3.js";
 import * as multisig from "@sqds/multisig";
@@ -183,10 +184,9 @@ export class SquadService {
       if (!accountInfo.owner.equals(this.programId)) {
         const owner = accountInfo.owner.toBase58();
 
-        // System Program owner indicates this is likely a Squads V3 multisig
         if (owner === "11111111111111111111111111111111") {
           throw new Error(
-            "This is a Squads V3 multisig. This app only supports Squads V4. Please use the legacy Squads interface at v3.squads.so"
+            "This address is not a Squads V4 multisig account. It may be a Squads vault address or a legacy Squads account."
           );
         }
 
@@ -216,20 +216,255 @@ export class SquadService {
     return result;
   }
 
+  async resolveVaultMultisigPda(
+    vaultPda: PublicKey,
+    useCache = true
+  ): Promise<PublicKey | null> {
+    const cacheKey = `vaultMultisig:${vaultPda.toBase58()}:${this.programId.toBase58()}`;
+
+    if (useCache) {
+      const cached = cache.get<string>(cacheKey);
+      if (cached) {
+        return new PublicKey(cached);
+      }
+    }
+
+    const signaturesResult = await requestBroker.fetch({
+      key: `signatures:${cacheKey}`,
+      chainId: this.chainId,
+      endpoints: this.rpcUrls,
+      ttlMs: CACHE_CONFIG.TTL,
+      concurrency: 1,
+      allowStaleOnError: useCache,
+      request: async (endpoint, endpointIndex) => {
+        const signatures = await getConnection(
+          endpoint
+        ).getSignaturesForAddress(vaultPda, {
+          limit: 10,
+        });
+        if (
+          signatures.length === 0 &&
+          endpointIndex < this.rpcUrls.length - 1
+        ) {
+          throw new Error(
+            `Network RPC endpoint returned no transaction history for ${vaultPda.toBase58()} from ${endpoint}`
+          );
+        }
+        return signatures;
+      },
+    });
+    this.recordBrokerResult(signaturesResult.degradedReason?.message);
+
+    const signatures = signaturesResult.data.map((item) => item.signature);
+    if (signatures.length === 0) {
+      return null;
+    }
+
+    let resolvedTransaction = false;
+    let lastTransactionError: unknown = null;
+    for (const signature of signatures) {
+      let transaction: ParsedTransactionWithMeta | null;
+      try {
+        const transactionResult = await requestBroker.fetch({
+          key: `transaction:${this.chainId}:${signature}`,
+          chainId: this.chainId,
+          endpoints: this.rpcUrls,
+          ttlMs: CACHE_CONFIG.TTL,
+          concurrency: 1,
+          allowStaleOnError: useCache,
+          request: (endpoint) =>
+            getConnection(endpoint).getParsedTransaction(signature, {
+              commitment: RPC_CONFIG.COMMITMENT,
+              maxSupportedTransactionVersion: 0,
+            }),
+        });
+        this.recordBrokerResult(transactionResult.degradedReason?.message);
+        transaction = transactionResult.data;
+      } catch (error) {
+        lastTransactionError = error;
+        continue;
+      }
+
+      if (!transaction) {
+        continue;
+      }
+
+      resolvedTransaction = true;
+      const candidateKeys = this.getCandidateKeysFromTransactions([
+        transaction,
+      ]);
+      const resolved = await this.resolveVaultFromCandidateAccounts(
+        vaultPda,
+        candidateKeys,
+        useCache
+      );
+      if (resolved) {
+        cache.set(cacheKey, resolved.toBase58(), CACHE_CONFIG.TTL);
+        return resolved;
+      }
+    }
+
+    if (!resolvedTransaction && lastTransactionError) {
+      throw lastTransactionError instanceof Error
+        ? lastTransactionError
+        : new Error("Unable to load transaction history for vault address.");
+    }
+
+    return null;
+  }
+
+  private getCandidateKeysFromTransactions(
+    transactions: (ParsedTransactionWithMeta | null)[]
+  ) {
+    const keysByAddress = new Map<string, PublicKey>();
+    for (const transaction of transactions) {
+      for (const accountKey of transaction?.transaction.message.accountKeys ??
+        []) {
+        const publicKey = new PublicKey(accountKey.pubkey);
+        keysByAddress.set(publicKey.toBase58(), publicKey);
+      }
+    }
+    return Array.from(keysByAddress.values());
+  }
+
+  private async resolveVaultFromCandidateAccounts(
+    vaultPda: PublicKey,
+    candidateKeys: PublicKey[],
+    useCache: boolean
+  ) {
+    for (let index = 0; index < candidateKeys.length; index += 100) {
+      const batch = candidateKeys.slice(index, index + 100);
+      const accountInfoResult = await requestBroker.fetch({
+        key: `vaultCandidates:${this.programId.toBase58()}:${batch
+          .map((key) => key.toBase58())
+          .join(",")}`,
+        chainId: this.chainId,
+        endpoints: this.rpcUrls,
+        ttlMs: CACHE_CONFIG.TTL,
+        concurrency: 2,
+        allowStaleOnError: useCache,
+        request: (endpoint) =>
+          getConnection(endpoint).getMultipleAccountsInfo(batch),
+      });
+      this.recordBrokerResult(accountInfoResult.degradedReason?.message);
+
+      for (let accountIndex = 0; accountIndex < batch.length; accountIndex++) {
+        const resolved = this.getVaultMultisigFromAccountInfo(
+          vaultPda,
+          batch[accountIndex]!,
+          accountInfoResult.data[accountIndex]
+        );
+        if (resolved) {
+          return resolved;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  private getVaultMultisigFromAccountInfo(
+    vaultPda: PublicKey,
+    accountPublicKey: PublicKey,
+    accountInfo: AccountInfo<Buffer> | null
+  ) {
+    if (!accountInfo?.owner.equals(this.programId)) {
+      return null;
+    }
+
+    const discriminator = accountInfo.data.subarray(0, 8);
+    if (
+      this.matchesDiscriminator(
+        discriminator,
+        multisig.accounts.multisigDiscriminator
+      )
+    ) {
+      return this.vaultMatchesMultisig(vaultPda, accountPublicKey)
+        ? accountPublicKey
+        : null;
+    }
+
+    const decodedMultisig = this.decodeMultisigReference(accountInfo);
+    if (!decodedMultisig) {
+      return null;
+    }
+
+    return this.vaultMatchesMultisig(vaultPda, decodedMultisig)
+      ? decodedMultisig
+      : null;
+  }
+
+  private decodeMultisigReference(accountInfo: AccountInfo<Buffer>) {
+    const discriminator = accountInfo.data.subarray(0, 8);
+    try {
+      if (
+        this.matchesDiscriminator(
+          discriminator,
+          multisig.accounts.proposalDiscriminator
+        )
+      ) {
+        return multisig.accounts.Proposal.fromAccountInfo(accountInfo)[0]
+          .multisig;
+      }
+      if (
+        this.matchesDiscriminator(
+          discriminator,
+          multisig.accounts.vaultTransactionDiscriminator
+        )
+      ) {
+        return multisig.accounts.VaultTransaction.fromAccountInfo(
+          accountInfo
+        )[0].multisig;
+      }
+      if (
+        this.matchesDiscriminator(
+          discriminator,
+          multisig.accounts.configTransactionDiscriminator
+        )
+      ) {
+        return multisig.accounts.ConfigTransaction.fromAccountInfo(
+          accountInfo
+        )[0].multisig;
+      }
+    } catch {
+      return null;
+    }
+
+    return null;
+  }
+
+  private vaultMatchesMultisig(vaultPda: PublicKey, multisigPda: PublicKey) {
+    for (let vaultIndex = 0; vaultIndex < 10; vaultIndex += 1) {
+      const [candidateVault] = multisig.getVaultPda({
+        multisigPda,
+        index: vaultIndex,
+        programId: this.programId,
+      });
+      if (candidateVault.equals(vaultPda)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  private matchesDiscriminator(discriminator: Buffer, expected: number[]) {
+    return expected.every((byte, index) => discriminator[index] === byte);
+  }
+
   async getMultisigsByCreator(creator: PublicKey, useCache = true) {
     const cacheKey = `creatorMultisigs:${creator.toBase58()}:${this.programId.toString()}`;
     const CREATOR_MULTISIGS_TTL = 5 * 60_000;
 
     if (useCache) {
-      const cached =
-        cache.get<
-          {
-            publicKey: PublicKey;
-            account: ReturnType<
-              typeof multisig.accounts.Multisig.fromAccountInfo
-            >[0];
-          }[]
-        >(cacheKey);
+      const cached = cache.get<
+        {
+          publicKey: PublicKey;
+          account: ReturnType<
+            typeof multisig.accounts.Multisig.fromAccountInfo
+          >[0];
+        }[]
+      >(cacheKey);
       if (cached) return cached;
     }
 
