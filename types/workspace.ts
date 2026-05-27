@@ -21,6 +21,7 @@ interface WorkspaceMember {
 
 export interface WorkspaceMultisig {
   provider: WorkspaceProviderId;
+  squadsVersion?: "v3" | "v4";
   key: string;
   address: string;
   chainId: string;

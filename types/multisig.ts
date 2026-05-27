@@ -1,9 +1,11 @@
 import type { PublicKey } from "@solana/web3.js";
 
 type MultisigProvider = "squads" | "safe";
+export type SquadsMultisigVersion = "v3" | "v4";
 
 export interface MultisigAccount {
   provider: MultisigProvider;
+  squadsVersion?: SquadsMultisigVersion;
   publicKey: PublicKey | string;
   threshold: number;
   members: MultisigMember[];
@@ -27,6 +29,7 @@ interface MultisigMember {
 
 interface SquadsMultisigAccount extends MultisigAccount {
   provider: "squads";
+  squadsVersion?: SquadsMultisigVersion;
   publicKey: PublicKey;
   members: Array<{
     key: PublicKey;

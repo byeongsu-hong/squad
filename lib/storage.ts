@@ -54,6 +54,7 @@ export const chainStorage = {
 
 interface StoredMultisig {
   provider?: "squads" | "safe";
+  squadsVersion?: "v3" | "v4";
   publicKey: string;
   threshold: number;
   members: Array<{
@@ -76,6 +77,7 @@ const multisigListStorage = createListStorage<MultisigAccount, StoredMultisig>(
   {
     serialize: (m) => ({
       provider: m.provider,
+      squadsVersion: m.provider === "squads" ? m.squadsVersion : undefined,
       publicKey: m.publicKey.toString(),
       threshold: m.threshold,
       members: m.members.map((member) => ({
@@ -98,6 +100,7 @@ const multisigListStorage = createListStorage<MultisigAccount, StoredMultisig>(
       if (provider === "safe") {
         return {
           provider,
+          squadsVersion: undefined,
           publicKey: m.publicKey,
           threshold: m.threshold,
           members: m.members.map((member) => ({
@@ -118,6 +121,7 @@ const multisigListStorage = createListStorage<MultisigAccount, StoredMultisig>(
 
       return {
         provider,
+        squadsVersion: m.squadsVersion,
         publicKey: new PublicKey(m.publicKey),
         threshold: m.threshold,
         members: m.members.map((member) => ({

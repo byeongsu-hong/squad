@@ -3,12 +3,15 @@ export interface ChainConfig {
   name: string;
   rpcUrl: string;
   rpcUrls?: string[];
+  squadsV3ProgramId?: string;
   squadsV4ProgramId?: string;
   explorerUrl?: string;
   vmFamily?: "svm" | "evm";
   multisigProvider?: "squads" | "safe";
   isDefault?: boolean;
 }
+
+export type SquadsVersion = "v3" | "v4";
 
 const DEFAULT_RPC_URLS_BY_CHAIN_ID: Record<string, string[]> = {
   "solana-mainnet": [
@@ -30,8 +33,20 @@ const LEGACY_PRIMARY_RPC_URL_BY_CHAIN_ID: Record<string, string> = {
   "base-mainnet": "https://base.llamarpc.com",
 };
 
+const DEFAULT_SQUADS_PROGRAMS_BY_CHAIN_ID: Record<
+  string,
+  Partial<Record<SquadsVersion, string>>
+> = {
+  "solana-mainnet": {
+    v3: "SMPLecH534NA9acpos4G6x7uf3LWbCAwZQE9e8ZekMu",
+    v4: "SQDS4ep65T869zMMBKyuUq6aD6EgTu8psMjkvj52pCf",
+  },
+};
+
 export function normalizeChainConfig(chain: ChainConfig): ChainConfig {
   const normalizedProvider = chain.multisigProvider ?? "squads";
+  const defaultSquadsPrograms =
+    DEFAULT_SQUADS_PROGRAMS_BY_CHAIN_ID[chain.id] ?? {};
   const defaultRpcUrls = DEFAULT_RPC_URLS_BY_CHAIN_ID[chain.id] ?? [];
   const primary =
     LEGACY_PRIMARY_RPC_URL_BY_CHAIN_ID[chain.id] === chain.rpcUrl
@@ -48,9 +63,13 @@ export function normalizeChainConfig(chain: ChainConfig): ChainConfig {
     rpcUrls,
     vmFamily: chain.vmFamily ?? "svm",
     multisigProvider: normalizedProvider,
+    squadsV3ProgramId:
+      normalizedProvider === "squads"
+        ? (chain.squadsV3ProgramId ?? defaultSquadsPrograms.v3)
+        : undefined,
     squadsV4ProgramId:
       normalizedProvider === "squads"
-        ? (chain.squadsV4ProgramId ?? "")
+        ? (chain.squadsV4ProgramId ?? defaultSquadsPrograms.v4 ?? "")
         : undefined,
   };
 }
@@ -81,16 +100,27 @@ export function getOperationalSquadsChains(chains: ChainConfig[]) {
   return chains.filter(isOperationalSquadsChain);
 }
 
-export function getSquadsProgramId(chain: ChainConfig): string {
+export function getSquadsProgramId(
+  chain: ChainConfig,
+  version: SquadsVersion = "v4"
+): string {
   const normalizedChain = normalizeChainConfig(chain);
 
-  if (!isOperationalSquadsChain(normalizedChain)) {
+  if (
+    normalizedChain.vmFamily !== "svm" ||
+    normalizedChain.multisigProvider !== "squads"
+  ) {
     throw new Error(`Chain ${chain.name} is not configured for Squads.`);
   }
 
-  const programId = normalizedChain.squadsV4ProgramId;
+  const programId =
+    version === "v3"
+      ? normalizedChain.squadsV3ProgramId
+      : normalizedChain.squadsV4ProgramId;
   if (!programId) {
-    throw new Error(`Chain ${chain.name} is missing a Squads program ID.`);
+    throw new Error(
+      `Chain ${chain.name} is missing a Squads ${version.toUpperCase()} program ID.`
+    );
   }
 
   return programId;
@@ -109,6 +139,8 @@ export const DEFAULT_CHAINS: ChainConfig[] = [
     name: "Solana",
     rpcUrl: DEFAULT_RPC_URLS_BY_CHAIN_ID["solana-mainnet"]![0]!,
     rpcUrls: DEFAULT_RPC_URLS_BY_CHAIN_ID["solana-mainnet"],
+    squadsV3ProgramId:
+      DEFAULT_SQUADS_PROGRAMS_BY_CHAIN_ID["solana-mainnet"]!.v3,
     squadsV4ProgramId: "SQDS4ep65T869zMMBKyuUq6aD6EgTu8psMjkvj52pCf",
     explorerUrl: "https://explorer.solana.com",
     vmFamily: "svm",

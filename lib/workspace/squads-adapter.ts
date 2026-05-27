@@ -3,6 +3,12 @@ import * as multisigSdk from "@sqds/multisig";
 import bs58 from "bs58";
 
 import { SquadService } from "@/lib/squad";
+import {
+  SquadsV3Service,
+  toSquadsV3MultisigAccount,
+  toSquadsV3WorkspacePayload,
+  toSquadsV3WorkspaceProposal,
+} from "@/lib/squads-v3";
 import { mapWithConcurrency } from "@/lib/utils/async";
 import {
   toWorkspaceMultisig,
@@ -47,6 +53,75 @@ function getOperationalSquadsChain(chains: ChainConfig[], chainId: string) {
 
 const SQUADS_MULTISIG_LOAD_CONCURRENCY = 3;
 
+function getSquadsVersion(multisig: Pick<MultisigAccount, "squadsVersion">) {
+  return multisig.squadsVersion ?? "v4";
+}
+
+export async function loadSquadsMultisigAccount(
+  chain: ChainConfig,
+  multisigAddress: string,
+  label?: string,
+  tags?: string[]
+): Promise<MultisigAccount> {
+  const normalizedChain = getOperationalSquadsChain([chain], chain.id);
+  if (!normalizedChain) {
+    throw new Error(`Chain ${chain.name} is not configured for Squads.`);
+  }
+
+  const multisigPubkey = new PublicKey(multisigAddress);
+  const programIdString = getSquadsProgramId(normalizedChain, "v4");
+  const squadService = new SquadService(
+    getChainRpcUrls(normalizedChain),
+    programIdString,
+    { chainId: normalizedChain.id }
+  );
+
+  try {
+    const multisigAccount = await squadService.getMultisig(multisigPubkey);
+    const programId = new PublicKey(programIdString);
+    const [vaultPda] = multisigSdk.getVaultPda({
+      multisigPda: multisigPubkey,
+      index: 0,
+      programId,
+    });
+
+    return {
+      provider: "squads",
+      squadsVersion: "v4",
+      publicKey: multisigPubkey,
+      threshold: multisigAccount.threshold,
+      members: multisigAccount.members.map((m) => ({
+        key: m.key,
+        permissions: { mask: m.permissions.mask },
+      })),
+      transactionIndex: BigInt(multisigAccount.transactionIndex.toString()),
+      msChangeIndex: 0,
+      programId,
+      chainId: normalizedChain.id,
+      label,
+      tags,
+      vaultPda,
+    };
+  } catch (v4Error) {
+    if (!normalizedChain.squadsV3ProgramId) {
+      throw v4Error;
+    }
+
+    const v3Service = new SquadsV3Service(
+      getChainRpcUrls(normalizedChain),
+      getSquadsProgramId(normalizedChain, "v3"),
+      { chainId: normalizedChain.id }
+    );
+    const v3Account = await v3Service.getMultisig(multisigPubkey);
+    return toSquadsV3MultisigAccount(multisigPubkey, v3Account, {
+      chainId: normalizedChain.id,
+      label,
+      tags,
+      programId: new PublicKey(getSquadsProgramId(normalizedChain, "v3")),
+    });
+  }
+}
+
 export async function loadSquadsWorkspaceProposals(
   multisigs: MultisigAccount[],
   chains: ChainConfig[]
@@ -62,6 +137,19 @@ export async function loadSquadsWorkspaceProposals(
       const chain = getOperationalSquadsChain(chains, multisig.chainId);
       if (!chain) {
         return [];
+      }
+
+      if (getSquadsVersion(multisig) === "v3") {
+        const service = new SquadsV3Service(
+          getChainRpcUrls(chain),
+          getSquadsProgramId(chain, "v3"),
+          { chainId: chain.id }
+        );
+        return (
+          await service.getTransactionsByMultisig(multisig.publicKey)
+        ).map((transaction) =>
+          toSquadsV3WorkspaceProposal(transaction.account, chain.id)
+        );
       }
 
       const squadService = new SquadService(
@@ -137,6 +225,7 @@ export async function loadSquadsCreatorMultisigs(
 
     return {
       provider: "squads",
+      squadsVersion: "v4",
       publicKey: account.publicKey,
       threshold: account.account.threshold,
       members: account.account.members.map((member) => ({
@@ -165,6 +254,18 @@ export async function loadSquadsWorkspaceProposalsForMultisig(
   const chain = getOperationalSquadsChain(chains, multisig.chainId);
   if (!chain) {
     return [];
+  }
+
+  if (getSquadsVersion(multisig) === "v3") {
+    const service = new SquadsV3Service(
+      getChainRpcUrls(chain),
+      getSquadsProgramId(chain, "v3"),
+      { chainId: chain.id }
+    );
+    return (await service.getTransactionsByMultisig(multisig.publicKey)).map(
+      (transaction) =>
+        toSquadsV3WorkspaceProposal(transaction.account, chain.id)
+    );
   }
 
   const squadService = new SquadService(
@@ -259,7 +360,10 @@ export function buildWorkspaceQueueItem(
   const currentUserRejected = Boolean(
     viewerAddress && proposal.rejections.includes(viewerAddress)
   );
-  const active = !proposal.executed && !proposal.cancelled;
+  const active =
+    !proposal.executed &&
+    !proposal.cancelled &&
+    (proposal.status === "Active" || proposal.status === "Approved");
   const readyToExecute = active && hasMetThreshold;
   const needsYourSignature =
     active && isMember && !currentUserApproved && !currentUserRejected;
@@ -335,9 +439,32 @@ async function loadSquadsWorkspacePayload(
     throw new Error("Chain configuration is not available for Squads payloads");
   }
 
+  const multisigPda = new PublicKey(multisig.address);
+
+  if (multisig.squadsVersion === "v3") {
+    const v3ProgramId = getSquadsProgramId(chain, "v3");
+    const service = new SquadsV3Service(getChainRpcUrls(chain), v3ProgramId, {
+      chainId: chain.id,
+    });
+    const transaction = await service.getTransaction(
+      multisigPda,
+      Number(proposal.transactionIndex)
+    );
+    const instructions = await service.getInstructions(
+      transaction.publicKey,
+      transaction.account.instructionIndex
+    );
+
+    return toSquadsV3WorkspacePayload(
+      transaction.account,
+      transaction.publicKey,
+      instructions.map((instruction) => instruction.account),
+      new PublicKey(v3ProgramId)
+    );
+  }
+
   const programIdString = getSquadsProgramId(chain);
   const programId = new PublicKey(programIdString);
-  const multisigPda = new PublicKey(multisig.address);
   const [transactionPda] = multisigSdk.getTransactionPda({
     multisigPda,
     index: proposal.transactionIndex,
@@ -434,6 +561,7 @@ export const squadsWorkspaceAdapter: WorkspaceProviderAdapter = {
           key: new PublicKey(member.address),
           permissions: { mask: member.permissionsMask },
         })),
+        squadsVersion: multisig.squadsVersion,
         transactionIndex: BigInt(0),
         msChangeIndex: 0,
         chainId: multisig.chainId,
