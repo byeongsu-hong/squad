@@ -17,7 +17,7 @@ describe("POST /api/safe/confirm", () => {
     delete process.env.SAFE_API_KEY;
   });
 
-  it("injects the configured Safe API key into SafeApiKit", async () => {
+  it("posts confirmations through the SDK-compatible Safe service base URL", async () => {
     process.env.SAFE_API_KEY = " test-safe-api-key ";
 
     const response = await POST(
@@ -37,7 +37,7 @@ describe("POST /api/safe/confirm", () => {
     expect(SafeApiKit).toHaveBeenCalledWith(
       expect.objectContaining({
         apiKey: "test-safe-api-key",
-        txServiceUrl: "https://api.safe.global/tx-service/eth/api/v2",
+        txServiceUrl: "https://api.safe.global/tx-service/eth/api",
       })
     );
   });
