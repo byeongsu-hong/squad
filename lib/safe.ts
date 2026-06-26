@@ -172,6 +172,17 @@ export function getSafeTransactionServiceBaseUrl(
   return `https://api.safe.global/tx-service/${alias}/api/v2`;
 }
 
+export function getSafeApiKitTransactionServiceBaseUrl(
+  chain: Pick<ChainConfig, "id" | "name">
+) {
+  const alias = getSafeChainAlias(chain.id, chain.name);
+  if (!alias) {
+    return null;
+  }
+
+  return `https://api.safe.global/tx-service/${alias}/api`;
+}
+
 export function getSafeChainNumericId(chain: Pick<ChainConfig, "id" | "name">) {
   const alias = getSafeChainAlias(chain.id, chain.name);
   return alias ? (SAFE_CHAIN_ID_MAP[alias] ?? null) : null;

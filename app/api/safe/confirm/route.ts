@@ -3,8 +3,8 @@ import { NextResponse } from "next/server";
 
 import {
   getSafeApiKey,
+  getSafeApiKitTransactionServiceBaseUrl,
   getSafeChainNumericId,
-  getSafeTransactionServiceBaseUrl,
 } from "@/lib/safe";
 
 export async function POST(request: Request) {
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
       name: body.chainName,
     };
     const numericChainId = getSafeChainNumericId(chain);
-    const txServiceUrl = getSafeTransactionServiceBaseUrl(chain);
+    const txServiceUrl = getSafeApiKitTransactionServiceBaseUrl(chain);
 
     if (!numericChainId || !txServiceUrl) {
       return NextResponse.json(
