@@ -323,7 +323,14 @@ export function ProposalDetailView({
                       <Button
                         size="sm"
                         disabled={isActionInProgress}
-                        onClick={() => executeByAddress(multisig.address, proposal.transactionIndex, multisig.chainId)}
+                        onClick={() =>
+                          executeByAddress(
+                            multisig.address,
+                            proposal.transactionIndex,
+                            multisig.chainId,
+                            { squadsVersion: multisig.squadsVersion }
+                          )
+                        }
                         className="bg-emerald-600 text-white hover:bg-emerald-500 border-emerald-700/30 font-semibold"
                       >
                         {isExecuteLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Zap className="h-3.5 w-3.5" />}
@@ -334,7 +341,14 @@ export function ProposalDetailView({
                       <Button
                         size="sm"
                         disabled={isActionInProgress}
-                        onClick={() => approveByAddress(multisig.address, proposal.transactionIndex, multisig.chainId)}
+                        onClick={() =>
+                          approveByAddress(
+                            multisig.address,
+                            proposal.transactionIndex,
+                            multisig.chainId,
+                            { squadsVersion: multisig.squadsVersion }
+                          )
+                        }
                         className="bg-primary text-primary-foreground hover:bg-primary/80 border-primary/20 font-semibold"
                       >
                         {isApproveLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
@@ -428,7 +442,14 @@ export function ProposalDetailView({
             {!isComplete && actionsSupported && rejectSupported && needsYourSignature && !readyToExecute && (
               <button
                 type="button"
-                onClick={() => rejectByAddress(multisig.address, proposal.transactionIndex, multisig.chainId)}
+                onClick={() =>
+                  rejectByAddress(
+                    multisig.address,
+                    proposal.transactionIndex,
+                    multisig.chainId,
+                    { squadsVersion: multisig.squadsVersion }
+                  )
+                }
                 disabled={isActionInProgress}
                 className="ml-auto text-destructive/50 hover:text-destructive text-[11px] transition-colors disabled:opacity-40"
               >

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   DEFAULT_CHAINS,
   getChainRpcUrls,
+  getSquadsProgramId,
   normalizeChainConfig,
 } from "@/types/chain";
 
@@ -73,5 +74,32 @@ describe("chain config RPC endpoints", () => {
         squadsV4ProgramId: "SQDS4ep65T869zMMBKyuUq6aD6EgTu8psMjkvj52pCf",
       }).rpcUrls
     ).toContain("https://solana-rpc.publicnode.com");
+  });
+
+  it("normalizes Solana with both Squads V4 and legacy V3 program IDs", () => {
+    const solana = DEFAULT_CHAINS.find(
+      (chain) => chain.id === "solana-mainnet"
+    );
+
+    expect(solana?.squadsV4ProgramId).toBe(
+      "SQDS4ep65T869zMMBKyuUq6aD6EgTu8psMjkvj52pCf"
+    );
+    expect(solana?.squadsV3ProgramId).toBe(
+      "SMPLecH534NA9acpos4G6x7uf3LWbCAwZQE9e8ZekMu"
+    );
+
+    const normalized = normalizeChainConfig({
+      id: "solana-mainnet",
+      name: "Solana",
+      rpcUrl: "https://api.mainnet-beta.solana.com",
+      multisigProvider: "squads",
+    });
+
+    expect(getSquadsProgramId(normalized, "v4")).toBe(
+      "SQDS4ep65T869zMMBKyuUq6aD6EgTu8psMjkvj52pCf"
+    );
+    expect(getSquadsProgramId(normalized, "v3")).toBe(
+      "SMPLecH534NA9acpos4G6x7uf3LWbCAwZQE9e8ZekMu"
+    );
   });
 });

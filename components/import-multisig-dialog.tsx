@@ -1,8 +1,6 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { PublicKey } from "@solana/web3.js";
-import * as multisigSdk from "@sqds/multisig";
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -40,17 +38,14 @@ import {
   matchesSafeChainAlias,
   parseSafeReference,
 } from "@/lib/safe";
-import { SquadService } from "@/lib/squad";
 import { chainIdSchema, labelSchema } from "@/lib/validation";
+import { loadSquadsMultisigAccount } from "@/lib/workspace/squads-adapter";
 import { useChainStore } from "@/stores/chain-store";
 import { useMultisigStore } from "@/stores/multisig-store";
 import {
-  getChainRpcUrls,
   getOperationalSquadsChains,
-  getSquadsProgramId,
   normalizeChainConfig,
 } from "@/types/chain";
-import type { SquadMember } from "@/types/squad";
 
 interface ImportMultisigDialogProps {
   open: boolean;
@@ -140,39 +135,14 @@ export function ImportMultisigDialog({
         );
         addMultisig(safeMultisig);
       } else {
-        const multisigPubkey = new PublicKey(data.multisigAddress);
-        const programIdString = getSquadsProgramId(chain);
-        const squadService = new SquadService(
-          getChainRpcUrls(chain),
-          programIdString,
-          { chainId: chain.id }
+        addMultisig(
+          await loadSquadsMultisigAccount(
+            chain,
+            data.multisigAddress,
+            data.label,
+            tags
+          )
         );
-
-        const multisigAccount = await squadService.getMultisig(multisigPubkey);
-
-        const programId = new PublicKey(programIdString);
-        const [vaultPda] = multisigSdk.getVaultPda({
-          multisigPda: multisigPubkey,
-          index: 0,
-          programId,
-        });
-
-        addMultisig({
-          provider: "squads",
-          publicKey: multisigPubkey,
-          threshold: multisigAccount.threshold,
-          members: multisigAccount.members.map((m: SquadMember) => ({
-            key: m.key,
-            permissions: { mask: m.permissions.mask },
-          })),
-          transactionIndex: BigInt(multisigAccount.transactionIndex.toString()),
-          msChangeIndex: 0,
-          programId,
-          chainId: chain.id,
-          label: data.label,
-          tags,
-          vaultPda,
-        });
       }
 
       toast.success("Vault imported");

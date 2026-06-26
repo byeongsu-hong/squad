@@ -18,6 +18,10 @@ export function toWorkspaceMultisig(
 
   return {
     provider: normalizedChain?.multisigProvider ?? "squads",
+    squadsVersion:
+      multisig.provider === "squads"
+        ? (multisig.squadsVersion ?? "v4")
+        : undefined,
     key: getWorkspaceMultisigKey(
       multisig.chainId,
       multisig.publicKey.toString()

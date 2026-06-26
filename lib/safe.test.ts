@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { requestBroker } from "@/lib/rpc/request-broker";
 import {
+  fetchSafeTransactions,
   getSafeChainAlias,
   getSafeTransactionServiceBaseUrl,
   matchesSafeChainAlias,
@@ -37,6 +38,7 @@ describe("safe helpers", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     requestBroker.clear();
+    delete process.env.SAFE_API_KEY;
   });
 
   it("parses raw Safe addresses and Safe URLs", () => {
@@ -86,6 +88,34 @@ describe("safe helpers", () => {
         name: "Ethereum",
       })
     ).toBe("https://api.safe.global/tx-service/eth/api/v2");
+  });
+
+  it("sends the configured Safe API key to the transaction service", async () => {
+    process.env.SAFE_API_KEY = " test-safe-api-key ";
+    const fetchSpy = vi.spyOn(global, "fetch").mockResolvedValue({
+      ok: true,
+      json: vi.fn(async () => ({
+        count: 0,
+        next: null,
+        previous: null,
+        results: [],
+      })),
+    } as unknown as Response);
+
+    await fetchSafeTransactions(
+      { id: "ethereum-mainnet", name: "Ethereum" },
+      "0x562Dfaac27A84be6C96273F5c9594DA1681C0DA7"
+    );
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      expect.stringContaining("https://api.safe.global/tx-service/eth/api/v2"),
+      expect.objectContaining({
+        headers: {
+          accept: "application/json",
+          authorization: "Bearer test-safe-api-key",
+        },
+      })
+    );
   });
 
   it("converts Safe service transactions into workspace proposals", () => {

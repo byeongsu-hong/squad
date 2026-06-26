@@ -48,6 +48,8 @@ const SAFE_CHAIN_ID_MAP: Record<string, bigint> = {
   arb1: BigInt(42161),
 } as const;
 
+export const SAFE_API_KEY_ENV_VAR = "SAFE_API_KEY";
+
 interface SafeServiceTransactionConfirmation {
   owner: string;
   signature?: string | null;
@@ -175,6 +177,25 @@ export function getSafeChainNumericId(chain: Pick<ChainConfig, "id" | "name">) {
   return alias ? (SAFE_CHAIN_ID_MAP[alias] ?? null) : null;
 }
 
+export function getSafeApiKey() {
+  const rawValue =
+    typeof process === "undefined"
+      ? undefined
+      : process.env[SAFE_API_KEY_ENV_VAR];
+  const apiKey = rawValue?.trim();
+
+  return apiKey ? apiKey : undefined;
+}
+
+function getSafeTransactionServiceHeaders() {
+  const apiKey = getSafeApiKey();
+
+  return {
+    accept: "application/json",
+    ...(apiKey ? { authorization: `Bearer ${apiKey}` } : {}),
+  };
+}
+
 export async function fetchSafeTransactions(
   chain: Pick<ChainConfig, "id" | "name">,
   safeAddress: string,
@@ -190,9 +211,7 @@ export async function fetchSafeTransactions(
   const response = await fetch(
     `${baseUrl}/safes/${safeAddress}/multisig-transactions/?limit=${limit}&ordering=-nonce`,
     {
-      headers: {
-        accept: "application/json",
-      },
+      headers: getSafeTransactionServiceHeaders(),
       cache: "no-store",
     }
   );
@@ -218,9 +237,7 @@ export async function fetchSafeTransactionByHash(
   const response = await fetch(
     `${baseUrl}/multisig-transactions/${safeTxHash}/`,
     {
-      headers: {
-        accept: "application/json",
-      },
+      headers: getSafeTransactionServiceHeaders(),
       cache: "no-store",
     }
   );
@@ -247,7 +264,7 @@ export async function fetchSafeTransactionByNonce(
   const response = await fetch(
     `${baseUrl}/safes/${safeAddress}/multisig-transactions/?nonce=${nonce.toString()}&limit=1`,
     {
-      headers: { accept: "application/json" },
+      headers: getSafeTransactionServiceHeaders(),
       cache: "no-store",
     }
   );

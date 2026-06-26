@@ -28,20 +28,13 @@ import {
 } from "@/lib/export-import-package";
 import { useAddressLabels } from "@/lib/hooks/use-address-label";
 import { loadSafeMultisig } from "@/lib/safe";
-import { SquadService } from "@/lib/squad";
 import { cn } from "@/lib/utils";
+import { loadSquadsMultisigAccount } from "@/lib/workspace/squads-adapter";
 import { useAddressLabelStore } from "@/stores/address-label-store";
 import { useChainStore } from "@/stores/chain-store";
 import { useMultisigStore } from "@/stores/multisig-store";
 import { useProviderAdapterStore } from "@/stores/provider-adapter-store";
 import { useWorkspaceStore } from "@/stores/workspace-store";
-import {
-  getChainRpcUrls,
-  getSquadsProgramId,
-  isOperationalSquadsChain,
-  normalizeChainConfig,
-} from "@/types/chain";
-import type { MultisigAccount } from "@/types/multisig";
 import { providerAdaptersToSettings } from "@/types/provider-adapter";
 
 import { Button } from "./ui/button";
@@ -319,49 +312,14 @@ export function ExportImportController() {
               continue;
             }
 
-            if (!isOperationalSquadsChain(chain)) {
-              failedMultisigs.push(
-                `${serializedMultisig.publicKey} (chain ${chain.name} is not active for Squads imports)`
-              );
-              completeImportStep(
-                `Skipped multisig ${serializedMultisig.publicKey}`
-              );
-              continue;
-            }
-
-            const programIdString = getSquadsProgramId(chain);
-            const squadService = new SquadService(
-              getChainRpcUrls(chain),
-              programIdString,
-              { chainId: chain.id }
+            addMultisig(
+              await loadSquadsMultisigAccount(
+                chain,
+                serializedMultisig.publicKey,
+                serializedMultisig.label,
+                serializedMultisig.tags
+              )
             );
-
-            const { PublicKey } = await import("@solana/web3.js");
-            const multisigPda = new PublicKey(serializedMultisig.publicKey);
-            const multisigData = await squadService.getMultisig(
-              multisigPda,
-              false
-            );
-
-            const multisigAccount: MultisigAccount = {
-              provider: "squads",
-              publicKey: multisigPda,
-              threshold: multisigData.threshold,
-              members: multisigData.members.map((m) => ({
-                key: m.key,
-                permissions: m.permissions,
-              })),
-              transactionIndex: BigInt(
-                multisigData.transactionIndex.toString()
-              ),
-              msChangeIndex: 0,
-              programId: new PublicKey(programIdString),
-              chainId: chain.id,
-              label: serializedMultisig.label,
-              tags: serializedMultisig.tags,
-            };
-
-            addMultisig(multisigAccount);
             importedMultisigs++;
             completeImportStep(
               `Imported Squads multisig ${serializedMultisig.label ?? serializedMultisig.publicKey}`

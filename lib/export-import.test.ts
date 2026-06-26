@@ -85,6 +85,15 @@ describe("export-import", () => {
       expect(serialized).not.toHaveProperty("members");
       expect(serialized).not.toHaveProperty("transactionIndex");
     });
+
+    it("preserves Squads protocol version for legacy V3 vaults", () => {
+      const serialized = serializeMultisigAccount({
+        ...mockMultisigs[0],
+        squadsVersion: "v3",
+      });
+
+      expect(serialized.squadsVersion).toBe("v3");
+    });
   });
 
   describe("exportChains", () => {
@@ -179,6 +188,25 @@ describe("export-import", () => {
       );
       expect(imported.multisigs?.[0].chainId).toBe("test-chain");
       expect(imported.multisigs?.[0].tags).toEqual(["ops", "treasury"]);
+    });
+
+    it("should import Squads V3 multisig metadata from YAML", () => {
+      const imported = importFromYaml(`version: "1.0"
+exportedAt: "2026-05-27T00:00:00.000Z"
+multisigs:
+  - provider: squads
+    squadsVersion: v3
+    publicKey: GjwcWFQYzemBtpUoN5fMAP2FZviTtMRWCmrppGuTthJS
+    chainId: solana-mainnet
+`);
+
+      expect(imported.multisigs?.[0]).toMatchObject({
+        provider: "squads",
+        squadsVersion: "v3",
+        publicKey: "GjwcWFQYzemBtpUoN5fMAP2FZviTtMRWCmrppGuTthJS",
+        chainId: "solana-mainnet",
+        tags: [],
+      });
     });
 
     it("should import both chains and multisigs from YAML", () => {

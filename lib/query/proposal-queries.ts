@@ -31,6 +31,7 @@ function refreshScopeForMultisig(multisig: WorkspaceMultisig) {
 function toSquadsMultisigAccount(multisig: WorkspaceMultisig): MultisigAccount {
   return {
     provider: "squads",
+    squadsVersion: multisig.squadsVersion,
     publicKey: new PublicKey(multisig.address),
     chainId: multisig.chainId,
     threshold: multisig.threshold,
@@ -40,6 +41,9 @@ function toSquadsMultisigAccount(multisig: WorkspaceMultisig): MultisigAccount {
     })),
     transactionIndex: 0n,
     msChangeIndex: 0,
+    vaultPda: multisig.vaultAddress
+      ? new PublicKey(multisig.vaultAddress)
+      : undefined,
   };
 }
 

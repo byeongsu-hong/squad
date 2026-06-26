@@ -16,6 +16,7 @@ import {
   executeSafeTransaction,
 } from "@/lib/safe-client";
 import { SquadService } from "@/lib/squad";
+import { SquadsV3Service } from "@/lib/squads-v3";
 import {
   applyRefreshPlan,
   getRefreshPlan,
@@ -31,11 +32,7 @@ import {
 import { invalidateSafeProposalCache } from "@/lib/workspace/safe-adapter";
 import { useChainStore } from "@/stores/chain-store";
 import { useWalletStore } from "@/stores/wallet-store";
-import {
-  getChainRpcUrls,
-  getSquadsProgramId,
-  isOperationalSquadsChain,
-} from "@/types/chain";
+import { getChainRpcUrls, getSquadsProgramId } from "@/types/chain";
 import { WalletType, parseLedgerError } from "@/types/wallet";
 
 interface UseProposalActionsOptions {
@@ -43,6 +40,21 @@ interface UseProposalActionsOptions {
 }
 
 type ProposalActionType = "approve" | "reject" | "execute";
+type SquadsActionVersion = "v3" | "v4";
+
+interface SquadsActionOptions {
+  squadsVersion?: SquadsActionVersion;
+}
+
+interface SolanaActionService {
+  getConnection(): {
+    getLatestBlockhash(): Promise<{ blockhash: string }>;
+    sendRawTransaction(
+      serializedTransaction: Buffer | Uint8Array
+    ): Promise<string>;
+    confirmTransaction(signature: string): Promise<unknown>;
+  };
+}
 
 function buildActionKey(
   action: ProposalActionType,
@@ -78,7 +90,7 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
   const { signTransaction, connected: walletAdapterConnected } = useWallet();
 
   const getSquadService = useCallback(
-    (chainId: string) => {
+    (chainId: string, squadsVersion: SquadsActionVersion = "v4") => {
       const chain = chains.find((c) => c.id === chainId);
       if (!chain) {
         throw new Error(ERROR_MESSAGES.CHAIN_NOT_FOUND);
@@ -91,19 +103,16 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
           getUnsupportedProviderMessage(adapter.id, "proposalActions")
         );
       }
-      if (!isOperationalSquadsChain(chain)) {
-        throw new Error(
-          "This chain is not configured for active Squads operations yet."
-        );
-      }
+      const programId = getSquadsProgramId(chain, squadsVersion);
       return {
-        service: new SquadService(
-          getChainRpcUrls(chain),
-          getSquadsProgramId(chain),
-          {
-            chainId: chain.id,
-          }
-        ),
+        service:
+          squadsVersion === "v3"
+            ? new SquadsV3Service(getChainRpcUrls(chain), programId, {
+                chainId: chain.id,
+              })
+            : new SquadService(getChainRpcUrls(chain), programId, {
+                chainId: chain.id,
+              }),
         chain,
       };
     },
@@ -137,7 +146,7 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
   const signAndSendTransaction = useCallback(
     async (
       transaction: Transaction,
-      squadService: SquadService,
+      squadService: SolanaActionService,
       chainId: string
     ) => {
       if (!publicKey) {
@@ -224,7 +233,8 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
     async (
       multisigPda: PublicKey,
       transactionIndex: bigint,
-      chainId: string
+      chainId: string,
+      squadsVersion: SquadsActionVersion = "v4"
     ) => {
       if (!publicKey) {
         toast.error(ERROR_MESSAGES.WALLET_NOT_CONNECTED);
@@ -235,7 +245,10 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
       setActionLoading(actionKey);
 
       try {
-        const { service: squadService } = getSquadService(chainId);
+        const { service: squadService } = getSquadService(
+          chainId,
+          squadsVersion
+        );
 
         const instruction = await squadService.approveProposal({
           multisigPda,
@@ -276,7 +289,8 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
     async (
       multisigPda: PublicKey,
       transactionIndex: bigint,
-      chainId: string
+      chainId: string,
+      squadsVersion: SquadsActionVersion = "v4"
     ) => {
       if (!publicKey) {
         toast.error(ERROR_MESSAGES.WALLET_NOT_CONNECTED);
@@ -287,7 +301,10 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
       setActionLoading(actionKey);
 
       try {
-        const { service: squadService } = getSquadService(chainId);
+        const { service: squadService } = getSquadService(
+          chainId,
+          squadsVersion
+        );
 
         const instruction = await squadService.rejectProposal({
           multisigPda,
@@ -328,7 +345,8 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
     async (
       multisigPda: PublicKey,
       transactionIndex: bigint,
-      chainId: string
+      chainId: string,
+      squadsVersion: SquadsActionVersion = "v4"
     ) => {
       if (!publicKey) {
         toast.error(ERROR_MESSAGES.WALLET_NOT_CONNECTED);
@@ -339,7 +357,10 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
       setActionLoading(actionKey);
 
       try {
-        const { service: squadService } = getSquadService(chainId);
+        const { service: squadService } = getSquadService(
+          chainId,
+          squadsVersion
+        );
 
         const result = await squadService.executeProposal({
           multisigPda,
@@ -441,7 +462,8 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
     approveByAddress: async (
       multisigKey: string,
       transactionIndex: bigint,
-      chainId: string
+      chainId: string,
+      actionOptions: SquadsActionOptions = {}
     ) => {
       const chain = getChain(chainId);
       const provider = chain.multisigProvider ?? "squads";
@@ -452,12 +474,18 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
       }
       if (provider === "safe")
         return runSafeAction("approve", multisigKey, transactionIndex, chainId);
-      return approve(new PublicKey(multisigKey), transactionIndex, chainId);
+      return approve(
+        new PublicKey(multisigKey),
+        transactionIndex,
+        chainId,
+        actionOptions.squadsVersion ?? "v4"
+      );
     },
     rejectByAddress: async (
       multisigKey: string,
       transactionIndex: bigint,
-      chainId: string
+      chainId: string,
+      actionOptions: SquadsActionOptions = {}
     ) => {
       const chain = getChain(chainId);
       const provider = chain.multisigProvider ?? "squads";
@@ -469,12 +497,18 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
         toast.error(message);
         throw new Error(message);
       }
-      return reject(new PublicKey(multisigKey), transactionIndex, chainId);
+      return reject(
+        new PublicKey(multisigKey),
+        transactionIndex,
+        chainId,
+        actionOptions.squadsVersion ?? "v4"
+      );
     },
     executeByAddress: async (
       multisigKey: string,
       transactionIndex: bigint,
-      chainId: string
+      chainId: string,
+      actionOptions: SquadsActionOptions = {}
     ) => {
       const chain = getChain(chainId);
       const provider = chain.multisigProvider ?? "squads";
@@ -485,7 +519,12 @@ export function useProposalActions(options: UseProposalActionsOptions = {}) {
       }
       if (provider === "safe")
         return runSafeAction("execute", multisigKey, transactionIndex, chainId);
-      return execute(new PublicKey(multisigKey), transactionIndex, chainId);
+      return execute(
+        new PublicKey(multisigKey),
+        transactionIndex,
+        chainId,
+        actionOptions.squadsVersion ?? "v4"
+      );
     },
     buildActionKey,
     isActionLoading: (
