@@ -211,6 +211,8 @@ Safe-specific reads are proxied through app routes:
 
 This keeps browser-side provider logic smaller and avoids direct reads against endpoints that may reject cross-origin traffic.
 
+Set `SAFE_API_KEY` as a server-side environment variable in Vercel Project Settings so these routes can call Safe Transaction Service domains such as `api.safe.global`.
+
 ## Architecture
 
 ```text

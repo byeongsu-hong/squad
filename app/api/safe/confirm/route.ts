@@ -2,6 +2,7 @@ import SafeApiKit from "@safe-global/api-kit";
 import { NextResponse } from "next/server";
 
 import {
+  getSafeApiKey,
   getSafeChainNumericId,
   getSafeTransactionServiceBaseUrl,
 } from "@/lib/safe";
@@ -41,9 +42,11 @@ export async function POST(request: Request) {
       );
     }
 
+    const apiKey = getSafeApiKey();
     const apiKit = new SafeApiKit({
       chainId: numericChainId,
       txServiceUrl,
+      ...(apiKey ? { apiKey } : {}),
     });
 
     const confirmation = await apiKit.confirmTransaction(
